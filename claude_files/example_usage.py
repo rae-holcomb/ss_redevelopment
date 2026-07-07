@@ -6,8 +6,6 @@ light curve: build the ACF, gather candidate periods from all three
 guess_* methods, fit and arbitrate between them with fit_rotation_period,
 and inspect/plot the result.
 """
-import sys
-sys.path.insert(0, "claude_files")
 
 import numpy as np
 from comb_fit import gather_initial_guesses, fit_rotation_period, assess_rotation_candidate

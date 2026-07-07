@@ -1007,6 +1007,16 @@ class CandidateResult:
     diagnostics: Optional[dict]
     passed_gates: bool = False
     error: Optional[str] = None
+    # How many raw candidate proposals (across all guess_* methods, before
+    # the dedup step below merged near-identical periods into this one
+    # representative) supported this same period, and which methods they
+    # came from. n_duplicate_guesses=0 and contributing_methods=(source
+    # method,) means this candidate was the only one proposing this period
+    # -- no cross-method corroboration at the candidate-generation stage.
+    # This is computed BEFORE fitting, so don't confuse it with post-fit
+    # agreement between different (still-distinct) fitted candidates.
+    n_duplicate_guesses: int = 0
+    contributing_methods: tuple = ()
 
 
 @dataclass
@@ -1144,9 +1154,18 @@ def fit_rotation_period(
     ]
     sane.sort(key=lambda g: g.P0)
     deduped = []
+    merged_groups = []  # parallel to `deduped`: every raw guess merged into it
     for g in sane:
         if not deduped or (g.P0 - deduped[-1].P0) / deduped[-1].P0 > dedup_rel_tol:
             deduped.append(g)
+            merged_groups.append([g])
+        else:
+            # within dedup_rel_tol of the last kept candidate: don't fit it
+            # separately, but DO remember it supported this same period --
+            # otherwise this information (e.g. "two different methods
+            # independently proposed ~this period") is silently lost before
+            # it ever reaches feature extraction / the ML ranker.
+            merged_groups[-1].append(g)
 
     if len(deduped) == 0:
         return EnsembleResult(
@@ -1162,7 +1181,9 @@ def fit_rotation_period(
 
     # --- fit every surviving candidate ---
     results = []
-    for guess in deduped:
+    for guess, group in zip(deduped, merged_groups):
+        n_dup = len(group) - 1
+        contributing_methods = tuple(sorted(set(gg.method for gg in group)))
         t0 = guess.t0 if guess.t0 is not None else _grid_search_t0(
             acf_lags, acf, guess.P0, min_lag=min_lag
         )
@@ -1184,12 +1205,14 @@ def fit_rotation_period(
             results.append(CandidateResult(
                 period=guess.P0, t0=t0, source_guess=guess, fit=fit,
                 diagnostics=diag, passed_gates=bool(passed),
+                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
             ))
         except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
             results.append(CandidateResult(
                 period=guess.P0, t0=t0, source_guess=guess, fit=None,
                 diagnostics=None, passed_gates=False,
                 error=f"{type(exc).__name__}: {exc}",
+                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
             ))
 
     fit_ok = [r for r in results if r.fit is not None]
