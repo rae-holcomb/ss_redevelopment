@@ -24,19 +24,21 @@ Typical usage
 
 >>> # hand the segments off to lightkurve: every two orbits become one
 >>> # sector-level LightCurve, dropping flagged orbits along the way
->>> lcc = segments_to_lightkurve(segments, diagnostics=diag,
-...                               exclude_flagged=True)
+>>> lcc, sectors_present = segments_to_lightkurve(
+...     segments, diagnostics=diag, exclude_flagged=True)
 
 >>> # or recombine back into one continuous array, dropping gap points
 >>> # and flagged (bad) orbits along the way
->>> clean_time, clean_flux = recombine_segments(
+>>> clean_time, clean_flux, sectors_present = recombine_segments(
 ...     segments, diag, drop_gap_points=True, drop_flagged_segments=True)
 
 >>> # manually degrade the long baseline to a realistic, gappy TESS-like
->>> # observing pattern by hand-picking which sectors to keep
->>> lcc = segments_to_lightkurve(segments, diagnostics=diag,
-...                               sectors=[1, 2, 6, 7, 12])
->>> patchy_time, patchy_flux = recombine_segments(
+>>> # observing pattern by hand-picking which sectors to keep -- compare
+>>> # the requested sectors to sectors_present to see which got dropped
+>>> # for being flagged bad
+>>> lcc, sectors_present = segments_to_lightkurve(
+...     segments, diagnostics=diag, sectors=[1, 2, 6, 7, 12])
+>>> patchy_time, patchy_flux, sectors_present = recombine_segments(
 ...     segments, diag, sectors=[1, 2, 6, 7, 12])
 """
 
@@ -530,6 +532,11 @@ def segments_to_lightkurve(segments, diagnostics=None, exclude_flagged=False,
           `sectors` is None)
         - 'FLAGGED' : True if any orbit belonging to this sector was
           flagged (present only if `diagnostics` was passed)
+    included_sectors : list of int
+        1-indexed sector numbers actually present in the returned
+        collection, in order. Comparing this against `sectors` (when
+        given) is an easy way to see which requested sectors got
+        dropped for being flagged bad.
     """
     import lightkurve as lk
 
@@ -589,7 +596,8 @@ def segments_to_lightkurve(segments, diagnostics=None, exclude_flagged=False,
             lc.meta['FLAGGED'] = bool(any(flagged[oi] for oi in orbit_idxs))
         lcs.append(lc)
 
-    return lk.LightCurveCollection(lcs)
+    included_sectors = [lc.meta['SECTOR'] for lc in lcs]
+    return lk.LightCurveCollection(lcs), included_sectors
 
 
 def recombine_segments(segments, diagnostics, drop_gap_points=False,
@@ -652,6 +660,11 @@ def recombine_segments(segments, diagnostics, drop_gap_points=False,
         The recombined time array.
     flux : np.ndarray
         The recombined flux array, same length as `time`.
+    included_sectors : list of int
+        1-indexed sector numbers that contributed at least one orbit to
+        the output, in order. Comparing this against `sectors` (when
+        given) is an easy way to see which requested sectors got
+        dropped for being flagged bad.
     """
     gap_mask = diagnostics['gap_mask']
     segment_flagged = diagnostics.get('segment_flagged')
@@ -675,6 +688,7 @@ def recombine_segments(segments, diagnostics, drop_gap_points=False,
         allowed = set(range(n_orbits))
 
     time_chunks, flux_chunks = [], []
+    contributing_idxs = []
     offset = 0
     for i, (t, fl) in enumerate(segments):
         n = len(t)
@@ -689,6 +703,7 @@ def recombine_segments(segments, diagnostics, drop_gap_points=False,
             t, fl = t[keep], fl[keep]
         time_chunks.append(t)
         flux_chunks.append(fl)
+        contributing_idxs.append(i)
 
     if offset != len(gap_mask):
         raise ValueError(
@@ -698,10 +713,12 @@ def recombine_segments(segments, diagnostics, drop_gap_points=False,
             "(remove_gap_points=False, the default) so it can apply its "
             "own drop_gap_points/drop_flagged_segments toggles.")
 
+    included_sectors = sorted(set(i // 2 + 1 for i in contributing_idxs))
+
     if time_chunks:
         time_out = np.concatenate(time_chunks)
         flux_out = np.concatenate(flux_chunks)
     else:
         time_out = np.array([])
         flux_out = np.array([])
-    return time_out, flux_out
+    return time_out, flux_out, included_sectors
