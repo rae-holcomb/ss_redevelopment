@@ -431,7 +431,7 @@ def guess_lombscargle(
     min_period: Optional[float] = None,
     max_period: Optional[float] = None,
     n_guesses: int = 5,
-    samples_per_peak: int = 10,
+    samples_per_peak: int = 1,
 ) -> list:
     """Propose candidate periods from peaks in the Lomb-Scargle periodogram
     of the light curve itself.
@@ -449,6 +449,18 @@ def guess_lombscargle(
         Defaults to [4 * median(dt), (time[-1]-time[0])/2].
     n_guesses : how many top candidates to return.
     samples_per_peak : oversampling factor passed to astropy's autopower.
+        Default lowered from astropy's own default of ~5-10 down to 1:
+        this function only needs to propose a *coarse* candidate period for
+        fit_rotation_period to refine via the real joint comb fit
+        afterward, not a precisely-resolved one, so there's little value
+        in a finely-sampled frequency grid here. Measured on a ~140k-point
+        real TESS light curve, samples_per_peak=10 (the old default)
+        evaluates roughly 4.5x more frequency samples than there are data
+        points and takes several seconds; samples_per_peak=1 is ~4x
+        faster with an essentially unchanged top candidate (the small
+        remaining period error is well within what the joint fit corrects
+        for). Raise this if you need this function's own candidates to be
+        precise without relying on the joint fit at all.
 
     Returns
     -------
@@ -620,6 +632,277 @@ def guess_acf_fft(
     return guesses
 
 
+# --------------------------------------------------------------------------
+# 4. Candidate generation: Global Wavelet Power Spectrum (optional)
+# --------------------------------------------------------------------------
+#
+# Unlike the three methods above, this one is NOT included in
+# gather_initial_guesses' default `methods` tuple -- it's registered in its
+# guess_fns lookup so it's available on request (methods=(..., "wavelet")),
+# but never runs unless a caller explicitly asks for it. See guess_wavelet's
+# docstring for why: it needs gap-free, evenly-sampled flux (no NaNs), which
+# not every light curve satisfies, and it's meaningfully more expensive than
+# the other three methods (see the relative-speed comparison in this
+# project's notes).
+
+def _period_to_morlet_scale(period: np.ndarray, dt: float, w0: float) -> np.ndarray:
+    """Convert a period (in the same time units as dt) to the `s` (scale)
+    argument used by _morlet2_kernel/_cwt_morlet below.
+
+    The Morlet wavelet's power is concentrated at angular frequency w0/s
+    (in units of radians per *sample*), i.e. an ordinary frequency of
+    w0 / (2*pi*s) cycles per sample. A period of P (in real time units)
+    corresponds to dt/P cycles per sample, so setting w0/(2*pi*s) = dt/P
+    and solving for s gives the relation used here.
+    """
+    return w0 * period / (2 * np.pi * dt)
+
+
+def _morlet2_kernel(M: int, s: float, w0: float) -> np.ndarray:
+    """A single complex Morlet wavelet kernel of length M at scale s,
+    normalized to unit energy. Reimplements the formula previously
+    provided by scipy.signal.morlet2 (removed from recent scipy), since
+    this module intentionally avoids adding a new third-party dependency
+    (e.g. PyWavelets) just for this.
+    """
+    x = (np.arange(0, M) - (M - 1.0) / 2.0) / s
+    wavelet = np.exp(1j * w0 * x) * np.exp(-0.5 * x**2) * np.pi**(-0.25)
+    return np.sqrt(1.0 / s) * wavelet
+
+
+def _cwt_morlet(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
+    """Continuous wavelet transform of `data` at each scale in `scales`,
+    using a complex Morlet wavelet (reimplements the old
+    scipy.signal.cwt(data, morlet2, scales, w=w0) behavior via FFT-based
+    convolution for speed). Returns a complex array of shape
+    (len(scales), len(data)).
+    """
+    from scipy.signal import fftconvolve
+
+    output = np.empty((len(scales), len(data)), dtype=complex)
+    for i, s in enumerate(scales):
+        n_kernel = int(min(10 * s, len(data)))
+        n_kernel = max(n_kernel, 3)
+        kernel = _morlet2_kernel(n_kernel, s, w0)
+        output[i] = fftconvolve(data, kernel, mode="same")
+    return output
+
+
+def _fit_and_subtract_gaussian(
+    log_periods: np.ndarray,
+    residual: np.ndarray,
+    fit_half_width_bins: int = 15,
+):
+    """One iteration of the ROOSTER-style iterative Gaussian peak-picking
+    (see guess_wavelet docstring): locate the tallest remaining point in
+    `residual`, fit a single Gaussian to a small window around it (in
+    log-period space, since periods of interest span more than a decade
+    and a Gaussian in linear period space would fit long-period peaks very
+    poorly), and return (peak_info_dict, updated_residual). Returns None
+    if the fit fails or collapses to a degenerate width.
+    """
+    from lmfit.models import GaussianModel
+
+    i_peak = int(np.argmax(residual))
+    lo = max(i_peak - fit_half_width_bins, 0)
+    hi = min(i_peak + fit_half_width_bins + 1, len(residual))
+    x = log_periods[lo:hi]
+    y = residual[lo:hi]
+
+    model = GaussianModel()
+    params = model.guess(y, x=x)
+    params["center"].set(value=log_periods[i_peak], min=x[0], max=x[-1])
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        out = model.fit(y, params, x=x)
+
+    amp = out.params["amplitude"].value
+    center = out.params["center"].value
+    sigma = out.params["sigma"].value
+    if not np.isfinite([amp, center, sigma]).all() or sigma <= 0:
+        return None
+
+    full_fit = model.eval(out.params, x=log_periods)
+    new_residual = residual - full_fit
+    height = float(model.eval(out.params, x=np.array([center]))[0])
+    peak_info = dict(height=height, center_log_period=center, sigma_log_period=sigma)
+    return peak_info, new_residual
+
+
+def guess_wavelet(
+    time: np.ndarray,
+    flux: np.ndarray,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    min_period: Optional[float] = None,
+    max_period: Optional[float] = None,
+    n_guesses: int = 5,
+    n_periods: int = 200,
+    w0: float = 6.0,
+    min_peak_snr: float = 3.0,
+) -> list:
+    """Propose candidate periods from peaks in the Global Wavelet Power
+    Spectrum (GWPS) of the light curve -- see Garcia et al. (2014) and the
+    wavelet stage of the Santos/ROOSTER rotation pipeline (Breton et al.
+    2021), which this closely follows.
+
+    Mechanism, step by step
+    ------------------------
+    1. Cross-correlate the (mean-subtracted) flux with a complex Morlet
+       wavelet at a log-spaced grid of trial periods (via this module's
+       own small FFT-based CWT implementation, _cwt_morlet -- recent scipy
+       versions removed scipy.signal.cwt/morlet2, so this avoids adding a
+       new third-party dependency just for one candidate-generation
+       method). Unlike a single Lomb-Scargle periodogram, this keeps the
+       *time* axis: the result is a 2D (period, time) power surface, so a
+       signal that is only periodic during part of the baseline (e.g.
+       before a flare, or before spot evolution scrambles the phase) in
+       principle shows up differently than one that's periodic throughout.
+       This function only uses the time-averaged projection of that
+       surface (the GWPS) for candidate generation -- see
+       `info["wavelet_power"]` if you want the full 2D surface for your
+       own inspection.
+
+    2. Time-average the 2D power surface over all time samples to get the
+       1D Global Wavelet Power Spectrum, GWPS(period). Real, persistent
+       periodicities integrate coherently across time and stand out as
+       peaks in this projection; transient, non-periodic power does not
+       survive the averaging.
+
+    3. Iteratively fit single Gaussians to the GWPS in log-period space
+       (see _fit_and_subtract_gaussian): fit the tallest remaining peak,
+       subtract that fit, and repeat on the residual. This mirrors what
+       ROOSTER's wavelet stage does, and (like guess_pairwise_histogram's
+       support-count ranking) is a way of separating out multiple distinct
+       candidate periods from one spectrum without just taking every local
+       maximum verbatim -- overlapping/nearby peaks get absorbed into a
+       single wider Gaussian rather than being double-counted. Iteration
+       stops after n_guesses peaks are found, or once the tallest
+       remaining peak drops below `min_peak_snr` times a robust noise
+       estimate of the (already peak-subtracted) GWPS.
+
+    4. Return each fitted peak as an InitialGuess, `strength` = the
+       Gaussian's peak height normalized by the tallest peak found, and
+       `info["fitted_gaussians"]` carrying every fitted peak's height,
+       center period, and log-period width (a rough analog of the
+       G_ACF/H_ACF-style peak-height diagnostics from the composite-
+       spectrum literature -- see `composite_spectrum_diagnostics`
+       elsewhere in this module for more in that spirit).
+
+    Caveats
+    -------
+    This function requires `flux` on an evenly-sampled time grid with no
+    NaNs (the CWT implementation used here has no gap-awareness). For real
+    gappy light curves, either restrict to your longest gap-free stretch,
+    or linearly interpolate short gaps before calling this -- interpolating
+    is a reasonable approximation for wavelet analysis specifically
+    because, unlike the ACF, a short interpolated stretch only locally
+    dilutes the time-frequency power there rather than biasing the whole
+    lag axis (see acf_utils.py's docstring for why the ACF needs a
+    genuinely gap-aware estimator instead).
+
+    Parameters
+    ----------
+    min_period, max_period : period search range. Defaults to
+        [4 * median(dt), (time[-1]-time[0])/2], matching guess_lombscargle.
+    n_guesses : maximum number of candidate peaks to extract.
+    n_periods : number of log-spaced trial periods spanning
+        [min_period, max_period].
+    w0 : Morlet wavelet's characteristic (nondimensional) frequency,
+        controlling the time/frequency resolution trade-off. Larger w0
+        gives sharper period resolution but blurrier time resolution.
+        6.0 is a standard default balancing the two.
+    min_peak_snr : minimum height (in units of the median absolute
+        deviation of the once-peak-subtracted GWPS) for a Gaussian fit to
+        be kept as a genuine candidate rather than noise.
+
+    Returns
+    -------
+    list[InitialGuess], sorted strongest-first (by fitted peak height),
+    method="wavelet"
+    """
+    if not np.isfinite(flux).all():
+        raise ValueError(
+            "guess_wavelet: flux contains NaNs; the CWT implementation "
+            "used here has no gap-awareness. Interpolate short gaps "
+            "first, or restrict to a gap-free stretch -- see this "
+            "function's docstring."
+        )
+
+    time = np.asarray(time, dtype=float)
+    flux = np.asarray(flux, dtype=float)
+    dt = np.median(np.diff(time))
+    if not np.allclose(np.diff(time), dt, rtol=1e-3):
+        warnings.warn(
+            "guess_wavelet: time does not appear evenly spaced; wavelet "
+            "period estimates may be unreliable."
+        )
+
+    baseline = time[-1] - time[0]
+    if min_period is None:
+        min_period = 4 * dt
+    if max_period is None:
+        max_period = baseline / 2
+    if max_period <= min_period:
+        raise RuntimeError(
+            "guess_wavelet: max_period <= min_period; widen the requested "
+            "range or check the light curve's baseline."
+        )
+
+    periods = np.geomspace(min_period, max_period, n_periods)
+    scales = _period_to_morlet_scale(periods, dt, w0)
+
+    y = flux - np.mean(flux)
+    wavelet_coeffs = _cwt_morlet(y, scales, w0)
+    wavelet_power = np.abs(wavelet_coeffs) ** 2  # shape (n_periods, n_time)
+
+    gwps = np.mean(wavelet_power, axis=1)
+
+    # --- iterative Gaussian peak extraction in log-period space ---
+    log_periods = np.log(periods)
+    residual = gwps.copy()
+    fitted = []
+    for _ in range(n_guesses):
+        med = np.median(residual)
+        mad = np.median(np.abs(residual - med))
+        noise_sigma = 1.4826 * mad if mad > 0 else np.std(residual)
+        if noise_sigma == 0 or np.max(residual) < med + min_peak_snr * noise_sigma:
+            break
+        out = _fit_and_subtract_gaussian(log_periods, residual)
+        if out is None:
+            break
+        peak_info, residual = out
+        fitted.append(peak_info)
+
+    if len(fitted) == 0:
+        raise RuntimeError(
+            "guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; "
+            "try lowering min_peak_snr or widening [min_period, max_period]."
+        )
+
+    fitted.sort(key=lambda d: d["height"], reverse=True)
+    height_max = fitted[0]["height"]
+
+    guesses = []
+    for rank, peak in enumerate(fitted, start=1):
+        P_cand = float(np.exp(peak["center_log_period"]))
+        guesses.append(InitialGuess(
+            P0=P_cand,
+            method="wavelet",
+            rank=rank,
+            strength=float(peak["height"] / height_max) if height_max > 0 else 0.0,
+            info=dict(
+                periods=periods,
+                gwps=gwps,
+                wavelet_power=wavelet_power,
+                fitted_gaussians=fitted,
+                peak_height=peak["height"],
+                peak_log_width=peak["sigma_log_period"],
+            ),
+        ))
+    return guesses
+
+
 def gather_initial_guesses(
     time: np.ndarray,
     flux: np.ndarray,
@@ -635,12 +918,20 @@ def gather_initial_guesses(
     failed_methods maps method name -> error message for any method that
     raised (e.g. astropy missing, too few ACF peaks found) so one method's
     failure doesn't stop the others from contributing candidates.
+
+    `methods` defaults to the three cheap, always-safe methods. "wavelet"
+    (guess_wavelet) is registered and available but deliberately NOT
+    included by default -- it requires gap-free flux and is meaningfully
+    more expensive than the other three (see this project's relative-speed
+    notes), so it only runs if you explicitly ask for it, e.g.
+    `methods=("pairwise_histogram", "lombscargle", "acf_fft", "wavelet")`.
     """
     method_kwargs = method_kwargs or {}
     guess_fns = {
         "pairwise_histogram": guess_pairwise_histogram,
         "lombscargle": guess_lombscargle,
         "acf_fft": guess_acf_fft,
+        "wavelet": guess_wavelet,
     }
     guesses = []
     failed = {}
@@ -955,17 +1246,325 @@ def _fit_single_candidate(
 # Goodness-of-fit / acceptance helper
 # --------------------------------------------------------------------------
 
+# --------------------------------------------------------------------------
+# Phase-dispersion and composite-spectrum diagnostics (optional)
+# --------------------------------------------------------------------------
+#
+# These are model-different cross-checks on a candidate that's already been
+# through the joint comb fit -- they don't generate new candidates, and
+# they're never computed unless assess_rotation_candidate is explicitly
+# given the extra data they need (see that function below). Motivation: the
+# joint comb fit and its redchi evaluate a candidate against the ACF's
+# *shape* in narrow local windows; both of the diagnostics below instead
+# check the candidate directly against the light curve's own phase
+# coherence (phase_dispersion_stat) or against the raw ACF's local
+# prominence rather than a fitted parabola (acf_peak_prominence_diagnostics)
+# -- genuinely different failure modes than height/redchi-based checks can
+# catch. See this project's half-period-alias case study (two unequal
+# starspot groups) for a worked example where every existing method AND the
+# joint fit's own redchi confidently prefer a wrong P/2 answer, and
+# phase_dispersion_theta is the one diagnostic that isn't fooled.
+
+def phase_dispersion_stat(
+    time: np.ndarray,
+    flux: np.ndarray,
+    P: float,
+    n_bins: int = 10,
+) -> float:
+    """Phase Dispersion Minimization statistic (Stellingwerf 1978) for a
+    candidate period P: fold the light curve on P, bin it in phase, and
+    compare the scatter *within* phase bins to the scatter of the whole
+    (unfolded) light curve.
+
+        theta = [sum_j (n_j - 1) * s_j^2] / [(N - M) * sigma_total^2]
+
+    where s_j^2 is the variance of the points in phase bin j, n_j is the
+    number of points in bin j, N is the total number of points, M is the
+    number of non-empty bins, and sigma_total^2 is the variance of the
+    full (unfolded) light curve.
+
+    Interpretation: if P is (close to) the true period, folding the light
+    curve on it lines up points from different cycles that really do
+    belong at the same phase, so each phase bin should look tight compared
+    to the light curve's overall scatter -- theta << 1. If P is wrong, the
+    fold scrambles unrelated points together in every bin, so each bin's
+    scatter approaches the light curve's overall scatter -- theta -> 1 (or
+    even slightly above 1, since folding on a bad period doesn't reduce
+    variance at all). theta is bounded below by 0 for a perfectly periodic,
+    noise-free signal correctly folded.
+
+    This is a genuinely different diagnostic from anything else in this
+    module: comb_score and the joint fit's redchi both evaluate a
+    candidate against the ACF's *shape*, whereas theta evaluates it
+    directly against the light curve's phase coherence, with no ACF or
+    parabola model involved at all. A candidate that fits the ACF
+    reasonably well but is actually a harmonic of the true period (e.g. 2x
+    or 0.5x too long/short) will often show a visibly worse (higher) theta
+    than the true period, since folding on the wrong multiple misaligns
+    the underlying light curve's repeating shape even when the ACF's comb
+    of peaks looks superficially plausible -- making theta a useful,
+    cheap, independent cross-check on a joint comb fit's winning candidate
+    (or on close runner-ups) before trusting it.
+
+    Parameters
+    ----------
+    time, flux : the light curve (NaNs are dropped automatically).
+    P : candidate period to test, same units as `time`.
+    n_bins : number of phase bins in [0, 1) to fold into. Default 10,
+        following Stellingwerf (1978)'s original recommendation of order
+        ~10 bins for typical sampling; too few bins washes out real
+        structure, too many starves each bin of points.
+
+    Returns
+    -------
+    theta : float. Lower is better; theta ~ 0 indicates strong phase
+        coherence at this period, theta ~ 1 indicates no more phase
+        coherence than a random period would show.
+    """
+    time = np.asarray(time, dtype=float)
+    flux = np.asarray(flux, dtype=float)
+    finite = np.isfinite(time) & np.isfinite(flux)
+    time, flux = time[finite], flux[finite]
+
+    if len(flux) < n_bins * 2 or P <= 0:
+        return float("nan")
+
+    phase = np.mod(time, P) / P
+    bin_idx = np.clip((phase * n_bins).astype(int), 0, n_bins - 1)
+
+    sigma_total_sq = np.var(flux, ddof=1)
+    if sigma_total_sq == 0:
+        return float("nan")
+
+    numerator = 0.0
+    n_nonempty_bins = 0
+    for j in range(n_bins):
+        in_bin = bin_idx == j
+        n_j = int(np.sum(in_bin))
+        if n_j < 2:
+            continue
+        numerator += (n_j - 1) * np.var(flux[in_bin], ddof=1)
+        n_nonempty_bins += 1
+
+    dof = len(flux) - n_nonempty_bins
+    if dof <= 0:
+        return float("nan")
+
+    theta = numerator / (dof * sigma_total_sq)
+    return float(theta)
+
+
+def refine_period_by_pdm(
+    time: np.ndarray,
+    flux: np.ndarray,
+    P0: float,
+    n_bins: int = 10,
+    search_frac: float = 0.02,
+    n_trial: int = 201,
+) -> dict:
+    """Locally refine a candidate period by minimizing phase_dispersion_stat
+    over a small grid of trial periods around P0, and return the best one.
+
+    Why this matters (found empirically while adding this diagnostic):
+    theta is a much less forgiving function of period precision than the
+    joint comb fit's own P is. The comb fit only ever looks at a handful of
+    narrow windows near each expected peak, so a fractional-percent error
+    in P barely nudges its redchi. Folding the ENTIRE light curve on P,
+    however, accumulates that same fractional error over every cycle in
+    the baseline -- for a baseline spanning N_cycles = baseline/P rotations,
+    a period error of order 1/N_cycles is already enough to smear a phase
+    fold into near-total incoherence (theta -> 1) regardless of whether P0
+    was close to correct. Concretely, a light curve with ~20 cycles in its
+    baseline needs P known to within roughly 1/20 = 5% just to avoid this,
+    and considerably better than that to get a theta clean enough to be
+    useful as a discriminating statistic.
+
+    Practically: don't hand fit.P from a CombFitResult straight to
+    phase_dispersion_stat and expect a reliable answer if the light curve
+    spans many cycles -- refine it first, exactly as this function does.
+    assess_rotation_candidate below does this automatically.
+
+    Parameters
+    ----------
+    time, flux : the light curve.
+    P0 : starting-point period to refine (e.g. a CombFitResult.P or an
+        InitialGuess.P0).
+    n_bins : phase bins for phase_dispersion_stat.
+    search_frac : half-width of the search grid, as a fraction of P0 (e.g.
+        0.02 searches +/- 2% around P0).
+    n_trial : number of trial periods in the search grid.
+
+    Returns
+    -------
+    dict with 'P_refined' (the trial period achieving the lowest theta) and
+    'theta_min' (its theta value).
+    """
+    trial_periods = np.linspace(P0 * (1 - search_frac), P0 * (1 + search_frac), n_trial)
+    thetas = np.array([
+        phase_dispersion_stat(time, flux, P, n_bins=n_bins) for P in trial_periods
+    ])
+    if not np.isfinite(thetas).any():
+        return dict(P_refined=float(P0), theta_min=float("nan"))
+    i_best = int(np.nanargmin(thetas))
+    return dict(P_refined=float(trial_periods[i_best]), theta_min=float(thetas[i_best]))
+
+
+def acf_peak_prominence_diagnostics(
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    peak_lag: float,
+    search_frac: float = 0.5,
+    P_for_search_window: Optional[float] = None,
+) -> dict:
+    """Composite-spectrum-style peak height/prominence diagnostics for a
+    single ACF peak, following the G_ACF/H_ACF statistics used in the
+    Santos/ROOSTER rotation pipeline (see Ceillier et al. 2017): the
+    height of the peak itself, and its prominence relative to the two
+    local minima flanking it on either side.
+
+    This deliberately mirrors, but is independent of, the joint comb fit:
+    _fit_single_candidate's fitted `height` for a window comes from a
+    parabola fit local to a narrow window, while G here is read directly
+    off the raw ACF at its actual local maximum near `peak_lag` (which may
+    drift slightly from the comb's algebraic prediction). Computing both
+    gives you two largely independent height estimates for the same
+    feature -- if the joint-fit height and the raw ACF's G disagree a lot,
+    that's a sign the joint fit's tied structure is dragging the fitted
+    parabola away from the ACF's actual local peak, worth a look via
+    plot_comb_fit.
+
+    Parameters
+    ----------
+    acf_lags, acf : the full ACF.
+    peak_lag : the lag near which to look for the actual local ACF
+        maximum -- typically fit.t0 (for the fundamental) or
+        fit.t0 + n*fit.P for harmonic n, taken from a CombFitResult.
+    search_frac : how far (as a fraction of P_for_search_window) to look
+        on either side of `peak_lag` for the true local maximum and its
+        flanking local minima. Default 0.5 (i.e. +/- half a period).
+    P_for_search_window : the period defining the search window width. If
+        None, defaults to 10% of the ACF's full lag range (a reasonable
+        width when you don't have a specific P in hand).
+
+    Returns
+    -------
+    dict with:
+        peak_lag_actual : lag of the true local ACF maximum nearest
+            `peak_lag` (may differ slightly from the input).
+        G : height of that local maximum (the ACF value there).
+        left_min, right_min : ACF values at the local minima immediately
+            to the left and right of the peak, within the search window.
+        H : mean of (G - left_min) and (G - right_min) -- the peak's
+            prominence relative to its immediate surroundings. A tall but
+            *unprominent* peak (e.g. one just riding down the ACF's broad
+            envelope near lag 0) will have a high G but a low H; H is
+            usually the more trustworthy "is this a real, distinct bump"
+            indicator of the two.
+    """
+    if P_for_search_window is None:
+        P_for_search_window = 0.1 * (acf_lags[-1] - acf_lags[0])
+    half_width = search_frac * P_for_search_window
+
+    lo = peak_lag - half_width
+    hi = peak_lag + half_width
+    mask = (acf_lags >= lo) & (acf_lags <= hi)
+    if mask.sum() < 3:
+        return dict(peak_lag_actual=np.nan, G=np.nan, left_min=np.nan,
+                     right_min=np.nan, H=np.nan)
+
+    sub_lags = acf_lags[mask]
+    sub_acf = acf[mask]
+    i_peak = int(np.argmax(sub_acf))
+    peak_lag_actual = float(sub_lags[i_peak])
+    G = float(sub_acf[i_peak])
+
+    left_vals = sub_acf[:i_peak + 1]
+    right_vals = sub_acf[i_peak:]
+    left_min = float(np.min(left_vals)) if len(left_vals) > 0 else np.nan
+    right_min = float(np.min(right_vals)) if len(right_vals) > 0 else np.nan
+
+    prominences = [G - v for v in (left_min, right_min) if np.isfinite(v)]
+    H = float(np.mean(prominences)) if prominences else np.nan
+
+    return dict(peak_lag_actual=peak_lag_actual, G=G, left_min=left_min,
+                right_min=right_min, H=H)
+
+
+def composite_spectrum_diagnostics(
+    fit: CombFitResult,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+) -> dict:
+    """Convenience wrapper: apply acf_peak_prominence_diagnostics to the
+    fundamental (n=0 tooth, i.e. fit.t0) of a CombFitResult, giving a
+    single G_ACF/H_ACF-style height/prominence summary for the winning (or
+    any candidate) fit -- ready to drop straight into a feature vector
+    alongside fit.redchi, fit.n_peaks_used, and phase_dispersion_stat for
+    an eventual ML selection step (see ROOSTER, Breton et al. 2021, for
+    the precedent this is modeled on).
+
+    Returns
+    -------
+    dict, the output of acf_peak_prominence_diagnostics evaluated at
+    fit.t0, with P_for_search_window=fit.P.
+    """
+    return acf_peak_prominence_diagnostics(
+        acf_lags, acf, peak_lag=fit.t0, P_for_search_window=fit.P,
+    )
+
+
+# --------------------------------------------------------------------------
+# Goodness-of-fit / acceptance helper
+# --------------------------------------------------------------------------
+
 def assess_rotation_candidate(
     fit: CombFitResult,
     acf: np.ndarray,
     min_peaks: int = 3,
     max_redchi: float = 5.0,
     min_height_over_local_std: float = 3.0,
+    time: Optional[np.ndarray] = None,
+    flux: Optional[np.ndarray] = None,
+    acf_lags: Optional[np.ndarray] = None,
+    n_pdm_bins: int = 10,
 ) -> dict:
     """Bundle a handful of acceptance diagnostics for a CombFitResult into a
     single dict. Does not make a hard accept/reject call (thresholds are
     target- and noise-regime-dependent) -- returns the ingredients so you
     can set your own cuts, or use fit_rotation_period's built-in gating.
+
+    Two additional, OPTIONAL diagnostics are computed if you supply the
+    extra data they need, on top of the original height/curvature-based
+    ones (which only ever needed `fit` and `acf`, and still only need
+    those):
+
+    - `phase_dispersion_theta` (needs `time` and `flux`): the Stellingwerf
+      (1978) PDM statistic, LOCALLY REFINED around fit.P -- see
+      refine_period_by_pdm's docstring for why a single evaluation at
+      fit.P is not good enough (the joint comb fit's own period precision
+      is generally not tight enough for a many-cycle phase fold to stay
+      coherent, even when fit.P is essentially correct). This checks phase
+      coherence directly in the light curve, independent of the
+      ACF/parabola model entirely, so it's a genuinely different failure
+      mode than anything the height/redchi-based checks below can catch
+      (e.g. it will often flag a harmonic alias that nonetheless produces
+      a deceptively clean-looking comb fit). `phase_dispersion_P_refined`
+      (the locally-refined period PDM actually settled on) is also
+      included, so you can see how far it moved from fit.P.
+
+    - `G_ACF`, `H_ACF` (needs `acf_lags`; reuses `acf`): the composite-
+      spectrum-style peak height and flanking-minima prominence of the
+      fundamental (fit.t0), from acf_peak_prominence_diagnostics /
+      composite_spectrum_diagnostics -- see those docstrings. H_ACF in
+      particular is a cheap, model-free prominence check that complements
+      `height_snr` below (which uses the *fitted* parabola height and the
+      ACF's global standard deviation, not the local flanking minima).
+
+    Both are omitted (left out of the returned dict) if their required
+    inputs aren't supplied, so this function's default, minimal call
+    signature (just `fit` and `acf`) is unchanged from before -- e.g.
+    fit_rotation_period's internal gating calls remain exactly as fast and
+    exactly as they were before these two diagnostics existed.
     """
     heights = np.array([p["height"] for p in fit.per_peak.values()])
     curvatures = np.array([p["curvature"] for p in fit.per_peak.values()])
@@ -984,7 +1583,7 @@ def assess_rotation_candidate(
 
     frac_positive = float(np.mean(heights > 0)) if len(heights) > 0 else 0.0
 
-    return dict(
+    diagnostics = dict(
         n_peaks_used=fit.n_peaks_used,
         n_peaks_dropped=fit.n_peaks_dropped,
         redchi=fit.redchi,
@@ -997,6 +1596,18 @@ def assess_rotation_candidate(
         passes_redchi=fit.redchi <= max_redchi if np.isfinite(fit.redchi) else False,
         passes_height_snr=bool(np.all(height_snr >= min_height_over_local_std)),
     )
+
+    if time is not None and flux is not None:
+        pdm = refine_period_by_pdm(time, flux, fit.P, n_bins=n_pdm_bins)
+        diagnostics["phase_dispersion_theta"] = pdm["theta_min"]
+        diagnostics["phase_dispersion_P_refined"] = pdm["P_refined"]
+
+    if acf_lags is not None:
+        composite = composite_spectrum_diagnostics(fit, acf_lags, acf)
+        diagnostics["G_ACF"] = composite["G"]
+        diagnostics["H_ACF"] = composite["H"]
+
+    return diagnostics
 
 
 # --------------------------------------------------------------------------

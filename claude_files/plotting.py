@@ -306,6 +306,140 @@ def plot_acf_fft_spectrum(
     return fig, ax
 
 
+def plot_wavelet_spectrum(
+    guesses: Union[InitialGuess, list],
+    ax: Optional[plt.Axes] = None,
+    title: str = "Global Wavelet Power Spectrum",
+    log_x: bool = True,
+):
+    """Plot the Global Wavelet Power Spectrum (GWPS) -- the time-averaged
+    projection of the light curve's wavelet power surface -- marking every
+    candidate returned by one guess_wavelet() call (rank 1 highlighted),
+    each as a Gaussian fitted in log-period space (see guess_wavelet's
+    docstring for the iterative peak-extraction procedure).
+
+    A second, small panel below shows the full 2D wavelet power surface
+    (period vs. time) for the rank-1 candidate's neighborhood, which is
+    the one piece of information this method has access to that none of
+    the other guess_* functions do: whether the periodicity is present
+    throughout the baseline or only part of it.
+    """
+    guesses = _as_list(guesses)
+    g0 = guesses[0]
+    if g0.method != "wavelet":
+        raise ValueError(
+            f"plot_wavelet_spectrum expects guesses from guess_wavelet, "
+            f"got method='{g0.method}'."
+        )
+
+    if ax is None:
+        fig, axes = plt.subplots(2, 1, figsize=(9, 6), height_ratios=[2, 1.2])
+        ax, ax2 = axes
+    else:
+        fig = ax.figure
+        ax2 = None
+
+    periods = g0.info["periods"]
+    gwps = g0.info["gwps"]
+    ax.plot(periods, gwps, lw=1, color="0.35")
+
+    for g in guesses:
+        is_best = g.rank == 1
+        peak = [p for p in g0.info["fitted_gaussians"]
+                if np.isclose(np.exp(p["center_log_period"]), g.P0)]
+        height = peak[0]["height"] if peak else g.strength * float(np.max(gwps))
+        ax.scatter([g.P0], [height],
+                   color="firebrick" if is_best else "steelblue",
+                   s=60 if is_best else 28, zorder=3,
+                   label=(f"rank 1: P0={g.P0:.3f}" if is_best
+                          else ("other candidates" if g.rank == 2 else None)))
+
+    if log_x:
+        ax.set_xscale("log")
+    ax.set_xlabel("period")
+    ax.set_ylabel("wavelet power (time-averaged)")
+    ax.set_title(title)
+    ax.legend(loc="upper right", fontsize=8, framealpha=0.9)
+
+    if ax2 is not None and "wavelet_power" in g0.info:
+        wavelet_power = g0.info["wavelet_power"]
+        time_idx = np.arange(wavelet_power.shape[1])
+        # Robust color scaling: a handful of very-short-period rows can have
+        # much larger power than the astrophysically interesting range,
+        # which would otherwise wash out everything else under a linear
+        # color scale spanning the full min/max.
+        vmax = np.percentile(wavelet_power, 99.5)
+        mesh = ax2.pcolormesh(
+            time_idx, periods, wavelet_power, shading="auto",
+            cmap="viridis", vmin=0, vmax=vmax,
+        )
+        if log_x:
+            ax2.set_yscale("log")
+        ax2.axhline(guesses[0].P0, color="white", lw=1, ls="--", alpha=0.8)
+        ax2.set_xlabel("time index")
+        ax2.set_ylabel("period")
+        ax2.set_title("wavelet power surface (period vs. time)", fontsize=9)
+        fig.colorbar(mesh, ax=ax2, label="power", pad=0.01)
+
+    fig.tight_layout()
+    return fig, ax
+
+
+# --------------------------------------------------------------------------
+# Phase-folded light curve (phase_dispersion_stat's own view of the data)
+# --------------------------------------------------------------------------
+
+def plot_phase_fold(
+    time: np.ndarray,
+    flux: np.ndarray,
+    P: float,
+    n_bins: int = 10,
+    ax: Optional[plt.Axes] = None,
+    title: Optional[str] = None,
+):
+    """Plot the light curve folded on a candidate period P, with the
+    phase-bin means +/- standard deviations overplotted -- the direct,
+    model-free visual counterpart of phase_dispersion_stat's theta number.
+    A period with low theta should look like a coherent phased shape here;
+    a period with high theta (e.g. a bad harmonic) will look like scatter.
+    """
+    time = np.asarray(time, dtype=float)
+    flux = np.asarray(flux, dtype=float)
+    finite = np.isfinite(time) & np.isfinite(flux)
+    time, flux = time[finite], flux[finite]
+
+    phase = np.mod(time, P) / P
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(7, 4))
+    else:
+        fig = ax.figure
+
+    ax.scatter(phase, flux, s=4, color="0.6", alpha=0.5, zorder=1, label="folded data")
+
+    bin_edges = np.linspace(0, 1, n_bins + 1)
+    bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+    bin_idx = np.clip(np.digitize(phase, bin_edges) - 1, 0, n_bins - 1)
+    means = np.array([np.mean(flux[bin_idx == j]) if np.any(bin_idx == j) else np.nan
+                       for j in range(n_bins)])
+    stds = np.array([np.std(flux[bin_idx == j]) if np.any(bin_idx == j) else np.nan
+                      for j in range(n_bins)])
+    ax.errorbar(bin_centers, means, yerr=stds, fmt="o-", color="firebrick",
+                lw=1.5, capsize=3, zorder=3, label="phase-bin mean +/- std")
+
+    from comb_fit import phase_dispersion_stat
+    theta = phase_dispersion_stat(time, flux, P, n_bins=n_bins)
+
+    if title is None:
+        title = f"Phase-folded light curve, P={P:.4f}  (PDM theta={theta:.3f})"
+    ax.set_xlabel("phase")
+    ax.set_ylabel("flux")
+    ax.set_title(title, fontsize=10)
+    ax.legend(loc="upper right", fontsize=8, framealpha=0.9)
+    fig.tight_layout()
+    return fig, ax
+
+
 def plot_candidate_guesses(guesses: Union[InitialGuess, list], ax: Optional[plt.Axes] = None):
     """Dispatch to the right method-specific plot based on the guesses'
     method, so you can call one function regardless of which guess_* they
@@ -316,6 +450,7 @@ def plot_candidate_guesses(guesses: Union[InitialGuess, list], ax: Optional[plt.
         "pairwise_histogram": plot_pairwise_spacing_histogram,
         "lombscargle": plot_lombscargle_periodogram,
         "acf_fft": plot_acf_fft_spectrum,
+        "wavelet": plot_wavelet_spectrum,
     }
     method = guesses[0].method
     if method not in dispatch:
@@ -490,6 +625,8 @@ def plot_full_diagnostic(
         panel_fns.append(("lombscargle", plot_lombscargle_periodogram))
     if "acf_fft" in by_method:
         panel_fns.append(("acf_fft", plot_acf_fft_spectrum))
+    if "wavelet" in by_method:
+        panel_fns.append(("wavelet", plot_wavelet_spectrum))
 
     n_panels = 1 + len(panel_fns) + (2 if result is not None else 0)
     fig, axes = plt.subplots(n_panels, 1, figsize=figsize)
