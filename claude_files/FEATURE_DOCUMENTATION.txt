@@ -1,0 +1,872 @@
+================================================================================
+FEATURE DOCUMENTATION
+Rotation-period candidate features for GBT/ranking-model training
+================================================================================
+
+This document describes every feature produced by extract_candidate_features()
+in ml_features.py, plus the star-level (light-curve) features that get copied
+into every candidate row. For each feature: its name (DataFrame column), a
+precise definition, a description of what it captures and why it was included,
+any literature that informed it, and which pipeline stage computes it.
+
+PIPELINE STAGES REFERENCED BELOW
+---------------------------------
+  Stage 1 (candidate generation): guess_pairwise_histogram / guess_lombscargle
+      / guess_acf_fft in comb_fit.py. Cheap, method-native candidate proposal;
+      never touches the ACF's actual shape.
+  Stage 2 (joint comb fit): _fit_single_candidate in comb_fit.py. The
+      expensive, authoritative joint least-squares parabola-comb fit for one
+      candidate (P, t0).
+  Stage 3 (fit diagnostics): assess_rotation_candidate in comb_fit.py. Cheap
+      derived summaries of one CombFitResult.
+  Stage 4 (multi-candidate arbitration): fit_rotation_period in comb_fit.py.
+      Dedup, gating, and ranking across all candidates for one star.
+  Stage 5 (feature extraction): extract_candidate_features and its helpers in
+      ml_features.py. Everything computed AFTER fitting is done, including
+      cross-candidate/cross-method comparisons and light-curve-level metrics
+      not needed by the fitting pipeline itself.
+
+A note on "true" vs. "candidate" period, since it recurs throughout: `period`
+is the PRE-FIT period proposed by whichever guess_* method generated this
+candidate (Stage 1). `fitted_P` is the POST-FIT, joint-least-squares-refined
+period (Stage 2) -- the better estimate, and what `label` and most
+period-dependent features (S_ph, n_cycles_spanned, ACF window searches, etc.)
+are computed against.
+
+
+================================================================================
+SECTION A: STAR-LEVEL (LIGHT-CURVE) FEATURES
+================================================================================
+One value per light curve; the same value is copied into every candidate row
+for that star. Computed in ml_features._lightcurve_level_features (Stage 5),
+directly from the raw (time, flux) arrays -- independent of any candidate
+period.
+
+--------------------------------------------------------------------------
+r_var
+--------------------------------------------------------------------------
+Definition   : Difference between the 95th and 5th percentile of the flux
+               after smoothing on a ~4 hour timescale (boxcar rolling mean,
+               window converted to points via the light curve's own median
+               cadence).
+Description  : A basic peak-to-peak photometric variability amplitude.
+               Reinhold & Gizon used this as a pre-filter -- stars below a
+               variability threshold aren't worth attempting a period search
+               on at all. Here it's kept as a continuous feature rather than
+               a hard cut, letting the model learn how variability amplitude
+               relates to period-recovery reliability rather than imposing a
+               fixed threshold upfront.
+Reference    : Reinhold & Gizon (2015), arXiv:1410.8048. Their original
+               treatment is per-Kepler-quarter, then combined; this
+               implementation supports the same per-segment-then-average
+               treatment (see `segments` parameter of _r_var) but currently
+               receives a single already-combined timeseries (multi-sector
+               segmentation is planned but not yet wired up on the input
+               side -- see "Known simplifications" below).
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+flicker_std
+--------------------------------------------------------------------------
+Definition   : Standard deviation of the flux after smoothing on an ~8 hour
+               timescale (same boxcar smoothing mechanism as r_var, different
+               window and different summary statistic -- std rather than a
+               percentile range).
+Description  : A short-timescale variability amplitude, conceptually related
+               to stellar granulation/"flicker" diagnostics used in
+               asteroseismology. THIS IS A SIMPLIFIED PROXY: the original
+               "Flicker" (Bastien et al. 2013) is computed from 8-hour-long
+               BINS with a longer-term trend subtracted first, then combined
+               across bins with a specific robust statistic -- a genuine
+               granulation-timescale detrending procedure. What's implemented
+               here is deliberately simpler (std of a smoothed version of the
+               flux, no separate trend subtraction), chosen because an exact
+               reproduction wasn't needed for this application -- only a
+               cheap, well-defined short-timescale variability scalar to feed
+               the ranking model.
+Reference    : Concept inspired by Bastien et al. (2013), "Flicker" --
+               not a reproduction of their exact algorithm.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+flux_std
+--------------------------------------------------------------------------
+Definition   : Standard deviation of the raw (unsmoothed) flux, over all
+               finite points.
+Description  : The simplest possible total-scatter metric. Kept alongside
+               r_var (which is percentile-based and more robust to
+               outliers/flares) specifically so the model can see the GAP
+               between the two: a big difference between flux_std and r_var
+               is itself a signal of flare contamination or other outlier-
+               driven scatter that a percentile-based metric alone would
+               hide. Chosen over a full median-absolute-deviation computation
+               for cost reasons at the ~1M-light-curve scale this is intended
+               to run at.
+Reference    : None specific; standard descriptive statistic.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+flux_skewness, flux_kurtosis
+--------------------------------------------------------------------------
+Definition   : Third and fourth standardized moments of the finite flux
+               values (scipy.stats.skew / kurtosis; kurtosis is
+               excess-kurtosis, i.e. 0 for a Gaussian).
+Description  : Spot-modulated light curves are typically non-Gaussian.
+               Included specifically because asymmetric or heavy-tailed flux
+               distributions can flag light curves where the standard
+               ACF/periodogram assumptions are shakier -- e.g. eclipsing
+               binaries (sharp, deep, asymmetric dips producing strong
+               skew/kurtosis very different from smooth sinusoidal spot
+               modulation) or flare-dominated stars.
+Reference    : None specific; standard descriptive statistics, motivated by
+               McQuillan et al. (2013)'s note that spot-modulated light
+               curves are typically non-Gaussian.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+duty_cycle
+--------------------------------------------------------------------------
+Definition   : (number of finite flux points) / (number of points the
+               nominal, gap-free cadence grid would have over the same time
+               span).
+Description  : Fraction of the nominal observing window that actually has
+               data. Directly relevant for real TESS-style light curves with
+               large gaps (momentum dumps, downlink gaps, multi-sector
+               dropouts) -- a low duty cycle means every downstream feature
+               (ACF, periodogram, fit quality) is working with less
+               information than its raw point count might suggest.
+Reference    : None specific; standard observational statistic.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+von_neumann_eta
+--------------------------------------------------------------------------
+Definition   : Mean squared successive difference divided by the variance,
+               i.e. mean((flux[i+1]-flux[i])**2) / var(flux), computed only
+               over time-adjacent valid pairs (pairs whose time separation
+               exceeds 1.5x the median cadence -- i.e. pairs that span a data
+               gap -- are excluded, so gaps don't masquerade as large jumps).
+Description  : A classic smoothness/randomness diagnostic (von Neumann's
+               statistic). Near 0 for smooth, genuinely periodic signals
+               (successive points are strongly correlated); approaches 2 for
+               pure white noise. Cheap, model-free, and largely independent
+               of every other feature on this list -- a simple "does this
+               light curve look periodic/smooth at all" sanity signal.
+Reference    : von Neumann (1941); standard time-series diagnostic, unrelated
+               to any of the astronomy-specific literature cited elsewhere in
+               this document.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+fliper_band_1, fliper_band_2, fliper_band_3
+--------------------------------------------------------------------------
+Definition   : Fraction of total power spectral density lying above 1/2,
+               1/8, and 1/32 of this light curve's own Nyquist frequency,
+               respectively. Computed via a masked FFT of the (mean-
+               subtracted, Hann-windowed, gap-zeroed) flux -- the same
+               "zero the gaps" trick used elsewhere in this pipeline for the
+               gap-aware ACF (see acf_utils.compute_acf) -- rather than a
+               general-purpose Lomb-Scargle PSD.
+Description  : A "FliPer-inspired" broadband variability metric, deliberately
+               NOT a reproduction of the published FliPer. Real FliPer
+               (Bugnet et al. 2018) integrates a noise-subtracted PSD above
+               several FIXED physical frequency cutoffs (0.7, 7, 20, 50 uHz),
+               with the noise floor subtracted using an analytic shot-noise
+               model calibrated specifically to Kepler's photon-counting
+               statistics as a function of magnitude. Two simplifications
+               were made here, both discussed and explicitly approved before
+               implementation:
+                 1. Frequency cutoffs are defined RELATIVE to this light
+                    curve's own Nyquist frequency rather than fixed physical
+                    values, so they scale automatically with cadence
+                    (relevant since TESS and SMARTS/ground-based cadences
+                    differ) instead of assuming Kepler-like sampling.
+                 2. Each band is reported as a FRACTION OF TOTAL POWER, not
+                    an absolute noise-subtracted PSD level -- this sidesteps
+                    needing an instrument-specific analytic noise model
+                    (no TESS-calibrated equivalent of Kepler's shot-noise
+                    formula was available), at the cost of losing the
+                    absolute-scale information the true metric carries.
+               Net effect: this captures "how is this light curve's
+               variability power distributed across timescales" (useful,
+               cheap, computed from infrastructure already built for the
+               ACF) without matching Bugnet et al.'s exact numbers. Verified
+               to behave sensibly on real data: pure white noise puts ~97%
+               of power in the highest band; the smooth, strongly periodic
+               TESS test light curve puts only ~19% there.
+Reference    : Concept and motivation from Bugnet et al. (2018),
+               10.3847/1538-4365/ac033f, used as an input feature to
+               ROOSTER's classifiers -- NOT a reproduction of their formula.
+Stage        : 5 (feature extraction).
+
+
+================================================================================
+SECTION B: CANDIDATE-GENERATION PROVENANCE
+================================================================================
+Describes which method proposed this candidate and how confident that
+method's own (cheap, ACF-unaware) evidence was. Computed at Stage 1, carried
+through unchanged into the feature table at Stage 5.
+
+--------------------------------------------------------------------------
+star_id
+--------------------------------------------------------------------------
+Definition   : Whatever identifier was passed to extract_candidate_features
+               (e.g. a SMARTS catalog ID or TESS TIC ID); the same value is
+               repeated on every candidate row for that star.
+Description  : Not a physical feature -- required for grouping rows by
+               light curve for grouped train/test splitting and for the
+               `group` arrays needed by ranking losses like XGBoost's
+               rank:pairwise/rank:ndcg. Should generally be EXCLUDED from
+               the actual model input feature set (it's an identifier, not
+               a predictive signal) but kept in the DataFrame for grouping
+               and bookkeeping.
+Stage        : 5 (feature extraction; a passthrough of the caller-supplied
+               `star_id` argument).
+
+--------------------------------------------------------------------------
+method
+--------------------------------------------------------------------------
+Definition   : Which guess_* function proposed this candidate:
+               "pairwise_histogram", "lombscargle", or "acf_fft".
+Description  : Categorical provenance. Useful for the model to learn
+               method-specific calibration/bias if any exists.
+Stage        : 1 (candidate generation).
+
+--------------------------------------------------------------------------
+rank
+--------------------------------------------------------------------------
+Definition   : This candidate's rank (1 = strongest) among its ORIGINATING
+               method's own top n_guesses candidates, by that method's
+               native evidence (histogram support count / LS power / FFT
+               power).
+Description  : How confident the originating method was in this specific
+               candidate, on its own terms, before any cross-checking.
+Stage        : 1 (candidate generation).
+
+--------------------------------------------------------------------------
+strength
+--------------------------------------------------------------------------
+Definition   : Method-specific normalized score: histogram support fraction
+               (count / max possible support) for pairwise_histogram; LS
+               power (astropy 'standard' normalization, ~[0,1]) for
+               lombscargle; FFT power fraction (power / band max) for
+               acf_fft.
+Description  : A continuous companion to `rank` -- captures HOW MUCH
+               stronger the top candidate was than the rest, which `rank`
+               alone (an ordinal) cannot.
+Stage        : 1 (candidate generation).
+
+--------------------------------------------------------------------------
+coverage_at_generation
+--------------------------------------------------------------------------
+Definition   : For pairwise_histogram candidates only (NaN otherwise):
+               fraction of the raw found ACF peaks that land near a comb
+               tooth at this candidate's period, anchored at the phase of
+               the smallest found peak (a cheap anchor, not the real fitted
+               phase).
+Description  : LEGACY field, kept for backward compatibility / comparison.
+               See `coverage_at_fit` (Section D) for the improved version of
+               this same idea, evaluated at the candidate's actual fitted
+               (P, t0) rather than a crude anchor, and computed for every
+               candidate regardless of originating method.
+Stage        : 1 (candidate generation).
+
+
+================================================================================
+SECTION C: JOINT-FIT RESULTS AND DIAGNOSTICS
+================================================================================
+The core output of the expensive, authoritative joint comb-of-parabolae fit
+(Stage 2) and its derived diagnostics (Stage 3).
+
+--------------------------------------------------------------------------
+period
+--------------------------------------------------------------------------
+Definition   : The PRE-FIT candidate period (P0) that seeded this fit --
+               i.e. whatever the originating guess_* method proposed, before
+               refinement.
+Stage        : 1 (candidate generation); carried through unchanged.
+
+--------------------------------------------------------------------------
+log_period
+--------------------------------------------------------------------------
+Definition   : log10(period).
+Description  : Rotation periods span hours to tens of days (2+ orders of
+               magnitude); a log transform gives the model a more evenly-
+               scaled feature than the raw period for splitting.
+Stage        : 5 (feature extraction; trivial derived transform).
+
+--------------------------------------------------------------------------
+period_frac_of_baseline
+--------------------------------------------------------------------------
+Definition   : period / (acf_lags[-1] - acf_lags[0]).
+Description  : What fraction of the available ACF lag range this period
+               represents. A period using 90% of the baseline is
+               fundamentally less trustworthy (very few cycles observed)
+               than one using 10%, independent of how good its redchi looks.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+n_cycles_spanned
+--------------------------------------------------------------------------
+Definition   : baseline_days / fitted_P (uses the FITTED period, unlike
+               period_frac_of_baseline which uses the pre-fit period).
+Description  : How many rotations were actually observed, phrased directly
+               as a statistical-power proxy rather than a fraction. Related
+               to but distinct from period_frac_of_baseline: this is
+               1/period_frac_of_baseline computed from the refined period.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+t0
+--------------------------------------------------------------------------
+Definition   : Phase (lag of the n=0 comb tooth) used to seed the fit --
+               either supplied with the InitialGuess, or found via a coarse,
+               non-fitting grid search against the ACF (_grid_search_t0)
+               that maximizes a tooth-weighted score (see comb_score;
+               low-lag teeth weighted more heavily than high-lag ones, per
+               the same spot-evolution reasoning as height_snr_slope below).
+Stage        : 4 (multi-candidate arbitration, phase seeding step).
+
+--------------------------------------------------------------------------
+fitted_P, P_err_frac
+--------------------------------------------------------------------------
+Definition   : fitted_P is the refined period from the joint least-squares
+               fit (CombFitResult.P). P_err_frac is the fit's reported
+               parameter uncertainty divided by fitted_P (a relative error).
+Description  : fitted_P is the single best point estimate this candidate
+               produced, and what `label` is matched against. P_err_frac
+               indicates how well-constrained the fit was -- NOTE: under the
+               robust loss function used by the fit (soft_l1, see
+               comb_fit.py's _fit_single_candidate docstring), this
+               covariance-based error estimate is only approximate and can
+               occasionally be nonsensically large; treat with some caution
+               relative to the diagnostic quality metrics below.
+Stage        : 2 (joint comb fit).
+
+--------------------------------------------------------------------------
+t0_err_frac
+--------------------------------------------------------------------------
+Definition   : Fit-reported uncertainty on t0, divided by fitted_P (put in
+               the same relative units as P_err_frac for comparability).
+Description  : A well-constrained phase is corroborating evidence for a
+               genuine periodic signal (a poorly-constrained phase suggests
+               the fit is loosely anchored, even if P itself looks
+               reasonable).
+Stage        : 2 (joint comb fit).
+
+--------------------------------------------------------------------------
+redchi, log_redchi
+--------------------------------------------------------------------------
+Definition   : Reduced chi-squared of the joint fit (CombFitResult.redchi),
+               and its log10.
+Description  : The primary raw goodness-of-fit statistic -- how well the
+               tied comb-of-parabolae model matches the ACF data across all
+               retained windows. Spans many orders of magnitude across
+               candidates/stars, hence the log version.
+CAUTION      : Raw redchi alone is NOT sufficient to identify the correct
+               period -- a comb fit near lag 0 can trivially achieve a tiny
+               redchi by fitting parabolae to the ACF's smooth decay
+               envelope rather than genuine periodic peaks (this exact
+               failure mode was observed and is why frac_positive_heights
+               and the height_snr features exist as complementary checks;
+               see fit_rotation_period's gating logic in comb_fit.py).
+Stage        : 2 (joint comb fit).
+
+--------------------------------------------------------------------------
+n_peaks_used, n_peaks_dropped, n_peaks_used_frac
+--------------------------------------------------------------------------
+Definition   : n_peaks_used = number of comb-tooth windows retained after
+               the fit's iterative RANSAC-style rejection of badly-fitting
+               windows. n_peaks_dropped = number rejected. n_peaks_used_frac
+               = n_peaks_used / (n_peaks_used + n_peaks_dropped), or divided
+               by the requested n_peaks if n_peaks_requested was supplied to
+               extract_candidate_features.
+Description  : How many of the expected periodic peaks actually survived
+               fitting, and what fraction that represents. Low
+               n_peaks_used_frac suggests the "comb" structure wasn't a good
+               match to begin with.
+Stage        : 2 (joint comb fit).
+
+--------------------------------------------------------------------------
+frac_positive_heights, frac_non_increasing_height
+--------------------------------------------------------------------------
+Definition   : frac_positive_heights = fraction of retained peaks whose
+               fitted height is > 0 (a genuine upward bump, not the comb
+               riding through a trough or the smooth decay envelope).
+               frac_non_increasing_height = fraction of consecutive peak
+               pairs (by harmonic index n) where height does not increase.
+Description  : frac_positive_heights is the single most important sanity
+               gate in this whole pipeline -- see the CAUTION under redchi
+               above. frac_non_increasing_height checks for the physically
+               expected gentle decay of peak height with lag (spot
+               evolution), though this is a softer signal than
+               frac_positive_heights.
+Stage        : 3 (fit diagnostics).
+
+--------------------------------------------------------------------------
+mean_height_snr, min_height_snr, max_height_snr, std_height_snr
+--------------------------------------------------------------------------
+Definition   : Summary statistics (mean/min/max/std) of each retained peak's
+               fitted height divided by the ACF's overall standard
+               deviation (per-peak array: CombFitResult.per_peak[n]['height']
+               / std(acf)).
+Description  : How tall the peaks are relative to the ACF's general noise
+               level, i.e. a per-peak significance measure. min_height_snr
+               in particular flags candidates where even the WEAKEST
+               retained peak is marginal.
+Stage        : 3 (fit diagnostics), aggregated to scalars at Stage 5.
+
+--------------------------------------------------------------------------
+height_snr_slope
+--------------------------------------------------------------------------
+Definition   : Slope of a linear fit of height_snr vs. harmonic index n (0,
+               1, 2, ...).
+Description  : A genuine rotation signal typically decays gently with n
+               (spot evolution -- see comb_score's default_comb_weight
+               docstring in comb_fit.py for the same physical reasoning),
+               so this slope is usually mildly negative for real candidates
+               and can be erratic (near zero, positive, or steeply negative)
+               for spurious ones.
+Stage        : 5 (feature extraction; linear fit over Stage-3 diagnostics).
+
+--------------------------------------------------------------------------
+mean_curvature, std_curvature
+--------------------------------------------------------------------------
+Definition   : Mean and standard deviation of the fitted parabola curvature
+               (A_n) across retained peaks.
+Description  : Curvature relates to peak width -- consistent curvature
+               across peaks is mildly supportive of a genuine, physically
+               consistent periodic structure; wildly inconsistent curvature
+               suggests the windows are fitting unrelated features.
+Stage        : 3 (fit diagnostics), aggregated to scalars at Stage 5.
+
+--------------------------------------------------------------------------
+passes_min_peaks, passes_redchi, passes_height_snr, passed_gates
+--------------------------------------------------------------------------
+Definition   : The first three are the individual hand-tuned reliability
+               gates computed in assess_rotation_candidate (Stage 3), each
+               a threshold on one of the metrics above. passed_gates is the
+               actual combined pass/fail decision fit_rotation_period uses
+               to pick its own single best answer (Stage 4) -- a slightly
+               different, more conservative gate combination than the three
+               individual passes_* flags (see fit_rotation_period's
+               docstring in comb_fit.py for the exact logic).
+Description  : Kept as features (not just used internally) so the ranking
+               model can learn to agree with, override, or refine these
+               hand-tuned rules rather than have them imposed as a hard
+               pre-filter.
+Stage        : 3 (individual gates) and 4 (passed_gates).
+
+--------------------------------------------------------------------------
+acf_std, baseline_days, n_acf_points
+--------------------------------------------------------------------------
+Definition   : Standard deviation of the full ACF array; the ACF's lag range
+               (acf_lags[-1] - acf_lags[0]); and the number of points in the
+               ACF array.
+Description  : Global ACF-level context, constant across all candidates for
+               one star but included per-row since redchi/height_snr etc.
+               only mean something relative to these scales (a redchi of
+               0.01 means something different for a noisy short-baseline
+               ACF than a clean long one).
+Stage        : 5 (feature extraction; O(1) summaries of the ACF array).
+
+
+================================================================================
+SECTION D: METHOD-SPECTRUM FEATURES
+================================================================================
+The key idea in this section: evaluate ALL THREE candidate-generation
+methods' raw evidence at THIS candidate's fitted period -- not just whichever
+method happened to propose it. Computed in
+ml_features._method_spectrum_features (Stage 5), by re-running peak-finding
+on each method's stored full spectrum/histogram array (recovering peaks
+beyond whichever top-n_guesses made it into the guess pool) and locating
+whichever local maximum sits nearest this candidate's fitted period.
+
+--------------------------------------------------------------------------
+ls_nearest_peak_rank
+--------------------------------------------------------------------------
+Definition   : Rank (1 = globally strongest) of the Lomb-Scargle periodogram
+               peak nearest this candidate's fitted period, among ALL local
+               maxima in the LS periodogram -- not just the top n_guesses
+               that became InitialGuess objects.
+Description  : Recovers information lost to the n_guesses=5 truncation: a
+               candidate might be the true period even if LS ranked it 7th
+               (outside the pool used for candidate generation), and this
+               field can still see that.
+Stage        : 5 (feature extraction, re-running scipy.find_peaks on the
+               stored periodogram array from Stage 1).
+
+--------------------------------------------------------------------------
+ls_nearest_peak_frac_power
+--------------------------------------------------------------------------
+Definition   : Power of that nearest LS peak, divided by the periodogram's
+               own maximum power (fraction of this star's best possible LS
+               power).
+Description  : Cross-star-normalized magnitude measure -- see the
+               rank-vs-fractional-power-vs-absolute-significance discussion
+               below (ls_nearest_peak_fap) for why all three are kept
+               together rather than picking just one.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+ls_nearest_peak_fap
+--------------------------------------------------------------------------
+Definition   : Lomb-Scargle false-alarm probability (astropy's
+               `LombScargle.false_alarm_probability`, Baluev method) of that
+               nearest peak's power.
+Description  : A statistically calibrated absolute-significance measure,
+               unlike raw power (not comparable across stars with different
+               noise/cadence/baseline). This is the "absolute significance
+               floor" member of a deliberate three-part trio (rank +
+               fractional power + FAP), chosen because each answers a
+               different question and none subsumes the others: rank is
+               ordinal and scale-free but blind to margin; fractional power
+               is magnitude-aware and cross-star-normalized but blind to
+               absolute significance (a star's tallest peak is trivially
+               "fraction 1.0" even if the whole periodogram is
+               noise-dominated); FAP catches exactly that "biggest fish in
+               an insignificant pond" case. In practice, with large point
+               counts (e.g. ~257k for the TESS test case), FAP alone tends
+               to call almost everything "significant" -- confirmed on real
+               test data -- so it's necessary but not sufficient, which is
+               the reasoning for keeping all three rather than any single
+               one.
+Reference    : Baluev (2008), the FAP method astropy implements by default
+               for this use case.
+Stage        : 5 (feature extraction; requires the stored LombScargle object
+               -- see guess_lombscargle's info['ls_object'] in comb_fit.py,
+               added specifically to support this feature).
+
+--------------------------------------------------------------------------
+ls_nearest_peak_rel_distance, ls_nearest_peak_width
+--------------------------------------------------------------------------
+Definition   : rel_distance = |fitted_P - nearest_LS_peak_period| /
+               nearest_LS_peak_period. width = half-power-crossing width of
+               that peak (distance between the two nearest points on either
+               side where power drops to half the peak's value).
+Description  : rel_distance measures how precisely the candidate lines up
+               with the periodogram's own preferred value. width
+               distinguishes a narrow, sharp peak (stronger evidence) from a
+               broad, mushy one at the same height.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+fft_nearest_peak_rank, fft_nearest_peak_frac_power,
+fft_nearest_peak_rel_distance, fft_nearest_peak_width
+--------------------------------------------------------------------------
+Definition   : Exact analogues of the four ls_nearest_peak_* fields above,
+               but evaluated against the ACF's own FFT power spectrum
+               (guess_acf_fft's stored arrays) instead of the light curve's
+               LS periodogram.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+fft_nearest_peak_snr
+--------------------------------------------------------------------------
+Definition   : Power of the nearest ACF-FFT peak, divided by the median
+               power across the whole searched FFT band (an empirical noise-
+               floor estimate).
+Description  : The ACF FFT has no FAP equivalent (FAP is specific to the
+               Lomb-Scargle statistical framework), so this is the "absolute
+               significance" stand-in for that method -- same conceptual
+               role as ls_nearest_peak_fap, cheaper to compute, less
+               rigorously calibrated.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+hist_nearest_bin_rank, hist_nearest_bin_frac_count,
+hist_nearest_bin_rel_distance
+--------------------------------------------------------------------------
+Definition   : Analogues of the LS/FFT nearest-peak fields, evaluated
+               against guess_pairwise_histogram's stored pairwise-spacing
+               histogram: rank of the nearest histogram local-maximum bin
+               (among ALL local maxima, not just top n_guesses), its count
+               as a fraction of the histogram's tallest bin, and the
+               relative distance from the candidate's fitted period to that
+               bin's center.
+Description  : Same "recover information lost to n_guesses truncation"
+               motivation as the LS/FFT versions. No width/significance
+               analogue is computed for the histogram (a half-height-
+               crossing "width" in count-space isn't a particularly
+               meaningful quantity for a spacing histogram the way peak
+               width is for a power spectrum).
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+coverage_at_fit
+--------------------------------------------------------------------------
+Definition   : Fraction of the RAW found ACF peaks (from
+               guess_pairwise_histogram's peak-finding step) that land near
+               a comb tooth at this candidate's ACTUAL FITTED (P, t0) --
+               using comb_fit._peak_coverage_fraction, but evaluated
+               generically for every candidate regardless of originating
+               method, at the true fitted phase rather than a crude anchor.
+Description  : The improved version of the legacy coverage_at_generation
+               field (Section B): "what fraction of the peaks this star's
+               ACF actually has are explained by this specific period,"
+               computed after the real fit has pinned down both P and t0
+               precisely.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+n_acf_peaks_found
+--------------------------------------------------------------------------
+Definition   : Total number of raw ACF peaks found by
+               guess_pairwise_histogram's peak-finding step (m in that
+               function's docstring). Same value for every candidate of a
+               given star (it's a property of the ACF's peak-finding run,
+               not of any individual candidate).
+Description  : Context for coverage_at_fit and the pairwise-histogram
+               support-count features: a candidate resting on m=6 found
+               peaks is on shakier statistical ground than one resting on
+               m=20, regardless of how good its coverage/count numbers look
+               in isolation.
+Stage        : 5 (feature extraction; sourced from Stage 1's peak-finding
+               output).
+
+--------------------------------------------------------------------------
+n_methods_recognize_as_peak
+--------------------------------------------------------------------------
+Definition   : Count (0-3) of methods for which this candidate's fitted
+               period sits within agreement_rel_tol of a genuine local
+               maximum in that method's OWN full spectrum/histogram --
+               regardless of whether that local maximum ever made it into
+               the method's own top-n_guesses candidate pool.
+Description  : Distinct from n_agreeing_methods (Section E): that field only
+               credits a method if its TOP-5 GUESS happened to land nearby.
+               This field catches cases where, e.g., LS ranked this period
+               7th (didn't make the cut for candidate generation) but it's
+               still visibly a real local maximum in the LS periodogram --
+               genuinely independent supporting evidence that
+               n_agreeing_methods, by construction, cannot see.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+combined_method_strength
+--------------------------------------------------------------------------
+Definition   : Mean of whichever fractional-power/fractional-count values
+               were available across the three methods (ls_nearest_peak_
+               frac_power, fft_nearest_peak_frac_power,
+               hist_nearest_bin_frac_count) for this candidate.
+Description  : A single scalar rollup of "how strongly do all three
+               methods' own evidence support this period," for convenience
+               (e.g. quick sorting/inspection) -- the underlying per-method
+               values remain available individually for the model to weight
+               as it sees fit.
+Stage        : 5 (feature extraction).
+
+
+================================================================================
+SECTION E: CROSS-CANDIDATE AGREEMENT AND HARMONIC FEATURES
+================================================================================
+Features that depend on the OTHER candidates tested for the same star.
+Computed in ml_features._agreement_and_harmonic_features (Stage 5), reading
+some inputs from Stage 4's dedup bookkeeping.
+
+--------------------------------------------------------------------------
+n_duplicate_guesses, n_contributing_methods
+--------------------------------------------------------------------------
+Definition   : n_duplicate_guesses = how many additional raw candidate
+               proposals (beyond the one representative that got fit) were
+               merged into this candidate during fit_rotation_period's
+               PRE-FIT deduplication step (candidates within dedup_rel_tol
+               of each other collapse into one before fitting).
+               n_contributing_methods = number of distinct guess_* methods
+               among the merged group.
+Description  : PRE-FIT agreement: how many independent method proposals
+               (before any curve fitting) pointed at this same period. This
+               required a fix to fit_rotation_period itself -- the dedup
+               step previously discarded this information entirely once a
+               near-duplicate candidate was merged away, silently losing
+               "two methods proposed almost exactly this period" evidence
+               before it could ever reach feature extraction. CandidateResult
+               now explicitly tracks this (see comb_fit.py).
+Stage        : 4 (multi-candidate arbitration -- the merge bookkeeping);
+               exposed directly as features at Stage 5.
+
+--------------------------------------------------------------------------
+n_agreeing_candidates, n_agreeing_methods
+--------------------------------------------------------------------------
+Definition   : Recomputed independently at Stage 5 by comparing every
+               candidate's FITTED period (fit.P) across the whole surviving
+               candidate pool for this star. n_agreeing_candidates = how
+               many OTHER candidates have a fitted period within
+               agreement_rel_tol of this one. n_agreeing_methods = how many
+               distinct methods (including this candidate's own) are
+               represented among that agreeing set.
+Description  : POST-FIT agreement -- distinct from the pre-fit fields above.
+               Two candidates that started more than dedup_rel_tol apart (so
+               neither absorbed the other pre-fit) can still converge to
+               nearly the same fitted period once the joint comb fit refines
+               both of them; this is independent, and arguably stronger,
+               corroboration than pre-fit agreement, since it survived the
+               actual curve fit rather than just a coarse initial period
+               estimate. Empirically, across the SMARTS/TESS test cases used
+               to develop this pipeline, the correct period was rarely any
+               single method's #1 pick but consistently had support from
+               more than one method by this measure -- the single strongest
+               informal signal observed for "this is probably the real
+               period" during development.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+best_competing_redchi, redchi_ratio_to_best_competing
+--------------------------------------------------------------------------
+Definition   : best_competing_redchi = the lowest reduced chi-squared among
+               candidates whose FITTED period is NOT in (post-fit) agreement
+               with this one. redchi_ratio_to_best_competing = this
+               candidate's own redchi divided by that value.
+Description  : How good the best genuinely-different rival period is. A
+               candidate can have an excellent redchi in isolation and still
+               be untrustworthy if a very different period fits even
+               better.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+redchi_ratio_to_global_best
+--------------------------------------------------------------------------
+Definition   : This candidate's redchi divided by the lowest redchi among
+               ALL tested candidates for this star (1.0 for the overall
+               best candidate, always >1 for every other one).
+Description  : Lets the model use this candidate's RELATIVE standing
+               directly, rather than only the raw redchi value, which varies
+               wildly in absolute scale from star to star.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+is_harmonic_of_global_best, harmonic_factor_of_global_best
+--------------------------------------------------------------------------
+Definition   : is_harmonic_of_global_best is True if this candidate's fitted
+               period is close (within harmonic_rel_tol) to a simple ratio
+               (0.5x, 2x, 3x, or 1/3x by default) of the fitted period
+               belonging to the star's globally-lowest-redchi candidate (and
+               is not itself that candidate, and is not simply the same
+               period). harmonic_factor_of_global_best records which ratio
+               matched.
+Description  : Directly targets the harmonic-confusion failure mode this
+               pipeline repeatedly ran into during development (candidates
+               locking onto P/2, 2P, 3P, etc. instead of the true
+               fundamental) -- gives the model an explicit flag for "this
+               looks like a harmonic of a stronger candidate" rather than
+               requiring it to infer that relationship from raw period
+               values alone.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+is_global_best_redchi
+--------------------------------------------------------------------------
+Definition   : True for exactly one candidate per star -- whichever has the
+               lowest redchi among all tested candidates.
+Description  : A convenience flag marking the reference candidate used to
+               compute the harmonic-relationship fields above.
+Stage        : 5 (feature extraction).
+
+
+================================================================================
+SECTION F: OTHER PER-CANDIDATE FEATURES
+================================================================================
+
+--------------------------------------------------------------------------
+mean_peak_trough_depth, min_peak_trough_depth, std_peak_trough_depth,
+mean_peak_trough_depth_snr, min_peak_trough_depth_snr,
+std_peak_trough_depth_snr
+--------------------------------------------------------------------------
+Definition   : For each fitted comb tooth, the fitted peak height above the
+               LOWER of the two local minima of the raw ACF flanking it
+               (searched out to +/- half the candidate's period on either
+               side of the tooth's center -- i.e. out to roughly halfway to
+               the neighboring tooth). Aggregated (mean/min/std) across all
+               retained peaks for this candidate, in both raw ACF units and
+               normalized by the ACF's overall standard deviation (the "_snr"
+               versions).
+Description  : A genuine local-prominence measure, requested specifically
+               to complement height_snr: height_snr normalizes a peak's
+               fitted height by the ACF's GLOBAL standard deviation, which
+               conflates "how tall is this specific bump" with "how variable
+               is the ACF overall" -- a peak sitting on a rising background
+               (e.g. still partway down the decay envelope near lag 0) can
+               have a high height_snr while having very little genuine local
+               prominence above its own immediate surroundings. Trough-
+               relative depth isolates the bump itself from that background
+               level. The lower-of-two-troughs choice (rather than, say, the
+               average of both) is the more conservative, harder-to-game
+               option.
+Stage        : 5 (feature extraction; walks the raw ACF array around each
+               fitted peak center from Stage 2).
+
+--------------------------------------------------------------------------
+s_ph
+--------------------------------------------------------------------------
+Definition   : Mathur et al.'s photometric activity index: bin the light
+               curve into consecutive windows whose length equals THIS
+               CANDIDATE's fitted period, compute the flux standard
+               deviation within each bin, and average across bins.
+Description  : NOTE: unlike the Section A star-level features, this is a
+               genuinely PER-CANDIDATE feature (not per-star) -- because the
+               bin width is the candidate's own period, different candidates
+               for the same star get different S_ph values. Used in the
+               literature both as a magnetic-activity diagnostic and
+               directly as an ML feature (Santos et al. / ROOSTER).
+Reference    : Mathur et al. (2014); used as an ML feature by Santos et al.
+               in the ROOSTER pipeline.
+Stage        : 5 (feature extraction; requires the candidate's fitted P, so
+               cannot be computed until after Stage 2).
+
+
+================================================================================
+LABEL (TRAINING ONLY)
+================================================================================
+
+--------------------------------------------------------------------------
+label
+--------------------------------------------------------------------------
+Definition   : 1 if |fitted_P - true_period| / true_period <= label_rel_tol
+               (default 3%), else 0. Only added when `true_period` is passed
+               to extract_candidate_features -- omitted entirely at
+               inference time on real data with no known truth.
+Description  : Matched against fitted_P (the refined post-fit period), not
+               the pre-fit `period` column -- the joint fit is a better
+               estimate of the true period than whatever the candidate-
+               generation stage originally proposed, so labeling against it
+               gives a cleaner training signal. For SMARTS training data,
+               true_period is the KNOWN INJECTED period, which is why
+               training against SMARTS avoids the circularity problem of
+               training against periods measured on the very real TESS data
+               this pipeline is meant to analyze (SMARTS light curves are
+               built by injecting synthetic spot signals onto real TESS
+               backgrounds, so the noise/gap characteristics are realistic
+               without the label itself coming from a period-finding
+               algorithm applied to real data).
+Stage        : 5 (feature extraction; the only place ground truth enters
+               anywhere in this pipeline).
+
+
+================================================================================
+KNOWN SIMPLIFICATIONS AND FUTURE WORK
+================================================================================
+- R_var (Section A) supports per-sector-then-combine computation (matching
+  Reinhold & Gizon's original per-Kepler-quarter treatment) via the
+  `sectors` parameter, but light curves are currently passed into this
+  pipeline as a single already-sector-combined timeseries, so this defaults
+  to treating the whole array as one segment. The other star-level
+  variability features (flicker_std, flux_std, skewness, kurtosis,
+  duty_cycle, von_neumann_eta, fliper_band_*) do not yet have the same
+  per-segment treatment; the same pattern used for R_var can be extended to
+  them once multi-sector input support is added to the pipeline.
+- flicker_std is a simplified proxy for the concept of "Flicker" (Bastien
+  et al. 2013), not a reproduction of their exact 8-hour-binned,
+  trend-subtracted algorithm.
+- fliper_band_1/2/3 are a simplified, "FliPer-inspired" proxy (Bugnet et al.
+  2018), using relative (Nyquist-scaled) frequency cutoffs and fractional-
+  power normalization instead of Bugnet's fixed physical cutoffs and
+  analytic (Kepler-specific) noise-floor subtraction. See Section A for the
+  full discussion of what was traded away and why.
+- This feature set is intentionally over-generated relative to what will
+  likely end up in a final model. Several groups contain deliberate,
+  overlapping redundancy as hedges (e.g. the rank/fractional-power/
+  significance trio per method) rather than accidental duplication -- the
+  plan is to prune based on feature-importance analysis (permutation
+  importance on a held-out, star-grouped split; correlation/redundancy
+  analysis within and across the deliberately-parallel feature families)
+  once a first model has been trained on real data, not to guess which
+  features matter in advance.

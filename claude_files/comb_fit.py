@@ -508,7 +508,14 @@ def guess_lombscargle(
             method="lombscargle",
             rank=rank,
             strength=float(power_sorted[i]),  # 'standard' normalization is already ~[0, 1]
-            info=dict(periodogram=(periods_sorted, power_sorted)),
+            info=dict(
+                periodogram=(periods_sorted, power_sorted),
+                # kept so later feature-extraction code can compute a
+                # false-alarm probability for any period (not just these
+                # top n_guesses) without recomputing the periodogram from
+                # scratch -- see ml_features.py.
+                ls_object=ls,
+            ),
         ))
     return guesses
 
