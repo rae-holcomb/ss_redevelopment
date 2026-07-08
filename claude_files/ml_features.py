@@ -591,6 +591,7 @@ def extract_candidate_features(
     flux: np.ndarray,
     acf_lags: np.ndarray,
     acf: np.ndarray,
+    *,
     star_id: Optional[Union[str, int]] = None,
     n_peaks_requested: Optional[int] = None,
     agreement_rel_tol: float = 0.03,
