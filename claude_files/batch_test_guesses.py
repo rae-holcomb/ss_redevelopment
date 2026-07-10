@@ -140,7 +140,7 @@ def _prep_wavelet_flux(flux: np.ndarray) -> np.ndarray:
     return s.interpolate(limit_direction="both").to_numpy()
 
 
-def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.03):
+def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.15):
     """Check whether/where the true period appears in one method's ranked candidate list.
 
     Parameters
@@ -152,7 +152,7 @@ def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.03):
         Known injected period (days) to check against.
     rel_tol : float
         Relative tolerance for declaring a candidate a match to
-        `true_period`. Default 0.03 (3%), matching this codebase's
+        `true_period`. Default 0.15 (15%), matching this codebase's
         `label_rel_tol` default in ml_features.extract_candidate_features.
 
     Returns
@@ -177,7 +177,7 @@ def process_one_lightcurve(
     fits_path,
     guess_fns: dict,
     n_guesses: int = 10,
-    rel_tol: float = 0.03,
+    rel_tol: float = 0.15,
     **load_kwargs,
 ):
     """Run every discovered guess_* function on one SMARTS light curve.
@@ -264,7 +264,7 @@ def process_one_lightcurve(
     return candidate_rows, summary_rows, failure_rows, header_vals, true_period
 
 
-def run_batch(fits_paths, outdir, n_guesses: int = 10, rel_tol: float = 0.03, **load_kwargs):
+def run_batch(fits_paths, outdir, n_guesses: int = 10, rel_tol: float = 0.15, **load_kwargs):
     """Run process_one_lightcurve over a list of FITS files and save the combined results.
 
     Parameters
@@ -447,7 +447,7 @@ def main():
     src.add_argument("--glob", type=str, help="glob pattern for FITS files, e.g. '/data/*.fits'")
     p.add_argument("--outdir", type=str, required=True, help="output directory")
     p.add_argument("--n-guesses", type=int, default=10, help="top-N candidates per method (default 10)")
-    p.add_argument("--rel-tol", type=float, default=0.03, help="relative match tolerance (default 0.03)")
+    p.add_argument("--rel-tol", type=float, default=0.15, help="relative match tolerance (default 0.15)")
     p.add_argument(
         "--sectors", type=str, default=None,
         help="comma-separated sector list to keep, e.g. '1,2,6,7,12' (default: all available)",

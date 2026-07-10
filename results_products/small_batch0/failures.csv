@@ -1,0 +1,90 @@
+star_id,method,error
+smarts-tess-v1.0-000100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-001500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-001500,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-001900,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-002500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-003100,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-003600,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-005100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-007500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-007500,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-007800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-009200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-009200,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-010300,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-010600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-011000,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-011200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-011400,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-012800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-014200,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-014500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-015000,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-015200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-015400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-015400,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-017300,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-017400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-017700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-019100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-019100,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-019200,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-019800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-020500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-021800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-022000,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-022800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-023200,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-023500,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-024700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-025500,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-025700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-025800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-028400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-028800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-029500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-029800,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-030300,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-030300,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-031200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-033200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-035600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-036400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-037700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-038400,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-045200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-046000,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-046300,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-048900,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-050200,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-051100,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-052600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-054100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-054600,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-055700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-057100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-059700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-059700,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-063400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-064400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-065400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-066500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-067100,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-068000,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-068500,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-070200,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-072400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-073100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-074100,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-077400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-081300,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-082900,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-084600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-087400,wavelet,"RuntimeError: guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; try lowering min_peak_snr or widening [min_period, max_period]."
+smarts-tess-v1.0-093400,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-094800,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-095600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-096600,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-097700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
+smarts-tess-v1.0-099700,pairwise_histogram,RuntimeError: guess_pairwise_histogram: fewer than 2 ACF peaks found; try lowering `prominence` or widening the lag range.
