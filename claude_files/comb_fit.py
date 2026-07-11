@@ -51,10 +51,11 @@ than no answer at all.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Callable, Optional, Union
 
 import numpy as np
+import pandas as pd
 from scipy.signal import find_peaks
 
 try:
@@ -633,6 +634,202 @@ def guess_acf_fft(
 
 
 # --------------------------------------------------------------------------
+# Short-period-focused variants (optional)
+# --------------------------------------------------------------------------
+#
+# Motivation: for a genuinely short-period signal (say < 10 days), a
+# LombScargle periodogram or ACF FFT spectrum computed over the pipeline's
+# usual full range (up to ~baseline/2, i.e. potentially hundreds of days)
+# makes that short-period peak compete against every longer-period feature
+# in the spectrum -- including spurious long-period power that has nothing
+# to do with rotation. Restricting the search band *before* ranking means a
+# short-period peak only has to beat other short-period candidates. Neither
+# of these methods is in gather_initial_guesses' default `methods` tuple
+# (like "wavelet", they're opt-in): pass them explicitly, e.g.
+# methods=("pairwise_histogram", "lombscargle", "acf_fft",
+# "lombscargle_short", "acf_fft_short").
+
+def guess_lombscargle_short(
+    time: np.ndarray,
+    flux: np.ndarray,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    max_period: float = 15.0,
+    min_period: Optional[float] = None,
+    n_guesses: int = 5,
+    samples_per_peak: int = 5,
+) -> list:
+    """Short-period-focused wrapper around guess_lombscargle.
+
+    Restricts the search grid to [min_period, max_period] *before*
+    ranking, so a genuine short-period peak only has to beat other
+    short-period candidates -- not every longer-period feature in the
+    full periodogram. samples_per_peak is raised from guess_lombscargle's
+    default of 1, since narrowing the range means far fewer frequencies
+    are evaluated, so a finer grid costs little extra compute here.
+
+    Note on cost: this calls guess_lombscargle again with a different
+    (narrower, finer) frequency grid than a normal "lombscargle" call
+    would use, so it does re-run astropy's LombScargle.autopower --
+    unavoidably, since the two calls genuinely use different resolutions
+    and ranges, not the same computation twice. It is still cheap: a
+    narrower band at finer sampling evaluates roughly the same order of
+    frequency points as the default wide-but-coarse call (see this
+    project's timing notes), not several times more.
+
+    Parameters
+    ----------
+    max_period : upper edge of the short-period search band (days).
+    min_period : lower edge; defaults to guess_lombscargle's own default
+        (4 * median cadence).
+    n_guesses, samples_per_peak : forwarded to guess_lombscargle.
+
+    Returns
+    -------
+    list[InitialGuess], method relabeled "lombscargle_short" so it's
+    tracked separately from the ordinary "lombscargle" candidates.
+    """
+    guesses = guess_lombscargle(
+        time, flux, acf_lags, acf,
+        min_period=min_period, max_period=max_period,
+        n_guesses=n_guesses, samples_per_peak=samples_per_peak,
+    )
+    return [replace(g, method="lombscargle_short") for g in guesses]
+
+
+def guess_acf_fft_short(
+    time: np.ndarray,
+    flux: np.ndarray,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    max_period: float = 15.0,
+    min_period: Optional[float] = None,
+    n_guesses: int = 5,
+    oversample: int = 8,
+) -> list:
+    """Short-period-focused wrapper around guess_acf_fft. oversample is
+    raised from the default 4, for the same reason as
+    guess_lombscargle_short raises samples_per_peak -- a narrower band
+    affords finer resolution cheaply.
+
+    Note on cost: unlike the LombScargle case, this recomputes the FFT of
+    the (already-computed) `acf` array at a different zero-padding
+    factor -- an FFT of an array with a few thousand points is on the
+    order of milliseconds, so this recomputation is not worth avoiding
+    even though it is, strictly, a second FFT of the same underlying ACF.
+
+    Returns
+    -------
+    list[InitialGuess], method relabeled "acf_fft_short".
+    """
+    guesses = guess_acf_fft(
+        time, flux, acf_lags, acf,
+        min_period=min_period, max_period=max_period,
+        n_guesses=n_guesses, oversample=oversample,
+    )
+    return [replace(g, method="acf_fft_short") for g in guesses]
+
+
+def _highpass_flux(time: np.ndarray, flux: np.ndarray, window_days: float) -> np.ndarray:
+    """Subtract a centered rolling-mean trend (NaN-aware) from flux, to
+    isolate variability faster than `window_days` and remove slower
+    variability that would otherwise dominate a periodogram or ACF. Used
+    by guess_acf_fft_highpass -- see its docstring for why this helps
+    short-period recovery specifically.
+    """
+    dt = np.median(np.diff(time))
+    window_pts = max(1, int(round(window_days / dt)))
+    if window_pts <= 1:
+        return flux.copy()
+    trend = pd.Series(flux).rolling(
+        window_pts, center=True, min_periods=max(1, window_pts // 3)
+    ).mean().to_numpy()
+    return flux - trend
+
+
+def guess_acf_fft_highpass(
+    time: np.ndarray,
+    flux: np.ndarray,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    smooth_windows: tuple = (2.0, 5.0, 10.0, 20.0, 40.0),
+    max_period: float = 15.0,
+    min_period: Optional[float] = None,
+    n_guesses: int = 5,
+    oversample: int = 8,
+    max_lag_frac: float = 1.0 / 3,
+    min_valid_frac: float = 0.3,
+) -> list:
+    """Short-period-focused candidate generation via a high-pass-filtered
+    ACF: remove slow variability from the light curve BEFORE computing the
+    ACF, so a weak short-period signal isn't swamped by a stronger
+    longer-timescale trend (real long-period rotation, spot evolution, or
+    residual systematics) in either the ACF itself or its FFT.
+
+    Mechanism, step by step
+    ------------------------
+    1. For each window in `smooth_windows`, high-pass filter the flux
+       (_highpass_flux): compute a centered rolling-mean trend over that
+       window and subtract it, leaving only variability faster than the
+       window. Each window is a genuinely different filtering choice, not
+       a resolution knob -- a too-short window risks attenuating the very
+       short-period signal you're trying to recover along with the trend,
+       a too-long window leaves more slow variability in the residual to
+       compete with it, so trying a couple of different windows (rather
+       than committing to one) hedges against either failure mode. The
+       defaults (20, 40 days) are several times the default
+       `max_period=15.0` specifically so the short-period band of interest
+       is never close to the filtering timescale itself.
+    2. Recompute the ACF (via acf_utils.compute_acf, imported locally to
+       avoid making this module depend on it for callers who don't use
+       this function) on the high-pass-filtered flux -- this is a
+       genuinely new computation each time, since the underlying signal
+       changed; there is no way to reuse the original (unfiltered) `acf`
+       argument here (it is accepted only for interface consistency with
+       the other guess_* functions and is not used).
+    3. Run guess_acf_fft on that new ACF, restricted to
+       [min_period, max_period] (see guess_acf_fft_short for why
+       restricting the band before ranking helps).
+    4. Tag each returned candidate's method as "acf_fft_hp{window}d" so
+       candidates from different smoothing windows are tracked separately
+       (e.g. "acf_fft_hp20d", "acf_fft_hp40d").
+
+    Parameters
+    ----------
+    smooth_windows : rolling-mean trend windows to try, in days.
+    max_period, min_period : forwarded to guess_acf_fft for the (fresh)
+        high-pass-filtered ACF.
+    n_guesses, oversample : forwarded to guess_acf_fft.
+    max_lag_frac, min_valid_frac : forwarded to acf_utils.compute_acf for
+        each recomputed ACF.
+
+    Returns
+    -------
+    list[InitialGuess], candidates from every window concatenated
+    together, each method-tagged by its originating window.
+    """
+    from acf_utils import compute_acf as _compute_acf
+
+    all_guesses = []
+    for window in smooth_windows:
+        flux_hp = _highpass_flux(time, flux, window)
+        lags_hp, acf_hp = _compute_acf(
+            time, flux_hp, max_lag_frac=max_lag_frac, min_valid_frac=min_valid_frac
+        )
+        try:
+            guesses = guess_acf_fft(
+                time, flux_hp, lags_hp, acf_hp,
+                min_period=min_period, max_period=max_period,
+                n_guesses=n_guesses, oversample=oversample,
+            )
+        except Exception:  # noqa: BLE001 -- one bad window shouldn't sink the rest
+            continue
+        tag = f"acf_fft_hp{window:g}d"
+        all_guesses.extend(replace(g, method=tag) for g in guesses)
+    return all_guesses
+
+
+# --------------------------------------------------------------------------
 # 4. Candidate generation: Global Wavelet Power Spectrum (optional)
 # --------------------------------------------------------------------------
 #
@@ -925,6 +1122,14 @@ def gather_initial_guesses(
     more expensive than the other three (see this project's relative-speed
     notes), so it only runs if you explicitly ask for it, e.g.
     `methods=("pairwise_histogram", "lombscargle", "acf_fft", "wavelet")`.
+
+    "lombscargle_short", "acf_fft_short", and "acf_fft_highpass" are
+    likewise opt-in only: short-period-focused variants of the LS/FFT
+    methods (see their docstrings), useful when you have a prior
+    expectation that the target rotates fast (say < 15 days) and the
+    default full-range candidates are being crowded out by longer-period
+    features. "acf_fft_highpass" in particular can return candidates from
+    multiple smoothing windows in one call -- see guess_acf_fft_highpass.
     """
     method_kwargs = method_kwargs or {}
     guess_fns = {
@@ -932,6 +1137,9 @@ def gather_initial_guesses(
         "lombscargle": guess_lombscargle,
         "acf_fft": guess_acf_fft,
         "wavelet": guess_wavelet,
+        "lombscargle_short": guess_lombscargle_short,
+        "acf_fft_short": guess_acf_fft_short,
+        "acf_fft_highpass": guess_acf_fft_highpass,
     }
     guesses = []
     failed = {}
