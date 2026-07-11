@@ -5,6 +5,8 @@ __pycache__/
 
 # ignore large data files
 data/*
+results_products/batch*/*.csv
+results_products/batch*/*/*.csv
 
 # C extensions
 *.so

@@ -753,7 +753,7 @@ def guess_acf_fft_highpass(
     acf_lags: np.ndarray,
     acf: np.ndarray,
     smooth_windows: tuple = (2.0, 5.0, 10.0, 20.0, 40.0),
-    max_period: float = 15.0,
+    max_period: float = 50.0,
     min_period: Optional[float] = None,
     n_guesses: int = 5,
     oversample: int = 8,
@@ -772,14 +772,25 @@ def guess_acf_fft_highpass(
        (_highpass_flux): compute a centered rolling-mean trend over that
        window and subtract it, leaving only variability faster than the
        window. Each window is a genuinely different filtering choice, not
-       a resolution knob -- a too-short window risks attenuating the very
-       short-period signal you're trying to recover along with the trend,
-       a too-long window leaves more slow variability in the residual to
-       compete with it, so trying a couple of different windows (rather
-       than committing to one) hedges against either failure mode. The
-       defaults (20, 40 days) are several times the default
-       `max_period=15.0` specifically so the short-period band of interest
-       is never close to the filtering timescale itself.
+       a resolution knob -- shorter windows filter more aggressively,
+       trading away real signal for periods comparable to or longer than
+       the window itself in exchange for cleaner isolation of whatever is
+       faster. The defaults now deliberately span both regimes: 20 and 40
+       days sit well above `max_period=15.0` (safe for anything in the
+       target band), while 2, 5, and 10 days are shorter than -- or
+       comparable to -- it, aggressively pushing to expose very-short-
+       period signal (sub-day to a few days) at real risk of attenuating
+       or destroying longer-period signal within the same target band.
+       That tradeoff is intentional and is not a problem in practice: this
+       function's candidates are only ever a few entries in a much larger
+       pool gathered from every method (see gather_initial_guesses), and a
+       period this function smooths away is exactly the kind of thing a
+       method that never touches the light curve's trend (e.g.
+       guess_lombscargle_short, or this same function's own longer
+       windows) is left to supply instead. More windows costs relatively
+       little: each is one more ACF recomputation on an already-short
+       light curve array, not another expensive periodogram search -- see
+       this project's timing notes.
     2. Recompute the ACF (via acf_utils.compute_acf, imported locally to
        avoid making this module depend on it for callers who don't use
        this function) on the high-pass-filtered flux -- this is a
@@ -792,7 +803,7 @@ def guess_acf_fft_highpass(
        restricting the band before ranking helps).
     4. Tag each returned candidate's method as "acf_fft_hp{window}d" so
        candidates from different smoothing windows are tracked separately
-       (e.g. "acf_fft_hp20d", "acf_fft_hp40d").
+       (e.g. "acf_fft_hp2d", "acf_fft_hp5d", ..., "acf_fft_hp40d").
 
     Parameters
     ----------
