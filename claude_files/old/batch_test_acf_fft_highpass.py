@@ -65,7 +65,6 @@ import glob as globmod
 import re
 import sys
 import traceback
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -84,16 +83,8 @@ HEADER_KEYS = [
 # matches guess_acf_fft_highpass's own default smooth_windows
 DEFAULT_SMOOTH_WINDOWS = (2.0, 5.0, 10.0, 20.0, 40.0)
 DEFAULT_MAX_PERIOD = 50.0  # matches guess_acf_fft_highpass's own default
-
-# Default worker count for --n-workers. Tuned for a 10-performance/4-efficiency
-# core machine: this script's per-window ACF-FFT work benefits from
-# sustained per-core throughput, which P-cores provide and E-cores don't --
-# scheduling some workers onto E-cores tends to create stragglers that hold
-# up the whole batch. Override with --n-workers on a different machine.
-DEFAULT_N_WORKERS = 10
 PERIOD_BAND_EDGES = [0, 1, 5, 10, 15, 20, 30, 50, np.inf]
 PERIOD_BAND_LABELS = ["<1d", "1-5d", "5-10d", "10-15d", "15-20d", "20-30d", "30-50d", ">50d"]
-
 # parses the window back out of a tag like "acf_fft_hp5d" or "acf_fft_hp2.5d"
 _WINDOW_TAG_RE = re.compile(r"^acf_fft_hp([\d.]+)d$")
 
@@ -223,45 +214,6 @@ def process_one_lightcurve(
     return candidate_rows, summary_rows, header_vals
 
 
-def _process_one_file_worker(task: dict) -> dict:
-    """Top-level (picklable) per-file worker for ProcessPoolExecutor.
-
-    Wraps process_one_lightcurve and converts any exception into a
-    structured error result instead of letting it propagate -- an
-    exception raised inside a worker process needs to come back across
-    the process boundary as data, not as a live traceback. No per-worker
-    initializer is needed here (unlike batch_test_guesses.py's auto-
-    discovery case): guess_acf_fft_highpass is a single fixed import,
-    not something each worker needs to rediscover.
-
-    Parameters
-    ----------
-    task : dict with keys 'fits_path', 'smooth_windows', 'max_period',
-        'min_period', 'n_guesses', 'oversample', 'rel_tol', 'load_kwargs'.
-
-    Returns
-    -------
-    dict with 'status' ('ok' or 'error') plus either the two row-lists
-    and header values from process_one_lightcurve, or an 'error' message.
-    """
-    fits_path = task["fits_path"]
-    try:
-        cand, summ, header_vals = process_one_lightcurve(
-            fits_path, task["smooth_windows"], task["max_period"], task["min_period"],
-            task["n_guesses"], task["oversample"], rel_tol=task["rel_tol"], **task["load_kwargs"],
-        )
-        for row in cand:
-            row.update(header_vals)
-        for row in summ:
-            row.update(header_vals)
-        return dict(status="ok", candidates=cand, summary=summ)
-    except Exception as exc:  # noqa: BLE001 -- report back to the main process instead of crashing the worker
-        return dict(
-            status="error", star_id=Path(fits_path).stem,
-            error=f"{type(exc).__name__}: {exc}",
-        )
-
-
 def run_batch(
     fits_paths, outdir,
     smooth_windows: tuple = DEFAULT_SMOOTH_WINDOWS,
@@ -270,25 +222,12 @@ def run_batch(
     n_guesses: int = 5,
     oversample: int = 8,
     rel_tol: float = 0.15,
-    n_workers: int = DEFAULT_N_WORKERS,
     **load_kwargs,
 ):
-    """Run process_one_lightcurve over a list of FITS files in parallel
-    (via ProcessPoolExecutor) and save the combined results.
+    """Run process_one_lightcurve over a list of FITS files and save the combined results.
 
-    Each light curve is processed completely independently, so this
-    parallelizes across files with one process pool. Plotting still
-    happens once, serially, in the main process after every file has
-    finished.
-
-    Parameters mirror guess_acf_fft_highpass's own, plus:
-
-    n_workers : int
-        Number of worker processes. Default DEFAULT_N_WORKERS; set to 1
-        for fully sequential processing (e.g. easier-to-read tracebacks
-        while debugging).
-
-    See module docstring for output files.
+    Parameters mirror guess_acf_fft_highpass's own; see module docstring
+    for output files.
 
     Returns
     -------
@@ -298,38 +237,34 @@ def run_batch(
     outdir.mkdir(parents=True, exist_ok=True)
     print(f"smooth_windows={smooth_windows}  max_period={max_period}  "
           f"min_period={min_period}  n_guesses={n_guesses}  oversample={oversample}")
-    print(f"Using {n_workers} worker process(es).")
 
     all_candidates, all_summary, all_failures = [], [], []
     n_ok, n_err = 0, 0
 
-    tasks = [
-        dict(
-            fits_path=p, smooth_windows=smooth_windows, max_period=max_period,
-            min_period=min_period, n_guesses=n_guesses, oversample=oversample,
-            rel_tol=rel_tol, load_kwargs=load_kwargs,
-        )
-        for p in fits_paths
-    ]
+    for i, fits_path in enumerate(fits_paths, start=1):
+        try:
+            cand, summ, header_vals = process_one_lightcurve(
+                fits_path, smooth_windows, max_period, min_period,
+                n_guesses, oversample, rel_tol=rel_tol, **load_kwargs,
+            )
+            for row in cand:
+                row.update(header_vals)
+            for row in summ:
+                row.update(header_vals)
+            all_candidates.extend(cand)
+            all_summary.extend(summ)
+            n_ok += 1
+        except Exception as exc:  # noqa: BLE001 -- a whole-file failure shouldn't stop the batch
+            n_err += 1
+            all_failures.append(dict(
+                star_id=Path(fits_path).stem,
+                error=f"{type(exc).__name__}: {exc}",
+            ))
+            traceback.print_exc(file=sys.stderr)
 
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
-        futures = {executor.submit(_process_one_file_worker, t): t["fits_path"] for t in tasks}
-        for i, future in enumerate(as_completed(futures), start=1):
-            fits_path = futures[future]
-            res = future.result()  # worker already caught its own exceptions; this itself shouldn't raise
-
-            if res["status"] == "ok":
-                all_candidates.extend(res["candidates"])
-                all_summary.extend(res["summary"])
-                n_ok += 1
-            else:
-                n_err += 1
-                all_failures.append(dict(star_id=res["star_id"], error=res["error"]))
-                print(f"  [FAILED] {Path(fits_path).name}: {res['error']}", file=sys.stderr)
-
-            if i % 50 == 0 or i == len(fits_paths):
-                print(f"  processed {i}/{len(fits_paths)} files "
-                      f"({n_ok} ok, {n_err} failed to load/compute ACF/run)")
+        if i % 50 == 0 or i == len(fits_paths):
+            print(f"  processed {i}/{len(fits_paths)} files "
+                  f"({n_ok} ok, {n_err} failed to load/compute ACF/run)")
 
     candidates_df = pd.DataFrame(all_candidates)
     summary_df = pd.DataFrame(all_summary)
@@ -431,11 +366,6 @@ def main():
                     help="forwarded to guess_acf_fft_highpass (default 8)")
     p.add_argument("--rel-tol", type=float, default=0.15, help="relative match tolerance (default 0.15)")
     p.add_argument(
-        "--n-workers", type=int, default=DEFAULT_N_WORKERS,
-        help=f"number of worker processes (default {DEFAULT_N_WORKERS}); "
-             f"use 1 for sequential processing (easier debugging)",
-    )
-    p.add_argument(
         "--sectors", type=str, default=None,
         help="comma-separated sector list to keep, e.g. '1,2,6,7,12' (default: all available)",
     )
@@ -459,7 +389,7 @@ def main():
         fits_paths, args.outdir,
         smooth_windows=smooth_windows, max_period=args.max_period, min_period=args.min_period,
         n_guesses=args.n_guesses, oversample=args.oversample, rel_tol=args.rel_tol,
-        n_workers=args.n_workers, **load_kwargs,
+        **load_kwargs,
     )
 
 

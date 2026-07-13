@@ -27,26 +27,12 @@ Usage
 
 Outputs (written to --outdir)
 ------------------------------
-    candidates.csv         : one row per (light curve, method,
-                              smoothing_window, rank<=N). smoothing_window
-                              is NaN except for acf_fft_highpass, whose
-                              candidates each record which of its internal
-                              smoothing windows (see comb_fit.py) produced
-                              them.
-    summary.csv            : one row per (light curve, method,
-                              smoothing_window) -- was the true period
-                              found, and at what rank. acf_fft_highpass
-                              gets one row per smoothing window it swept
-                              internally, rather than one row mixing all
-                              windows together -- see process_one_lightcurve.
+    candidates.csv         : one row per (light curve, method, rank<=N)
+    summary.csv            : one row per (light curve, method) -- was the
+                              true period found, and at what rank
     failures.csv            : one row per (light curve[, method]) that
                               raised an exception, with the error message
-    hit_rate_by_method.png  : bar chart of overall hit rate per method.
-                              NOTE: for acf_fft_highpass this now averages
-                              over (star, window) pairs rather than one
-                              outcome per star, since that method
-                              contributes multiple summary rows per star --
-                              see the module-level note above make_diagnostic_plots.
+    hit_rate_by_method.png  : bar chart of overall hit rate per method
     rank_distribution.png   : histogram of the rank the true period landed
                               at, among hits, split by method
     hit_rate_vs_period.png  : hit rate vs. true period (log-binned), split
@@ -59,10 +45,8 @@ from __future__ import annotations
 import argparse
 import glob as globmod
 import inspect
-import re
 import sys
 import traceback
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import numpy as np
@@ -74,24 +58,10 @@ from preprocessing import load_smarts_fits
 from acf_utils import compute_acf
 import comb_fit
 
-# guess_acf_fft_highpass tags each of its candidates by originating
-# smoothing window, e.g. "acf_fft_hp5d" -- this recovers that window so it
-# can be preserved as its own column instead of being discarded when
-# candidates get folded into their outer discovered method name below.
-_WINDOW_TAG_RE = re.compile(r"^acf_fft_hp([\d.]+)d$")
-
 HEADER_KEYS = [
     "PERIOD", "ACTIVITY", "CYCLE", "OVERLAP", "INCL",
     "MINLAT", "MAXLAT", "DIFFROT", "TSPOT", "BFLY",
 ]
-
-# Default worker count for --n-workers. Tuned for a 10-performance/4-efficiency
-# core machine: heavy FFT/periodogram/wavelet work benefits from sustained
-# per-core throughput, which P-cores provide and E-cores don't -- scheduling
-# some workers onto E-cores tends to create stragglers that hold up the
-# whole batch rather than adding useful throughput. Override with
-# --n-workers on a different machine.
-DEFAULT_N_WORKERS = 10
 
 # every guess_* function in comb_fit.py shares this call signature:
 # fn(time, flux, acf_lags, acf, ..., n_guesses=...) -> list[InitialGuess]
@@ -203,27 +173,6 @@ def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.15):
     return False, None, None
 
 
-def parse_smoothing_window(method_tag: str):
-    """Recover the smoothing window (days) embedded in a candidate's own
-    method tag, e.g. "acf_fft_hp5d" -> 5.0.
-
-    Only guess_acf_fft_highpass's candidates carry a window this way (see
-    its docstring in comb_fit.py); every other guess_* function's method
-    tag is a plain name like "lombscargle" with no embedded window.
-
-    Parameters
-    ----------
-    method_tag : the `method` field of an InitialGuess (its own tag, NOT
-        the outer discovered function name -- see process_one_lightcurve).
-
-    Returns
-    -------
-    float, or None if `method_tag` doesn't carry a window.
-    """
-    m = _WINDOW_TAG_RE.match(method_tag)
-    return float(m.group(1)) if m else None
-
-
 def process_one_lightcurve(
     fits_path,
     guess_fns: dict,
@@ -255,18 +204,9 @@ def process_one_lightcurve(
     Returns
     -------
     candidate_rows : list[dict]
-        One row per (method, smoothing_window, rank) candidate produced.
-        smoothing_window is NaN for every method except acf_fft_highpass,
-        whose candidates each carry the window (days) that produced them.
+        One row per (method, rank) candidate produced.
     summary_rows : list[dict]
-        One row per (method, smoothing_window): found/rank summary. For
-        every method except acf_fft_highpass this is exactly one row per
-        method (smoothing_window=NaN), same as before. For
-        acf_fft_highpass it's one row per smoothing window swept
-        internally by that function (see its docstring in comb_fit.py),
-        since scoring its candidates as a single mixed-window ranked list
-        would both discard which window found the true period and
-        compute a rank that doesn't mean what it looks like.
+        One row per method: found/rank summary.
     failure_rows : list[dict]
         One row per method that raised an exception.
     header_vals : dict
@@ -298,128 +238,34 @@ def process_one_lightcurve(
                 error=f"{type(exc).__name__}: {exc}",
             ))
             summary_rows.append(dict(
-                star_id=star_id, method=method_name, smoothing_window=np.nan, n_candidates=0,
+                star_id=star_id, method=method_name, n_candidates=0,
                 found_true_period=False, rank_of_true_period=np.nan,
                 matched_P0=np.nan, true_period=true_period,
             ))
             continue
 
-        # Group this method's candidates by whichever smoothing window their
-        # OWN method tag carries (see parse_smoothing_window). For every
-        # method except acf_fft_highpass, every candidate's tag carries no
-        # window, so they all land in one group=None bucket -- one summary
-        # row per (star, method), identical to previous behavior.
-        # acf_fft_highpass is different: guess_acf_fft_highpass runs several
-        # smoothing windows internally in one call and concatenates all of
-        # their candidates together with window-local rank (rank 1 appears
-        # once per window, not once overall) -- so scoring the concatenated
-        # list as if it were a single ranked list would both discard which
-        # window produced the winning candidate AND compute a "rank" that
-        # doesn't mean what it looks like across mixed windows. Grouping by
-        # window first, then scoring each group independently, fixes both.
-        groups: dict = {}
+        found, rank, matched_P0 = rank_of_true_period(guesses, true_period, rel_tol=rel_tol)
+        summary_rows.append(dict(
+            star_id=star_id, method=method_name, n_candidates=len(guesses),
+            found_true_period=found, rank_of_true_period=rank,
+            matched_P0=matched_P0, true_period=true_period,
+        ))
         for g in guesses:
-            w = parse_smoothing_window(g.method)
-            groups.setdefault(w, []).append(g)
-
-        if not groups:
-            # guess_acf_fft_highpass can return an empty list without
-            # raising (it swallows its own per-window failures) -- still
-            # guarantee one summary row per (star, method) in that case,
-            # same as every other method's zero-candidate outcome.
-            groups[None] = []
-
-        for w, wguesses in groups.items():
-            found, rank, matched_P0 = rank_of_true_period(wguesses, true_period, rel_tol=rel_tol)
-            summary_rows.append(dict(
-                star_id=star_id, method=method_name,
-                smoothing_window=w if w is not None else np.nan,
-                n_candidates=len(wguesses),
-                found_true_period=found, rank_of_true_period=rank,
-                matched_P0=matched_P0, true_period=true_period,
+            is_match = (
+                true_period is not None and np.isfinite(true_period)
+                and abs(g.P0 - true_period) / true_period <= rel_tol
+            )
+            candidate_rows.append(dict(
+                star_id=star_id, method=method_name, rank=g.rank,
+                P0=g.P0, strength=g.strength, true_period=true_period,
+                is_match=is_match,
             ))
-            for g in wguesses:
-                is_match = (
-                    true_period is not None and np.isfinite(true_period)
-                    and abs(g.P0 - true_period) / true_period <= rel_tol
-                )
-                candidate_rows.append(dict(
-                    star_id=star_id, method=method_name,
-                    smoothing_window=w if w is not None else np.nan,
-                    rank=g.rank, P0=g.P0, strength=g.strength,
-                    true_period=true_period, is_match=is_match,
-                ))
 
     return candidate_rows, summary_rows, failure_rows, header_vals, true_period
 
 
-# Populated once per worker process by _init_worker, rather than being
-# passed through the pool on every task -- guess_fns holds function
-# references (fine to pickle) but rebuilding it via discover_guess_functions()
-# for every single file would repeat the same cheap-but-not-free inspect.py
-# introspection thousands of times for no benefit.
-_worker_guess_fns = None
-
-
-def _init_worker():
-    """ProcessPoolExecutor initializer: run once per worker process at
-    startup, so each worker discovers guess_* functions exactly once
-    rather than on every task it's handed.
-    """
-    global _worker_guess_fns
-    _worker_guess_fns = discover_guess_functions()
-
-
-def _process_one_file_worker(task: dict) -> dict:
-    """Top-level (picklable) per-file worker for ProcessPoolExecutor.
-
-    Wraps process_one_lightcurve, using this worker process's own
-    _worker_guess_fns (set up once by _init_worker rather than passed
-    through the pool per-task), and converts any exception into a
-    structured error result instead of letting it propagate -- an
-    exception raised inside a worker process needs to come back across
-    the process boundary as data, not as a live traceback.
-
-    Parameters
-    ----------
-    task : dict with keys 'fits_path', 'n_guesses', 'rel_tol', 'load_kwargs'.
-
-    Returns
-    -------
-    dict with 'status' ('ok' or 'error') plus either the three row-lists
-    and header values from process_one_lightcurve, or an 'error' message.
-    """
-    fits_path = task["fits_path"]
-    try:
-        cand, summ, fail, header_vals, _true_period = process_one_lightcurve(
-            fits_path, _worker_guess_fns,
-            n_guesses=task["n_guesses"], rel_tol=task["rel_tol"], **task["load_kwargs"],
-        )
-        for row in cand:
-            row.update(header_vals)
-        for row in summ:
-            row.update(header_vals)
-        return dict(status="ok", candidates=cand, summary=summ, failures=fail)
-    except Exception as exc:  # noqa: BLE001 -- report back to the main process instead of crashing the worker
-        return dict(
-            status="error", star_id=Path(fits_path).stem,
-            error=f"{type(exc).__name__}: {exc}",
-            traceback=traceback.format_exc(),
-        )
-
-
-def run_batch(
-    fits_paths, outdir, n_guesses: int = 10, rel_tol: float = 0.15,
-    n_workers: int = DEFAULT_N_WORKERS, **load_kwargs,
-):
-    """Run process_one_lightcurve over a list of FITS files in parallel
-    (via ProcessPoolExecutor) and save the combined results.
-
-    Each light curve is processed completely independently (load -> ACF ->
-    every guess_* function -> per-file results), so this parallelizes
-    across files with one process pool rather than doing anything fancier
-    per-file. Plotting still happens once, serially, in the main process
-    after every file has finished.
+def run_batch(fits_paths, outdir, n_guesses: int = 10, rel_tol: float = 0.15, **load_kwargs):
+    """Run process_one_lightcurve over a list of FITS files and save the combined results.
 
     Parameters
     ----------
@@ -432,11 +278,6 @@ def run_batch(
         Top-N candidates requested/kept per method.
     rel_tol : float
         Relative tolerance for matching a candidate to the true period.
-    n_workers : int
-        Number of worker processes. Default DEFAULT_N_WORKERS; set to 1
-        to fall back to fully sequential processing (e.g. for debugging --
-        tracebacks from a real exception are much easier to read directly
-        than reconstructed from a worker's returned string).
     **load_kwargs
         Forwarded to load_smarts_fits for every file (e.g. sectors=[...]).
 
@@ -447,8 +288,6 @@ def run_batch(
     outdir = Path(outdir)
     outdir.mkdir(parents=True, exist_ok=True)
 
-    # discover once up front just to fail fast / report method count; each
-    # worker will independently rediscover the same functions via _init_worker
     guess_fns = discover_guess_functions()
     if not guess_fns:
         raise RuntimeError(
@@ -456,37 +295,34 @@ def run_batch(
             "expected (time, flux, acf_lags, acf, ...) signature."
         )
     print(f"Discovered {len(guess_fns)} guess_* function(s): {list(guess_fns)}")
-    print(f"Using {n_workers} worker process(es).")
 
     all_candidates, all_summary, all_failures = [], [], []
     n_ok, n_err = 0, 0
 
-    tasks = [
-        dict(fits_path=p, n_guesses=n_guesses, rel_tol=rel_tol, load_kwargs=load_kwargs)
-        for p in fits_paths
-    ]
+    for i, fits_path in enumerate(fits_paths, start=1):
+        try:
+            cand, summ, fail, header_vals, _true_period = process_one_lightcurve(
+                fits_path, guess_fns, n_guesses=n_guesses, rel_tol=rel_tol, **load_kwargs
+            )
+            for row in cand:
+                row.update(header_vals)
+            for row in summ:
+                row.update(header_vals)
+            all_candidates.extend(cand)
+            all_summary.extend(summ)
+            all_failures.extend(fail)
+            n_ok += 1
+        except Exception as exc:  # noqa: BLE001 -- a whole-file failure shouldn't stop the batch
+            n_err += 1
+            all_failures.append(dict(
+                star_id=Path(fits_path).stem, method="__load_or_acf__",
+                error=f"{type(exc).__name__}: {exc}",
+            ))
+            traceback.print_exc(file=sys.stderr)
 
-    with ProcessPoolExecutor(max_workers=n_workers, initializer=_init_worker) as executor:
-        futures = {executor.submit(_process_one_file_worker, t): t["fits_path"] for t in tasks}
-        for i, future in enumerate(as_completed(futures), start=1):
-            fits_path = futures[future]
-            res = future.result()  # worker already caught its own exceptions; this itself shouldn't raise
-
-            if res["status"] == "ok":
-                all_candidates.extend(res["candidates"])
-                all_summary.extend(res["summary"])
-                all_failures.extend(res["failures"])
-                n_ok += 1
-            else:
-                n_err += 1
-                all_failures.append(dict(
-                    star_id=res["star_id"], method="__load_or_acf__", error=res["error"],
-                ))
-                print(f"  [FAILED] {Path(fits_path).name}: {res['error']}", file=sys.stderr)
-
-            if i % 50 == 0 or i == len(fits_paths):
-                print(f"  processed {i}/{len(fits_paths)} files "
-                      f"({n_ok} ok, {n_err} failed to load/compute ACF)")
+        if i % 50 == 0 or i == len(fits_paths):
+            print(f"  processed {i}/{len(fits_paths)} files "
+                  f"({n_ok} ok, {n_err} failed to load/compute ACF)")
 
     candidates_df = pd.DataFrame(all_candidates)
     summary_df = pd.DataFrame(all_summary)
@@ -517,16 +353,6 @@ def make_diagnostic_plots(summary_df: pd.DataFrame, outdir):
         split by method -- shows which period regimes (short/fast
         rotators vs. long/slow rotators) each method struggles with.
 
-    NOTE on acf_fft_highpass specifically: since process_one_lightcurve
-    emits one summary row per (star, smoothing_window) for this method
-    rather than one row per star, these three plots' groupby("method")
-    aggregation averages over every (star, window) pair for it, not over
-    stars alone -- so its bar/line in each plot reflects "mean outcome
-    across windows", not "best window per star". If you want the latter,
-    derive it from summary_df yourself, e.g.:
-        hp = summary_df[summary_df.method == "acf_fft_highpass"]
-        best_per_star = hp.groupby("star_id")["found_true_period"].any()
-
     Parameters
     ----------
     summary_df : pd.DataFrame
@@ -550,28 +376,19 @@ def make_diagnostic_plots(summary_df: pd.DataFrame, outdir):
     fig.savefig(outdir / "hit_rate_by_method.png", dpi=150)
     plt.close(fig)
 
-    # --- rank distribution among hits (grouped bars, one cluster per rank) ---
+    # --- rank distribution among hits ---
     hits = summary_df[summary_df["found_true_period"]]
-    fig, ax = plt.subplots(figsize=(9, 5))
+    fig, ax = plt.subplots(figsize=(6, 4))
     if len(hits):
         max_rank = int(hits["rank_of_true_period"].max())
-        ranks = np.arange(1, max_rank + 1)
-        n_methods = len(methods)
-        # each rank gets a cluster of n_methods bars side by side, rather than
-        # n_methods overlapping semi-transparent histograms -- with more than
-        # 2-3 methods, overlapping alpha-blended bars become unreadable long
-        # before you can tell which method is winning at a given rank.
-        bar_width = 0.8 / n_methods
-        cmap = plt.get_cmap("tab10" if n_methods <= 10 else "tab20")
-        for mi, m in enumerate(methods):
+        bins = np.arange(0.5, max_rank + 1.5, 1)
+        for m in methods:
             sub = hits.loc[hits["method"] == m, "rank_of_true_period"]
-            counts = sub.value_counts().reindex(ranks, fill_value=0).sort_index()
-            offset = (mi - (n_methods - 1) / 2) * bar_width
-            ax.bar(ranks + offset, counts.values, width=bar_width, label=m, color=cmap(mi))
+            if len(sub):
+                ax.hist(sub, bins=bins, alpha=0.5, label=m)
         ax.set_xlabel("rank at which the true period appeared")
         ax.set_ylabel("count")
-        ax.set_xticks(ranks)
-        ax.legend(fontsize=8, ncol=2 if n_methods > 4 else 1)
+        ax.legend(fontsize=8)
     ax.set_title("Rank of true period among hits, by method")
     fig.tight_layout()
     fig.savefig(outdir / "rank_distribution.png", dpi=150)
@@ -632,11 +449,6 @@ def main():
     p.add_argument("--n-guesses", type=int, default=10, help="top-N candidates per method (default 10)")
     p.add_argument("--rel-tol", type=float, default=0.15, help="relative match tolerance (default 0.15)")
     p.add_argument(
-        "--n-workers", type=int, default=DEFAULT_N_WORKERS,
-        help=f"number of worker processes (default {DEFAULT_N_WORKERS}); "
-             f"use 1 for sequential processing (easier debugging)",
-    )
-    p.add_argument(
         "--sectors", type=str, default=None,
         help="comma-separated sector list to keep, e.g. '1,2,6,7,12' (default: all available)",
     )
@@ -653,7 +465,7 @@ def main():
 
     run_batch(
         fits_paths, args.outdir,
-        n_guesses=args.n_guesses, rel_tol=args.rel_tol, n_workers=args.n_workers, **load_kwargs,
+        n_guesses=args.n_guesses, rel_tol=args.rel_tol, **load_kwargs,
     )
 
 
