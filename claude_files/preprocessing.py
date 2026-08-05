@@ -850,8 +850,8 @@ def load_smarts_fits(
     Steps (see the module docstring for the full rationale):
         1. Read time/flux from the FITS file's LIGHTCURVE HDU (flux is
            shifted from SMARTS' 1.0-centered convention to 0-centered, to
-           match what the rest of this codebase -- acf_utils, comb_fit,
-           etc. -- expects) and the injected rotation period from the
+           match what the rest of this codebase -- acf_utils, guesses,
+           comb_fit, etc. -- expects) and the injected rotation period from the
            primary header.
         2. split_lightcurve: re-detect the original per-orbit gaps and
            break the light curve back into individual orbits.

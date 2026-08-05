@@ -2,7 +2,7 @@
 """
 batch_test_acf_fft_highpass.py
 
-Batch-runs guess_acf_fft_highpass (comb_fit.py) across a list of SMARTS
+Batch-runs guess_acf_fft_highpass (guesses.py) across a list of SMARTS
 light curves, recording which smoothing window produced each candidate,
 so you can check afterward which window recovers the true period best in
 which true-period range.
@@ -75,7 +75,7 @@ from astropy.io import fits
 
 from preprocessing import load_smarts_fits
 from acf_utils import compute_acf
-from comb_fit import guess_acf_fft_highpass
+from guesses import guess_acf_fft_highpass
 
 HEADER_KEYS = [
     "PERIOD", "ACTIVITY", "CYCLE", "OVERLAP", "INCL",

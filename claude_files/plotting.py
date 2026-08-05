@@ -1,7 +1,7 @@
 """
 plotting.py
 
-Diagnostic plots for the comb_fit.py (v2) pipeline:
+Diagnostic plots for the guesses.py + comb_fit.py (v2) pipeline:
     - the ACF itself, with detected peaks and/or comb teeth marked
     - the specific ACF peaks used by guess_pairwise_histogram
     - the pairwise-spacing histogram, with all candidates from one
@@ -34,7 +34,8 @@ from typing import Optional, Union
 import numpy as np
 import matplotlib.pyplot as plt
 
-from comb_fit import InitialGuess, CombFitResult, EnsembleResult, CandidateResult
+from comb_fit import CombFitResult, EnsembleResult, CandidateResult
+from guesses import InitialGuess
 
 
 def _as_list(guesses: Union[InitialGuess, list]) -> list:

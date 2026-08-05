@@ -12,7 +12,7 @@ any literature that informed it, and which pipeline stage computes it.
 PIPELINE STAGES REFERENCED BELOW
 ---------------------------------
   Stage 1 (candidate generation): guess_pairwise_histogram / guess_lombscargle
-      / guess_acf_fft in comb_fit.py. Cheap, method-native candidate proposal;
+      / guess_acf_fft in guesses.py. Cheap, method-native candidate proposal;
       never touches the ACF's actual shape.
   Stage 2 (joint comb fit): _fit_single_candidate in comb_fit.py. The
       expensive, authoritative joint least-squares parabola-comb fit for one
@@ -534,7 +534,7 @@ Description  : A statistically calibrated absolute-significance measure,
 Reference    : Baluev (2008), the FAP method astropy implements by default
                for this use case.
 Stage        : 5 (feature extraction; requires the stored LombScargle object
-               -- see guess_lombscargle's info['ls_object'] in comb_fit.py,
+               -- see guess_lombscargle's info['ls_object'] in guesses.py,
                added specifically to support this feature).
 
 --------------------------------------------------------------------------
@@ -598,7 +598,7 @@ coverage_at_fit
 Definition   : Fraction of the RAW found ACF peaks (from
                guess_pairwise_histogram's peak-finding step) that land near
                a comb tooth at this candidate's ACTUAL FITTED (P, t0) --
-               using comb_fit._peak_coverage_fraction, but evaluated
+               using guesses._peak_coverage_fraction, but evaluated
                generically for every candidate regardless of originating
                method, at the true fitted phase rather than a crude anchor.
 Description  : The improved version of the legacy coverage_at_generation

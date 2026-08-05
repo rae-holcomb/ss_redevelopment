@@ -2,12 +2,12 @@
 example_messy_data.py
 
 Recommended workflow for real, messy light curves (gaps, weak/noisy
-rotation signals) using the v2 comb_fit.py API:
+rotation signals) using the guesses.py + comb_fit.py pipeline:
 
     1. compute_acf (acf_utils) -- gap-aware, handles NaN-filled cadences
        (e.g. TESS downlink/momentum-dump gaps) without needing to
        interpolate or discard most of the data.
-    2. gather_initial_guesses (comb_fit) -- collect candidate periods from
+    2. gather_initial_guesses (guesses) -- collect candidate periods from
        all three guess_* methods (top n_guesses each, cheap, no ACF
        cross-checking yet).
     3. fit_rotation_period (comb_fit) -- fit the real joint comb model to
@@ -20,7 +20,8 @@ rotation signals) using the v2 comb_fit.py API:
 
 import numpy as np
 from acf_utils import compute_acf
-from comb_fit import gather_initial_guesses, fit_rotation_period, assess_rotation_candidate
+from guesses import gather_initial_guesses
+from comb_fit import fit_rotation_period, assess_rotation_candidate
 from plotting import plot_full_diagnostic
 
 

@@ -6,7 +6,7 @@ Full pipeline starting from a raw SMARTS FITS file:
        original per-orbit gaps, drop bad orbits, optionally keep only a
        hand-picked subset of sectors, regrid to even cadence.
     2. compute_acf (acf_utils.py) -- gap-aware ACF.
-    3. gather_initial_guesses + fit_rotation_period (comb_fit.py) --
+    3. gather_initial_guesses (guesses.py) + fit_rotation_period (comb_fit.py) --
        candidate generation, joint fit, and reliability-gated arbitration.
     4. extract_candidate_features (ml_features.py) -- flatten into a
        training-ready feature table (with a label, since we know the
@@ -17,7 +17,8 @@ Full pipeline starting from a raw SMARTS FITS file:
 import numpy as np
 from preprocessing import load_smarts_fits, plot_split_diagnostics
 from acf_utils import compute_acf
-from comb_fit import gather_initial_guesses, fit_rotation_period
+from guesses import gather_initial_guesses
+from comb_fit import fit_rotation_period
 from ml_features import extract_candidate_features
 from plotting import plot_full_diagnostic
 

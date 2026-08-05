@@ -3,7 +3,7 @@
 batch_test_guesses.py
 
 Batch-runs every guess_* candidate-generation function found in your
-comb_fit.py module against a list of SMARTS light curves, WITHOUT calling
+guesses.py module against a list of SMARTS light curves, WITHOUT calling
 fit_rotation_period (no fitting, no gate-checking, no arbitration between
 methods). For each light curve x method, it keeps the top-N candidates and
 records whether/where the true (injected) period appears among them.
@@ -13,7 +13,7 @@ step, how good is each guess_* function at putting the right period
 somewhere in its short list?" -- independent of how well the downstream
 joint comb fit later cleans things up.
 
-Assumes preprocessing.py, acf_utils.py, and comb_fit.py (your existing
+Assumes preprocessing.py, acf_utils.py, and guesses.py (your existing
 modules) are importable, i.e. this script is run from the same directory
 as those files, or they're on your PYTHONPATH.
 
@@ -31,7 +31,7 @@ Outputs (written to --outdir)
                               smoothing_window, rank<=N). smoothing_window
                               is NaN except for acf_fft_highpass, whose
                               candidates each record which of its internal
-                              smoothing windows (see comb_fit.py) produced
+                              smoothing windows (see guesses.py) produced
                               them.
     summary.csv            : one row per (light curve, method,
                               smoothing_window) -- was the true period
@@ -72,7 +72,7 @@ from astropy.io import fits
 
 from preprocessing import load_smarts_fits
 from acf_utils import compute_acf
-import comb_fit
+import guesses
 
 # guess_acf_fft_highpass tags each of its candidates by originating
 # smoothing window, e.g. "acf_fft_hp5d" -- this recovers that window so it
@@ -93,23 +93,23 @@ HEADER_KEYS = [
 # --n-workers on a different machine.
 DEFAULT_N_WORKERS = 10
 
-# every guess_* function in comb_fit.py shares this call signature:
+# every guess_* function in guesses.py shares this call signature:
 # fn(time, flux, acf_lags, acf, ..., n_guesses=...) -> list[InitialGuess]
 REQUIRED_ARGS = {"time", "flux", "acf_lags", "acf"}
 
 
-def discover_guess_functions(module=comb_fit) -> dict:
+def discover_guess_functions(module=guesses) -> dict:
     """Auto-discover every guess_* candidate-generation function in `module`.
 
     Rather than hardcoding a fixed list of method names, this inspects
     `module` for functions named 'guess_*' whose signature accepts the
     standard (time, flux, acf_lags, acf, ...) call pattern shared by every
-    guess_* function in comb_fit.py. That way, if you add a 5th (or 6th)
+    guess_* function in guesses.py. That way, if you add a 5th (or 6th)
     method later, this script picks it up automatically with no changes.
 
     Parameters
     ----------
-    module : the module to search (default: comb_fit).
+    module : the module to search (default: guesses).
 
     Returns
     -------
@@ -208,7 +208,7 @@ def parse_smoothing_window(method_tag: str):
     method tag, e.g. "acf_fft_hp5d" -> 5.0.
 
     Only guess_acf_fft_highpass's candidates carry a window this way (see
-    its docstring in comb_fit.py); every other guess_* function's method
+    its docstring in guesses.py); every other guess_* function's method
     tag is a plain name like "lombscargle" with no embedded window.
 
     Parameters
@@ -263,7 +263,7 @@ def process_one_lightcurve(
         every method except acf_fft_highpass this is exactly one row per
         method (smoothing_window=NaN), same as before. For
         acf_fft_highpass it's one row per smoothing window swept
-        internally by that function (see its docstring in comb_fit.py),
+        internally by that function (see its docstring in guesses.py),
         since scoring its candidates as a single mixed-window ranked list
         would both discard which window found the true period and
         compute a rank that doesn't mean what it looks like.
@@ -452,7 +452,7 @@ def run_batch(
     guess_fns = discover_guess_functions()
     if not guess_fns:
         raise RuntimeError(
-            "No guess_* functions found in comb_fit.py matching the "
+            "No guess_* functions found in guesses.py matching the "
             "expected (time, flux, acf_lags, acf, ...) signature."
         )
     print(f"Discovered {len(guess_fns)} guess_* function(s): {list(guess_fns)}")

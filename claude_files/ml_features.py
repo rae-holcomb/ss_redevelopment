@@ -39,7 +39,8 @@ import pandas as pd
 from scipy.signal import find_peaks
 from scipy.stats import skew as _skew, kurtosis as _kurtosis
 
-from comb_fit import EnsembleResult, InitialGuess, _peak_coverage_fraction
+from comb_fit import EnsembleResult
+from guesses import InitialGuess, _peak_coverage_fraction
 
 
 # ==========================================================================
