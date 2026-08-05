@@ -64,7 +64,6 @@ import argparse
 import glob as globmod
 import re
 import sys
-import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 

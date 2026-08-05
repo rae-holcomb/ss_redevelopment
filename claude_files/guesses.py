@@ -43,7 +43,7 @@ from __future__ import annotations
 
 import warnings
 from dataclasses import dataclass, field, replace
-from typing import Callable, Optional, Union
+from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd

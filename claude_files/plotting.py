@@ -1,7 +1,7 @@
 """
 plotting.py
 
-Diagnostic plots for the guesses.py + comb_fit.py (v2) pipeline:
+Diagnostic plots for the guesses.py + comb_fit.py pipeline:
     - the ACF itself, with detected peaks and/or comb teeth marked
     - the specific ACF peaks used by guess_pairwise_histogram
     - the pairwise-spacing histogram, with all candidates from one
@@ -17,7 +17,7 @@ Every function takes an existing matplotlib Axes via `ax=...` (creating one
 if not given) and returns (fig, ax), so plots can be composed into your own
 multi-panel figures or saved/customized afterward.
 
-Note on the v2 API: guess_pairwise_histogram/guess_lombscargle/guess_acf_fft
+Note: guess_pairwise_histogram/guess_lombscargle/guess_acf_fft
 each return a LIST of InitialGuess (their top n_guesses candidates), not a
 single one. The plotting functions below that visualize a single method's
 output (plot_pairwise_histogram_peaks, plot_pairwise_spacing_histogram,
@@ -34,7 +34,7 @@ from typing import Optional, Union
 import numpy as np
 import matplotlib.pyplot as plt
 
-from comb_fit import CombFitResult, EnsembleResult, CandidateResult
+from comb_fit import CombFitResult, EnsembleResult
 from guesses import InitialGuess
 
 

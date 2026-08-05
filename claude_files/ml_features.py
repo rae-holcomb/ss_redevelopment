@@ -40,7 +40,7 @@ from scipy.signal import find_peaks
 from scipy.stats import skew as _skew, kurtosis as _kurtosis
 
 from comb_fit import EnsembleResult
-from guesses import InitialGuess, _peak_coverage_fraction
+from guesses import _peak_coverage_fraction
 
 
 # ==========================================================================
@@ -235,6 +235,151 @@ def _group_guesses_by_method(guesses: list) -> dict:
     return reps
 
 
+def _ls_family_block(guess, prefix: str, fitted_P: float, agreement_rel_tol: float):
+    """Shared logic for any method whose info dict looks like
+    guess_lombscargle's (a "periodogram" tuple, optionally an "ls_object"
+    for FAP): guess_lombscargle itself, and guess_lombscargle_short, whose
+    info dict is untouched by dataclasses.replace() and so has the exact
+    same shape. Returns (feature_dict, frac_power_or_None, recognized: bool).
+    """
+    keys = ("rank", "frac_power", "rel_distance", "width", "fap")
+    if guess is None:
+        return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False
+
+    periods, power = guess.info["periodogram"]
+    stats = _nearest_peak_stats(periods, power, fitted_P)
+    if stats is None:
+        return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False
+
+    out = {
+        f"{prefix}_nearest_peak_rank": stats["rank"],
+        f"{prefix}_nearest_peak_frac_power": stats["frac_power"],
+        f"{prefix}_nearest_peak_rel_distance": stats["rel_distance"],
+        f"{prefix}_nearest_peak_width": stats["width"],
+    }
+    ls_obj = guess.info.get("ls_object")
+    if ls_obj is not None and np.isfinite(stats["raw_value"]):
+        try:
+            out[f"{prefix}_nearest_peak_fap"] = float(
+                ls_obj.false_alarm_probability(stats["raw_value"], method="baluev")
+            )
+        except Exception:  # noqa: BLE001 -- FAP is a nice-to-have, never fatal
+            out[f"{prefix}_nearest_peak_fap"] = np.nan
+    else:
+        out[f"{prefix}_nearest_peak_fap"] = np.nan
+
+    recognized = stats["rel_distance"] <= agreement_rel_tol
+    return out, stats["frac_power"], recognized
+
+
+def _fft_family_block(guess, prefix: str, fitted_P: float, agreement_rel_tol: float):
+    """Shared logic for any method whose info dict looks like
+    guess_acf_fft's ("fft_freq"/"fft_power" arrays): guess_acf_fft itself,
+    guess_acf_fft_short (info dict untouched by dataclasses.replace(), same
+    shape), and each per-window candidate from guess_acf_fft_highpass
+    (same shape again -- only the underlying ACF differs). Returns
+    (feature_dict, frac_power_or_None, recognized: bool, noise_floor_snr).
+    The SNR is returned separately (not just folded into the dict) so
+    guess_acf_fft_highpass's aggregation across windows can compare it
+    without re-deriving it.
+    """
+    keys = ("rank", "frac_power", "rel_distance", "width", "snr")
+    if guess is None:
+        return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False, np.nan
+
+    freq, power = guess.info["fft_freq"], guess.info["fft_power"]
+    periods = 1.0 / freq
+    order = np.argsort(periods)
+    periods_sorted, power_sorted = periods[order], power[order]
+    stats = _nearest_peak_stats(periods_sorted, power_sorted, fitted_P)
+    if stats is None:
+        return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False, np.nan
+
+    noise_floor = float(np.median(power_sorted))
+    snr = stats["raw_value"] / noise_floor if noise_floor > 0 else np.nan
+    out = {
+        f"{prefix}_nearest_peak_rank": stats["rank"],
+        f"{prefix}_nearest_peak_frac_power": stats["frac_power"],
+        f"{prefix}_nearest_peak_rel_distance": stats["rel_distance"],
+        f"{prefix}_nearest_peak_width": stats["width"],
+        f"{prefix}_nearest_peak_snr": snr,
+    }
+    recognized = stats["rel_distance"] <= agreement_rel_tol
+    return out, stats["frac_power"], recognized, snr
+
+
+def _wavelet_block(guess, fitted_P: float, agreement_rel_tol: float):
+    """guess_wavelet's info dict holds ("periods", "gwps") -- already an
+    ascending-period power array, same shape _nearest_peak_stats expects,
+    just not called "periodogram"/"fft_power" since it's neither. No FAP
+    equivalent exists for a wavelet spectrum, so (like guess_acf_fft) the
+    absolute-significance companion is a median-based SNR rather than a
+    calibrated probability.
+    """
+    keys = ("rank", "frac_power", "rel_distance", "width", "snr")
+    if guess is None:
+        return {f"wavelet_nearest_peak_{k}": np.nan for k in keys}, None, False
+
+    periods, gwps = guess.info["periods"], guess.info["gwps"]
+    stats = _nearest_peak_stats(periods, gwps, fitted_P)
+    if stats is None:
+        return {f"wavelet_nearest_peak_{k}": np.nan for k in keys}, None, False
+
+    noise_floor = float(np.median(gwps))
+    out = {
+        "wavelet_nearest_peak_rank": stats["rank"],
+        "wavelet_nearest_peak_frac_power": stats["frac_power"],
+        "wavelet_nearest_peak_rel_distance": stats["rel_distance"],
+        "wavelet_nearest_peak_width": stats["width"],
+        "wavelet_nearest_peak_snr": stats["raw_value"] / noise_floor if noise_floor > 0 else np.nan,
+    }
+    recognized = stats["rel_distance"] <= agreement_rel_tol
+    return out, stats["frac_power"], recognized
+
+
+def _fft_highpass_family_block(method_reps: dict, fitted_P: float, agreement_rel_tol: float):
+    """guess_acf_fft_highpass returns one candidate group per smoothing
+    window it was given, tagged "acf_fft_hp{window}d" -- a dynamic set of
+    method names that depends on the caller's smooth_windows argument, not
+    a fixed list like every other method here. Exploding that into one
+    column-per-window would give a different feature schema for every run
+    with a different smooth_windows setting, which is a real problem for
+    concatenating feature tables across many stars into one training
+    matrix. Instead, this evaluates every "acf_fft_hp*d" candidate present
+    (each via _fft_family_block, since their info dict has the same shape
+    as plain guess_acf_fft) and reports only the single BEST one (by
+    fractional power) under a fixed "fft_highpass_*" prefix, plus which
+    window won (fft_highpass_best_window) and how many windows were even
+    available (fft_highpass_n_windows_tested) for context.
+    """
+    keys = ("rank", "frac_power", "rel_distance", "width", "snr")
+    hp_keys = sorted(k for k in method_reps if k.startswith("acf_fft_hp"))
+    out_base = {"fft_highpass_n_windows_tested": len(hp_keys), "fft_highpass_best_window": None}
+
+    if not hp_keys:
+        out_base.update({f"fft_highpass_nearest_peak_{k}": np.nan for k in keys})
+        return out_base, None, False
+
+    best = None  # (frac_power, window_key, block_dict, recognized)
+    for key in hp_keys:
+        block, frac_power, recognized, _snr = _fft_family_block(
+            method_reps[key], "fft_highpass", fitted_P, agreement_rel_tol
+        )
+        if frac_power is None:
+            continue
+        if best is None or frac_power > best[0]:
+            best = (frac_power, key, block, recognized)
+
+    if best is None:
+        out_base.update({f"fft_highpass_nearest_peak_{k}": np.nan for k in keys})
+        return out_base, None, False
+
+    frac_power, key, block, recognized = best
+    out_base.update(block)
+    out_base["fft_highpass_best_window"] = key
+    return out_base, frac_power, recognized
+
+
 def _method_spectrum_features(
     fitted_P: float,
     fitted_t0: float,
@@ -245,69 +390,52 @@ def _method_spectrum_features(
     candidate's fitted (P, t0), regardless of which method originally
     proposed the candidate. See FEATURE_DOCUMENTATION.txt for the full
     rationale for each field.
+
+    Covers all seven candidate-generation methods, not just the three
+    always-on ones: the four opt-in methods (guess_wavelet,
+    guess_lombscargle_short, guess_acf_fft_short, guess_acf_fft_highpass)
+    are silently skipped (contribute no *_nearest_peak_* columns, and
+    don't count toward n_methods_recognize_as_peak/combined_method_strength)
+    if they weren't part of the guess pool for this star -- this function's
+    behavior for a star fit with only the three default methods is
+    unchanged from before these four were added.
     """
     out = {}
     recognized = 0
     strengths = []
 
-    # --- Lomb-Scargle ---
-    ls_guess = method_reps.get("lombscargle")
-    if ls_guess is not None:
-        periods, power = ls_guess.info["periodogram"]
-        stats = _nearest_peak_stats(periods, power, fitted_P)
-        if stats is not None:
-            out["ls_nearest_peak_rank"] = stats["rank"]
-            out["ls_nearest_peak_frac_power"] = stats["frac_power"]
-            out["ls_nearest_peak_rel_distance"] = stats["rel_distance"]
-            out["ls_nearest_peak_width"] = stats["width"]
-            ls_obj = ls_guess.info.get("ls_object")
-            if ls_obj is not None and np.isfinite(stats["raw_value"]):
-                try:
-                    out["ls_nearest_peak_fap"] = float(
-                        ls_obj.false_alarm_probability(stats["raw_value"], method="baluev")
-                    )
-                except Exception:  # noqa: BLE001 -- FAP is a nice-to-have, never fatal
-                    out["ls_nearest_peak_fap"] = np.nan
-            else:
-                out["ls_nearest_peak_fap"] = np.nan
-            if stats["rel_distance"] <= agreement_rel_tol:
-                recognized += 1
-            strengths.append(stats["frac_power"])
-        else:
-            for k in ("rank", "frac_power", "rel_distance", "width", "fap"):
-                out[f"ls_nearest_peak_{k}"] = np.nan
-    else:
-        for k in ("rank", "frac_power", "rel_distance", "width", "fap"):
-            out[f"ls_nearest_peak_{k}"] = np.nan
+    def _fold_in(block, frac_power, is_recognized):
+        out.update(block)
+        if frac_power is not None:
+            strengths.append(frac_power)
+        if is_recognized:
+            nonlocal recognized
+            recognized += 1
 
-    # --- ACF FFT ---
-    fft_guess = method_reps.get("acf_fft")
-    if fft_guess is not None:
-        freq, power = fft_guess.info["fft_freq"], fft_guess.info["fft_power"]
-        periods = 1.0 / freq
-        order = np.argsort(periods)
-        periods_sorted, power_sorted = periods[order], power[order]
-        stats = _nearest_peak_stats(periods_sorted, power_sorted, fitted_P)
-        if stats is not None:
-            out["fft_nearest_peak_rank"] = stats["rank"]
-            out["fft_nearest_peak_frac_power"] = stats["frac_power"]
-            out["fft_nearest_peak_rel_distance"] = stats["rel_distance"]
-            out["fft_nearest_peak_width"] = stats["width"]
-            noise_floor = float(np.median(power_sorted))
-            out["fft_nearest_peak_snr"] = (
-                stats["raw_value"] / noise_floor if noise_floor > 0 else np.nan
-            )
-            if stats["rel_distance"] <= agreement_rel_tol:
-                recognized += 1
-            strengths.append(stats["frac_power"])
-        else:
-            for k in ("rank", "frac_power", "rel_distance", "width", "snr"):
-                out[f"fft_nearest_peak_{k}"] = np.nan
-    else:
-        for k in ("rank", "frac_power", "rel_distance", "width", "snr"):
-            out[f"fft_nearest_peak_{k}"] = np.nan
+    # --- Lomb-Scargle family: lombscargle, lombscargle_short ---
+    _fold_in(*_ls_family_block(method_reps.get("lombscargle"), "ls", fitted_P, agreement_rel_tol))
+    _fold_in(*_ls_family_block(
+        method_reps.get("lombscargle_short"), "ls_short", fitted_P, agreement_rel_tol
+    ))
 
-    # --- pairwise-spacing histogram ---
+    # --- ACF FFT family: acf_fft, acf_fft_short, acf_fft_highpass (aggregated) ---
+    block, frac_power, recognized_fft, _snr = _fft_family_block(
+        method_reps.get("acf_fft"), "fft", fitted_P, agreement_rel_tol
+    )
+    _fold_in(block, frac_power, recognized_fft)
+    block, frac_power, recognized_fft_short, _snr = _fft_family_block(
+        method_reps.get("acf_fft_short"), "fft_short", fitted_P, agreement_rel_tol
+    )
+    _fold_in(block, frac_power, recognized_fft_short)
+    _fold_in(*_fft_highpass_family_block(method_reps, fitted_P, agreement_rel_tol))
+
+    # --- Wavelet ---
+    _fold_in(*_wavelet_block(method_reps.get("wavelet"), fitted_P, agreement_rel_tol))
+
+    # --- pairwise-spacing histogram (unchanged from before; distinct
+    # naming/shape -- "hist_nearest_bin_*", no width/significance field --
+    # since a spacing histogram isn't really the same kind of object as a
+    # power spectrum) ---
     pw_guess = method_reps.get("pairwise_histogram")
     if pw_guess is not None:
         bin_centers, hist = pw_guess.info["histogram"]
@@ -663,7 +791,6 @@ def extract_candidate_features(
         diag = c.diagnostics
         guess = c.source_guess
 
-        heights = diag["heights"]
         height_snr = diag["height_snr"]
         curvatures = diag["curvatures"]
 

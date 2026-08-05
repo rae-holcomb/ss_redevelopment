@@ -43,7 +43,7 @@ of this same design discussion.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, Optional, Union
 
 import numpy as np
@@ -230,7 +230,6 @@ def _build_comb_params(
 
     for w in windows:
         n = w.n
-        lag_sub = acf_lags[w.mask]
         acf_sub = acf[w.mask]
 
         if allow_jitter and n > 0:
