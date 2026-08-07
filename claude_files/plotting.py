@@ -485,12 +485,16 @@ def plot_comb_fit(
     ax.plot(acf_lags, acf, lw=1, color="0.35", zorder=1, label="ACF")
     ax.axhline(0, color="0.85", lw=0.8, zorder=0)
 
-    params = fit.lmfit_result.params
     for i, w in enumerate(fit.windows):
         n = w.n
-        c = params[f"center_{n}"].value
-        A = params[f"A_{n}"].value
-        h = params[f"h_{n}"].value
+        # read fitted values from per_peak (populated regardless of which
+        # optimizer backend produced the fit) rather than lmfit_result,
+        # which may be None now that _fit_single_candidate's hot path
+        # doesn't route through lmfit.Parameters -- see this project's
+        # fitting-performance notes.
+        c = fit.per_peak[n]["center"]
+        A = fit.per_peak[n]["curvature"]
+        h = fit.per_peak[n]["height"]
 
         if shade_windows:
             ax.axvspan(w.lag_lo, w.lag_hi, color="steelblue", alpha=0.08, zorder=0)

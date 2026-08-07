@@ -47,6 +47,7 @@ from typing import Callable, Optional
 
 import numpy as np
 import pandas as pd
+from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
 try:
@@ -777,16 +778,52 @@ def _cwt_morlet(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
     scipy.signal.cwt(data, morlet2, scales, w=w0) behavior via FFT-based
     convolution for speed). Returns a complex array of shape
     (len(scales), len(data)).
-    """
-    from scipy.signal import fftconvolve
 
-    output = np.empty((len(scales), len(data)), dtype=complex)
+    Computes the FFT of `data` ONCE (at a fixed size large enough for
+    every scale's kernel) and reuses it across all scales, rather than
+    calling scipy.signal.fftconvolve per scale -- which would silently
+    recompute fft(data) from scratch on every one of the ~200 calls this
+    function makes for a typical n_periods grid. That redundant FFT of
+    the full (often several-thousand-point) light curve was measured to
+    be the majority of guess_wavelet's cost (see this project's
+    fitting-performance notes). Each scale's own (much shorter) kernel
+    still needs its own FFT, since the kernel genuinely differs per
+    scale -- an earlier attempt to also batch all scales' kernel FFTs
+    into one call was tried and measured SLOWER, not faster (zero-padding
+    every kernel, including the many short ones from small scales, up to
+    the single largest kernel's FFT size wastes more than it saves), so
+    that part is deliberately left as a per-scale loop.
+    """
+    from scipy.fft import fft, ifft, next_fast_len
+
+    n_data = len(data)
+    kernel_lens = [max(int(min(10 * s, n_data)), 3) for s in scales]
+    n_fft = next_fast_len(n_data + max(kernel_lens) - 1)
+
+    data_fft = fft(data, n=n_fft)
+
+    output = np.empty((len(scales), n_data), dtype=complex)
     for i, s in enumerate(scales):
-        n_kernel = int(min(10 * s, len(data)))
-        n_kernel = max(n_kernel, 3)
+        n_kernel = kernel_lens[i]
         kernel = _morlet2_kernel(n_kernel, s, w0)
-        output[i] = fftconvolve(data, kernel, mode="same")
+        full = ifft(data_fft * fft(kernel, n=n_fft))
+        # mode="same" extraction, matching scipy.signal.fftconvolve's
+        # convention when the first argument (data) is the longer input:
+        # centered window of length n_data out of the length
+        # (n_data + n_kernel - 1) linear convolution.
+        start = (n_kernel - 1) // 2
+        output[i] = full[start:start + n_data]
     return output
+
+
+def _gaussian(x: np.ndarray, height: float, center: float, sigma: float) -> np.ndarray:
+    """height-parameterized Gaussian: height * exp(-(x-center)^2 / (2*sigma^2)).
+    Used by _fit_and_subtract_gaussian -- deliberately NOT lmfit's
+    GaussianModel (which uses an area/amplitude parameterization requiring
+    an extra evaluation step to recover the peak height), so the fit
+    directly returns what we actually want.
+    """
+    return height * np.exp(-0.5 * ((x - center) / sigma) ** 2)
 
 
 def _fit_and_subtract_gaussian(
@@ -801,31 +838,41 @@ def _fit_and_subtract_gaussian(
     and a Gaussian in linear period space would fit long-period peaks very
     poorly), and return (peak_info_dict, updated_residual). Returns None
     if the fit fails or collapses to a degenerate width.
-    """
-    from lmfit.models import GaussianModel
 
+    Uses scipy.optimize.curve_fit directly rather than lmfit.GaussianModel:
+    this is a tiny, well-conditioned 3-parameter fit on ~30 points, called
+    up to n_guesses times per light curve, and profiling found lmfit's
+    per-call Parameters/Model machinery was costing more than the actual
+    fit here (see this project's fitting-performance notes -- the same
+    class of overhead already removed from the main comb fit).
+    """
     i_peak = int(np.argmax(residual))
     lo = max(i_peak - fit_half_width_bins, 0)
     hi = min(i_peak + fit_half_width_bins + 1, len(residual))
     x = log_periods[lo:hi]
     y = residual[lo:hi]
 
-    model = GaussianModel()
-    params = model.guess(y, x=x)
-    params["center"].set(value=log_periods[i_peak], min=x[0], max=x[-1])
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        out = model.fit(y, params, x=x)
+    height0 = float(np.max(y))
+    center0 = float(log_periods[i_peak])
+    sigma0 = max((x[-1] - x[0]) / 4.0, 1e-6)
 
-    amp = out.params["amplitude"].value
-    center = out.params["center"].value
-    sigma = out.params["sigma"].value
-    if not np.isfinite([amp, center, sigma]).all() or sigma <= 0:
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=RuntimeWarning)
+            popt, _ = curve_fit(
+                _gaussian, x, y, p0=[height0, center0, sigma0],
+                bounds=([-np.inf, x[0], 1e-8], [np.inf, x[-1], max(x[-1] - x[0], 1e-7)]),
+                maxfev=200,
+            )
+    except RuntimeError:
         return None
 
-    full_fit = model.eval(out.params, x=log_periods)
+    height, center, sigma = (float(v) for v in popt)
+    if not np.isfinite([height, center, sigma]).all() or sigma <= 0:
+        return None
+
+    full_fit = _gaussian(log_periods, height, center, sigma)
     new_residual = residual - full_fit
-    height = float(model.eval(out.params, x=np.array([center]))[0])
     peak_info = dict(height=height, center_log_period=center, sigma_log_period=sigma)
     return peak_info, new_residual
 

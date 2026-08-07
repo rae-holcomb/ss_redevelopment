@@ -43,17 +43,11 @@ of this same design discussion.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Callable, Optional, Union
 
 import numpy as np
-
-try:
-    import lmfit
-except ImportError as e:  # pragma: no cover
-    raise ImportError(
-        "comb_fit requires lmfit (`pip install lmfit`)."
-    ) from e
+from scipy.optimize import least_squares as scipy_least_squares
 
 from guesses import InitialGuess
 
@@ -137,6 +131,114 @@ def comb_score(
     return float(np.sum(weights * vals) / np.sum(weights))
 
 
+def _short_period_group_key(method: str) -> Optional[str]:
+    """Map a candidate's method string to a short-period-family group key,
+    or None if it doesn't belong to one of the three known short-period-
+    focused families. Used by cap_short_period_candidates to decide which
+    candidates the cap applies to.
+
+    All guess_acf_fft_highpass window variants ("acf_fft_hp2d",
+    "acf_fft_hp5d", "acf_fft_hp10d", ...) map to the SAME group
+    ("acf_fft_highpass"), since every smoothing window in that function
+    searches the same [min_period, max_period] band -- they're different
+    filtering choices applied to the same underlying period range, not
+    different bands, so the cap should apply to their combined output
+    rather than separately per window (which would defeat the point: 5
+    windows x top_n each would still let the total balloon).
+    """
+    if method in ("lombscargle_short", "acf_fft_short"):
+        return method
+    if method.startswith("acf_fft_hp"):
+        return "acf_fft_highpass"
+    return None
+
+
+def cap_short_period_candidates(
+    guesses: list,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    min_lag: float,
+    top_n: int = 3,
+    scoring_n_phase: int = 40,
+) -> list:
+    """Prune the short-period-focused candidate families
+    (lombscargle_short, acf_fft_short, acf_fft_highpass) down to their
+    top `top_n` candidates each, ranked by comb_score, before they reach
+    the expensive joint comb fit. Candidates from every other method pass
+    through unchanged.
+
+    Why this exists: these three families exist specifically to search a
+    narrow period band more finely than the general-purpose methods do,
+    which means they can propose many candidates clustered in a small
+    part of parameter space (e.g. acf_fft_highpass alone can return up to
+    len(smooth_windows) * n_guesses candidates -- 25 with the defaults).
+    Every one of those gets fully joint-fit by fit_rotation_period unless
+    pruned first, which (a) is expensive (a single joint fit costs ~2-3
+    orders of magnitude more than a comb_score evaluation -- see this
+    project's timing notes) and (b) increases the chance that one
+    candidate exploits the near-lag-0 comb pitfall purely by having more
+    rolls of the dice (see this project's near-lag-0 regression case
+    study). We don't need every short-period candidate fit -- just the
+    few most promising ones -- so this cheaply ranks them first with the
+    same comb_score used to seed t0 elsewhere, and only lets the survivors
+    through to the expensive step.
+
+    Parameters
+    ----------
+    guesses : list[InitialGuess]
+        The full candidate pool (typically from gather_initial_guesses
+        and/or calling several guess_* functions directly).
+    acf_lags, acf : the ACF being fit against.
+    min_lag : lower bound for the t0 grid search (see _grid_search_t0),
+        for any candidate that doesn't already have a t0.
+    top_n : int
+        Number of candidates to keep per short-period family (default 3).
+    scoring_n_phase : int
+        Phase-grid resolution used for the t0 search here (default 40,
+        vs. _grid_search_t0's own default of 200). A coarser grid is fine:
+        _grid_search_t0 is explicitly documented as "a coarse, cheap
+        phase estimate meant to seed the real joint fit -- not a fit in
+        itself" regardless of which caller derives it, so there's no
+        precision this cap's ranking pass needs that the survivors'
+        eventual joint fit doesn't already tolerate. This t0 IS carried
+        forward onto survivors (fit_rotation_period reuses it rather than
+        re-deriving one), since re-searching at full resolution for the
+        few candidates that already have a perfectly adequate seed would
+        just re-spend the time this function exists to save.
+
+    Returns
+    -------
+    list[InitialGuess]
+        All non-short-period-family candidates, unchanged, plus up to
+        `top_n` per short-period family, each with its t0 filled in (if
+        it didn't already have one) and its comb_score recorded in `info`
+        (key "comb_score"), sorted highest-score-first within each
+        family.
+    """
+    groups: dict = {}
+    passthrough = []
+    for g in guesses:
+        key = _short_period_group_key(g.method)
+        if key is None:
+            passthrough.append(g)
+        else:
+            groups.setdefault(key, []).append(g)
+
+    capped = []
+    for group_guesses in groups.values():
+        scored = []
+        for g in group_guesses:
+            t0 = g.t0 if g.t0 is not None else _grid_search_t0(
+                acf_lags, acf, g.P0, min_lag=min_lag, n_phase=scoring_n_phase
+            )
+            score = comb_score(acf_lags, acf, g.P0, t0)
+            scored.append((score, replace(g, t0=t0, info={**g.info, "comb_score": score})))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        capped.extend(g for _, g in scored[:top_n])
+
+    return passthrough + capped
+
+
 def _grid_search_t0(
     acf_lags: np.ndarray,
     acf: np.ndarray,
@@ -201,7 +303,7 @@ def _build_windows(
     return windows
 
 
-def _build_comb_params(
+def _fit_comb_core(
     windows: list,
     acf_lags: np.ndarray,
     acf: np.ndarray,
@@ -210,78 +312,173 @@ def _build_comb_params(
     P_bounds_frac: float = 0.3,
     allow_jitter: bool = True,
     jitter_frac: float = 0.05,
+    loss: str = "soft_l1",
 ):
-    """Construct the tied lmfit.Parameters object for the comb model.
+    """Fit the joint comb-of-parabolae model directly via
+    scipy.optimize.least_squares with a hand-derived ANALYTIC Jacobian,
+    rather than through lmfit.Parameters with a finite-difference Jacobian.
 
-    Model per window n:
-        model(lag) = h_n - A_n * (lag - center_n)**2
-        center_n   = t0 + n*P0 + delta_n      (delta_n small, optional)
+    Why: profiling found two compounding costs in the old lmfit-based
+    approach (see this project's fitting-performance notes): (1) tying
+    each window's center to the shared P/t0 via an lmfit `expr=` string
+    made every residual evaluation re-interpret that expression through
+    lmfit's asteval engine -- fixed separately by computing centers with
+    plain arithmetic instead; (2) without an analytic Jacobian, scipy
+    estimates one by finite differences, which perturbs every one of the
+    ~20-30 free parameters separately and re-evaluates the FULL residual
+    for each -- roughly 20-30x more residual evaluations than fitting
+    needs, per Jacobian estimate, per optimizer iteration. This function
+    fixes the second, larger cost: the model is just h - A*(lag-c)**2
+    with c = t0 + n*P (+ delta_n), so its Jacobian is a few lines of
+    closed-form algebra (see the `jacobian` closure below) -- giving
+    scipy the exact Jacobian directly, in one cheap vectorized call,
+    instead of estimating an approximate one the expensive way.
 
-    P and t0 are single, shared parameters -- every window's center is
-    algebraically tied to them via an lmfit parameter *expression*
-    (`expr="t0 + {n}*P"`), which is what enforces "evenly spaced" as a hard
-    structural constraint rather than something checked after the fact.
-    A_n >= 0 is likewise a hard bound, enforcing "opens downward" (a
-    genuine ACF peak, not a trough) for every window independently.
+    This also drops the lmfit.Parameters layer entirely (not just the
+    `expr=` ties within it): the parameter vector here is a plain numpy
+    array with plain scipy bounds, with no per-call attribute-lookup
+    overhead. CombFitResult.fit_result stores the raw scipy OptimizeResult
+    for anyone who needs to inspect the fit directly, in place of the
+    lmfit MinimizerResult this field used to hold.
+
+    Parameter vector layout (built fresh per call, since `windows` can
+    change between RANSAC-rejection iterations): [P, t0, delta_n for each
+    window with n>0 (only if allow_jitter), A_n for each window in order,
+    h_n for each window in order].
+
+    Returns
+    -------
+    dict with keys: P, P_err, t0, t0_err, redchi, success, centers (dict
+    n -> fitted center), A (dict n -> fitted curvature), h (dict n ->
+    fitted height), raw (the scipy OptimizeResult).
     """
-    params = lmfit.Parameters()
-    params.add("P", value=P0, min=P0 * (1 - P_bounds_frac), max=P0 * (1 + P_bounds_frac))
-    params.add("t0", value=t0, min=t0 - 0.5 * P0, max=t0 + 0.5 * P0)
+    m = len(windows)
+    ns = [w.n for w in windows]
+    lag_subs = [acf_lags[w.mask] for w in windows]
+    acf_subs = [acf[w.mask] for w in windows]
+    n_points = [len(l) for l in lag_subs]
+    total_pts = sum(n_points)
+    starts = np.cumsum([0] + n_points)  # residual-block start offsets
 
-    for w in windows:
-        n = w.n
-        acf_sub = acf[w.mask]
+    delta_positions = [i for i, n in enumerate(ns) if n > 0] if allow_jitter else []
+    n_delta = len(delta_positions)
+    delta_pos_of = {i: k for k, i in enumerate(delta_positions)}  # window idx -> delta slot
 
-        if allow_jitter and n > 0:
-            # delta_n lets window n's center drift a little from the exact
-            # comb position, bounded to +/- jitter_frac*P. This tolerates
-            # gentle real period drift (e.g. differential rotation, spot
-            # evolution) without abandoning the tied structure entirely --
-            # every center is still anchored to (P, t0), just with a small
-            # per-window correction.
-            params.add(f"delta_{n}", value=0.0, min=-jitter_frac * P0, max=jitter_frac * P0)
-            params.add(f"center_{n}", expr=f"t0 + {n}*P + delta_{n}")
-        else:
-            # n=0's center IS t0 by definition; no jitter term needed.
-            params.add(f"center_{n}", expr=f"t0 + {n}*P" if n > 0 else "t0")
+    idx_P, idx_t0 = 0, 1
+    idx_delta0 = 2
+    idx_A0 = idx_delta0 + n_delta
+    idx_h0 = idx_A0 + m
+    n_params = idx_h0 + m
 
-        # Rough starting values for this window's own shape parameters,
-        # read directly off the windowed data (not fit yet, just a
-        # reasonable starting point for the optimizer).
+    x0 = np.zeros(n_params)
+    lb = np.full(n_params, -np.inf)
+    ub = np.full(n_params, np.inf)
+
+    x0[idx_P] = P0
+    lb[idx_P], ub[idx_P] = P0 * (1 - P_bounds_frac), P0 * (1 + P_bounds_frac)
+    x0[idx_t0] = t0
+    lb[idx_t0], ub[idx_t0] = t0 - 0.5 * P0, t0 + 0.5 * P0
+    for i in delta_positions:
+        pos = idx_delta0 + delta_pos_of[i]
+        lb[pos], ub[pos] = -jitter_frac * P0, jitter_frac * P0
+
+    for i, w in enumerate(windows):
+        acf_sub, lag_sub = acf_subs[i], lag_subs[i]
         h0_guess = float(np.max(acf_sub))
         half_w = 0.5 * (w.lag_hi - w.lag_lo)
         edge_drop = h0_guess - float(np.min(acf_sub))
         A0_guess = max(edge_drop, 1e-6) / max(half_w**2, 1e-6)
+        x0[idx_A0 + i] = A0_guess
+        lb[idx_A0 + i] = 0.0  # forces downward-opening
+        x0[idx_h0 + i] = h0_guess
 
-        params.add(f"A_{n}", value=A0_guess, min=0.0)  # min=0 forces downward opening
-        params.add(f"h_{n}", value=h0_guess)
+    ns_arr = np.array(ns, dtype=float)
 
-    return params
+    def _centers(x):
+        P, t0v = x[idx_P], x[idx_t0]
+        c = t0v + ns_arr * P
+        for i in delta_positions:
+            c[i] += x[idx_delta0 + delta_pos_of[i]]
+        return c
 
+    def residual(x):
+        centers = _centers(x)
+        out = np.empty(total_pts)
+        for i in range(m):
+            A, h, c = x[idx_A0 + i], x[idx_h0 + i], centers[i]
+            out[starts[i]:starts[i + 1]] = (h - A * (lag_subs[i] - c) ** 2) - acf_subs[i]
+        return out
 
-def _comb_residual(
-    params,
-    windows: list,
-    acf_lags: np.ndarray,
-    acf: np.ndarray,
-) -> np.ndarray:
-    """Residual vector for lmfit: for every window, evaluate that window's
-    parabola at its own data points and subtract the real ACF values.
-    Concatenated across all windows into one flat vector, since lmfit's
-    least_squares backend just wants a single 1D array to minimize the
-    sum-of-squares of.
-    """
-    resid = []
-    for w in windows:
-        n = w.n
-        lag_sub = acf_lags[w.mask]
-        acf_sub = acf[w.mask]
-        c = params[f"center_{n}"].value
-        A = params[f"A_{n}"].value
-        h = params[f"h_{n}"].value
-        model = h - A * (lag_sub - c) ** 2
-        resid.append(model - acf_sub)
-    return np.concatenate(resid)
+    def jacobian(x):
+        centers = _centers(x)
+        J = np.zeros((total_pts, n_params))
+        for i in range(m):
+            n, A, c = ns[i], x[idx_A0 + i], centers[i]
+            s0, s1 = starts[i], starts[i + 1]
+            diff = lag_subs[i] - c
+            dresid_dc = 2.0 * A * diff  # d/dc[h - A*(lag-c)^2] = 2*A*(lag-c)
+            J[s0:s1, idx_A0 + i] = -diff**2
+            J[s0:s1, idx_h0 + i] = 1.0
+            J[s0:s1, idx_P] = dresid_dc * n
+            J[s0:s1, idx_t0] = dresid_dc
+            if i in delta_pos_of:
+                J[s0:s1, idx_delta0 + delta_pos_of[i]] = dresid_dc
+        return J
+
+    fit_kws = {"loss": loss} if loss != "linear" else {}
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        res = scipy_least_squares(
+            residual, x0, jac=jacobian, bounds=(lb, ub),
+            # Looser than scipy's 1e-8 defaults: this project only needs
+            # ~1% relative period precision out of the comb fit itself
+            # (PDM refinement, where used, and the reliability gates both
+            # operate at that level, not 1e-8) -- tightening convergence
+            # far beyond what anything downstream uses just burns extra
+            # trust-region iterations (each one a fresh SVD solve, the
+            # single largest remaining cost per fit; see this project's
+            # fitting-performance notes) for precision nothing consumes.
+            xtol=1e-6, ftol=1e-6, gtol=1e-6,
+            **fit_kws,
+        )
+
+    centers_fit = _centers(res.x)
+    dof = total_pts - n_params
+    chisqr = float(np.sum(res.fun ** 2))
+    redchi = chisqr / dof if dof > 0 else float("nan")
+
+    P_err, t0_err = None, None
+    with warnings.catch_warnings():
+        # Same expected case the old lmfit-based code already anticipated:
+        # under a robust loss / near-degenerate J^T J, some diagonal
+        # covariance entries can come out negative (approximation
+        # artifact, not a real fit problem) -- sqrt of those is NaN by
+        # design here, not a bug to surface as a warning every call.
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        try:
+            # Same convention lmfit/scipy.curve_fit use: covariance from
+            # the (pseudo-inverted) J^T J, scaled by the residual
+            # variance. Only approximate under a robust loss, same
+            # caveat as before.
+            JTJ = res.jac.T @ res.jac
+            cov = np.linalg.pinv(JTJ) * (redchi if np.isfinite(redchi) else 1.0)
+            stderrs = np.sqrt(np.diag(cov))
+            if np.isfinite(stderrs[idx_P]):
+                P_err = float(stderrs[idx_P])
+            if np.isfinite(stderrs[idx_t0]):
+                t0_err = float(stderrs[idx_t0])
+        except (np.linalg.LinAlgError, ValueError):
+            pass
+
+    return dict(
+        P=float(res.x[idx_P]), P_err=P_err,
+        t0=float(res.x[idx_t0]), t0_err=t0_err,
+        redchi=redchi, success=bool(res.success),
+        centers={n: float(centers_fit[i]) for i, n in enumerate(ns)},
+        A={n: float(res.x[idx_A0 + i]) for i, n in enumerate(ns)},
+        h={n: float(res.x[idx_h0 + i]) for i, n in enumerate(ns)},
+        raw=res,
+    )
 
 
 @dataclass
@@ -291,7 +488,7 @@ class CombFitResult:
     t0: float
     t0_err: Optional[float]
     windows: list
-    lmfit_result: object
+    fit_result: object  # raw scipy.optimize.OptimizeResult (was an lmfit MinimizerResult before this project's fitting-performance rework -- see _fit_comb_core)
     per_peak: dict
     n_peaks_used: int
     n_peaks_dropped: int
@@ -365,28 +562,14 @@ def _fit_single_candidate(
         )
 
     n_dropped_total = 0
-    result = None
+    fit = None
 
     for iteration in range(max_reject_iters + 1):
         # --- fit with the current set of windows ---
-        params = _build_comb_params(
+        fit = _fit_comb_core(
             windows, acf_lags, acf, P0, t0,
-            allow_jitter=allow_jitter, jitter_frac=jitter_frac,
+            allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
         )
-        fit_kws = {"loss": loss} if loss != "linear" else {}
-        with warnings.catch_warnings():
-            # lmfit's stderr/covariance estimate is only approximate under
-            # robust losses and can emit a spurious "invalid value in sqrt"
-            # warning while computing it; the P/t0 point estimates
-            # themselves are unaffected.
-            warnings.simplefilter("ignore", category=RuntimeWarning)
-            result = lmfit.minimize(
-                _comb_residual,
-                params,
-                args=(windows, acf_lags, acf),
-                method="least_squares",
-                **fit_kws,
-            )
 
         # --- compute each window's own residual RMS, to decide what (if
         # anything) is bad enough to drop before the next iteration ---
@@ -395,9 +578,9 @@ def _fit_single_candidate(
             n = w.n
             lag_sub = acf_lags[w.mask]
             acf_sub = acf[w.mask]
-            c = result.params[f"center_{n}"].value
-            A = result.params[f"A_{n}"].value
-            h = result.params[f"h_{n}"].value
+            c = fit["centers"][n]
+            A = fit["A"][n]
+            h = fit["h"][n]
             model = h - A * (lag_sub - c) ** 2
             per_peak_rms[n] = float(np.sqrt(np.mean((model - acf_sub) ** 2)))
 
@@ -426,9 +609,9 @@ def _fit_single_candidate(
         n = w.n
         lag_sub = acf_lags[w.mask]
         acf_sub = acf[w.mask]
-        c = result.params[f"center_{n}"].value
-        A = result.params[f"A_{n}"].value
-        h = result.params[f"h_{n}"].value
+        c = fit["centers"][n]
+        A = fit["A"][n]
+        h = fit["h"][n]
         model = h - A * (lag_sub - c) ** 2
         # NOTE: w.lag_lo/w.lag_hi are frozen at candidate-generation time
         # (built from the CANDIDATE's initial P0/t0, before this fit ever
@@ -453,17 +636,17 @@ def _fit_single_candidate(
         )
 
     return CombFitResult(
-        P=result.params["P"].value,
-        P_err=result.params["P"].stderr,
-        t0=result.params["t0"].value,
-        t0_err=result.params["t0"].stderr,
+        P=fit["P"],
+        P_err=fit["P_err"],
+        t0=fit["t0"],
+        t0_err=fit["t0_err"],
         windows=windows,
-        lmfit_result=result,
+        fit_result=fit["raw"],
         per_peak=per_peak,
         n_peaks_used=len(windows),
         n_peaks_dropped=n_dropped_total,
-        redchi=float(result.redchi) if hasattr(result, "redchi") else float("nan"),
-        success=bool(result.success) and len(windows) >= min_peaks_required,
+        redchi=fit["redchi"],
+        success=bool(fit["success"]) and len(windows) >= min_peaks_required,
     )
 
 
@@ -906,6 +1089,7 @@ def fit_rotation_period(
     min_mean_height_snr: float = 1.0,
     min_frac_vertex_in_window: float = 0.8,
     dedup_rel_tol: float = 0.03,
+    short_period_cap_n: Optional[int] = 3,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -923,12 +1107,17 @@ def fit_rotation_period(
        also accepted, for convenience/backward compatibility).
 
     2. Sanity-filter (period not absurdly short, and long enough baseline
-       to fit at least 2 cycles) then deduplicate: candidates within
-       `dedup_rel_tol` relative difference of each other are treated as
-       the same candidate (only the first encountered, after sorting by
-       period, is kept) -- there's no point fitting nearly-identical
-       periods twice just because two different methods happened to
-       propose them independently.
+       to fit at least 2 cycles), then cap the short-period-focused
+       candidate families (lombscargle_short, acf_fft_short,
+       acf_fft_highpass) down to their top `short_period_cap_n` candidates
+       each by comb_score (see cap_short_period_candidates) -- these
+       families can otherwise flood the pool with many candidates
+       clustered in a narrow period band. Then deduplicate: candidates
+       within `dedup_rel_tol` relative difference of each other are
+       treated as the same candidate (only the first encountered, after
+       sorting by period, is kept) -- there's no point fitting nearly-
+       identical periods twice just because two different methods
+       happened to propose them independently.
 
     3. For each surviving candidate:
          a. If it doesn't already have a t0 (candidate generation doesn't
@@ -1007,6 +1196,12 @@ def fit_rotation_period(
     min_frac_vertex_in_window : the four reliability gates described above.
     dedup_rel_tol : relative-difference tolerance for treating two
         candidate periods as duplicates.
+    short_period_cap_n : if not None, cap the lombscargle_short,
+        acf_fft_short, and acf_fft_highpass candidate families down to
+        their top `short_period_cap_n` candidates each (by comb_score)
+        before the expensive fitting step -- see
+        cap_short_period_candidates for why. Set to None to disable and
+        fit every candidate from these families (the old behavior).
 
     Returns
     -------
@@ -1031,6 +1226,14 @@ def fit_rotation_period(
         g for g in initial_guesses
         if g.P0 > 2 * dt_acf and _teeth_count(g.P0, g.t0 or lag_min, lag_max) >= 2
     ]
+
+    # --- cap short-period-focused families before the expensive fitting
+    # step (see cap_short_period_candidates docstring) ---
+    if short_period_cap_n is not None:
+        sane = cap_short_period_candidates(
+            sane, acf_lags, acf, min_lag=min_lag, top_n=short_period_cap_n
+        )
+
     sane.sort(key=lambda g: g.P0)
     deduped = []
     merged_groups = []  # parallel to `deduped`: every raw guess merged into it

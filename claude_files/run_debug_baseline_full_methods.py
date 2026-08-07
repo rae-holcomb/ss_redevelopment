@@ -17,6 +17,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -75,7 +76,14 @@ def process_one_file(fits_path: str) -> dict:
     dict
         One row: star id, true period, per-method candidate counts and
         failures, pipeline success, recovered period, relative error,
-        alias diagnosis.
+        alias diagnosis, and two JSON-encoded method->count dicts:
+        raw_method_counts (candidates each method generated before any
+        filtering) and contributing_method_counts (how many of the
+        candidates actually tested by fit_rotation_period, after its
+        internal sanity filter / short-period cap / dedup, trace back to
+        each method -- a deduped candidate can have more than one
+        contributing method if two methods proposed nearly the same
+        period).
     """
     star_id = Path(fits_path).stem
     row = dict(
@@ -84,6 +92,7 @@ def process_one_file(fits_path: str) -> dict:
         n_peaks_used=np.nan, message="", rel_error=np.nan,
         alias_relation="", n_candidates_tried=np.nan,
         method_failures="", error="",
+        raw_method_counts_json="{}", contributing_method_counts_json="{}",
     )
     try:
         with fits.open(fits_path) as hdul:
@@ -96,21 +105,40 @@ def process_one_file(fits_path: str) -> dict:
         wavelet_flux = _prep_wavelet_flux(pre.flux)
 
         all_guesses = []
+        raw_method_counts = {}
         failed_methods = {}
         for method_name, (fn, n_guesses) in METHODS.items():
             flux_in = wavelet_flux if method_name == "wavelet" else pre.flux
             try:
-                all_guesses.extend(fn(pre.time, flux_in, acf_lags, acf, n_guesses=n_guesses))
+                g = fn(pre.time, flux_in, acf_lags, acf, n_guesses=n_guesses)
+                all_guesses.extend(g)
+                raw_method_counts[method_name] = len(g)
             except Exception as exc:  # noqa: BLE001 -- one method failing shouldn't block the rest
                 failed_methods[method_name] = f"{type(exc).__name__}: {exc}"
+                raw_method_counts[method_name] = 0
 
         row["method_failures"] = "; ".join(f"{k}: {v}" for k, v in failed_methods.items())
+        row["raw_method_counts_json"] = json.dumps(raw_method_counts)
 
         result = fit_rotation_period(acf_lags, acf, all_guesses)
 
         row["success"] = bool(result.success)
         row["message"] = result.message
         row["n_candidates_tried"] = result.n_candidates_tried
+
+        # tally, across every candidate that actually made it to the
+        # fitting stage (post sanity-filter/cap/dedup), which method(s)
+        # contributed it -- a candidate can list more than one method if
+        # dedup merged near-identical proposals from different methods
+        contributing_method_counts = {}
+        for c in result.candidates:
+            for m in c.contributing_methods:
+                # acf_fft_highpass tags candidates per smoothing window
+                # (acf_fft_hp2d, acf_fft_hp5d, ...) -- roll these back up
+                # to the parent method name for a readable summary
+                key = "acf_fft_highpass" if m.startswith("acf_fft_hp") else m
+                contributing_method_counts[key] = contributing_method_counts.get(key, 0) + 1
+        row["contributing_method_counts_json"] = json.dumps(contributing_method_counts)
 
         best = result.best_fit
         if best is not None:
