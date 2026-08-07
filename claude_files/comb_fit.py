@@ -430,12 +430,26 @@ def _fit_single_candidate(
         A = result.params[f"A_{n}"].value
         h = result.params[f"h_{n}"].value
         model = h - A * (lag_sub - c) ** 2
+        # NOTE: w.lag_lo/w.lag_hi are frozen at candidate-generation time
+        # (built from the CANDIDATE's initial P0/t0, before this fit ever
+        # ran), but `c` above is the algebraically-tied center from the
+        # FINAL fitted (shared) P/t0 -- which allow_jitter, the +/-30% P
+        # bound, and the +/-50%*P0 t0 bound can all move well away from
+        # where the window was originally built. If the fitted vertex has
+        # drifted outside its own window, this window's "fit" isn't
+        # actually constrained by a local peak at all -- the parabola is
+        # being extrapolated onto data it was never centered on, which can
+        # still produce a deceptively small residual on a smooth/shallow
+        # stretch of the ACF (e.g. the near-lag-0 decay envelope) without
+        # reflecting any real periodic structure there.
+        vertex_in_window = bool(w.lag_lo <= c <= w.lag_hi)
         per_peak[n] = dict(
             center=c,
             height=h,
             curvature=A,
             residual_rms=float(np.sqrt(np.mean((model - acf_sub) ** 2))),
             n_points=int(w.mask.sum()),
+            vertex_in_window=vertex_in_window,
         )
 
     return CombFitResult(
@@ -776,12 +790,27 @@ def assess_rotation_candidate(
     signature (just `fit` and `acf`) is unchanged from before -- e.g.
     fit_rotation_period's internal gating calls remain exactly as fast and
     exactly as they were before these two diagnostics existed.
+
+    A third, always-computed diagnostic, `frac_vertex_in_window`: the
+    fraction of surviving windows whose fitted parabola vertex (per_peak
+    center) actually falls within that window's own frozen lag bounds. A
+    window's bounds are fixed at candidate-generation time, but its center
+    is tied to the jointly-fit (shared) P/t0, which allow_jitter and the
+    fit's P/t0 bounds can move well away from where the window was built.
+    A vertex outside its window means that window's low residual isn't
+    evidence of a real local peak -- the parabola is being extrapolated
+    onto data it was never centered on. See this project's near-lag-0
+    regression case study (short-period candidates achieving a deceptively
+    low redchi by fitting the ACF's smooth decay envelope) for a worked
+    example where every surviving window failed this check.
     """
     heights = np.array([p["height"] for p in fit.per_peak.values()])
     curvatures = np.array([p["curvature"] for p in fit.per_peak.values()])
+    vertex_in_window = np.array([p.get("vertex_in_window", True) for p in fit.per_peak.values()])
     ns = np.array(list(fit.per_peak.keys()))
     order = np.argsort(ns)
     heights, curvatures, ns = heights[order], curvatures[order], ns[order]
+    vertex_in_window = vertex_in_window[order]
 
     acf_std = float(np.std(acf))
     height_snr = heights / acf_std if acf_std > 0 else heights * np.nan
@@ -793,6 +822,7 @@ def assess_rotation_candidate(
         frac_non_increasing = np.nan
 
     frac_positive = float(np.mean(heights > 0)) if len(heights) > 0 else 0.0
+    frac_vertex_in_window = float(np.mean(vertex_in_window)) if len(vertex_in_window) > 0 else 0.0
 
     diagnostics = dict(
         n_peaks_used=fit.n_peaks_used,
@@ -803,6 +833,7 @@ def assess_rotation_candidate(
         curvatures=curvatures,
         frac_non_increasing_height=frac_non_increasing,
         frac_positive_heights=frac_positive,
+        frac_vertex_in_window=frac_vertex_in_window,
         passes_min_peaks=fit.n_peaks_used >= min_peaks,
         passes_redchi=fit.redchi <= max_redchi if np.isfinite(fit.redchi) else False,
         passes_height_snr=bool(np.all(height_snr >= min_height_over_local_std)),
@@ -873,6 +904,7 @@ def fit_rotation_period(
     min_peaks_required: int = 4,
     min_frac_positive_heights: float = 0.8,
     min_mean_height_snr: float = 1.0,
+    min_frac_vertex_in_window: float = 0.8,
     dedup_rel_tol: float = 0.03,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
@@ -913,8 +945,8 @@ def fit_rotation_period(
        recorded with an error message rather than silently dropped, so you
        can see what was tried.
 
-    4. Apply three reliability gates to every successfully-fit candidate.
-       A candidate must satisfy ALL three to be considered "passed":
+    4. Apply four reliability gates to every successfully-fit candidate.
+       A candidate must satisfy ALL four to be considered "passed":
          - n_peaks_used >= min_peaks_required: enough of the expected
            peaks survived the fit (and the RANSAC-style rejection inside
            _fit_single_candidate) to be confident this is a real,
@@ -930,6 +962,24 @@ def fit_rotation_period(
            enough relative to the ACF's overall noise level (its standard
            deviation) to be distinguishable from noise fluctuations, on
            average across the surviving peaks.
+         - frac_vertex_in_window >= min_frac_vertex_in_window: each
+           window's fitted parabola vertex must actually fall within that
+           window's own (frozen) lag bounds. Window bounds are fixed at
+           candidate-generation time, but a window's center is tied to the
+           jointly-fit (shared) P/t0, which allow_jitter and the fit's own
+           P/t0 bounds can move well away from where the window was
+           originally built. A vertex outside its window means that
+           window's low residual isn't evidence of a real local peak --
+           the parabola was extrapolated onto data it was never centered
+           on. Default 0.8 (matching min_frac_positive_heights) rather
+           than a stricter 1.0: the n=0 window in particular sits against
+           the acf_lags domain edge (lag >= 0), so a legitimately-good fit
+           can still see its vertex drift a small amount past that
+           boundary during normal t0 refinement -- this is a boundary
+           artifact, not evidence the window failed to capture a real
+           peak, and shouldn't be penalized the same as a candidate where
+           EVERY window's vertex has drifted away by a large amount (the
+           actual near-lag-0 pathology this gate exists to catch).
 
     5. Among candidates that pass all three gates, pick the one with the
        lowest reduced chi-squared -- the tightest joint fit. Candidates
@@ -953,8 +1003,8 @@ def fit_rotation_period(
     n_peaks, window_frac, allow_jitter, jitter_frac, loss,
     max_reject_iters, reject_threshold_sigma : forwarded to
         _fit_single_candidate for every candidate.
-    min_peaks_required, min_frac_positive_heights, min_mean_height_snr :
-        the three reliability gates described above.
+    min_peaks_required, min_frac_positive_heights, min_mean_height_snr,
+    min_frac_vertex_in_window : the four reliability gates described above.
     dedup_rel_tol : relative-difference tolerance for treating two
         candidate periods as duplicates.
 
@@ -1030,6 +1080,7 @@ def fit_rotation_period(
                 fit.n_peaks_used >= min_peaks_required
                 and diag["frac_positive_heights"] >= min_frac_positive_heights
                 and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
+                and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
             )
             results.append(CandidateResult(
                 period=guess.P0, t0=t0, source_guess=guess, fit=fit,
@@ -1075,10 +1126,12 @@ def fit_rotation_period(
                 f"reliability thresholds (min_peaks_required="
                 f"{min_peaks_required}, min_frac_positive_heights="
                 f"{min_frac_positive_heights}, min_mean_height_snr="
-                f"{min_mean_height_snr}). The closest attempt was P="
+                f"{min_mean_height_snr}, min_frac_vertex_in_window="
+                f"{min_frac_vertex_in_window}). The closest attempt was P="
                 f"{best.fit.P:.4g} (n_peaks_used={best.fit.n_peaks_used}, "
                 f"frac_positive_heights={best.diagnostics['frac_positive_heights']:.2f}, "
-                f"mean_height_snr={np.nanmean(best.diagnostics['height_snr']):.2f}) "
+                f"mean_height_snr={np.nanmean(best.diagnostics['height_snr']):.2f}, "
+                f"frac_vertex_in_window={best.diagnostics['frac_vertex_in_window']:.2f}) "
                 "-- attached for inspection, but should NOT be treated as a "
                 "reliable rotation period measurement."
             ),
