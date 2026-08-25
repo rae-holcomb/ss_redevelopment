@@ -1114,10 +1114,18 @@ def fit_rotation_period(
        families can otherwise flood the pool with many candidates
        clustered in a narrow period band. Then deduplicate: candidates
        within `dedup_rel_tol` relative difference of each other are
-       treated as the same candidate (only the first encountered, after
-       sorting by period, is kept) -- there's no point fitting nearly-
-       identical periods twice just because two different methods
-       happened to propose them independently.
+       merged into one group (grouped against a fixed anchor period, so a
+       chain of nearby candidates can't drift past dedup_rel_tol in
+       total), and the HIGHEST-STRENGTH candidate in each group is used
+       as the representative (P0, t0) that actually gets fit -- there's
+       no point fitting nearly-identical periods twice just because two
+       different methods happened to propose them independently, and no
+       reason to seed the fit from whichever one happened to have the
+       lowest period rather than whichever method was most confident.
+       Every group's full membership (which methods, how many) is still
+       recorded on the resulting CandidateResult (contributing_methods,
+       n_duplicate_guesses) even though only the representative gets
+       fit -- that provenance is exactly what would otherwise be lost.
 
     3. For each surviving candidate:
          a. If it doesn't already have a t0 (candidate generation doesn't
@@ -1242,12 +1250,28 @@ def fit_rotation_period(
             deduped.append(g)
             merged_groups.append([g])
         else:
-            # within dedup_rel_tol of the last kept candidate: don't fit it
+            # within dedup_rel_tol of the GROUP'S ANCHOR (deduped[-1] only
+            # ever updates when a new group starts, so every member is
+            # compared against that fixed anchor, not a "last seen" value
+            # -- this is what keeps a chain of nearby candidates from
+            # drifting past dedup_rel_tol in total): don't fit it
             # separately, but DO remember it supported this same period --
             # otherwise this information (e.g. "two different methods
             # independently proposed ~this period") is silently lost before
             # it ever reaches feature extraction / the ML ranker.
             merged_groups[-1].append(g)
+
+    # Within each merged group, fit using the HIGHEST-STRENGTH candidate's
+    # (P0, t0) as the representative, rather than always the group's
+    # anchor (which is just whichever happened to have the lowest period).
+    # strength is each method's own normalized confidence for that guess
+    # (see InitialGuess), so this seeds the fit with whichever method was
+    # most confident about this period, not an arbitrary tie-break by
+    # sort order. NaN strengths (unset) always lose to any finite one.
+    def _strength_key(gg: InitialGuess) -> float:
+        return gg.strength if np.isfinite(gg.strength) else -np.inf
+
+    deduped = [max(group, key=_strength_key) for group in merged_groups]
 
     if len(deduped) == 0:
         return EnsembleResult(
