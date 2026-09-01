@@ -296,3 +296,21 @@ chats should know:
   retroactively summarizing that whole arc rather than being built up
   entry-by-entry — so don't expect a detailed turn-by-turn history above
   this line.
+- **2026-09-01 — TESS window-function / phase-coverage figures**
+  (`window_function/`): recreated Fig. 4 of Rodel et al. 2024
+  (doi:10.1093/mnras/stae474) with current pointings, using the real FFI
+  (QLP + TESS-SPOC) window function of TIC 167814656, 45 sectors
+  (S1-13, 27-39, 61-69, 87-90, 93-98), 7.45 yr baseline. Coverage is
+  computed exactly by unioning phase arcs, not by binning; validated
+  against a brute-force phase grid. Three findings worth carrying
+  forward into any multi-sector work here: (1) mean per-sector duty
+  cycle improved 0.919 (Cycle 1) to 0.967 (Cycles 5-8), so modern window
+  functions are less lossy than the paper's Cycle-1 example; (2) TESS
+  sectors are **no longer 27 d** — Cycle 8 (S97, S98) uses ~55-57 d
+  pointings, so any code assuming a 27.4 d sector length is now wrong;
+  (3) at long periods the dominant effect is per-cycle *clumping*, not
+  intra-sector gaps — at fixed on-sky time, 45 sectors cover 0.98 of
+  phase at P=730 d if back-to-back but only 0.74 as actually observed,
+  and coverage is strongly non-monotonic in period. Relevant to open
+  issue 6 (multi-sector support) and to the long-period end of the
+  rotation search generally. See `window_function/README.md`.
