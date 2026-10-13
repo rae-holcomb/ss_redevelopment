@@ -228,3 +228,7 @@ tic283722336/
 
 window_function/window_cadences.npz
 window_function/__pycache__/
+
+# scorecard / benchmark run outputs (regenerable)
+runs/
+.pytest_cache/

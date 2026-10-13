@@ -60,6 +60,8 @@ All files live in a single flat package (`claude_files/` in the
 | `FEATURE_DOCUMENTATION.txt` | The definitive reference for every ML feature: name, definition, rationale, literature references, pipeline stage. Read this instead of re-deriving feature meanings from code. |
 | `batch_test_guesses.py` | Production batch runner: evaluates every `guess_*` method's hit rate across many light curves, in parallel, with auto-discovery of new methods via introspection. |
 | `batch_test_acf_fft_highpass.py` | Companion script isolating `guess_acf_fft_highpass`'s per-smoothing-window behavior specifically. Possibly redundant now that `batch_test_guesses.py` auto-discovers it too — unresolved, see open issues. |
+| `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
+| `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
 ### `guesses.py` in more detail
@@ -113,6 +115,13 @@ evaluated on the light curve directly rather than the ACF — genuinely
 different failure mode, not fooled by the half-period alias case that
 fools redchi) and `acf_peak_prominence_diagnostics`
 (G_ACF/H_ACF-style raw-ACF peak prominence, ROOSTER-inspired).
+
+Outside `claude_files/` (added 2026-10-13 for agent-driven development;
+see `docs/AGENT_WORKFLOW.md`): `tests/` (pytest), `benchmarks/`
+(`scorecard.py`, `check_goals.py`, `goals.json`, `baselines/`), `reports/`
+(one folder per task), `tools/` (`new_report.py`, `run_notebook.py`),
+`.claude/agents/` (agent roles), `.claude/skills/write-report/`,
+`docs/TASKS.md` (task board).
 
 ---
 
@@ -261,6 +270,18 @@ Roughly in priority order as of this writing — re-prioritize freely.
    `acf_fft_highpass` as one of its methods generically. Not deleted
    pending confirmation it doesn't do something the general runner
    doesn't.
+10. **Low-SNR stars get confident wrong answers instead of declines.** On the
+   synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
+   ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
+   account for noise-driven short-lag ACF structure. Task T6.
+11. **Differential-rotation label ambiguity.** On synthetic data with shear up
+   to 0.2, 7/200 stars were measured at 1.10–1.16 × the equatorial period
+   (the spot-latitude period), which counts as "wrong" at REL_TOL=0.10. Need to
+   know how SMARTS defines `PERIOD` and what shear it injects (task T3).
+12. **Stage 2 arbitration loses correct candidates.** Stage 1 recall (any
+   method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
+   (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
+   quick hand-tuned fix (TASKS.md P1).
 
 ---
 
@@ -314,3 +335,15 @@ chats should know:
   and coverage is strongly non-monotonic in period. Relevant to open
   issue 6 (multi-sector support) and to the long-period end of the
   rotation search generally. See `window_function/README.md`.
+- **2026-10-13: Agent/TDD infrastructure and synthetic baseline.**
+  `REL_TOL` changed 0.15 → 0.10 project-wide and moved into the new
+  `evaluation.py`, with P/2 and 2P as separate alias outcomes (Rae's decision).
+  Added `synthetic.py`, a pytest suite (`tests/`, 64 tests, ~5 s),
+  `benchmarks/scorecard.py` + `check_goals.py` + `goals.json`, the report
+  contract (`write-report` skill, `tools/new_report.py`), six agent roles in
+  `.claude/agents/`, `docs/TASKS.md` and `docs/AGENT_WORKFLOW.md`. Open issue 8
+  is now a strict-xfail test and active goal G5. Baseline on
+  `synthetic:n=200,seed=0`: 67% correct / 3.5% alias / 13% wrong / 16.5%
+  declined. See `reports/2026-10-13_phase0-synthetic-baseline/` for this and for
+  new open issues 10–12. Python env is `ss_local` (base anaconda is 3.8 without
+  lmfit).

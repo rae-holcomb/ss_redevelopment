@@ -72,6 +72,7 @@ from astropy.io import fits
 
 from preprocessing import load_smarts_fits
 from acf_utils import compute_acf
+from evaluation import REL_TOL
 import guesses
 
 # guess_acf_fft_highpass tags each of its candidates by originating
@@ -170,7 +171,7 @@ def _prep_wavelet_flux(flux: np.ndarray) -> np.ndarray:
     return s.interpolate(limit_direction="both").to_numpy()
 
 
-def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.15):
+def rank_of_true_period(guesses: list, true_period, rel_tol: float = REL_TOL):
     """Check whether/where the true period appears in one method's ranked candidate list.
 
     Parameters
@@ -182,7 +183,7 @@ def rank_of_true_period(guesses: list, true_period, rel_tol: float = 0.15):
         Known injected period (days) to check against.
     rel_tol : float
         Relative tolerance for declaring a candidate a match to
-        `true_period`. Default 0.15 (15%), matching this codebase's
+        `true_period`. Default evaluation.REL_TOL (10% as of 2026-10-13; was 15%), matching this codebase's
         `label_rel_tol` default in ml_features.extract_candidate_features.
 
     Returns
@@ -228,7 +229,7 @@ def process_one_lightcurve(
     fits_path,
     guess_fns: dict,
     n_guesses: int = 10,
-    rel_tol: float = 0.15,
+    rel_tol: float = REL_TOL,
     **load_kwargs,
 ):
     """Run every discovered guess_* function on one SMARTS light curve.
@@ -409,7 +410,7 @@ def _process_one_file_worker(task: dict) -> dict:
 
 
 def run_batch(
-    fits_paths, outdir, n_guesses: int = 10, rel_tol: float = 0.15,
+    fits_paths, outdir, n_guesses: int = 10, rel_tol: float = REL_TOL,
     n_workers: int = DEFAULT_N_WORKERS, **load_kwargs,
 ):
     """Run process_one_lightcurve over a list of FITS files in parallel
@@ -630,7 +631,7 @@ def main():
     src.add_argument("--glob", type=str, help="glob pattern for FITS files, e.g. '/data/*.fits'")
     p.add_argument("--outdir", type=str, required=True, help="output directory")
     p.add_argument("--n-guesses", type=int, default=10, help="top-N candidates per method (default 10)")
-    p.add_argument("--rel-tol", type=float, default=0.15, help="relative match tolerance (default 0.15)")
+    p.add_argument("--rel-tol", type=float, default=REL_TOL, help=f"relative match tolerance (default {REL_TOL}, from evaluation.py)")
     p.add_argument(
         "--n-workers", type=int, default=DEFAULT_N_WORKERS,
         help=f"number of worker processes (default {DEFAULT_N_WORKERS}); "

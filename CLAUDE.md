@@ -23,13 +23,33 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `claude_files/` — the flat pipeline package (all `.py` modules plus
   `FEATURE_DOCUMENTATION.txt`). `claude_files/old/` holds superseded
   versions; don't read from it unless comparing against history.
-- `docs/` — `PROJECT_CONTEXT.md`, `METHODOLOGY_NOTES.md`.
+- `docs/`: `PROJECT_CONTEXT.md`, `METHODOLOGY_NOTES.md`, `TASKS.md`
+  (task board), `AGENT_WORKFLOW.md` (how Rae runs/reviews agents).
+- `tests/`: pytest suite (`python -m pytest -q`, ~5 s, no data needed;
+  `-m "not slow"` skips end-to-end tests). Must pass before any commit.
+- `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
+  figures), `check_goals.py` (grades against `goals.json` and a baseline),
+  `baselines/` (committed reference metrics).
+- `datasets/`: frozen dev/holdout manifests (once built, see `docs/TASKS.md`).
+- `reports/`: one folder per agent task (README + figures + notebook).
+- `runs/`: scorecard outputs (gitignored, regenerable).
+- `tools/`: helper scripts (`new_report.py`).
+- `.claude/agents/`, `.claude/skills/`: agent role definitions and the
+  `write-report` procedure.
 - `results_products/` — batch outputs and `run_full_analysis.py`. Result
   CSVs are gitignored.
 - `data/` — light curve inputs; **gitignored and not currently present
   locally.** Ask Rae for the path before assuming a debug set exists.
 - Root-level notebooks (`ss_claude_sandbox.ipynb`, `smarts_sandbox.ipynb`,
   `analyze_batch_processing.ipynb`) are Rae's working scratch space.
+
+## Environment
+
+Use `/opt/anaconda3/envs/ss_local/bin/python` (conda env `ss_local`,
+Python 3.13; has numpy/scipy/astropy/lmfit/pytest/nbconvert). Base
+anaconda Python is 3.8 and lacks lmfit, so don't use it. The Jupyter
+kernel is registered as "Python (ss_local)". Ask Rae before installing
+packages.
 
 ## Hardware
 
@@ -64,8 +84,12 @@ always run locally by Rae, not inside a Claude Code session.
   `ProcessPoolExecutor` cannot pickle closures, so bind extra arguments
   with `functools.partial` around a module-level function rather than
   defining the worker inline.
-- **Convention constants**: `rel_tol=0.15` across scripts; `n_guesses=10`
-  for most methods (5 for `acf_fft_highpass`).
+- **Convention constants**: `REL_TOL=0.10` (changed from 0.15 on
+  2026-10-13), defined once in `claude_files/evaluation.py`. Import it
+  rather than hardcoding. Measurements within REL_TOL of P/2 or 2P are a
+  separate **alias** outcome (`half`/`double`), not lumped with `wrong`.
+  Score periods only via `evaluation.classify_period`/`best_outcome`.
+  `n_guesses=10` for most methods (5 for `acf_fft_highpass`).
 
 ## Debug workflow
 
@@ -84,6 +108,28 @@ anything against them.
   run without a visible prompt each time.
 - Anything at real batch scale (hundreds–thousands of files) is run
   locally by Rae, not autonomously in a session.
+
+## Agent sessions
+
+Rae runs several agent sessions in parallel, each on its own worktree
+branch, and reviews their work through reports. If you're working on a
+task from `docs/TASKS.md`:
+
+- Read your role file in `.claude/agents/` if you were given one.
+- **Legibility is the point.** End every task with the `write-report`
+  skill. Make plots of failure modes, not just aggregate numbers. Put
+  decisions that belong to Rae under "Open questions for Rae" instead of
+  making them silently.
+- **Don't move the goalposts.** Never edit `benchmarks/goals.json`,
+  `benchmarks/scorecard.py`'s metric definitions, `claude_files/evaluation.py`,
+  `datasets/` manifests, or existing test assertions as part of a method
+  task. Propose changes in the report. Never evaluate on
+  `datasets/holdout.csv` unless Rae says so.
+- Any claim of improvement needs a before/after `check_goals.py --baseline`
+  on the same dataset string.
+- Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks";
+  `dev_medium` needs Rae's OK; larger is Rae's local job.
+- New follow-up ideas go under "Proposed" in `docs/TASKS.md`.
 
 ## Performance changes
 

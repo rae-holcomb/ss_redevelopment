@@ -1,0 +1,31 @@
+{
+  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baseline values in descriptions are from benchmarks/baselines/synth200_s0.json (commit a5fa572, 2026-10-13). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record.",
+  "goals": [
+    {"id": "G1", "status": "draft", "dataset": "synthetic:n=200,seed=0",
+     "metric": "final.overall.correct", "op": ">=", "target": 0.75,
+     "description": "Overall final-answer correctness (baseline 0.67)."},
+    {"id": "G2", "status": "draft", "dataset": "synthetic:n=200,seed=0",
+     "metric": "final.by_bin.<1d.correct", "op": ">=", "target": 0.75,
+     "description": "Final correctness for P<1d (baseline 0.63). Task T5."},
+    {"id": "G3", "status": "draft", "dataset": "synthetic:n=200,seed=0",
+     "metric": "union_recall.by_bin.<1d", "op": ">=", "target": 0.92,
+     "description": "Some Stage-1 method has true P in its list, P<1d (baseline 0.84). Task T5."},
+    {"id": "G4", "status": "draft", "dataset": "synthetic:n=200,seed=0",
+     "metric": "final.by_bin.10-30d.correct", "op": ">=", "target": 0.80,
+     "description": "Final correctness 10-30d (baseline 0.65 although Stage-1 recall is 0.95: an arbitration problem). Tasks T6/T11."},
+    {"id": "G5", "status": "active", "dataset": "synthetic:n=200,seed=0",
+     "metric": "methods.pairwise_histogram.overall.error_rate", "op": "<=", "target": 0.0,
+     "description": "guess_pairwise_histogram never raises (baseline: raises on 18% of stars). Task T4 / open issue 8."},
+    {"id": "G6", "status": "draft", "dataset": "synthetic:n=200,seed=0",
+     "metric": "final.overall.wrong", "op": "<=", "target": 0.08,
+     "description": "Confidently-wrong answers are costlier than declining (baseline 0.13)."}
+  ],
+  "regression_guard": {
+    "max_drop": 0.02,
+    "metrics": [
+      "final.overall.correct",
+      {"pattern": "final.by_bin.*.correct", "max_drop": 0.06},
+      {"pattern": "union_recall.by_bin.*", "max_drop": 0.06}
+    ]
+  }
+}

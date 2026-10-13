@@ -74,6 +74,7 @@ from astropy.io import fits
 
 from preprocessing import load_smarts_fits
 from acf_utils import compute_acf
+from evaluation import REL_TOL
 from guesses import guess_acf_fft_highpass
 
 HEADER_KEYS = [
@@ -127,7 +128,7 @@ def read_header_values(fits_path, keys=HEADER_KEYS) -> dict:
         return {k: header.get(k, None) for k in keys}
 
 
-def rank_of_true_period_in_group(guesses: list, true_period, rel_tol: float = 0.15):
+def rank_of_true_period_in_group(guesses: list, true_period, rel_tol: float = REL_TOL):
     """Check whether/where the true period appears within ONE window's
     candidate group (i.e. `guesses` should already be filtered to a
     single smoothing window before calling this -- rank is window-local).
@@ -136,7 +137,7 @@ def rank_of_true_period_in_group(guesses: list, true_period, rel_tol: float = 0.
     ----------
     guesses : list[InitialGuess], all sharing the same method/window tag.
     true_period : float or None.
-    rel_tol : relative match tolerance. Default 0.15, matching this
+    rel_tol : relative match tolerance. Default evaluation.REL_TOL (0.10 as of 2026-10-13; was 0.15), matching this
         codebase's current batch_test_guesses.py convention.
 
     Returns
@@ -160,7 +161,7 @@ def process_one_lightcurve(
     min_period,
     n_guesses: int,
     oversample: int,
-    rel_tol: float = 0.15,
+    rel_tol: float = REL_TOL,
     **load_kwargs,
 ):
     """Run guess_acf_fft_highpass once on one light curve, then split its
@@ -268,7 +269,7 @@ def run_batch(
     min_period=None,
     n_guesses: int = 5,
     oversample: int = 8,
-    rel_tol: float = 0.15,
+    rel_tol: float = REL_TOL,
     n_workers: int = DEFAULT_N_WORKERS,
     **load_kwargs,
 ):
@@ -428,7 +429,7 @@ def main():
                     help="top-N candidates per window (default 5, matching guess_acf_fft_highpass)")
     p.add_argument("--oversample", type=int, default=8,
                     help="forwarded to guess_acf_fft_highpass (default 8)")
-    p.add_argument("--rel-tol", type=float, default=0.15, help="relative match tolerance (default 0.15)")
+    p.add_argument("--rel-tol", type=float, default=REL_TOL, help=f"relative match tolerance (default {REL_TOL}, from evaluation.py)")
     p.add_argument(
         "--n-workers", type=int, default=DEFAULT_N_WORKERS,
         help=f"number of worker processes (default {DEFAULT_N_WORKERS}); "
