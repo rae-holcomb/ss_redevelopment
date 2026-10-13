@@ -274,10 +274,17 @@ Roughly in priority order as of this writing — re-prioritize freely.
    synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
    ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
    account for noise-driven short-lag ACF structure. Task T6.
-11. **Differential-rotation label ambiguity.** On synthetic data with shear up
-   to 0.2, 7/200 stars were measured at 1.10–1.16 × the equatorial period
-   (the spot-latitude period), which counts as "wrong" at REL_TOL=0.10. Need to
-   know how SMARTS defines `PERIOD` and what shear it injects (task T3).
+11. **Differential-rotation label ambiguity, likely large in SMARTS.**
+   SMARTS `PERIOD` is the *equatorial* period (Claytor+2022, confirmed by Rae).
+   butterpy uses Omega(lat) = Omega_eq (1 + alpha sin^2 lat), with
+   |alpha| in 0.1–1 (log-uniform) for 75% of stars (half solar-like, half
+   anti-solar) and 0 for 25%, and spot latitudes up to 80 deg. A spot's period
+   is P_eq / (1 + alpha sin^2 lat), so at lat 40 deg it is 0.71–1.70 x P_eq for
+   |alpha| = 1, far outside REL_TOL = 0.10. A correct measurement of the
+   dominant spots' period can therefore be scored "wrong". On synthetic data
+   (shear only up to 0.2), 7/200 stars already hit this. Needs a decision on
+   the correctness criterion, e.g. scoring against the range of spot-latitude
+   periods computed from the SMARTS input catalog (lat_min, lat_max, alpha). Tasks T1/T3.
 12. **Stage 2 arbitration loses correct candidates.** Stage 1 recall (any
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
@@ -347,3 +354,16 @@ chats should know:
   declined. See `reports/2026-10-13_phase0-synthetic-baseline/` for this and for
   new open issues 10–12. Python env is `ss_local` (base anaconda is 3.8 without
   lmfit).
+- **2026-10-13: SMARTS generation details** (Claytor et al. 2022,
+  arXiv:2104.14566, Table 1; MAST HLSP page): 1M butterpy simulations;
+  P_eq **uniform** in 0.1–180 d (so only 16.6% have P < 30 d, the
+  pipeline's ~1-yr-baseline limit, and 5.5% have P < 10 d; dev sets must
+  stratify on period, not sample at random); activity 0.1–10x solar
+  log-uniform; spot decay timescale (1–10) x P_eq; latitudes lat_min 0–40,
+  lat_max lat_min+5 to 80 deg; shear as in open issue 11; inclination
+  uniform in sin^2 i; noise = ~2000 southern-CVZ galaxy FFI light curves
+  (1000 train / 1000 test), 13 sectors, 30-min cadence, gaps linearly
+  interpolated. A per-simulation input-parameter catalog exists on MAST
+  (`_cat.tar.gz`). Env check: `codeastro` also passes the test suite and
+  gives identical periods, but is about 40% slower per star than `ss_local` and has an
+  incompatible numpy/scipy pair; staying on `ss_local` pending Rae's call.

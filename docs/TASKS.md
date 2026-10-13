@@ -35,6 +35,10 @@ report (`write-report` skill) and, if code changed, a before/after
 ### T2. Build frozen dev sets and holdout
 - **Agent:** `dev-set-builder`
 - **Status:** blocked (on T1 inventory)
+- **Note:** SMARTS periods are uniform in 0.1–180 d, so only ~17% of the corpus
+  has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
+  would make dev sets mostly unrecoverable long periods. Stratify, and use the
+  MAST input-parameter catalog rather than opening FITS headers.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
   `holdout.csv` (~2000–5000), stratified by period/SNR/baseline, reproducible
   from `tools/build_dev_sets.py`.
@@ -48,9 +52,10 @@ report (`write-report` skill) and, if code changed, a before/after
   ones (noise spectra, gap patterns, amplitude distribution, ACF morphology) and
   tune `make_suite` so synthetic results predict dev-set results.
 - **Done when:** scorecard per-bin outcomes on synthetic vs dev_small are
-  compared side by side; discrepancies explained. Includes determining how
-  SMARTS defines `PERIOD` under differential rotation and what shear it
-  injects (Phase 0 report, open question 1).
+  compared side by side; discrepancies explained. `PERIOD` is equatorial and the
+  shear can be large (PROJECT_CONTEXT open issue 11): quantify how often
+  the spot-latitude periods fall outside REL_TOL of P_eq, and propose a
+  correctness criterion for Rae.
 
 ---
 
