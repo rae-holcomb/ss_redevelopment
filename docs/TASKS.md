@@ -98,10 +98,28 @@ for confirmation (ask Rae first).
   improvement each.
 - **Done when:** one report per method.
 
-### T8. Regularly-gapped data aliasing stress test (open issue 7)
-- **Status:** ready
-- **Goal:** add a periodic-gap option to `synthetic.py` and test zero-fill FFT vs
-  LombScargle under it.
+### T8. TESS orbit-gap aliasing check (open issue 7). Low priority
+- **Agent:** `method-improver` (diagnostic; a code change only if a problem is found)
+- **Status:** ready, low priority (Rae, 2026-10-13)
+- **Background:** gaps multiply the light curve by a window function, so periodic
+  gaps (period T_gap) put spurious peaks at f_rot ± k/T_gap. FFT-based methods
+  (`acf_fft*`, the masked-FFT ACF, `wavelet` via interpolation) are the most exposed;
+  Lomb-Scargle the least. Earlier checks found real SMARTS/TESS gaps irregular
+  enough to be low-risk overall, but the ~1 d gap every ~13.7 d TESS orbit *is*
+  periodic and sits inside our 1–30 d period range.
+- **Scope (TESS orbit gaps only):**
+  1. Sweep rotation period densely around T_gap = 13.7 d and its simple ratios
+     (6.85, 27.4 d, …) on synthetic light curves with the standard orbit-gap grid.
+  2. For each method and for the final answer, measure success rate and whether
+     candidates or answers land on the predicted alias periods
+     1/|1/P_rot ± k/T_gap|.
+  3. Show the window function's spectrum and ACF for reference.
+- **Done when:** a short report says whether stars near 13.7 d (and its ratios)
+  show a measurable dip in success or excess aliases relative to neighbouring
+  periods, per method, with a recommendation (no action, or a targeted fix).
+- **Out of scope for now:** ground-based day/night cadence, momentum-dump gaps, and
+  multi-sector yearly clumping. **Re-evaluate if the pipeline is applied to other
+  missions (e.g. Roman)**, whose observing windows may be strongly periodic.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`

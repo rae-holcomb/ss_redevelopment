@@ -261,6 +261,10 @@ Roughly in priority order as of this writing — re-prioritize freely.
    not to trigger the classic aliasing failure mode. A synthetic light
    curve with a strictly periodic gap pattern (e.g. rigid ground-based
    day/night cadence) would be the real stress test, and hasn't been run.
+   **Scoped 2026-10-13 (Rae):** only the TESS ~13.7 d orbit-gap periodicity
+   matters for now (task T8, low priority); revisit other cadences if the
+   pipeline is applied to other missions (e.g. Roman).
+
 8. **`guess_pairwise_histogram` raises outright** (doesn't return an
    empty list, raises an exception) on some ultra-short-period light
    curves where fewer than 2 ACF peaks can be found. Never circled back
