@@ -98,7 +98,11 @@ HEADER_KEYS = [
 # some workers onto E-cores tends to create stragglers that hold up the
 # whole batch rather than adding useful throughput. Override with
 # --n-workers on a different machine.
-DEFAULT_N_WORKERS = 10
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 
 # every guess_* function in guesses.py shares this call signature:
 # fn(time, flux, acf_lags, acf, ..., n_guesses=...) -> list[InitialGuess]

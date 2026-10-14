@@ -23,11 +23,11 @@ from nbclient import NotebookClient
 
 
 def main(argv=None) -> int:
-    """Execute the notebook in place with the ss_local kernel, cwd = notebook's folder."""
+    """Execute the notebook in place with the ss_openblas kernel, cwd = notebook's folder."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("notebook", type=Path)
     p.add_argument("--timeout", type=int, default=600, help="per-cell timeout, seconds")
-    p.add_argument("--kernel", default="ss_local")
+    p.add_argument("--kernel", default="ss_openblas")
     args = p.parse_args(argv)
 
     nb = nbformat.read(args.notebook, as_version=4)

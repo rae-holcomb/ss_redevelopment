@@ -96,7 +96,11 @@ DEFAULT_MAX_PERIOD = 50.0  # matches guess_acf_fft_highpass's own default
 # sustained per-core throughput, which P-cores provide and E-cores don't --
 # scheduling some workers onto E-cores tends to create stragglers that hold
 # up the whole batch. Override with --n-workers on a different machine.
-DEFAULT_N_WORKERS = 10
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 PERIOD_BAND_EDGES = [0, 1, 5, 10, 15, 20, 30, 50, np.inf]
 PERIOD_BAND_LABELS = ["<1d", "1-5d", "5-10d", "10-15d", "15-20d", "20-30d", "30-50d", ">50d"]
 

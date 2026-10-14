@@ -85,7 +85,11 @@ from acf_utils import compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
 SCORECARD_VERSION = 2  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
-DEFAULT_N_WORKERS = 10
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 DEFAULT_PIPELINE_METHODS = ("pairwise_histogram", "lombscargle", "acf_fft")
 # Project convention: n_guesses=10 for most methods, 5 for acf_fft_highpass
 # (which returns n_guesses candidates per internal smoothing window).

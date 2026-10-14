@@ -43,7 +43,11 @@ from guesses import (  # noqa: E402
 )
 from comb_fit import fit_rotation_period  # noqa: E402
 
-DEFAULT_N_WORKERS = 10  # target the 10 P-cores; leave the 4 E-cores free
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 
 # method name -> (function, n_guesses). n_guesses=5 for acf_fft_highpass
 # matches this project's established convention (it returns candidates

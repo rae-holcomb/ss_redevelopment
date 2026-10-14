@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import os
 import warnings
+from typing import Optional
 
 # Every thread-count variable a numpy/scipy BLAS/LAPACK/OpenMP backend reads.
 BLAS_THREAD_ENV_VARS = (
@@ -136,19 +137,28 @@ def warn_if_nondeterministic_blas() -> bool:
     return False
 
 
-def default_n_workers() -> int:
-    """Default process-pool size: one worker per physical core.
-
-    BLAS is pinned to one thread per worker, so the CPU-bound pipeline gains
-    little from hyperthreads (measured in T14 on a 4-core/8-thread Intel i5:
-    see that report's runtime table). Falls back to os.cpu_count() // 2 if the
-    physical-core count can't be read.
-    """
-    n = None
+def _sysctl_int(key: str) -> Optional[int]:
+    """Integer value of a macOS sysctl key, or None if unavailable."""
     try:
         import subprocess
-        n = int(subprocess.check_output(["sysctl", "-n", "hw.physicalcpu"], text=True).strip())
+        out = subprocess.run(["sysctl", "-n", key], capture_output=True, text=True, timeout=5)
+        return int(out.stdout.strip()) if out.returncode == 0 and out.stdout.strip() else None
     except Exception:  # noqa: BLE001 -- not macOS, or sysctl unavailable
+        return None
+
+
+def default_n_workers() -> int:
+    """Default process-pool size: one worker per physical PERFORMANCE core.
+
+    BLAS is pinned to one thread per worker, so the CPU-bound pipeline gains
+    little from hyperthreads (see the T14 report's runtime table, measured on a
+    4-core/8-thread Intel i5). On Apple Silicon, `hw.perflevel0.physicalcpu` is
+    the P-core count (e.g. 10 on a 10P+4E chip, matching the old hardcoded 10);
+    on Intel Macs, which have no perflevels, it's `hw.physicalcpu`. Elsewhere
+    the fallback is psutil's physical-core count, then os.cpu_count() // 2.
+    """
+    n = _sysctl_int("hw.perflevel0.physicalcpu") or _sysctl_int("hw.physicalcpu")
+    if not n:
         try:
             import psutil  # optional
             n = psutil.cpu_count(logical=False)

@@ -41,7 +41,11 @@ from preprocessing import load_smarts_fits  # noqa: E402
 from guesses import gather_initial_guesses  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-DEFAULT_N_WORKERS = 10  # target the 10 P-cores; leave the 4 E-cores free
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 
 
 def process_one_file(fits_path: str) -> dict:

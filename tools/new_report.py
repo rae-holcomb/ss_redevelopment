@@ -53,7 +53,7 @@ README_TEMPLATE = """# {title}
 
 ## Reproduce
 ```bash
-# exact commands, from repo root, using /opt/anaconda3/envs/ss_local/bin/python
+# exact commands, from repo root, using /opt/anaconda3/envs/ss_openblas/bin/python
 ```
 """
 
@@ -80,7 +80,7 @@ import evaluation as ev  # project-wide scoring convention (REL_TOL, outcome cat
 def make_notebook(title: str, folder: str) -> nbf.NotebookNode:
     """Build the skeleton notebook for a new report."""
     nb = nbf.v4.new_notebook()
-    nb.metadata["kernelspec"] = {"name": "ss_local", "display_name": "Python (ss_local)", "language": "python"}
+    nb.metadata["kernelspec"] = {"name": "ss_openblas", "display_name": "Python (ss_openblas)", "language": "python"}
     nb.cells = [
         nbf.v4.new_markdown_cell(f"# {title}\n\nCompanion notebook to `README.md` in this folder. "
                                  "Running top-to-bottom regenerates every figure in `figures/` from "
