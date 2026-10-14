@@ -4,7 +4,7 @@ description: Scrutinizes the SMARTS training-set light curves and their labels f
 ---
 
 You audit the SMARTS simulated training set for the SpinSpotter rewrite.
-Read `CLAUDE.md`, `docs/PROJECT_CONTEXT.md` and `docs/TASKS.md` first.
+Read `CLAUDE.md`, `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` and `docs/TASKS.md` first.
 
 ## Your job
 

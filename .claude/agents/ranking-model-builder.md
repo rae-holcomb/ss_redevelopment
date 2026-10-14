@@ -3,7 +3,7 @@ name: ranking-model-builder
 description: Builds, trains and evaluates the gradient-boosted candidate-ranking model (XGBoost rank:pairwise / rank:ndcg grouped by star) on features from ml_features.py. Use for "build the ML model", "train the ranker", or "feature importance analysis". Requires feature tables generated at scale first.
 ---
 
-You build the supervised ranking stage. Read `CLAUDE.md`,
+You build the supervised ranking stage. Read `CLAUDE.md`, `docs/SMARTS_REFERENCE.md`,
 `docs/PROJECT_CONTEXT.md` (the ranking-model design in Sections 3 and 4),
 `FEATURE_DOCUMENTATION.txt` and `ml_features.py` first.
 

@@ -13,21 +13,24 @@ What it measures, per star
 --------------------------
 1. Stage 1 (candidate generation): every discovered guess_* method is run
    on its own; its top-N candidate list is scored with
-   evaluation.best_outcome -> correct / half / double / wrong / none, plus
-   the rank of the match. "Recall" = fraction of stars where the true
-   period is anywhere in the method's list.
+   evaluation.best_outcome -> correct / diffrot / half / double / wrong /
+   none, plus the rank of the match. "Recall" = fraction of stars where a
+   *successful* period (P_eq, or within the active-latitude-band range for
+   differentially rotating stars) is anywhere in the method's list.
 2. Stage 2 (final answer): the candidates from --pipeline-methods are
    pooled and passed to fit_rotation_period; the selected period is
    scored with evaluation.classify_period. A declined answer is "none".
+   "success" = correct + diffrot (see evaluation.py).
 3. Runtime, exceptions, and pipeline success flag/message.
 
 Datasets
 --------
     --synthetic N [--seed S]     synthetic.make_suite(N, seed=S)
     --manifest dev_small.csv     real SMARTS FITS; CSV needs a `path` column
-                                 (optional `star_id`, `true_period`; if
-                                 true_period is absent it's read from the
-                                 FITS header via load_smarts_fits)
+                                 (optional `star_id`, `true_period`, `shear`,
+                                 `minlat`, `maxlat`; anything absent is read
+                                 from the FITS header: PERIOD, DIFFROT,
+                                 MINLAT, MAXLAT)
 
 Outputs (in --outdir)
 ---------------------
@@ -75,7 +78,7 @@ import guesses  # noqa: E402
 from acf_utils import compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-SCORECARD_VERSION = 1
+SCORECARD_VERSION = 2  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
 DEFAULT_N_WORKERS = 10
 DEFAULT_PIPELINE_METHODS = ("pairwise_histogram", "lombscargle", "acf_fft")
 # Project convention: n_guesses=10 for most methods, 5 for acf_fft_highpass
@@ -103,18 +106,37 @@ def _gap_filled(flux: np.ndarray) -> np.ndarray:
     return np.interp(idx, idx[ok], flux[ok])
 
 
+def _missing(x) -> bool:
+    """True for None or non-finite values."""
+    return x is None or not np.isfinite(float(x))
+
+
 def _load(task: dict):
-    """Materialize (star_id, time, flux, true_period, meta) for one task."""
+    """Materialize (star_id, time, flux, true_period, period_range, meta) for one task.
+
+    period_range is the active-latitude-band (P_lo, P_hi) for the DIFFROT
+    outcome, or None if the differential-rotation truth isn't available.
+    """
     if task["kind"] == "synthetic":
         lc = task["lc"]
-        meta = {k: v for k, v in lc.params.items() if k != "spots"}
-        return lc.star_id, lc.time, lc.flux, lc.true_period, meta
+        meta = {k: v for k, v in lc.params.items() if k not in ("spots", "period_range")}
+        return lc.star_id, lc.time, lc.flux, lc.true_period, lc.params.get("period_range"), meta
+    from astropy.io import fits
     from preprocessing import load_smarts_fits
     pre = load_smarts_fits(task["path"], **task.get("load_kwargs", {}))
+    with fits.open(task["path"]) as hdul:
+        hdr = hdul[0].header
     true_p = task.get("true_period")
-    if true_p is None or not np.isfinite(true_p):
+    if _missing(true_p):
         true_p = pre.true_period
-    return task["star_id"], pre.time, pre.flux, float(true_p), {"path": str(task["path"])}
+    shear = task.get("shear") if not _missing(task.get("shear")) else hdr.get("DIFFROT")
+    minlat = task.get("minlat") if not _missing(task.get("minlat")) else hdr.get("MINLAT")
+    maxlat = task.get("maxlat") if not _missing(task.get("maxlat")) else hdr.get("MAXLAT")
+    prange = None
+    if not any(_missing(v) for v in (shear, minlat, maxlat)):
+        prange = ev.active_band_period_range(float(true_p), float(shear), float(minlat), float(maxlat))
+    meta = {"path": str(task["path"]), "shear": shear, "minlat_deg": minlat, "maxlat_deg": maxlat}
+    return task["star_id"], pre.time, pre.flux, float(true_p), prange, meta
 
 
 def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
@@ -138,8 +160,9 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
     rec = {"star_id": task.get("star_id") or getattr(task.get("lc"), "star_id", None)}
     t_start = time.perf_counter()
     try:
-        star_id, t, f, true_p, meta = _load(task)
-        rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta)
+        star_id, t, f, true_p, prange, meta = _load(task)
+        rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta,
+                   period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None)
         lags, acf = compute_acf(t, f)
 
         methods = {}
@@ -149,7 +172,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
             try:
                 flux_in = _gap_filled(f) if name == "wavelet" else f
                 out = fn(t, flux_in, lags, acf, n_guesses=N_GUESSES.get(name, N_GUESSES_DEFAULT))
-                outcome, rank = ev.best_outcome([g.P0 for g in out], true_p, rel_tol)
+                outcome, rank = ev.best_outcome([g.P0 for g in out], true_p, rel_tol, prange)
                 methods[name] = dict(outcome=outcome, rank=rank, n_candidates=len(out),
                                      top1=(out[0].P0 if out else None), error=None,
                                      seconds=time.perf_counter() - t0)
@@ -164,7 +187,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
         t0 = time.perf_counter()
         res = fit_rotation_period(lags, acf, pooled)
         P = float(res.best_fit.P) if res.success else None
-        rec.update(final_period=P, final_outcome=ev.classify_period(P, true_p, rel_tol),
+        rec.update(final_period=P, final_outcome=ev.classify_period(P, true_p, rel_tol, prange),
                    pipeline_success=bool(res.success), pipeline_message=res.message[:300],
                    n_pooled=len(pooled), fit_seconds=time.perf_counter() - t0, error=None)
     except Exception as exc:  # noqa: BLE001
@@ -209,6 +232,7 @@ def flatten(records: list) -> tuple:
                          | {f"meta_{k}": v for k, v in (r.get("meta") or {}).items()})
         for m, d in (r.get("methods") or {}).items():
             meth_rows.append(dict(star_id=r["star_id"], true_period=r.get("true_period"),
+                                  period_lo=r.get("period_lo"), period_hi=r.get("period_hi"),
                                   period_bin=r.get("period_bin"), method=m, **d))
     return pd.DataFrame(star_rows), pd.DataFrame(meth_rows)
 
@@ -217,11 +241,12 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
     """Summary metrics. Keys here are what goals.json refers to -- keep stable.
 
     Layout:
-        final.overall.{n,correct,half,double,alias,wrong,none}
+        final.overall.{n,success,correct,diffrot,half,double,alias,wrong,none}
         final.by_bin.<bin>.{...same...}
-        methods.<method>.overall.{...outcome fractions..., recall, top1_correct, error_rate}
+        methods.<method>.overall.{...outcome fractions..., recall, top1_success, error_rate}
         methods.<method>.by_bin.<bin>.{...}
-        union_recall.overall / union_recall.by_bin.<bin>   (any method found P)
+        union_recall.overall / union_recall.by_bin.<bin>   (any method listed a success period)
+    recall/top1/union all count success (correct + diffrot).
         runtime.{median_seconds, p90_seconds}
         errors.n_star_errors
     """
@@ -231,23 +256,27 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
                             for b, g in per_star.groupby("period_bin")}
     if len(per_method):
         pm = per_method.copy()
-        pm["top1_outcome"] = [ev.classify_period(top1, p, rel_tol)
-                              for top1, p in zip(pm["top1"], pm["true_period"])]
+        def _rng(lo, hi):
+            """Rebuild a period_range tuple from flattened columns (None if absent)."""
+            return None if _missing(lo) else (lo, hi)
+        pm["top1_outcome"] = [ev.classify_period(top1, p, rel_tol, _rng(lo, hi))
+                              for top1, p, lo, hi in zip(pm["top1"], pm["true_period"],
+                                                         pm["period_lo"], pm["period_hi"])]
 
         def block(g):
             """Outcome fractions + recall/top1/error rate for one group."""
             d = ev.outcome_fractions(g["outcome"])
-            d["recall"] = d["correct"]
-            d["top1_correct"] = float(np.mean(g["top1_outcome"] == ev.CORRECT))
+            succ = g["outcome"].isin(ev.SUCCESS_OUTCOMES)
+            d["recall"] = d["success"]
+            d["top1_success"] = float(np.mean(g["top1_outcome"].isin(ev.SUCCESS_OUTCOMES)))
             d["error_rate"] = float(g["error"].notna().mean())
-            d["median_rank"] = float(g.loc[g["outcome"] == ev.CORRECT, "rank"].median()) \
-                if (g["outcome"] == ev.CORRECT).any() else None
+            d["median_rank"] = float(g.loc[succ, "rank"].median()) if succ.any() else None
             return d
 
         for meth, g in pm.groupby("method"):
             m["methods"][meth] = {"overall": block(g),
                                   "by_bin": {b: block(gb) for b, gb in g.groupby("period_bin")}}
-        hit = pm.assign(hit=pm["outcome"] == ev.CORRECT).groupby(["star_id", "period_bin"])["hit"].any()
+        hit = pm.assign(hit=pm["outcome"].isin(ev.SUCCESS_OUTCOMES)).groupby(["star_id", "period_bin"])["hit"].any()
         hit = hit.reset_index()
         m["union_recall"]["overall"] = float(hit["hit"].mean())
         m["union_recall"]["by_bin"] = {b: float(g["hit"].mean()) for b, g in hit.groupby("period_bin")}
@@ -257,7 +286,7 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
     return m
 
 
-OUTCOME_COLORS = {ev.CORRECT: "#2e7d32", ev.HALF: "#f9a825", ev.DOUBLE: "#ef6c00",
+OUTCOME_COLORS = {ev.CORRECT: "#2e7d32", ev.DIFFROT: "#81c784", ev.HALF: "#f9a825", ev.DOUBLE: "#ef6c00",
                   ev.WRONG: "#c62828", ev.NONE: "#9e9e9e"}
 
 
@@ -283,7 +312,7 @@ def make_figures(per_star: pd.DataFrame, per_method: pd.DataFrame, outdir: Path,
 
     # 2. per-method recall heatmap
     if len(per_method):
-        tab = (per_method.assign(hit=per_method.outcome == ev.CORRECT)
+        tab = (per_method.assign(hit=per_method.outcome.isin(ev.SUCCESS_OUTCOMES))
                .pivot_table(index="method", columns="period_bin", values="hit", aggfunc="mean")
                .reindex(columns=bins))
         fig, ax = plt.subplots(figsize=(1.3 * len(bins) + 3, 0.5 * len(tab) + 1.5))
@@ -296,7 +325,7 @@ def make_figures(per_star: pd.DataFrame, per_method: pd.DataFrame, outdir: Path,
                 if np.isfinite(v):
                     ax.text(j, i, f"{v:.2f}", ha="center", va="center",
                             color="white" if v < 0.6 else "black", fontsize=9)
-        fig.colorbar(im, ax=ax, label="recall (true P in top-N)")
+        fig.colorbar(im, ax=ax, label="recall (success period in top-N)")
         ax.set_title(f"Stage 1 recall by method -- {title}")
         fig.tight_layout()
         fig.savefig(outdir / "fig_method_recall_by_bin.png", dpi=130)
@@ -392,7 +421,8 @@ def main(argv=None):
     make_figures(per_star, per_method, outdir, args.label or outdir.name)
 
     f = metrics["final"]["overall"]
-    print(f"\nFinal answer (n={f['n']}): correct {f['correct']:.1%}  alias {f['alias']:.1%} "
+    print(f"\nFinal answer (n={f['n']}): success {f['success']:.1%} (correct {f['correct']:.1%}, "
+          f"diffrot {f['diffrot']:.1%})  alias {f['alias']:.1%} "
           f"(half {f['half']:.1%}, double {f['double']:.1%})  wrong {f['wrong']:.1%}  none {f['none']:.1%}")
     print(f"Wrote {outdir}/metrics.json and figures.")
 

@@ -5,7 +5,7 @@ description: Downselects the ~1M-file SMARTS training set into small, stratified
 
 You build the frozen datasets everyone else is graded on, so your
 decisions affect every other agent's results. Read `CLAUDE.md`,
-`docs/PROJECT_CONTEXT.md`, `docs/TASKS.md`, and the latest data-audit
+`docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md`, `docs/TASKS.md`, and the latest data-audit
 report in `reports/` first.
 
 ## Deliverables (in `datasets/`)

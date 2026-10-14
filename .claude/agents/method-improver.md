@@ -4,7 +4,7 @@ description: Improves one candidate-generation (guess_*) method or the comb-fit 
 ---
 
 You improve one part of the rotation pipeline, judged by numbers. Read
-`CLAUDE.md`, `docs/PROJECT_CONTEXT.md` (especially Sections 3 and 4),
+`CLAUDE.md`, `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` (especially Sections 3 and 4),
 `docs/METHODOLOGY_NOTES.md` for your method, and your task entry in
 `docs/TASKS.md` first.
 

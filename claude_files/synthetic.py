@@ -19,9 +19,14 @@ Spot model
 ----------
 Each spot k has a latitude b_k, initial longitude phi_k, a fractional
 depth A_k, a Gaussian lifetime envelope (peak time tc_k, width tau_k),
-and a rotation period set by solar-like differential rotation:
+and a rotation period set by latitudinal differential rotation in the
+SMARTS/butterpy convention (shear > 0 solar-like, < 0 anti-solar):
 
     P_k = P_eq / (1 - shear * sin^2(b_k))
+
+Spot latitudes |b_k| are drawn uniformly within an active band
+[minlat, maxlat], mirroring SMARTS's MINLAT/MAXLAT. The band's period range
+(evaluation.active_band_period_range) defines the DIFFROT success window.
 
 The flux deficit of spot k is its depth times its *projected* area on
 the visible hemisphere for stellar inclination i:
@@ -46,6 +51,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 import numpy as np
+
+from evaluation import active_band_period_range, latitude_period
 
 CADENCE_DAYS = 1800.0 / 86400.0  # 30-min, matches load_smarts_fits default timestep
 
@@ -100,6 +107,8 @@ def spot_signal(
     inclination_deg: float = 70.0,
     shear: float = 0.0,
     spot_lifetime_days: float = np.inf,
+    minlat_deg: float = 0.0,
+    maxlat_deg: float = 50.0,
 ) -> tuple:
     """Flux deficit from evolving spots on a differentially rotating star.
 
@@ -111,9 +120,14 @@ def spot_signal(
     n_spots : number of spots.
     amplitude : approximate peak-to-peak modulation depth (relative flux).
     inclination_deg : stellar inclination (90 = equator-on).
-    shear : differential-rotation shear (0 = solid body; Sun ~0.2).
+    shear : differential-rotation shear in the SMARTS/butterpy convention,
+        P(lat) = P_eq / (1 - shear sin^2 lat); > 0 solar-like (poles slower),
+        < 0 anti-solar, 0 solid body. See docs/SMARTS_REFERENCE.md.
     spot_lifetime_days : Gaussian lifetime (sigma) of each spot's envelope.
         np.inf gives static spots (strictly periodic signal).
+    minlat_deg, maxlat_deg : active latitude band; each spot's |latitude| is
+        uniform in this band, hemisphere random (analogue of SMARTS
+        MINLAT/MAXLAT, without butterpy's butterfly drift or +/-7 deg spill).
 
     Returns
     -------
@@ -125,11 +139,12 @@ def spot_signal(
     deficit = np.zeros_like(time, dtype=float)
     spots = []
     for _ in range(n_spots):
-        lat = np.arcsin(rng.uniform(-0.8, 0.8))
+        lat = np.deg2rad(rng.uniform(minlat_deg, maxlat_deg)) * rng.choice([-1.0, 1.0])
         phi = rng.uniform(0, 2 * np.pi)
         depth = rng.uniform(0.5, 1.0)
-        p_k = period / (1.0 - shear * np.sin(lat) ** 2)
-        mu = np.cos(inc) * np.sin(lat) + np.sin(inc) * np.cos(lat) * np.cos(2 * np.pi * time / p_k + phi)
+        p_k = float(latitude_period(period, shear, np.rad2deg(lat)))
+        omega_k = 0.0 if not np.isfinite(p_k) else 2 * np.pi / p_k  # shear>=1 near the pole: no rotation
+        mu = np.cos(inc) * np.sin(lat) + np.sin(inc) * np.cos(lat) * np.cos(omega_k * time + phi)
         mu = np.clip(mu, 0.0, None)
         if np.isfinite(spot_lifetime_days):
             tc = rng.uniform(time[0] - 0.2 * t_span, time[-1] + 0.2 * t_span)
@@ -183,6 +198,8 @@ def make_lightcurve(
     inclination_deg: float = 70.0,
     shear: float = 0.0,
     spot_lifetime_days: float = np.inf,
+    minlat_deg: float = 0.0,
+    maxlat_deg: float = 50.0,
     n_sectors: int = 2,
     sector_days: float = 27.4,
     ramp_amplitude: float = 0.0,
@@ -198,7 +215,8 @@ def make_lightcurve(
     white_noise : per-cadence Gaussian noise std.
     red_noise_sigma, red_noise_tau_days : AR(1) correlated-noise std and
         timescale (stellar granulation / residual systematics stand-in).
-    n_spots, inclination_deg, shear, spot_lifetime_days : see spot_signal.
+    n_spots, inclination_deg, shear, spot_lifetime_days, minlat_deg,
+    maxlat_deg : see spot_signal.
     n_sectors, sector_days : see tess_like_time_grid.
     ramp_amplitude : amplitude of an exponential ramp (e-fold 0.5 d) at the
         start of every orbit; 0 disables.
@@ -207,13 +225,16 @@ def make_lightcurve(
 
     Returns
     -------
-    SyntheticLightCurve with NaN flux in gaps.
+    SyntheticLightCurve with NaN flux in gaps. params['period_range'] is
+    the active-band (P_lo, P_hi) used by evaluation.classify_period for the
+    DIFFROT outcome, computed exactly as for SMARTS headers.
     """
     rng = np.random.default_rng(seed)
     time, valid, orbit_starts = tess_like_time_grid(n_sectors=n_sectors, sector_days=sector_days)
     signal, spots = spot_signal(time, period, rng, n_spots=n_spots, amplitude=amplitude,
                                 inclination_deg=inclination_deg, shear=shear,
-                                spot_lifetime_days=spot_lifetime_days)
+                                spot_lifetime_days=spot_lifetime_days,
+                                minlat_deg=minlat_deg, maxlat_deg=maxlat_deg)
     flux = signal + rng.normal(0.0, white_noise, len(time))
     flux += red_noise(len(time), red_noise_sigma, red_noise_tau_days, rng)
     if ramp_amplitude > 0:
@@ -224,11 +245,22 @@ def make_lightcurve(
     params = dict(period=period, amplitude=amplitude, white_noise=white_noise,
                   red_noise_sigma=red_noise_sigma, red_noise_tau_days=red_noise_tau_days,
                   n_spots=n_spots, inclination_deg=inclination_deg, shear=shear,
-                  spot_lifetime_days=spot_lifetime_days, n_sectors=n_sectors,
+                  spot_lifetime_days=spot_lifetime_days, minlat_deg=minlat_deg,
+                  maxlat_deg=maxlat_deg,
+                  period_range=active_band_period_range(period, shear, minlat_deg, maxlat_deg),
+                  n_sectors=n_sectors,
                   sector_days=sector_days, ramp_amplitude=ramp_amplitude, seed=seed,
                   snr=amplitude / white_noise if white_noise > 0 else np.inf, spots=spots)
     return SyntheticLightCurve(time=time, flux=flux, true_period=float(period),
                                params=params, star_id=star_id or f"synth-{seed:06d}")
+
+
+def _smarts_shear(rng: np.random.Generator) -> float:
+    """Draw one shear value from the SMARTS mixture: 50% +10^U(-1,0),
+    25% zero, 25% -10^U(-1,0)."""
+    u = rng.uniform()
+    mag = 10 ** rng.uniform(-1.0, 0.0)
+    return float(mag if u < 0.5 else (0.0 if u < 0.75 else -mag))
 
 
 def make_suite(
@@ -240,10 +272,14 @@ def make_suite(
 ) -> list:
     """Generate a reproducible, varied population of synthetic light curves.
 
-    Periods are log-uniform over `period_range`; SNR (amplitude/white
-    noise) is log-uniform over `snr_range`; spot count, inclination,
-    shear, spot lifetime, red noise and orbit ramps are all randomized so
-    the suite covers single-dip, double-dip and evolving-spot morphologies.
+    Periods are log-uniform over `period_range` (deliberately NOT SMARTS's
+    uniform 0.1-180 d, to concentrate stars where the pipeline can work);
+    SNR (amplitude/white noise) is log-uniform over `snr_range`.
+    Differential rotation, latitude band and inclination follow the SMARTS
+    distributions (docs/SMARTS_REFERENCE.md): shear +10^U(-1,0) for 50%,
+    0 for 25%, -10^U(-1,0) for 25%; MINLAT ~ U(0,40), MAXLAT ~
+    U(MINLAT+5, 80); inclination uniform in sin^2 i. Spot count, spot
+    lifetime, red noise and orbit ramps are randomized too.
 
     Parameters
     ----------
@@ -272,8 +308,10 @@ def make_suite(
             white_noise=white,
             red_noise_sigma=float(rng.uniform(0.0, 0.5)) * white,
             n_spots=int(rng.integers(1, 4)),
-            inclination_deg=float(np.rad2deg(np.arccos(rng.uniform(0.05, 1.0)))),
-            shear=float(rng.uniform(0.0, 0.2)),
+            inclination_deg=float(np.rad2deg(np.arcsin(np.sqrt(rng.uniform(0.0, 1.0))))),
+            shear=_smarts_shear(rng),
+            minlat_deg=(minlat := float(rng.uniform(0.0, 40.0))),
+            maxlat_deg=float(rng.uniform(minlat + 5.0, 80.0)),
             spot_lifetime_days=float(rng.choice([np.inf, rng.uniform(2, 10) * period])),
             n_sectors=n_sectors,
             ramp_amplitude=float(rng.choice([0.0, rng.uniform(0.5, 2.0) * white])),

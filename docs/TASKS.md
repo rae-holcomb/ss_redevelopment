@@ -123,6 +123,11 @@ for confirmation (ask Rae first).
 - **Status:** blocked (on T2)
 - **Goal:** resumable parallel script producing candidate feature tables for
   dev_medium plus a training sample. Rae runs it locally.
+- **Decision needed first:** `extract_candidate_features` labels a candidate 1
+  only if its fitted P is within 3% of P_eq. Under differential rotation, a
+  correct spot-latitude period gets label 0. Consider a graded relevance label
+  for the ranker (2 = P_eq, 1 = in active-band range per
+  `evaluation.active_band_period_range`, 0 = otherwise). XGBoost ranking supports this.
 
 ### T11. Train and evaluate the ranker
 - **Agent:** `ranking-model-builder`
@@ -131,6 +136,23 @@ for confirmation (ask Rae first).
   per period bin, with a calibrated "decline" threshold.
 
 ---
+
+## Future features (Rae-approved direction, not yet scheduled)
+
+### F1. Detect and measure differential rotation
+- **Requested by:** Rae, 2026-10-13. Tackle separately from period recovery.
+- **Idea:** identify which stars show latitudinal differential rotation and
+  estimate how much (e.g. shear, or the spread of spot-latitude periods). SMARTS
+  gives exact truth for training and validation (`DIFFROT`, `MINLAT`, `MAXLAT`;
+  see `docs/SMARTS_REFERENCE.md`).
+- **Possible signals:** period drift across sectors (sliding-window ACF/LS),
+  split or broadened periodogram peaks, wavelet ridge wander, comb-fit residual
+  structure or per-peak jitter (`allow_jitter` in `comb_fit.py`), and
+  multiple non-harmonic candidates clustered within ~0.5–2x P that all fit well.
+- **Note:** Claytor+2022's CNN could *not* recover differential rotation from
+  binned wavelet spectra, so a positive result would be novel.
+- **Prerequisite:** T1/T2 (real data + dev sets). The scorecard's `diffrot`
+  outcome already tags stars where we measured a non-equatorial spot period.
 
 ## Proposed (agents add here; Rae promotes)
 

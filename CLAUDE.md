@@ -7,6 +7,10 @@ open issues, read `docs/PROJECT_CONTEXT.md` first — it is the
 authoritative, continuously-maintained source of truth for the project
 itself.** This file is about *how to work*, not *what the project is*.
 
+For how SMARTS simulations were generated (parameter distributions, FITS
+header keys, differential-rotation sign convention, noise model), read
+`docs/SMARTS_REFERENCE.md`. Don't re-derive it from the papers.
+
 Also read `docs/METHODOLOGY_NOTES.md` if you need the scientific (rather
 than software-engineering) motivation for a design choice, and
 `claude_files/FEATURE_DOCUMENTATION.txt` for the ML feature set
@@ -23,7 +27,7 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `claude_files/` — the flat pipeline package (all `.py` modules plus
   `FEATURE_DOCUMENTATION.txt`). `claude_files/old/` holds superseded
   versions; don't read from it unless comparing against history.
-- `docs/`: `PROJECT_CONTEXT.md`, `METHODOLOGY_NOTES.md`, `TASKS.md`
+- `docs/`: `PROJECT_CONTEXT.md`, `METHODOLOGY_NOTES.md`, `SMARTS_REFERENCE.md`, `TASKS.md`
   (task board), `AGENT_WORKFLOW.md` (how Rae runs/reviews agents).
 - `tests/`: pytest suite (`python -m pytest -q`, ~5 s, no data needed;
   `-m "not slow"` skips end-to-end tests). Must pass before any commit.
@@ -88,6 +92,10 @@ always run locally by Rae, not inside a Claude Code session.
   2026-10-13), defined once in `claude_files/evaluation.py`. Import it
   rather than hardcoding. Measurements within REL_TOL of P/2 or 2P are a
   separate **alias** outcome (`half`/`double`), not lumped with `wrong`.
+  A period inside the star's active-latitude-band range (differential
+  rotation; truth from SMARTS `DIFFROT`/`MINLAT`/`MAXLAT`) is the `diffrot`
+  outcome and counts as **success** (= correct + diffrot); goals target
+  success.
   Score periods only via `evaluation.classify_period`/`best_outcome`.
   `n_guesses=10` for most methods (5 for `acf_fft_highpass`).
 

@@ -274,17 +274,13 @@ Roughly in priority order as of this writing — re-prioritize freely.
    synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
    ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
    account for noise-driven short-lag ACF structure. Task T6.
-11. **Differential-rotation label ambiguity, likely large in SMARTS.**
-   SMARTS `PERIOD` is the *equatorial* period (Claytor+2022, confirmed by Rae).
-   butterpy uses Omega(lat) = Omega_eq (1 + alpha sin^2 lat), with
-   |alpha| in 0.1–1 (log-uniform) for 75% of stars (half solar-like, half
-   anti-solar) and 0 for 25%, and spot latitudes up to 80 deg. A spot's period
-   is P_eq / (1 + alpha sin^2 lat), so at lat 40 deg it is 0.71–1.70 x P_eq for
-   |alpha| = 1, far outside REL_TOL = 0.10. A correct measurement of the
-   dominant spots' period can therefore be scored "wrong". On synthetic data
-   (shear only up to 0.2), 7/200 stars already hit this. Needs a decision on
-   the correctness criterion, e.g. scoring against the range of spot-latitude
-   periods computed from the SMARTS input catalog (lat_min, lat_max, alpha). Tasks T1/T3.
+11. **Differential rotation vs the P_eq label: addressed in scoring
+   (2026-10-13), still open for ML labels.** SMARTS `PERIOD` is equatorial,
+   but spot-latitude periods can differ a lot (shear up to +/-1, latitudes to
+   80 deg). Scoring now counts a period inside the active band's range as the
+   `diffrot` success outcome. The ranker's training label still uses P_eq only
+   (see T10 in TASKS.md). Detecting and measuring differential rotation itself
+   is future feature F1.
 12. **Stage 2 arbitration loses correct candidates.** Stage 1 recall (any
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
@@ -367,3 +363,18 @@ chats should know:
   (`_cat.tar.gz`). Env check: `codeastro` also passes the test suite and
   gives identical periods, but is about 40% slower per star than `ss_local` and has an
   incompatible numpy/scipy pair; staying on `ss_local` pending Rae's call.
+- **2026-10-13: Differential-rotation-aware scoring.** Rae decided that a
+  measured spot-latitude period is a success: we want whatever physical period
+  is measurable. New `evaluation.DIFFROT` outcome and `success` metric
+  (correct + diffrot), using band range P_eq/(1 - shear sin^2 lat) over
+  [MINLAT, MAXLAT] (butterpy sign: shear > 0 solar-like; the paper's Eq. 1 sign
+  is wrong, verified in butterpy's 2021 code). `synthetic.make_suite` now draws
+  shear, latitude band and inclination from the SMARTS distributions. Scorecard
+  v2 reads `DIFFROT`/`MINLAT`/`MAXLAT` from FITS headers. Full generation
+  details are in the new `docs/SMARTS_REFERENCE.md` (cross-checked against
+  10,000 real headers in results_products/batch1). Future feature F1
+  (diffrot detection) is logged in TASKS.md.
+  New baseline (`synthetic:n=200,seed=0`, scorecard v2): 67% success =
+  46% correct + 21% diffrot; 3.5% alias, 5.5% wrong, 24% declined. Declines are
+  now the main loss: high-SNR and solar-like-shear stars get rejected by the
+  gates (draft goal G7). See `reports/2026-10-13_synthetic-baseline-v2-diffrot/`.

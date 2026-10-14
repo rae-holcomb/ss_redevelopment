@@ -38,6 +38,29 @@ def test_injected_period_dominates_periodogram():
     assert abs(1 / freq[np.argmax(power)] - 4.0) / 4.0 < 0.05
 
 
+def test_differential_rotation_signal_lands_in_band():
+    """A single high-latitude spot on a strongly solar-like star modulates at
+    its latitude's period, not P_eq -- and that period lies in params['period_range']."""
+    lc = make_lightcurve(4.0, amplitude=0.01, white_noise=0.0005, n_spots=1, inclination_deg=60,
+                         shear=0.8, minlat_deg=45, maxlat_deg=50, n_sectors=2, seed=3)
+    ok = np.isfinite(lc.flux)
+    freq, power = LombScargle(lc.time[ok], lc.flux[ok]).autopower(minimum_frequency=1 / 20,
+                                                                  maximum_frequency=5)
+    p_peak = 1 / freq[np.argmax(power)]
+    lo, hi = lc.params["period_range"]
+    assert p_peak > 4.0 * 1.10, "should be clearly longer than P_eq"
+    assert lo * 0.95 <= p_peak <= hi * 1.05
+
+
+def test_suite_shear_mixture():
+    """Suite draws SMARTS-like shear: ~50% positive, ~25% zero, ~25% negative."""
+    suite = make_suite(400, seed=1, n_sectors=1)
+    sh = np.array([lc.params["shear"] for lc in suite])
+    assert 0.42 < np.mean(sh > 0) < 0.58
+    assert 0.17 < np.mean(sh == 0) < 0.33
+    assert np.all(np.abs(sh) <= 1.0)
+
+
 def test_suite_period_range_and_ids():
     """Suite periods respect the requested range and IDs are unique."""
     suite = make_suite(20, seed=0, period_range=(0.5, 10.0), n_sectors=2)

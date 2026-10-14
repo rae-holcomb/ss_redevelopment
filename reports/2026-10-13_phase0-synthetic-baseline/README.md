@@ -1,6 +1,6 @@
 # Phase 0: synthetic baseline scorecard
 
-**Date:** 2026-10-13 · **Author:** Claude (setup session with Rae) · **Branch:** main · **Status:** draft
+**Date:** 2026-10-13 · **Author:** Claude (setup session with Rae) · **Branch:** main · **Status:** superseded by `reports/2026-10-13_synthetic-baseline-v2-diffrot/` (new synthetic population + diffrot-aware scoring; numbers below are not comparable)
 
 ## TL;DR
 - On 200 synthetic stars (P = 0.2–40 d, SMARTS-length 356 d baseline), the current pipeline gets

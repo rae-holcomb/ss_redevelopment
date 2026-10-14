@@ -4,8 +4,11 @@ import math
 
 import pytest
 
-from evaluation import (CORRECT, DOUBLE, HALF, NONE, REL_TOL, WRONG, best_outcome,
-                        classify_period, outcome_fractions, period_bin)
+import numpy as np
+
+from evaluation import (CORRECT, DIFFROT, DOUBLE, HALF, NONE, REL_TOL, WRONG,
+                        active_band_period_range, best_outcome, classify_period,
+                        latitude_period, outcome_fractions, period_bin)
 
 
 def test_rel_tol_convention():
@@ -60,9 +63,50 @@ def test_period_bin_edges():
 
 
 def test_outcome_fractions():
-    """Fractions sum to 1 and alias = half + double."""
-    f = outcome_fractions([CORRECT, CORRECT, HALF, DOUBLE, WRONG])
+    """alias = half + double; success = correct + diffrot."""
+    f = outcome_fractions([CORRECT, DIFFROT, HALF, DOUBLE, WRONG])
     assert f["n"] == 5
-    assert f["correct"] == pytest.approx(0.4)
+    assert f["correct"] == pytest.approx(0.2)
+    assert f["success"] == pytest.approx(0.4)
     assert f["alias"] == pytest.approx(0.4)
     assert math.isnan(outcome_fractions([])["correct"])
+
+
+# --- differential rotation (butterpy / SMARTS convention) ---
+
+def test_latitude_period_sign_convention():
+    """butterpy: omega = omega_eq (1 - shear sin^2 lat). Positive shear is
+    solar-like (slower at high latitude => longer period). Pinned here because
+    Claytor+2022's printed Eq. 1 has the opposite sign (docs/SMARTS_REFERENCE.md)."""
+    assert latitude_period(10.0, 0.5, 0.0) == pytest.approx(10.0)
+    assert latitude_period(10.0, 0.5, 90.0) == pytest.approx(20.0)
+    assert latitude_period(10.0, -1.0, 90.0) == pytest.approx(5.0)
+    assert np.isinf(latitude_period(10.0, 1.0, 90.0))
+
+
+def test_active_band_range_ordering():
+    """Range is (lo, hi) for either sign of shear; zero shear collapses to P_eq."""
+    lo, hi = active_band_period_range(10.0, 0.5, 10.0, 60.0)
+    assert lo < hi and lo > 10.0
+    lo, hi = active_band_period_range(10.0, -0.5, 10.0, 60.0)
+    assert lo < hi < 10.0
+    assert active_band_period_range(10.0, 0.0, 10.0, 60.0) == pytest.approx((10.0, 10.0))
+
+
+def test_diffrot_outcome():
+    """A spot-latitude period outside REL_TOL of P_eq but inside the band is DIFFROT;
+    without band truth it stays WRONG; CORRECT still takes precedence."""
+    band = active_band_period_range(10.0, 0.8, 30.0, 60.0)   # ~ (12.5, 25)
+    assert classify_period(15.0, 10.0, period_range=band) == DIFFROT
+    assert classify_period(15.0, 10.0) == WRONG
+    assert classify_period(10.5, 10.0, period_range=band) == CORRECT
+    assert classify_period(7.5, 10.0, period_range=band) == HALF      # half of a band period
+    assert classify_period(40.0, 10.0, period_range=band) == DOUBLE   # double of a band period
+    assert classify_period(3.0, 10.0, period_range=band) == WRONG
+
+
+def test_best_outcome_ranks_diffrot_below_correct():
+    """CORRECT beats DIFFROT beats alias in a candidate list."""
+    band = (12.0, 18.0)
+    assert best_outcome([15.0, 10.1], 10.0, period_range=band) == (CORRECT, 2)
+    assert best_outcome([5.0, 15.0], 10.0, period_range=band) == (DIFFROT, 2)

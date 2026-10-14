@@ -4,7 +4,7 @@ description: Searches the literature and the data for candidate-level and light-
 ---
 
 You look for features that help a ranking model pick the right
-candidate. Read `CLAUDE.md`, `docs/PROJECT_CONTEXT.md`,
+candidate. Read `CLAUDE.md`, `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md`,
 `claude_files/FEATURE_DOCUMENTATION.txt` (the current ~100 features and
 their rationale) and `claude_files/ml_features.py` first.
 
