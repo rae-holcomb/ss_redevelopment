@@ -162,6 +162,93 @@ for confirmation (ask Rae first).
   synthetic scorecard. Consider promoting a goal "all methods' error_rate = 0"
   (Rae edits goals.json).
 
+### T16. Patchy sector coverage: robustness, search limits, and safeguards
+- **Requested by:** Rae, 2026-10-14. Multi-part; do the subtasks in order.
+- **Why:** most real TESS stars aren't observed for 13 consecutive sectors. Many
+  have 1–2 sectors or non-consecutive ones. We want as much period information as
+  possible from patchy data, and honest limits where we can't get it.
+- **Already exists:**
+  - `preprocessing.load_smarts_fits(sectors=[...])` keeps only chosen sectors of a
+    SMARTS light curve (via `split_smarts_lc.recombine_segments`).
+  - `sector_configs.txt` has 121 unique real-star sector patterns: Cycle 1 sectors
+    from `target_df_shortform.csv`, built in `ss_claude_sandbox.ipynb` cell 10.
+    By length: 13 one-sector, 22 two-sector, …, 1 thirteen-sector; 31 fully consecutive.
+- **Known limitation:** SMARTS spans one year, so multi-year revisit gaps can't be
+  emulated (see the window_function work and open issue 6). Stars observed only
+  after Cycle 1 were dropped when the patterns were built.
+- **Coordination:** the "Extend ACF period limit" session (branch
+  `claude/angry-einstein-cb10da`) is changing the ACF lag / period limit. T16c must
+  build on whatever lands from it.
+
+#### T16a. Coverage-degradation infrastructure
+- **Agent:** `method-improver` (infrastructure only)
+- **Status:** ready
+- **Do:**
+  - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
+    mirroring `load_smarts_fits(sectors=...)`.
+  - Rebuild the real-star coverage library *with frequencies*: count how many real
+    stars share each pattern, don't just dedupe. Commit it as data with a builder
+    script.
+  - Add scorecard options to run on a named coverage class or to sample patterns by
+    real-star frequency, e.g. `--coverage real-weighted | single | consecutive-2 |
+    gapped`.
+  - Record per-star coverage descriptors in `per_star.csv`: n_sectors, total
+    baseline, longest contiguous span, duty cycle, largest gap.
+  - Tests.
+- **Note:** scorecard *metric definitions* stay unchanged. This adds dataset
+  options and descriptor columns, so bump `SCORECARD_VERSION` and get Rae's OK on the
+  new columns.
+
+#### T16b. How do candidate methods degrade with coverage?
+- **Agent:** `method-improver` (diagnostic report; no method changes)
+- **Status:** blocked on T16a
+- **Do:**
+  - Run the scorecard across coverage classes: 1 sector; 2 consecutive;
+    2 non-consecutive; 3–5 gapped; ≥ 6.
+  - Map per-method recall/success and final success against P relative to the
+    longest contiguous span and to the total baseline.
+  - Identify failure mechanisms per method. Expected suspects:
+    - ACF truncation by `min_valid_frac` across big gaps;
+    - `pairwise_histogram` running out of peaks;
+    - Lomb-Scargle aliasing from the sector-gap window (relates to T8);
+    - wavelet interpolating across months-long gaps (likely invalid).
+- **Done when:** a report with a method × coverage-class × period-bin success table
+  and failure-mode examples.
+
+#### T16c. Search upper limits for patchy data
+- **Agent:** `method-improver`
+- **Status:** blocked on T16b (and the ACF-period-limit branch)
+- **Do:** define the maximum searchable / reportable period as a function of
+  coverage (longest contiguous span, total baseline, ACF valid-pair coverage).
+  Measure reliability (success vs wrong) as P approaches each candidate limit, and
+  pick limits that keep "wrong" low.
+- **Done when:** a `max_period(coverage)` rule implemented in one place, with
+  justification plots, and goals proposed for Rae.
+
+#### T16d. Method policy and safeguards for patchy data
+- **Agent:** `method-improver`
+- **Status:** blocked on T16b/c
+- **Ideas to evaluate (pick by evidence):**
+  - Per-coverage method selection, e.g. skip wavelet when gaps exceed X.
+  - Segment-wise analysis: ACF or Lomb-Scargle per contiguous chunk, then require
+    agreement across chunks. A cross-sector consistency check as a reliability signal.
+  - Gap-aware alias rejection using the coverage window's own spectrum.
+  - Short-data reliability gates: the gates were tuned on full-year data, so
+    recalibrate their thresholds.
+  - **Partial-information outputs:** instead of a flat decline, report "P > X
+    (lower limit)" or "no periodicity below X d". Needs a new result type; decide
+    with Rae how it is scored.
+- **Done when:** success on patchy classes improves without regressing full
+  coverage, and the "wrong" rate on 1–2-sector stars stays low.
+
+#### T16e. Coverage-aware ML features
+- **Agent:** `feature-researcher`
+- **Status:** blocked on T16a
+- **Do:** add coverage descriptors (n_sectors, longest span, duty cycle, P/longest
+  span, n_cycles observed) to `ml_features.py`, so the ranker can learn how much to
+  trust a candidate under a given coverage. Relates to open issue 6 (multi-sector
+  support).
+
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
 - **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
