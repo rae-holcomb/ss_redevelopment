@@ -171,6 +171,27 @@ for confirmation (ask Rae first).
   synthetic scorecard. Consider promoting a goal "all methods' error_rate = 0"
   (Rae edits goals.json).
 
+### T18. Arbitration and reliability gates (promoted from P1, 2026-10-14)
+- **Agent:** `method-improver`
+- **Status:** in progress (started 2026-10-14)
+- **Why:** Stage 1 lists a success period for 88–100% of stars per bin, but the final
+  answer succeeds for only 65–86% (open issue 12). 30/36 of the lost stars fail the
+  *gates* (T9). Meanwhile red noise gets a confident period 22/60 times in
+  `benchmarks/pb_scan.py`, and low-SNR stars get ~0.2–0.5 d noise answers (open issues
+  10, 14b, 15).
+- **Scope** (everything collected in P1, P7 and P10):
+  - candidate selection and gating in `fit_rotation_period` (`comb_fit.py`);
+  - T9's `acf_half_lag_contrast` gate/selection;
+  - a few-peak noise guard (ACF peak height, PDM theta, contrast);
+  - the factor-of-2 guard's 0.7 threshold vs T9's `fold_half_corr`;
+  - cross-method support (`n_contributing_methods`).
+- **Measure on:** synth200 seed 0 **and seed 1**, plus `pb_scan.py` (signal + 120
+  noise LCs). Tune on seed 0 and pb_scan's dev seeds; validate on seed 1 and pb_scan's
+  eval seeds.
+- **Done when:** a before/after on all of those, success up (G1, G4), wrong down (G6),
+  declines down (G7), red-noise FP well below 22/60, no regression guard tripped, and the
+  seed-1 validation holds up. Any success-vs-wrong trade-off goes to Rae.
+
 ### T17. Add `s_ph_5P` (literature-standard S_ph) alongside `s_ph`
 - **Agent:** `feature-researcher` (small)
 - **Status:** ready (Rae, 2026-10-14, from T9 open question 3)
@@ -200,7 +221,7 @@ for confirmation (ask Rae first).
 
 #### T16a. Coverage-degradation infrastructure
 - **Agent:** `method-improver` (infrastructure only)
-- **Status:** ready
+- **Status:** in progress (started 2026-10-14)
 - **Do:**
   - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
     mirroring `load_smarts_fits(sectors=...)`.
@@ -419,6 +440,7 @@ for confirmation (ask Rae first).
 ## Proposed (agents add here; Rae promotes)
 
 ### P1. Quick arbitration improvement before the ML ranker
+- **Promoted to T18** (2026-10-14).
 - **Proposed by:** Phase 0 report (2026-10-13)
 - **Idea:** in 10–30 d, Stage-1 recall is 0.95 but final correctness is 0.65.
   Try simple, explainable changes to candidate selection in `fit_rotation_period`
