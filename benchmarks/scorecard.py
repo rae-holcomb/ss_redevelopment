@@ -75,6 +75,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 import evaluation as ev  # noqa: E402
 import guesses  # noqa: E402
+from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
@@ -172,7 +173,8 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
             t0 = time.perf_counter()
             try:
                 flux_in = _gap_filled(f) if name == "wavelet" else f
-                out = fn(t, flux_in, lags1, acf1, n_guesses=N_GUESSES.get(name, N_GUESSES_DEFAULT))
+                out = two_view_guesses(fn, t, flux_in, (lags1, acf1), (lags, acf),
+                                       n_guesses=N_GUESSES.get(name, N_GUESSES_DEFAULT))
                 outcome, rank = ev.best_outcome([g.P0 for g in out], true_p, rel_tol, prange)
                 methods[name] = dict(outcome=outcome, rank=rank, n_candidates=len(out),
                                      top1=(out[0].P0 if out else None), error=None,

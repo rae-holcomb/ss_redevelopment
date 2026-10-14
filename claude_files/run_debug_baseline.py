@@ -71,7 +71,7 @@ def process_one_file(fits_path: str) -> dict:
         acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
         acf_lags1, acf1 = compute_acf(pre.time, pre.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage-1 view (B/3)
 
-        guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1)
+        guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1, long_view=(acf_lags, acf))
         result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
 
         row["success"] = bool(result.success)

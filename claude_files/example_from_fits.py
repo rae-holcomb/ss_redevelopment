@@ -42,7 +42,8 @@ if __name__ == "__main__":
     acf_lags1, acf1 = compute_acf(pre.time, pre.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage-1 view (B/3)
 
     # --- 3. candidate generation + fitting/arbitration ---
-    guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1, n_guesses=5)
+    guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1, n_guesses=5,
+                                                      long_view=(acf_lags, acf))
     result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
     print(f"\n{result.message}")
     if result.success:

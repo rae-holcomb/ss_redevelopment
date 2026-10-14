@@ -1051,6 +1051,53 @@ def guess_wavelet(
     return guesses
 
 
+def two_view_guesses(fn, time, flux, short_view: tuple, long_view: Optional[tuple] = None, **kwargs) -> list:
+    """Run one guess_* function on a short-lag ACF view and, optionally, a
+    long-lag view, and merge the results.
+
+    Why two views (2026-10-13): the comb fit now sees the ACF out to ~0.7 B,
+    but the ACF-based generators behave differently on that longer ACF --
+    guess_acf_fft's top-N spectral peaks fill up with low-frequency
+    structure and drop short periods, while on the short (B/3) view it
+    cannot propose anything longer than (B/3)/2 = B/6 at all. So the short
+    view supplies everything it can reach, and the long view adds ONLY
+    candidates beyond the short view's reach (P0 > half the short view's
+    lag range). Candidates the long view returns identically to the short
+    one (e.g. ACF-independent methods like Lomb-Scargle) are not repeated.
+
+    Parameters
+    ----------
+    fn : a guess_* function with signature fn(time, flux, acf_lags, acf, **kwargs).
+    time, flux : the light curve.
+    short_view : (acf_lags, acf) truncated at acf_utils.STAGE1_MAX_LAG_FRAC.
+    long_view : (acf_lags, acf) as used by the comb fit (~0.7 B), or None
+        for single-view (pre-2026-10-13) behavior.
+    **kwargs : forwarded to fn (e.g. n_guesses).
+
+    Returns
+    -------
+    list[InitialGuess]. Raises only if the short view raises and the long
+    view adds nothing (so error accounting matches the single-view call).
+    """
+    try:
+        out = list(fn(time, flux, short_view[0], short_view[1], **kwargs))
+        short_exc = None
+    except Exception as exc:  # noqa: BLE001 -- the long view may still contribute
+        out, short_exc = [], exc
+    if long_view is not None:
+        p_cut = 0.5 * (short_view[0][-1] - short_view[0][0])
+        seen = {(g.method, round(g.P0, 9)) for g in out}
+        try:
+            extra = [g for g in fn(time, flux, long_view[0], long_view[1], **kwargs)
+                     if g.P0 > p_cut and (g.method, round(g.P0, 9)) not in seen]
+        except Exception:  # noqa: BLE001
+            extra = []
+        out.extend(extra)
+    if short_exc is not None and not out:
+        raise short_exc
+    return out
+
+
 def gather_initial_guesses(
     time: np.ndarray,
     flux: np.ndarray,
@@ -1059,6 +1106,7 @@ def gather_initial_guesses(
     methods: tuple = ("pairwise_histogram", "lombscargle", "acf_fft"),
     n_guesses: int = 5,
     method_kwargs: Optional[dict] = None,
+    long_view: Optional[tuple] = None,
 ) -> tuple:
     """Convenience wrapper: call each requested guess_* function and
     concatenate their candidate lists into one pool, ready to hand to
@@ -1081,6 +1129,11 @@ def gather_initial_guesses(
     default full-range candidates are being crowded out by longer-period
     features. "acf_fft_highpass" in particular can return candidates from
     multiple smoothing windows in one call -- see guess_acf_fft_highpass.
+
+    long_view : optional (acf_lags, acf) of the comb fit's longer ACF
+        (~0.7 B). If given, (acf_lags, acf) is treated as the short Stage-1
+        view and each method is run through two_view_guesses, adding
+        long-period candidates beyond the short view's reach.
     """
     method_kwargs = method_kwargs or {}
     guess_fns = {
@@ -1100,7 +1153,7 @@ def gather_initial_guesses(
         kwargs = dict(n_guesses=n_guesses)
         kwargs.update(method_kwargs.get(method, {}))
         try:
-            guesses.extend(guess_fns[method](time, flux, acf_lags, acf, **kwargs))
+            guesses.extend(two_view_guesses(guess_fns[method], time, flux, (acf_lags, acf), long_view, **kwargs))
         except Exception as exc:  # noqa: BLE001 -- one method failing shouldn't block the rest
             failed[method] = f"{type(exc).__name__}: {exc}"
     return guesses, failed

@@ -99,7 +99,8 @@ def run_one(task: dict) -> dict:
         lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
     else:
         lags1, acf1 = lags, acf
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
+    two = {"long_view": (lags, acf)} if STAGE1_MAX_LAG_FRAC is not None else {}
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10, **two)
     t1 = time.perf_counter()
     res = fit_rotation_period(lags, acf, g, **fit_kw)
     t2 = time.perf_counter()

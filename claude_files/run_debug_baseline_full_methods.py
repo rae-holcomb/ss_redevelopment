@@ -33,7 +33,7 @@ from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from preprocessing import load_smarts_fits  # noqa: E402
 from guesses import (  # noqa: E402
     guess_pairwise_histogram, guess_lombscargle, guess_acf_fft, guess_wavelet,
-    guess_lombscargle_short, guess_acf_fft_short, guess_acf_fft_highpass,
+    guess_lombscargle_short, guess_acf_fft_short, guess_acf_fft_highpass, two_view_guesses,
 )
 from comb_fit import fit_rotation_period  # noqa: E402
 
@@ -111,7 +111,7 @@ def process_one_file(fits_path: str) -> dict:
         for method_name, (fn, n_guesses) in METHODS.items():
             flux_in = wavelet_flux if method_name == "wavelet" else pre.flux
             try:
-                g = fn(pre.time, flux_in, acf_lags1, acf1, n_guesses=n_guesses)
+                g = two_view_guesses(fn, pre.time, flux_in, (acf_lags1, acf1), (acf_lags, acf), n_guesses=n_guesses)
                 all_guesses.extend(g)
                 raw_method_counts[method_name] = len(g)
             except Exception as exc:  # noqa: BLE001 -- one method failing shouldn't block the rest

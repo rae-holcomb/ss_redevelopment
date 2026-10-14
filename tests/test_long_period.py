@@ -25,7 +25,7 @@ def _run(lc):
     """compute_acf (with pair counts) -> default candidates -> comb fit."""
     lags, acf, counts = compute_acf(lc.time, lc.flux, return_counts=True)
     lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10, long_view=(lags, acf))
     res = fit_rotation_period(lags, acf, g, acf_counts=counts)
     return res, (res.best_fit.P if res.success else None)
 
@@ -164,7 +164,7 @@ def test_ml_features_expose_peak_budget_and_baseline_fraction():
     lc = make_lightcurve(6.0, amplitude=0.01, white_noise=0.001, n_sectors=1, seed=5, n_spots=1)
     lags, acf, counts = compute_acf(lc.time, lc.flux, return_counts=True)
     lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10, long_view=(lags, acf))
     res = fit_rotation_period(lags, acf, g, acf_counts=counts)
     df = extract_candidate_features(res, g, lc.time, lc.flux, lags, acf)
     for col in ("n_peaks_used", "n_teeth_available", "n_peaks_required", "few_peaks",
@@ -190,3 +190,19 @@ def test_trailing_decayed_teeth_are_trimmed():
     assert fit.n_peaks_used >= 4
     untrimmed = comb_fit._fit_single_candidate(lags, acf, P, P, n_peaks=8, trim_decayed_tail=False)
     assert untrimmed.n_peaks_trimmed == 0 and untrimmed.n_peaks_used == fit.n_peaks_used + fit.n_peaks_trimmed
+
+
+def test_two_view_guesses_adds_only_out_of_reach_long_candidates():
+    """The long ACF view contributes only periods beyond half the short
+    view's lag range, and never repeats an identical candidate."""
+    from guesses import InitialGuess, two_view_guesses
+
+    def fake(time, flux, lags, acf, n_guesses=10):
+        """Proposes P = lag_range/2 and a fixed P = 1 (ACF-independent)."""
+        return [InitialGuess(P0=0.5 * lags[-1], method="fake"), InitialGuess(P0=1.0, method="fake")]
+
+    short = (np.linspace(0, 9, 10), np.zeros(10))
+    long_ = (np.linspace(0, 19, 20), np.zeros(20))
+    out = sorted(g.P0 for g in two_view_guesses(fake, None, None, short, long_))
+    assert out == [1.0, 4.5, 9.5]
+    assert sorted(g.P0 for g in two_view_guesses(fake, None, None, short, None)) == [1.0, 4.5]
