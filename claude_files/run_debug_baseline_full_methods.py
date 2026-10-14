@@ -35,11 +35,11 @@ from astropy.io import fits
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "repo" / "claude_files"))
 
-from acf_utils import compute_acf  # noqa: E402
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from preprocessing import load_smarts_fits  # noqa: E402
 from guesses import (  # noqa: E402
     guess_pairwise_histogram, guess_lombscargle, guess_acf_fft, guess_wavelet,
-    guess_lombscargle_short, guess_acf_fft_short, guess_acf_fft_highpass,
+    guess_lombscargle_short, guess_acf_fft_short, guess_acf_fft_highpass, two_view_guesses,
 )
 from comb_fit import fit_rotation_period  # noqa: E402
 
@@ -111,7 +111,8 @@ def process_one_file(fits_path: str) -> dict:
         row["true_period"] = true_period
 
         pre = load_smarts_fits(fits_path)
-        acf_lags, acf = compute_acf(pre.time, pre.flux)
+        acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
+        acf_lags1, acf1 = compute_acf(pre.time, pre.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage-1 view (B/3)
         wavelet_flux = _prep_wavelet_flux(pre.flux)
 
         all_guesses = []
@@ -120,7 +121,7 @@ def process_one_file(fits_path: str) -> dict:
         for method_name, (fn, n_guesses) in METHODS.items():
             flux_in = wavelet_flux if method_name == "wavelet" else pre.flux
             try:
-                g = fn(pre.time, flux_in, acf_lags, acf, n_guesses=n_guesses)
+                g = two_view_guesses(fn, pre.time, flux_in, (acf_lags1, acf1), (acf_lags, acf), n_guesses=n_guesses)
                 all_guesses.extend(g)
                 raw_method_counts[method_name] = len(g)
             except Exception as exc:  # noqa: BLE001 -- one method failing shouldn't block the rest
@@ -130,7 +131,7 @@ def process_one_file(fits_path: str) -> dict:
         row["method_failures"] = "; ".join(f"{k}: {v}" for k, v in failed_methods.items())
         row["raw_method_counts_json"] = json.dumps(raw_method_counts)
 
-        result = fit_rotation_period(acf_lags, acf, all_guesses)
+        result = fit_rotation_period(acf_lags, acf, all_guesses, acf_counts=acf_counts)
 
         row["success"] = bool(result.success)
         row["message"] = result.message

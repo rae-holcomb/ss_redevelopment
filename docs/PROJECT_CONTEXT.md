@@ -295,6 +295,17 @@ Roughly in priority order as of this writing — re-prioritize freely.
    whose `ddot` was alignment-dependent here (on x86_64, so arm64 is untested).
    On Apple Silicon, build the env from conda-forge with `libblas=*=*openblas` and
    re-verify (TASKS.md P5).
+14. **Long periods on short baselines: addressed 2026-10-13, edges remain.** The comb
+   fit used to need >= 4 ACF peaks within B/3 (P <~ B/12), so most 1-2 sector TESS stars
+   could never get a period above ~2-5 d. It now reaches P ~ 0.3 B (see changelog).
+   Still open: (a) P = B/3 sits on the ACF coverage edge (min_valid_frac=0.3 -> ~0.67 B);
+   (b) few-peak (`few_peaks=True`) answers have no extra noise guard, and red noise produced
+   long few-peak false positives (1/60 eval, 3/30 dev seeds); (e) runtime +30-60%; (c) the factor-2 guard's 0.7 ratio
+   threshold is hand-set; (d) `guess_acf_fft` misbehaves on long ACFs (hence two-view Stage 1).
+15. **The comb's lag-0 tooth is an implicit noise filter (found 2026-10-13).** For short
+   candidate periods, `_grid_search_t0` puts the n=0 tooth on the trivial lag-0 ACF peak. Removing
+   it everywhere made 5 low-SNR synth200 stars return confident ~0.2-0.5 d answers. This
+   is likely part of open issue 10's mechanism, and any T6 fix should account for it.
 
 ---
 
@@ -425,3 +436,14 @@ chats should know:
   decline analysis and proposals (P7, P8; numbered P4/P5 in the report) in `reports/2026-10-14_t9-feature-search/`.
 
 - **2026-10-14: Baseline refreshed under `ss_openblas`; G8; Rae's decisions on T9/T15.** New `benchmarks/baselines/synth200_s0.json` (+ `synth200_s0_tables/` per-star CSVs for exact equivalence checks; see `benchmarks/baselines/README.md`). Outcomes are identical to the previous baseline for all 200 stars; 125 periods shifted ≤5.1e-5 relative (one-time Accelerate→OpenBLAS shift). New active goal **G8** (every method's error_rate = 0) with wildcard-goal support in `check_goals.py` (+ `tests/test_check_goals.py`). Decisions recorded in TASKS.md: T15 behaviors kept; T9's alias gate folded into P1 (validate on another seed); diffrot-label check required in T10; CNN-σ_P comparison in T11; new small task T17 (`s_ph_5P`); Lu+2020 = Astraea (AJ 160, 168), Lu+2022 = ZTF periods (AJ 164, 251), added to the T9 literature table and to T16d/D1.
+- **2026-10-13: Long-period ACF limit lifted (P up to ~B/3).** `compute_acf` now reaches
+  ~0.7 B (pair-coverage cut is the real limit) and can return per-lag pair counts. The comb fit's
+  peak gate is adaptive (clamp(teeth in range, 2, 4)), and relaxed answers carry
+  `few_peaks`/`n_teeth_available`, as Rae requested. Also added: a factor-of-2 guard (half-tooth height
+  ratio instead of redchi for ~2x pairs); the lag-0 tooth skipped for unsaturated combs; decayed trailing
+  teeth trimmed; no MAD rejection below the required count; sqrt(pair-count) residual weights (measured
+  neutral); window decimation to <= 100 points (speed); two-view Stage 1 (guessers keep the B/3 ACF,
+  plus out-of-reach long candidates from the 0.7 B ACF, `STAGE1_MAX_LAG_FRAC`); and edge-clipped
+  windows judged against their nominal bound. Result: P/B scan correct at 0.10-0.33 went 0.00 -> 0.94;
+  synth200 success 0.670 -> 0.725 with no regression guard tripped. Costs: rare red-noise long
+  few-peak false positives (1/60 eval), and runtime +60% on 1-2 sectors / +30% on synth200. New benchmark `benchmarks/pb_scan.py`. See `reports/2026-10-13_acf-long-period-limit/`.

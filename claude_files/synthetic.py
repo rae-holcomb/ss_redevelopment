@@ -288,9 +288,10 @@ def make_suite(
     period_range : (min, max) period, days.
     snr_range : (min, max) amplitude / white_noise.
     n_sectors : sectors per light curve. Default 13 (x 27.4 d = 356 d)
-        matches the full SMARTS baseline. Note the comb fit needs >= 4 ACF
-        peaks inside compute_acf's 1/3-baseline lag range, i.e. baseline
-        >~ 12 P, so long periods honestly fail on short baselines.
+        matches the full SMARTS baseline. The comb fit needs >= 2 ACF
+        peaks inside compute_acf's ~0.7-baseline lag range (>= 4 where
+        available), i.e. P <~ 0.3 baseline; answers relying on fewer than 4
+        peaks are flagged few_peaks (since 2026-10-13; before, P <~ B/12).
 
     Returns
     -------

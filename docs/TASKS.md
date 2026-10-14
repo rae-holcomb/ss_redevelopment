@@ -84,7 +84,10 @@ for confirmation (ask Rae first).
   tripped.
 
 ### T6. Long-period recovery and honest failure (>10 d)
-- **Status:** ready
+- **Status:** in progress. Long-period half **done and merged 2026-10-14**
+  (report `reports/2026-10-13_acf-long-period-limit/`: P up to ~B/3, synth200 >30 d success
+  0 -> 0.75). The low-SNR ~0.2-0.5 d wrong-answer half (open issue 10) is still open; see open issue 15
+  (the lag-0 tooth) for a clue.
 - **Goal:** understand final-answer failures at long P: how many are the
   baseline limit (<4 ACF peaks in 1/3 baseline) versus fixable. Consider whether
   the 1/3-baseline ACF lag cap or `min_peaks_required=4` should adapt.
@@ -215,6 +218,9 @@ for confirmation (ask Rae first).
   new columns.
 
 #### T16b. How do candidate methods degrade with coverage?
+- **Also (Rae, 2026-10-14):** re-evaluate the comb fit's sqrt(pair-count) residual
+  weighting (measured neutral on full-year data in the ACF long-period report). It
+  should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
 - **Status:** blocked on T16a
 - **Do:**
@@ -231,6 +237,9 @@ for confirmation (ask Rae first).
   and failure-mode examples.
 
 #### T16c. Search upper limits for patchy data
+- **Also (Rae, 2026-10-14):** test lowering `compute_acf`'s `min_valid_frac` from 0.3
+  to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
+  ACF pair-coverage edge (ACF long-period report, open issue 14a).
 - **Agent:** `method-improver`
 - **Status:** blocked on T16b (and the ACF-period-limit branch)
 - **Do:** define the maximum searchable / reportable period as a function of
@@ -420,6 +429,15 @@ for confirmation (ask Rae first).
   rate, and may rescue >30 d stars. Its threshold was tuned on seed 0, so **validate
   on a different synthetic seed** (e.g. `--seed 1`) before adopting it, and later on
   dev_small.
+- **Also in scope (Rae, 2026-10-14, from the ACF long-period report):**
+  - **Few-peak noise guard (was P10).** Red noise gives a high false-positive rate:
+    22/60 red-noise light curves got a period in `benchmarks/pb_scan.py`. Test the
+    raw ACF peak height, PDM theta and T9's `acf_half_lag_contrast` as gates, and
+    judge them on red-noise FP *and* success.
+  - **Factor-of-2 guard threshold (0.7, hand-set).** A clean two-spot star with
+    ratio 0.81 still goes to P/2. Test alternatives with T9's `fold_half_corr`, the
+    best P-vs-2P separator.
+  - Measure on synth200 (two seeds) **and** `pb_scan.py`.
 
 
 ### P2. Other guess_* methods should return [] instead of raising
@@ -492,3 +510,23 @@ for confirmation (ask Rae first).
   `new_features.py`) can't be evaluated on synthetic data (constant white noise).
   Also test `*_nearest_peak_width / fitted_P` (current widths are in days) and
   `s_ph` with 5·P bins. Needs dev_small (T2).
+
+### P9. Make the P/B scan a standard benchmark with its own goal
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** `benchmarks/pb_scan.py` (P set as a fraction of the baseline, 1/2/13 sectors, plus 120
+  noise LCs) probes the short-baseline regime that synth200 (13 sectors) barely touches. Candidate
+  goal: correct >= 0.8 at P/B 0.10-0.30 on 1-2 sectors, with white/red noise FP not above baseline.
+
+### P10. Noise guard for few-peak answers
+- **Folded into P1** (Rae, 2026-10-14).
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** red noise occasionally yields long `few_peaks` false positives (1/60 eval, 3/30 dev seeds). Raw
+  ACF peak height and PDM theta separated them cleanly from true few-peak detections on the
+  handful of cases seen. Test a gate on a larger noise set, or leave it to the ranker.
+
+### P11. Recover the runtime the long-period change cost
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** median per-star time rose 1.6x on 1-2 sectors and 1.3x on synth200 (more teeth and candidates per
+  fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
+  Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
+  outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
