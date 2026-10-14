@@ -102,6 +102,29 @@ for confirmation (ask Rae first).
 - **Goal:** add a periodic-gap option to `synthetic.py` and test zero-fill FFT vs
   LombScargle under it.
 
+### T12. Efficiency pass on the production pipeline
+- **Agent:** `performance-optimizer`
+- **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
+- **Why:** at ~1.16 s/star on the default path (`ss_local`, 2026-10-13), one pass over
+  1M stars is ~322 CPU-hours (~32 h on 10 workers), and the corpus will be
+  re-run many times. Each 10% speedup saves ~32 CPU-hours per pass.
+- **Goal:** profile the production path (load → ACF → default guesses → comb fit →
+  features), find where time goes (including slow-tail stars), and make it
+  faster **without changing results**.
+- **Done when:**
+  - `benchmarks/profile_pipeline.py` exists;
+  - an output-equivalence test exists in `tests/`;
+  - optimizations are implemented with before/after timings and no regression
+    guard trips;
+  - the report includes projected 1M-star CPU-hours and a ranked list of
+    further opportunities;
+  - any accuracy-for-speed trades are proposed separately for Rae.
+- **Coordination:** touches the same files as Phase 2 method work (`guesses.py`,
+  `comb_fit.py`). Don't run it concurrently with a method-improver on the same
+  module. Rerun after major method changes land, since new methods add cost.
+- **Follow-up:** once the profiler exists, Rae may add a runtime goal on its
+  output to `goals.json`.
+
 ---
 
 ## Phase 3: features
