@@ -553,7 +553,7 @@
         "alias": 0.065,
         "recall": 0.495,
         "top1_success": 0.37,
-        "error_rate": 0.275,
+        "error_rate": 0.0,
         "median_rank": 1.0
       },
       "by_bin": {
@@ -569,7 +569,7 @@
           "alias": 0.13333333333333333,
           "recall": 0.4666666666666667,
           "top1_success": 0.37777777777777777,
-          "error_rate": 0.35555555555555557,
+          "error_rate": 0.0,
           "median_rank": 1.0
         },
         "10-30d": {
@@ -584,7 +584,7 @@
           "alias": 0.023255813953488372,
           "recall": 0.813953488372093,
           "top1_success": 0.5813953488372093,
-          "error_rate": 0.13953488372093023,
+          "error_rate": 0.0,
           "median_rank": 1.0
         },
         "3-10d": {
@@ -599,7 +599,7 @@
           "alias": 0.0,
           "recall": 0.7777777777777778,
           "top1_success": 0.6388888888888888,
-          "error_rate": 0.2222222222222222,
+          "error_rate": 0.0,
           "median_rank": 1.0
         },
         "<1d": {
@@ -614,7 +614,7 @@
           "alias": 0.08823529411764706,
           "recall": 0.10294117647058824,
           "top1_success": 0.058823529411764705,
-          "error_rate": 0.36764705882352944,
+          "error_rate": 0.0,
           "median_rank": 1.0
         },
         ">30d": {
@@ -740,15 +740,15 @@
     }
   },
   "runtime": {
-    "median_seconds": 7.069304614997236,
-    "p90_seconds": 10.369728237920208
+    "median_seconds": 11.358231716483715,
+    "p90_seconds": 17.36756726928288
   },
   "errors": {
     "n_star_errors": 0
   },
   "config": {
     "scorecard_version": 2,
-    "git_commit": "f141359-dirty",
+    "git_commit": "4896568-dirty",
     "rel_tol": 0.1,
     "dataset": "synthetic:n=200,seed=0",
     "pipeline_methods": [
@@ -760,7 +760,7 @@
     "n_guesses_overrides": {
       "acf_fft_highpass": 5
     },
-    "wall_seconds": 158.5108299255371,
-    "created": "2026-10-13 22:10:12"
+    "wall_seconds": 490.87755489349365,
+    "created": "2026-10-13 22:47:19"
   }
 }

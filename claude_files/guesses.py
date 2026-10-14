@@ -228,8 +228,17 @@ def guess_pairwise_histogram(
 
     Returns
     -------
-    list[InitialGuess], sorted strongest-first (by support count), method="pairwise_histogram"
+    list[InitialGuess], sorted strongest-first (by support count), method="pairwise_histogram".
+    Returns an empty list (never raises) when there is nothing to propose:
+    fewer than 3 ACF lags, fewer than 2 ACF peaks found, or no pairwise
+    spacing inside [min_period, max_period].
     """
+    # Degenerate input (too few lags to define a lag spacing) -> no
+    # candidates. Like every early exit below, this returns [] rather than
+    # raising: "no usable ACF peaks" is a normal outcome for noise-dominated
+    # or near-Nyquist stars, not an error (PROJECT_CONTEXT open issue 8).
+    if len(acf_lags) < 3:
+        return []
     dt = np.median(np.diff(acf_lags))
     if min_lag is None:
         min_lag = 3 * dt
@@ -242,11 +251,11 @@ def guess_pairwise_histogram(
         acf_lags, acf, min_lag=min_lag, max_lag=max_lag, prominence=prominence
     )
 
+    # A spacing needs at least two peaks. Fewer is common for pure noise or
+    # periods near the Nyquist limit; if you expected peaks, try lowering
+    # `prominence` or widening the lag range.
     if len(peak_lags) < 2:
-        raise RuntimeError(
-            "guess_pairwise_histogram: fewer than 2 ACF peaks found; "
-            "try lowering `prominence` or widening the lag range."
-        )
+        return []
 
     # all pairwise positive differences
     diffs = []
@@ -260,16 +269,18 @@ def guess_pairwise_histogram(
         hi = max_period if max_period is not None else diffs.max()
         diffs = diffs[(diffs >= lo) & (diffs <= hi)]
 
+    # no pairwise spacings survive the min_period/max_period cut
     if len(diffs) == 0:
-        raise RuntimeError(
-            "guess_pairwise_histogram: no pairwise spacings survive the "
-            "min_period/max_period cut."
-        )
+        return []
 
     if n_hist_bins is None:
         bin_width = max(4 * dt, (diffs.max() - diffs.min()) / 200)
     else:
         bin_width = (diffs.max() - diffs.min()) / n_hist_bins
+    if not bin_width > 0:
+        # all spacings identical (e.g. exactly 2 peaks) with an explicit
+        # n_hist_bins would give zero-width bins; fall back to the default.
+        bin_width = 4 * dt
 
     # Histogram range starts at 0 (or a small floor), not diffs.min(): if the
     # range started at diffs.min(), the fundamental spacing (often close to

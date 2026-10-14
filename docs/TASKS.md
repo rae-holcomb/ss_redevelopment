@@ -67,7 +67,8 @@ All Phase 2 tasks use `method-improver`. Until T2 lands, judge on
 for confirmation (ask Rae first).
 
 ### T4. Fix `guess_pairwise_histogram` crash (open issue 8)
-- **Status:** ready
+- **Status:** done, merged 2026-10-13 (report `reports/2026-10-13_t4-pairwise-histogram-no-raise/`).
+  Its open questions 1–3 became T13–T15.
 - **Goal:** return `[]` instead of raising when <2 ACF peaks are found.
 - **Done when:** the two strict-xfail entries in `tests/test_guesses.py::KNOWN_FAILURES`
   are removed and the suite passes. A good first task for trying out the agent workflow.
@@ -120,6 +121,46 @@ for confirmation (ask Rae first).
 - **Out of scope for now:** ground-based day/night cadence, momentum-dump gaps, and
   multi-sector yearly clumping. **Re-evaluate if the pipeline is applied to other
   missions (e.g. Roman)**, whose observing windows may be strongly periodic.
+
+### T13. Recalibrate ACF peak-finding prominence
+- **Agent:** `method-improver`
+- **Status:** ready (from the T4 report, approved by Rae 2026-10-13)
+- **Problem:** the adaptive threshold (prominence = 5 × std of the ACF's second
+  difference, `guesses._acf_peak_candidates`) is miscalibrated both ways. It misses
+  rotation bumps that are obvious by eye (T4 report stars 00003, 00004) and lets
+  hundreds of noise wiggles through elsewhere (median 15 peaks, max 585).
+- **Ideas to compare:** second difference of a smoothed ACF; prominence relative
+  to the ACF envelope; retry at lower prominence when < 2 peaks are found.
+- **Done when:** a peak-count/recall diagnostic by period bin and SNR before and
+  after, `pairwise_histogram` recall improves (especially <3 d, where it is weakest),
+  and no regression guard trips. Note that `_acf_peak_candidates` may also feed
+  other code paths, so check its callers.
+
+### T14. Make scorecard runs bit-reproducible
+- **Agent:** `performance-optimizer` or `method-improver` (small task)
+- **Status:** ready (from the T4 report, approved by Rae 2026-10-13)
+- **Problem:** with identical inputs, 17/200 final periods differed between runs by up to
+  2.3e-4 relative. That's harmless at REL_TOL=0.10, but it makes before/after
+  diffs noisy and blocks an exact output-equivalence test (needed by T12).
+- **Goal:** find the cause (suspects: multithreaded BLAS/FFT inside workers,
+  worker scheduling, optimizer tolerances, unseeded randomness in fitting/RANSAC) and
+  fix it, e.g. single-threaded BLAS (`OMP_NUM_THREADS=1` etc.) in scorecard
+  workers. Measure the runtime effect, since single-threading may also *help* with 10 workers.
+- **Done when:** two consecutive scorecard runs give identical `per_star.csv`
+  final periods, plus a test that checks determinism on a few stars.
+
+### T15. No guess_* method raises on degenerate input
+- **Agent:** `method-improver`
+- **Status:** ready (from the T4 report, approved by Rae 2026-10-13)
+- **Problem:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still
+  `raise RuntimeError` on degenerate input (guesses.py around lines 380, 510 and
+  1000–1030). That breaks the "return [], never raise" contract T4 established.
+- **Goal:** same treatment as T4: write tests that reach each early exit (degenerate
+  inputs: all-NaN, constant flux, too-short baseline, empty period window), then
+  make them return `[]`.
+- **Done when:** the new tests pass and every guess method's error rate is 0 on the
+  synthetic scorecard. Consider promoting a goal "all methods' error_rate = 0"
+  (Rae edits goals.json).
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
@@ -205,3 +246,20 @@ for confirmation (ask Rae first).
   (e.g. weighting cross-method support `n_contributing_methods`, penalizing
   candidates whose multiples also fit well) and measure them against G4.
 
+
+### P2. Other guess_* methods should return [] instead of raising
+- **Proposed by:** T4 report (2026-10-13)
+- **Idea:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still raise
+  `RuntimeError` on degenerate input (too few points, empty period range, no
+  peak above SNR). The contract in `tests/test_guesses.py` says returning `[]`
+  is fine but raising is not. Apply the T4 pattern, with a test for each exit.
+
+### P3. Recalibrate guess_pairwise_histogram's adaptive ACF-peak prominence
+- **Proposed by:** T4 report (2026-10-13)
+- **Idea:** the threshold, 5 x std(second difference of the ACF), misses visible
+  rotation bumps when spot lifetimes are short. In other stars it lets through
+  hundreds of noise peaks (median 15, max 585, on synthetic n=200). Try
+  smoothing the ACF before taking the second difference, an envelope-relative
+  prominence, or a retry at lower prominence when fewer than 2 peaks are found.
+  Measure the change with pairwise_histogram recall by bin. See
+  `reports/2026-10-13_t4-pairwise-histogram-no-raise/` (Figure 2).

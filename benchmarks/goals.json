@@ -1,34 +1,82 @@
 {
   "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only.",
   "goals": [
-    {"id": "G1", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "final.overall.success", "op": ">=", "target": 0.75,
-     "description": "Overall success, i.e. measured a physical rotation period (baseline 0.67)."},
-    {"id": "G2", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "final.by_bin.<1d.success", "op": ">=", "target": 0.75,
-     "description": "Success for P_eq<1d (baseline 0.65). Task T5."},
-    {"id": "G3", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "union_recall.by_bin.<1d", "op": ">=", "target": 0.94,
-     "description": "Some Stage-1 method lists a success period, P_eq<1d (baseline 0.88). Task T5."},
-    {"id": "G4", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "final.by_bin.10-30d.success", "op": ">=", "target": 0.82,
-     "description": "Success 10-30d (baseline 0.70 although Stage-1 recall is 0.98: an arbitration problem). Tasks T6/P1/T11."},
-    {"id": "G5", "status": "active", "dataset": "synthetic:n=200,seed=0",
-     "metric": "methods.pairwise_histogram.overall.error_rate", "op": "<=", "target": 0.0,
-     "description": "guess_pairwise_histogram never raises (baseline: raises on 27.5% of stars). Task T4 / open issue 8."},
-    {"id": "G6", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "final.overall.wrong", "op": "<=", "target": 0.04,
-     "description": "Confidently-wrong answers are costlier than declining (baseline 0.055)."},
-    {"id": "G7", "status": "draft", "dataset": "synthetic:n=200,seed=0",
-     "metric": "final.overall.none", "op": "<=", "target": 0.18,
-     "description": "Fewer declines on measurable stars (baseline 0.24). High-SNR (5-20) stars are declined as often as SNR<2 (29%), and solar-like shear raises declines; some declines (near pole-on) are legitimate. Robustness to differential rotation."}
+    {
+      "id": "G1",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "final.overall.success",
+      "op": ">=",
+      "target": 0.75,
+      "description": "Overall success, i.e. measured a physical rotation period (baseline 0.67)."
+    },
+    {
+      "id": "G2",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "final.by_bin.<1d.success",
+      "op": ">=",
+      "target": 0.75,
+      "description": "Success for P_eq<1d (baseline 0.65). Task T5."
+    },
+    {
+      "id": "G3",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "union_recall.by_bin.<1d",
+      "op": ">=",
+      "target": 0.94,
+      "description": "Some Stage-1 method lists a success period, P_eq<1d (baseline 0.88). Task T5."
+    },
+    {
+      "id": "G4",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "final.by_bin.10-30d.success",
+      "op": ">=",
+      "target": 0.82,
+      "description": "Success 10-30d (baseline 0.70 although Stage-1 recall is 0.98: an arbitration problem). Tasks T6/P1/T11."
+    },
+    {
+      "id": "G5",
+      "status": "met",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "methods.pairwise_histogram.overall.error_rate",
+      "op": "<=",
+      "target": 0.0,
+      "description": "guess_pairwise_histogram never raises (baseline: raises on 27.5% of stars). Task T4 / open issue 8. MET 2026-10-13 (T4 merged)."
+    },
+    {
+      "id": "G6",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "final.overall.wrong",
+      "op": "<=",
+      "target": 0.04,
+      "description": "Confidently-wrong answers are costlier than declining (baseline 0.055)."
+    },
+    {
+      "id": "G7",
+      "status": "draft",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "final.overall.none",
+      "op": "<=",
+      "target": 0.18,
+      "description": "Fewer declines on measurable stars (baseline 0.24). High-SNR (5-20) stars are declined as often as SNR<2 (29%), and solar-like shear raises declines; some declines (near pole-on) are legitimate. Robustness to differential rotation."
+    }
   ],
   "regression_guard": {
     "max_drop": 0.02,
     "metrics": [
       "final.overall.success",
-      {"pattern": "final.by_bin.*.success", "max_drop": 0.06},
-      {"pattern": "union_recall.by_bin.*", "max_drop": 0.06}
+      {
+        "pattern": "final.by_bin.*.success",
+        "max_drop": 0.06
+      },
+      {
+        "pattern": "union_recall.by_bin.*",
+        "max_drop": 0.06
+      }
     ]
   }
 }

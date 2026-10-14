@@ -264,11 +264,8 @@ Roughly in priority order as of this writing — re-prioritize freely.
    **Scoped 2026-10-13 (Rae):** only the TESS ~13.7 d orbit-gap periodicity
    matters for now (task T8, low priority); revisit other cadences if the
    pipeline is applied to other missions (e.g. Roman).
-
-8. **`guess_pairwise_histogram` raises outright** (doesn't return an
-   empty list, raises an exception) on some ultra-short-period light
-   curves where fewer than 2 ACF peaks can be found. Never circled back
-   to make this fail gracefully.
+8. *(Resolved 2026-10-13 by T4; kept as a placeholder so later issue
+   numbers stay stable. See the changelog.)*
 9. **`batch_test_acf_fft_highpass.py` may be redundant** now that
    `batch_test_guesses.py`'s auto-discovery already exercises
    `acf_fft_highpass` as one of its methods generically. Not deleted
@@ -382,3 +379,13 @@ chats should know:
   46% correct + 21% diffrot; 3.5% alias, 5.5% wrong, 24% declined. Declines are
   now the main loss: high-SNR and solar-like-shear stars get rejected by the
   gates (draft goal G7). See `reports/2026-10-13_synthetic-baseline-v2-diffrot/`.
+- **2026-10-13: Open issue 8 resolved (T4).** `guess_pairwise_histogram` now
+  returns `[]` instead of raising when it finds fewer than 2 ACF peaks. The same
+  applies to an empty period window, fewer than 3 lags, and zero-width histogram
+  bins. On synthetic n=200 seed 0, its error rate went 0.275 → 0 and G5 passes.
+  Final outcomes are identical, because callers already caught the exception.
+  The stars that raised were low-SNR, nearly pole-on, or had short spot
+  lifetimes. Issue 8 is kept as a placeholder so the numbering stays stable.
+  Follow-ups P2 (other methods still raise) and P3 (prominence calibration) are
+  in TASKS.md. See `reports/2026-10-13_t4-pairwise-histogram-no-raise/`.
+- **2026-10-13: T4 merged; baseline updated.** `benchmarks/baselines/synth200_s0.json` is now T4's post-fix run (final outcomes identical to the v2 baseline; only pairwise_histogram's error rate went 0.275 → 0). G5 marked met. T4 report open questions 1–3 became tasks T13 (prominence recalibration), T14 (bit-reproducible scorecards) and T15 (no guess_* method raises).
