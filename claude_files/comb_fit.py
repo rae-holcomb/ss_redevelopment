@@ -247,11 +247,11 @@ def _grid_search_t0(
     n_phase: int = 200,
     n_teeth_for_score: int = 5,
     weight_func: Optional[Callable[[int], float]] = None,
-    skip_lag0_tooth: bool = True,
+    skip_lag0_tooth: bool = False,
 ) -> float:
     """Given a candidate period P0, grid-search the phase t0 in
     [lo, lo + P0) that maximizes comb_score, where lo = max(min_lag,
-    P0/2) if skip_lag0_tooth (default) else min_lag. The returned t0 is
+    P0/2) if skip_lag0_tooth else min_lag (default). The returned t0 is
     itself the lag of the (n=0) tooth. This is a coarse, cheap phase
     estimate meant to seed the real joint fit -- not a fit in itself.
 
@@ -263,6 +263,11 @@ def _grid_search_t0(
     out of 8 (tolerated by min_frac_vertex_in_window=0.8); for a long
     period with only 2-3 teeth in range it sinks the whole fit. Starting
     the grid at P0/2 makes the first tooth the first genuine peak (~P0).
+    fit_rotation_period enables this ONLY for candidates in the few-peak
+    regime: for many-tooth candidates the lag-0 window turned out to act as
+    an implicit noise filter (with it skipped everywhere, synthetic n=200
+    seed 0 gained 5 confidently-wrong ~0.2-0.5 d answers on low-SNR stars --
+    the open-issue-10 pathology), so their seeding is left unchanged.
     """
     lo = max(min_lag, 0.5 * P0) if skip_lag0_tooth else min_lag
     trial_t0 = np.linspace(lo, lo + P0, n_phase, endpoint=False)
@@ -1586,9 +1591,14 @@ def fit_rotation_period(
     for guess, group in zip(deduped, merged_groups):
         n_dup = len(group) - 1
         contributing_methods = tuple(sorted(set(gg.method for gg in group)))
-        t0 = guess.t0 if guess.t0 is not None else _grid_search_t0(
-            acf_lags, acf, guess.P0, min_lag=min_lag
-        )
+        if guess.t0 is not None:
+            t0 = guess.t0
+        else:
+            # Skip the trivial lag-0 tooth only where it matters: if the
+            # comb starting at the first genuine peak (~P0) has fewer than
+            # min_peaks_required teeth in range (see _grid_search_t0).
+            skip0 = min(n_peaks, _teeth_count(guess.P0, max(min_lag, 0.5 * guess.P0), lag_max)) < min_peaks_required
+            t0 = _grid_search_t0(acf_lags, acf, guess.P0, min_lag=min_lag, skip_lag0_tooth=skip0)
         # Adaptive peak gate: a period near B/3 only has 2-3 teeth inside
         # the ACF's lag range, so demanding min_peaks_required (4) of them
         # would reject it by construction. Require every available tooth,
