@@ -65,7 +65,13 @@ import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import numpy as np
+# Worker setup (T14): pin BLAS to 1 thread BEFORE numpy is imported, here and
+# (via the inherited environment) in every spawned pool worker. See
+# determinism.py for why this is needed for bit-reproducibility.
+import determinism  # noqa: E402  (same directory as this script)
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
 import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
@@ -368,6 +374,7 @@ def _init_worker():
     rather than on every task it's handed.
     """
     global _worker_guess_fns
+    determinism.init_worker()  # 1 BLAS thread per worker (T14)
     _worker_guess_fns = discover_guess_functions()
 
 

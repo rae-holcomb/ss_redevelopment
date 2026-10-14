@@ -67,7 +67,13 @@ import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import numpy as np
+# Worker setup (T14): pin BLAS to 1 thread BEFORE numpy is imported, here and
+# (via the inherited environment) in every spawned pool worker. See
+# determinism.py for why this is needed for bit-reproducibility.
+import determinism  # noqa: E402  (same directory as this script)
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
 import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
@@ -312,7 +318,7 @@ def run_batch(
         for p in fits_paths
     ]
 
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+    with ProcessPoolExecutor(max_workers=n_workers, initializer=determinism.init_worker) as executor:
         futures = {executor.submit(_process_one_file_worker, t): t["fits_path"] for t in tasks}
         for i, future in enumerate(as_completed(futures), start=1):
             fits_path = futures[future]

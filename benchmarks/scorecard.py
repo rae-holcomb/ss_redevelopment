@@ -63,11 +63,17 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
 from pathlib import Path
 
-import numpy as np
-import pandas as pd
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "claude_files"))
+
+# Worker setup (T14): pin BLAS to 1 thread BEFORE numpy is imported, here and
+# (via the inherited environment) in every spawned pool worker. See
+# claude_files/determinism.py for why this is needed for bit-reproducibility.
+import determinism  # noqa: E402
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
 import matplotlib  # noqa: E402
 matplotlib.use("Agg")
@@ -386,6 +392,7 @@ def main(argv=None):
     tasks = [t for t in build_tasks(args) if t["star_id"] not in done]
     methods = tuple(m.strip() for m in args.pipeline_methods.split(",") if m.strip())
     worker = partial(score_one_star, pipeline_methods=methods, rel_tol=args.rel_tol)
+    determinism.warn_if_nondeterministic_blas()
     print(f"{len(done)} already done, {len(tasks)} to run, {args.n_workers} worker(s)")
 
     t0 = time.time()
@@ -402,7 +409,7 @@ def main(argv=None):
             for t in tasks:
                 _write(worker(t))
         else:
-            with ProcessPoolExecutor(max_workers=args.n_workers) as ex:
+            with ProcessPoolExecutor(max_workers=args.n_workers, initializer=determinism.init_worker) as ex:
                 futs = [ex.submit(worker, t) for t in tasks]
                 for fut in as_completed(futs):
                     _write(fut.result())
