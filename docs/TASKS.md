@@ -66,7 +66,8 @@ All Phase 2 tasks use `method-improver`. Until T2 lands, judge on
 for confirmation (ask Rae first).
 
 ### T4. Fix `guess_pairwise_histogram` crash (open issue 8)
-- **Status:** ready
+- **Status:** done, awaiting Rae's review (branch `claude/t4-pairwise-histogram-49d342`;
+  report `reports/2026-10-13_t4-pairwise-histogram-no-raise/`)
 - **Goal:** return `[]` instead of raising when <2 ACF peaks are found.
 - **Done when:** the two strict-xfail entries in `tests/test_guesses.py::KNOWN_FAILURES`
   are removed and the suite passes. A good first task for trying out the agent workflow.
@@ -163,3 +164,20 @@ for confirmation (ask Rae first).
   (e.g. weighting cross-method support `n_contributing_methods`, penalizing
   candidates whose multiples also fit well) and measure them against G4.
 
+
+### P2. Other guess_* methods should return [] instead of raising
+- **Proposed by:** T4 report (2026-10-13)
+- **Idea:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still raise
+  `RuntimeError` on degenerate input (too few points, empty period range, no
+  peak above SNR). The contract in `tests/test_guesses.py` says returning `[]`
+  is fine but raising is not. Apply the T4 pattern, with a test for each exit.
+
+### P3. Recalibrate guess_pairwise_histogram's adaptive ACF-peak prominence
+- **Proposed by:** T4 report (2026-10-13)
+- **Idea:** the threshold, 5 x std(second difference of the ACF), misses visible
+  rotation bumps when spot lifetimes are short. In other stars it lets through
+  hundreds of noise peaks (median 15, max 585, on synthetic n=200). Try
+  smoothing the ACF before taking the second difference, an envelope-relative
+  prominence, or a retry at lower prominence when fewer than 2 peaks are found.
+  Measure the change with pairwise_histogram recall by bin. See
+  `reports/2026-10-13_t4-pairwise-histogram-no-raise/` (Figure 2).

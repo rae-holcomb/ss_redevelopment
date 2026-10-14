@@ -17,10 +17,7 @@ METHODS = list(GUESS_METHODS)
 # Known open bugs, keyed by (method, fixture). strict=True means that when
 # the bug is fixed the test "unexpectedly passes" and FAILS, forcing whoever
 # fixed it to delete the entry here -- so this list can't silently go stale.
-KNOWN_FAILURES = {
-    ("pairwise_histogram", "noise_lc"): "PROJECT_CONTEXT open issue 8: raises when <2 ACF peaks",
-    ("pairwise_histogram", "ultrashort_lc"): "PROJECT_CONTEXT open issue 8: raises when <2 ACF peaks",
-}
+KNOWN_FAILURES = {}
 
 
 def _run(method, lcx, n_guesses=5):
@@ -60,3 +57,29 @@ def test_recovers_clean_period_in_top_n(method, clean_lc):
     out = _run(method, clean_lc, n_guesses=10)
     outcome, rank = best_outcome([g.P0 for g in out], clean_lc.true_period)
     assert outcome == CORRECT, f"{method}: best outcome {outcome}, candidates {[round(g.P0, 3) for g in out]}"
+
+
+def test_pairwise_histogram_degenerate_inputs_return_empty(clean_lc):
+    """guess_pairwise_histogram returns [] (never raises) on every early
+    exit: too few lags, an empty period window, and a flat ACF with no
+    peaks (PROJECT_CONTEXT open issue 8)."""
+    import numpy as np
+    from guesses import guess_pairwise_histogram
+
+    t, f, lags, acf = clean_lc.time, clean_lc.flux, clean_lc.acf_lags, clean_lc.acf
+    assert guess_pairwise_histogram(t, f, lags[:2], acf[:2]) == []
+    assert guess_pairwise_histogram(t, f, lags, acf, min_period=1e5, max_period=2e5) == []
+    assert guess_pairwise_histogram(t, f, lags, np.zeros_like(acf)) == []
+
+
+def test_pairwise_histogram_two_peaks_with_explicit_bins():
+    """Exactly two ACF peaks give a single pairwise spacing; with an explicit
+    n_hist_bins that used to mean zero-width bins. It should still return
+    the spacing as a candidate."""
+    import numpy as np
+    from guesses import guess_pairwise_histogram
+
+    lags = np.arange(0, 10, 0.01)
+    acf = np.exp(-0.5 * ((lags - 3) / 0.2) ** 2) + np.exp(-0.5 * ((lags - 6) / 0.2) ** 2)
+    out = guess_pairwise_histogram(lags, lags, lags, acf, n_hist_bins=50)
+    assert out and abs(out[0].P0 - 3.0) < 0.1
