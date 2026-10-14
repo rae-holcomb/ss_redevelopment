@@ -40,6 +40,8 @@ report (`write-report` skill) and, if code changed, a before/after
   has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
   would make dev sets mostly unrecoverable long periods. Stratify, and use the
   MAST input-parameter catalog rather than opening FITS headers.
+- **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
+  not just full-year light curves. See T16f.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
   `holdout.csv` (~2000–5000), stratified by period/SNR/baseline, reproducible
   from `tools/build_dev_sets.py`.
@@ -235,9 +237,9 @@ for confirmation (ask Rae first).
   - Gap-aware alias rejection using the coverage window's own spectrum.
   - Short-data reliability gates: the gates were tuned on full-year data, so
     recalibrate their thresholds.
-  - **Partial-information outputs:** instead of a flat decline, report "P > X
-    (lower limit)" or "no periodicity below X d". Needs a new result type; decide
-    with Rae how it is scored.
+  - **Partial-information outputs:** see discussion item **D1** (searched-range
+    reporting). Rae leans toward reporting it as pipeline output rather than scoring
+    it. Don't build it until D1 is settled.
 - **Done when:** success on patchy classes improves without regressing full
   coverage, and the "wrong" rate on 1–2-sector stars stays low.
 
@@ -248,6 +250,28 @@ for confirmation (ask Rae first).
   span, n_cycles observed) to `ml_features.py`, so the ranker can learn how much to
   trust a candidate under a given coverage. Relates to open issue 6 (multi-sector
   support).
+
+#### T16f. Gappy coverage in the standard development datasets
+- **Agent:** `dev-set-builder` (for the real-data sets), `method-improver` (for synthetic)
+- **Status:** blocked on T16a (and on T2 for the real-data part)
+- **Why:** so every agent's routine before/after scorecard exercises patchy data,
+  not just the clean full-year case. Regressions on gappy stars should be caught
+  as they happen, not discovered at the end.
+- **Do:**
+  - **Synthetic:** define a standard coverage mix for the default synthetic
+    benchmark (a fixed fraction of full-year, consecutive, non-consecutive and
+    single-sector stars), using the T16a coverage library. Re-baseline
+    `benchmarks/baselines/` once, recording the old baseline as history, as with v2.
+  - **Real data (T2):** add coverage pattern as a stratification axis for
+    `dev_small`, `dev_medium` and `holdout`. Apply patterns from the T16a library to
+    SMARTS files via `load_smarts_fits(sectors=...)`, stored as a per-row column
+    in the manifest (and read by the scorecard), so each set is frozen and reproducible.
+  - **Scorecard/goals:** report metrics per coverage class as well as per period bin,
+    and add a regression guard per coverage class. Rae owns `goals.json`, so propose
+    the entries in the report.
+- **Done when:** the default synthetic and dev scorecards include gappy stars, the
+  per-coverage-class metrics appear in `metrics.json` and the figures, and the new
+  baselines are committed.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
@@ -330,6 +354,30 @@ for confirmation (ask Rae first).
   determinism (T14), re-time the pipeline (T12 profiler) and choose `--n-workers`
   for 10 P-cores. Update CLAUDE.md's Hardware section.
 
+## Open discussions (Rae to decide; not ready for an agent)
+
+### D1. Report the searched parameter range ("no periodicity below X d")
+- **Raised:** 2026-10-14 (from T16d). Rae likes it: it tells an astronomer what
+  range of period space the data and pipeline effectively searched.
+- **Leaning:** a reported output (e.g. a per-star `searched_period_range` plus
+  "no significant periodicity in [a, b] d"), **not** part of scoring.
+- **To decide:** how to define the range (sampling/Nyquist, longest contiguous span,
+  ACF valid-pair coverage, T16c's `max_period(coverage)`), what "no periodicity"
+  threshold means statistically, and the output format.
+
+### D2. Combining widely separated sectors in real data
+- **Raised:** 2026-10-14. SMARTS spans one year, so the pipeline has never seen
+  multi-year gaps (e.g. a star observed in Cycle 1 and again in Cycle 3+).
+- **To decide, before running on real TESS data:**
+  - analyze each observing season separately and combine the results, or run on
+    the stitched light curve (spots evolve, so phase coherence across years is lost);
+  - how to treat inter-season normalization offsets;
+  - how much the window function's clumping (see the window_function figures and
+    PROJECT_CONTEXT changelog 2026-09-01) affects long periods;
+  - whether to simulate it by stitching separate SMARTS light curves, or by
+    generating multi-year synthetic data.
+- **Relates to:** open issue 6 (multi-sector support), T16, F2.
+
 ## Proposed (agents add here; Rae promotes)
 
 ### P1. Quick arbitration improvement before the ML ranker
@@ -341,6 +389,7 @@ for confirmation (ask Rae first).
 
 
 ### P2. Other guess_* methods should return [] instead of raising
+- **Promoted to T15** (2026-10-13).
 - **Proposed by:** T4 report (2026-10-13)
 - **Idea:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still raise
   `RuntimeError` on degenerate input (too few points, empty period range, no
@@ -348,6 +397,7 @@ for confirmation (ask Rae first).
   is fine but raising is not. Apply the T4 pattern, with a test for each exit.
 
 ### P3. Recalibrate guess_pairwise_histogram's adaptive ACF-peak prominence
+- **Promoted to T13** (2026-10-13).
 - **Proposed by:** T4 report (2026-10-13)
 - **Idea:** the threshold, 5 x std(second difference of the ACF), misses visible
   rotation bumps when spot lifetimes are short. In other stars it lets through

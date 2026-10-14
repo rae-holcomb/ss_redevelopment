@@ -25,6 +25,10 @@ the data moving between machines.
 
 ## Design rules
 
+- **Stratify on sector coverage** too (task T16f): assign each star a real-star
+  sector pattern from the T16a coverage library (single sector, consecutive,
+  non-consecutive, full year), store it as a manifest column, and load it with
+  `load_smarts_fits(sectors=...)`. Development must exercise gappy data throughout.
 - **Stratify** on log-period (at least the evaluation.PERIOD_BIN_LABELS
   bins), signal-to-noise, and baseline. **Oversample** the regimes we care
   about (<10 d is where recovery is weakest) but record the sampling
