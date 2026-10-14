@@ -21,8 +21,8 @@ for running and supervising agent sessions.
 | Reports | `reports/YYYY-MM-DD_<slug>/` | README, figures, executed notebook, data. |
 | Run outputs | `runs/` (gitignored) | Raw scorecard outputs. Regenerable. |
 
-Python environment: `/opt/anaconda3/envs/ss_local/bin/python`. The Jupyter
-kernel is registered as **"Python (ss_local)"**.
+Python environment: `/opt/anaconda3/envs/ss_openblas/bin/python`. The Jupyter
+kernel is registered as **"Python (ss_openblas)"**.
 
 ## Starting an agent on a task
 
@@ -94,14 +94,14 @@ Metric paths you can target are printed by
 ## Common commands
 
 ```bash
-/opt/anaconda3/envs/ss_local/bin/python -m pytest -q
+/opt/anaconda3/envs/ss_openblas/bin/python -m pytest -q
 ```
 ```bash
-/opt/anaconda3/envs/ss_local/bin/python benchmarks/scorecard.py --synthetic 200 --seed 0 --outdir runs/my_run
+/opt/anaconda3/envs/ss_openblas/bin/python benchmarks/scorecard.py --synthetic 200 --seed 0 --outdir runs/my_run
 ```
 ```bash
-/opt/anaconda3/envs/ss_local/bin/python benchmarks/check_goals.py runs/my_run/metrics.json --baseline benchmarks/baselines/synth200_s0.json
+/opt/anaconda3/envs/ss_openblas/bin/python benchmarks/check_goals.py runs/my_run/metrics.json --baseline benchmarks/baselines/synth200_s0.json
 ```
 ```bash
-/opt/anaconda3/envs/ss_local/bin/python tools/new_report.py my-investigation --title "My investigation"
+/opt/anaconda3/envs/ss_openblas/bin/python tools/new_report.py my-investigation --title "My investigation"
 ```

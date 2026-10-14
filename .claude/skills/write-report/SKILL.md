@@ -12,7 +12,7 @@ the report has to stand on its own and has to be honest.
 ## 1. Scaffold
 
 ```bash
-/opt/anaconda3/envs/ss_local/bin/python tools/new_report.py <kebab-slug> --title "<Title>"
+/opt/anaconda3/envs/ss_openblas/bin/python tools/new_report.py <kebab-slug> --title "<Title>"
 ```
 
 This creates `reports/YYYY-MM-DD_<slug>/` with `README.md`, `notebook.ipynb`,
@@ -48,7 +48,7 @@ This creates `reports/YYYY-MM-DD_<slug>/` with `README.md`, `notebook.ipynb`,
   computation in scripts, not the notebook.
 - Execute it so Rae sees outputs without running anything:
   ```bash
-  /opt/anaconda3/envs/ss_local/bin/python tools/run_notebook.py reports/<folder>/notebook.ipynb
+  /opt/anaconda3/envs/ss_openblas/bin/python tools/run_notebook.py reports/<folder>/notebook.ipynb
   ```
 - Put markdown cells between figures explaining what each one shows.
 

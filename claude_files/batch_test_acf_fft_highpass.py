@@ -67,7 +67,13 @@ import sys
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import numpy as np
+# Worker setup (T14): pin BLAS to 1 thread BEFORE numpy is imported, here and
+# (via the inherited environment) in every spawned pool worker. See
+# determinism.py for why this is needed for bit-reproducibility.
+import determinism  # noqa: E402  (same directory as this script)
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
 import pandas as pd
 import matplotlib.pyplot as plt
 from astropy.io import fits
@@ -90,7 +96,11 @@ DEFAULT_MAX_PERIOD = 50.0  # matches guess_acf_fft_highpass's own default
 # sustained per-core throughput, which P-cores provide and E-cores don't --
 # scheduling some workers onto E-cores tends to create stragglers that hold
 # up the whole batch. Override with --n-workers on a different machine.
-DEFAULT_N_WORKERS = 10
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 PERIOD_BAND_EDGES = [0, 1, 5, 10, 15, 20, 30, 50, np.inf]
 PERIOD_BAND_LABELS = ["<1d", "1-5d", "5-10d", "10-15d", "15-20d", "20-30d", "30-50d", ">50d"]
 
@@ -312,7 +322,7 @@ def run_batch(
         for p in fits_paths
     ]
 
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+    with ProcessPoolExecutor(max_workers=n_workers, initializer=determinism.init_worker) as executor:
         futures = {executor.submit(_process_one_file_worker, t): t["fits_path"] for t in tasks}
         for i, future in enumerate(as_completed(futures), start=1):
             fits_path = futures[future]

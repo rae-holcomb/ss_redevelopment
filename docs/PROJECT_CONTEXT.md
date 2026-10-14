@@ -61,6 +61,7 @@ All files live in a single flat package (`claude_files/` in the
 | `batch_test_guesses.py` | Production batch runner: evaluates every `guess_*` method's hit rate across many light curves, in parallel, with auto-discovery of new methods via introspection. |
 | `batch_test_acf_fft_highpass.py` | Companion script isolating `guess_acf_fft_highpass`'s per-smoothing-window behavior specifically. Possibly redundant now that `batch_test_guesses.py` auto-discovers it too — unresolved, see open issues. |
 | `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
+| `determinism.py` | Process setup for bit-reproducible runs (T14): `pin_blas_threads()` (call before importing numpy), `init_worker()` (ProcessPoolExecutor initializer), `blas_backend()`, `default_n_workers()` (one per physical P-core). Requires the OpenBLAS env `ss_openblas` (`environment.yml`); Accelerate is not reproducible. |
 | `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
@@ -286,6 +287,12 @@ Roughly in priority order as of this writing — re-prioritize freely.
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
    quick hand-tuned fix (TASKS.md P1).
+13. **Bit-reproducibility is verified only on the Intel i5 (T14).** Under
+   `ss_openblas`, runs are bit-identical, apart from a ~2e-11 wavelet-only residue
+   on one star (TASKS.md P4). numpy's and scipy's macOS arm64 wheels use Accelerate,
+   whose `ddot` was alignment-dependent here (on x86_64, so arm64 is untested).
+   On Apple Silicon, build the env from conda-forge with `libblas=*=*openblas` and
+   re-verify (TASKS.md P5).
 
 ---
 
@@ -389,3 +396,17 @@ chats should know:
   Follow-ups P2 (other methods still raise) and P3 (prominence calibration) are
   in TASKS.md. See `reports/2026-10-13_t4-pairwise-histogram-no-raise/`.
 - **2026-10-13: T4 merged; baseline updated.** `benchmarks/baselines/synth200_s0.json` is now T4's post-fix run (final outcomes identical to the v2 baseline; only pairwise_histogram's error rate went 0.275 → 0). G5 marked met. T4 report open questions 1–3 became tasks T13 (prominence recalibration), T14 (bit-reproducible scorecards) and T15 (no guess_* method raises).
+- **2026-10-14: T14, bit-reproducible scorecards.** The run-to-run final-period noise (up to 9.8e-3
+  relative, a few % of stars) came from Apple Accelerate's `ddot`, whose last bits depend on the memory
+  alignment of its input (np.dot / np.linalg.norm on 1-D float64). scipy `least_squares` (trf) uses
+  those norms every iteration, so the comb fit varied even within one process. Thread pinning alone does
+  not fix it. New env **`ss_openblas`** (python 3.12, numpy 1.26.4 + scipy 1.16.0 on OpenBLAS;
+  `environment.yml`, built via pip with a hand-picked scipy wheel) is now the project env. `ss_local`
+  is kept but isn't reproducible. New `claude_files/determinism.py` pins BLAS to 1 thread per process
+  in the scorecard and batch runners, and their default worker count is now one per physical
+  P-core (4 on the i5) instead of 10.
+  On synthetic n=200 seed 0: 21/21 run pairs have identical final periods (before: 16–20/200 differ
+  per pair). Outcomes and check_goals are unchanged, and runtime shows no measurable change.
+  The backend switch shifted final periods once, by ≤9e-5 relative, with no outcome changes.
+  New test `tests/test_determinism.py` (slow; XFAILs on non-OpenBLAS). New `tools/compare_runs.py`.
+  New open issue 13, proposals P4/P5. See `reports/2026-10-14_t14-bit-reproducible-scorecards/`.

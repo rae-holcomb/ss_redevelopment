@@ -24,7 +24,13 @@ import traceback
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
-import numpy as np
+# Worker setup (T14): pin BLAS to 1 thread BEFORE numpy is imported, here and
+# (via the inherited environment) in every spawned pool worker. See
+# determinism.py for why this is needed for bit-reproducibility.
+import determinism  # noqa: E402  (same directory as this script)
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
 import pandas as pd
 from astropy.io import fits
 
@@ -35,7 +41,11 @@ from preprocessing import load_smarts_fits  # noqa: E402
 from guesses import gather_initial_guesses  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-DEFAULT_N_WORKERS = 10  # target the 10 P-cores; leave the 4 E-cores free
+# One worker per physical performance core (4 on the i5 workstation, 10 on a
+# 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
+# i5: identical throughput within run-to-run noise, so extra hyperthread workers
+# only add memory and contention. See determinism.default_n_workers.
+DEFAULT_N_WORKERS = determinism.default_n_workers()
 
 
 def process_one_file(fits_path: str) -> dict:
@@ -125,7 +135,7 @@ def run_baseline(data_dir: str, outdir: str, n_workers: int = DEFAULT_N_WORKERS)
 
     print(f"Running full pipeline on {len(fits_paths)} files using {n_workers} worker(s)...")
     rows = []
-    with ProcessPoolExecutor(max_workers=n_workers) as executor:
+    with ProcessPoolExecutor(max_workers=n_workers, initializer=determinism.init_worker) as executor:
         futures = {executor.submit(process_one_file, str(p)): p for p in fits_paths}
         for i, future in enumerate(as_completed(futures), start=1):
             p = futures[future]

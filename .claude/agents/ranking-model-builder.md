@@ -34,5 +34,5 @@ You build the supervised ranking stage. Read `CLAUDE.md`, `docs/SMARTS_REFERENCE
   held-out split, and correlation analysis within the deliberately
   redundant feature families.
 
-xgboost isn't installed in `ss_local` yet. Ask Rae before installing
+xgboost isn't installed in `ss_openblas` yet. Ask Rae before installing
 packages.

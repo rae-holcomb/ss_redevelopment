@@ -140,7 +140,7 @@ for confirmation (ask Rae first).
 
 ### T14. Make scorecard runs bit-reproducible
 - **Agent:** `performance-optimizer` or `method-improver` (small task)
-- **Status:** ready (from the T4 report, approved by Rae 2026-10-13)
+- **Status:** done, in review (2026-10-14, branch `claude/t14-determinism-18ba05`). Cause: Apple Accelerate's alignment-dependent ddot. Fix: `ss_openblas` env + BLAS pinned to 1 thread per process. See `reports/2026-10-14_t14-bit-reproducible-scorecards/`.
 - **Problem:** with identical inputs, 17/200 final periods differed between runs by up to
   2.3e-4 relative. That's harmless at REL_TOL=0.10, but it makes before/after
   diffs noisy and blocks an exact output-equivalence test (needed by T12).
@@ -406,3 +406,26 @@ for confirmation (ask Rae first).
   prominence, or a retry at lower prominence when fewer than 2 peaks are found.
   Measure the change with pairwise_histogram recall by bin. See
   `reports/2026-10-13_t4-pairwise-histogram-no-raise/` (Figure 2).
+
+### P4. Explain the last guess_wavelet run-to-run residue
+- **Proposed by:** T14 report (2026-10-14)
+- **Idea:** under `ss_openblas`, final periods and every other method's candidates are
+  bit-identical across runs and worker counts, but `guess_wavelet`'s top-1 differed by
+  ~2e-11 (relative) on one star: synthetic n=200 seed 0, star 00058, two distinct values
+  across 7 runs (2 of the 3 four-worker runs vs everything else); also star 00038 once
+  on n=40. It doesn't reproduce
+  in-process, under heap perturbation, or after replaying full scorecard history.
+  wavelet isn't pooled into the fit, so final answers are unaffected, but T12's exact
+  per-method equivalence check would trip on it. Suspects: per-process state in
+  `scipy.fft` (pocketfft plan cache) or the bounded `curve_fit` in
+  `_fit_and_subtract_gaussian`. Low priority; until it's explained, T12 can compare
+  wavelet candidates with rtol=1e-9.
+
+### P5. Re-verify determinism and the default worker count on Apple Silicon
+- **Proposed by:** T14 report (2026-10-14)
+- **Idea:** T14's fix was verified only on the Intel i5. numpy/scipy's macOS arm64 PyPI
+  wheels use Accelerate, so on an Apple Silicon machine build `ss_openblas` from
+  conda-forge with `libblas=*=*openblas` (mamba/micromamba; see `environment.yml`).
+  Then run `pytest tests/test_determinism.py` (must PASS, not XFAIL), two 200-star
+  scorecards + `tools/compare_runs.py`, and the worker-count timing sweep from the T14 report.
+  Overlaps with F2 if Rae has filed it there.

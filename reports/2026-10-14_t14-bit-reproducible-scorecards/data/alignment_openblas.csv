@@ -1,0 +1,21 @@
+primitive,n,frac_sensitive,n_trials,backend
+"np.dot(v, v)  [BLAS ddot]",8,0.0,40,openblas
+"np.dot(v, v)  [BLAS ddot]",25,0.0,40,openblas
+"np.dot(v, v)  [BLAS ddot]",100,0.0,40,openblas
+"np.dot(v, v)  [BLAS ddot]",1000,0.0,40,openblas
+np.linalg.norm(v),8,0.0,40,openblas
+np.linalg.norm(v),25,0.0,40,openblas
+np.linalg.norm(v),100,0.0,40,openblas
+np.linalg.norm(v),1000,0.0,40,openblas
+"np.sum(v * v)  [numpy, no BLAS]",8,0.0,40,openblas
+"np.sum(v * v)  [numpy, no BLAS]",25,0.0,40,openblas
+"np.sum(v * v)  [numpy, no BLAS]",100,0.0,40,openblas
+"np.sum(v * v)  [numpy, no BLAS]",1000,0.0,40,openblas
+J.T @ f  [BLAS gemv],8,0.0,40,openblas
+J.T @ f  [BLAS gemv],25,0.0,40,openblas
+J.T @ f  [BLAS gemv],100,0.0,40,openblas
+J.T @ f  [BLAS gemv],1000,0.0,40,openblas
+scipy.linalg.svd(J),8,0.0,40,openblas
+scipy.linalg.svd(J),25,0.0,40,openblas
+scipy.linalg.svd(J),100,0.0,40,openblas
+scipy.linalg.svd(J),1000,0.0,40,openblas

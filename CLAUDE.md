@@ -49,11 +49,23 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 
 ## Environment
 
-Use `/opt/anaconda3/envs/ss_local/bin/python` (conda env `ss_local`,
-Python 3.13; has numpy/scipy/astropy/lmfit/pytest/nbconvert). Base
-anaconda Python is 3.8 and lacks lmfit, so don't use it. The Jupyter
-kernel is registered as "Python (ss_local)". Ask Rae before installing
-packages.
+Use `/opt/anaconda3/envs/ss_openblas/bin/python` (env `ss_openblas`,
+Python 3.12, numpy 1.26.4 + scipy 1.16.0 **linked against OpenBLAS**;
+recipe and pins in `environment.yml`). The Jupyter kernel is registered as
+"Python (ss_openblas)" (kernel name `ss_openblas`). Ask Rae before
+installing packages.
+
+Why OpenBLAS (T14): with Apple Accelerate, `np.dot`/`np.linalg.norm` results
+depend on memory alignment, so the comb fit wasn't bit-reproducible. Scripts
+pin BLAS to 1 thread per process via `claude_files/determinism.py`; new
+entry-point scripts must call `determinism.pin_blas_threads()` *before*
+importing numpy and pass `initializer=determinism.init_worker` to
+`ProcessPoolExecutor`. `tests/test_determinism.py` XFAILs (rather than
+passes) in a non-OpenBLAS env; if you see that XFAIL, you're in the wrong env.
+
+The old env `ss_local` (Python 3.13, numpy/scipy on Accelerate) still exists
+and runs everything, but results are not bit-reproducible there. Base
+anaconda Python is 3.8 and lacks lmfit, so don't use it.
 
 ## Hardware
 
