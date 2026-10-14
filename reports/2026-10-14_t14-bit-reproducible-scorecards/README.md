@@ -139,7 +139,7 @@ Reading the timings:
    - Then require `tests/test_determinism.py` to PASS (not XFAIL), rerun two scorecards with `tools/compare_runs.py`, and redo the worker sweep.
    - Accelerate on arm64 uses different kernels; I couldn't test whether it has the same alignment dependence.
 4. **Should a wrong env fail loudly?** Right now `ss_local` still runs everything. The scorecard prints a `RuntimeWarning` and the determinism test XFAILs. Making the scorecard refuse to run on non-OpenBLAS would be stricter, but it would stop agents still on `ss_local`.
-5. **Housekeeping.** Three idle orphaned `ss_local` worker pools are sitting at 0% CPU with parent PID 1. Their resource trackers are PIDs 41306, 43379 and 49104; one is from this worktree but predates this session (probably T4's), and two are from the "Extend ACF period limit" worktree. They hold memory only; I didn't kill processes that aren't mine.
+5. **Housekeeping.** One idle orphaned `ss_local` worker pool (resource tracker PID 41306, parent PID 1, 0% CPU) is left from this worktree; it predates this session, probably T4's. It holds memory only and is safe to kill. The two orphan pools I'd seen from the "Extend ACF period limit" worktree (PIDs 43379, 49104) are gone.
 6. **`ss_local` uses python 3.13 and `ss_openblas` uses 3.12**, because numpy 1.26 has no 3.13 wheels. Moving to numpy 2.x later would allow 3.13 again, but on macOS ≥ 14 its x86_64 wheels are Accelerate too, so that needs the same hand-picked-wheel care.
 
 ## Reproduce
