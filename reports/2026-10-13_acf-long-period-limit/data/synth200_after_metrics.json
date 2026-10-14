@@ -740,15 +740,15 @@
     }
   },
   "runtime": {
-    "median_seconds": 8.746452910505468,
-    "p90_seconds": 12.13793641020311
+    "median_seconds": 6.254658616482629,
+    "p90_seconds": 8.327879037780804
   },
   "errors": {
     "n_star_errors": 0
   },
   "config": {
     "scorecard_version": 2,
-    "git_commit": "0d6ed38",
+    "git_commit": "7bad1e1",
     "rel_tol": 0.1,
     "dataset": "synthetic:n=200,seed=0",
     "pipeline_methods": [
@@ -760,7 +760,7 @@
     "n_guesses_overrides": {
       "acf_fft_highpass": 5
     },
-    "wall_seconds": 190.4082670211792,
-    "created": "2026-10-14 01:04:00"
+    "wall_seconds": 136.96691298484802,
+    "created": "2026-10-14 02:19:34"
   }
 }

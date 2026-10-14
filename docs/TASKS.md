@@ -174,6 +174,13 @@ for confirmation (ask Rae first).
 
 ### P3. Noise guard for few-peak answers
 - **Proposed by:** ACF long-period report (2026-10-13)
-- **Idea:** red noise occasionally yields long `few_peaks` false positives (2/30 on dev seeds). Raw
+- **Idea:** red noise occasionally yields long `few_peaks` false positives (1/60 eval, 3/30 dev seeds). Raw
   ACF peak height and PDM theta separated them cleanly from true few-peak detections on the
   handful of cases seen. Test a gate on a larger noise set, or leave it to the ranker.
+
+### P4. Recover the runtime the long-period change cost
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** median per-star time rose 1.6x on 1-2 sectors and 1.3x on synth200 (more teeth and candidates per
+  fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
+  Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
+  outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.

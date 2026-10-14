@@ -318,22 +318,22 @@
   },
   "runtime_seconds": {
     "1": {
-      "median_total": 5.5480134154931875,
-      "p90_total": 9.541708758616007,
-      "median_fit": 5.533652723490377,
-      "p90_fit": 9.531003993097695
+      "median_total": 1.5814744264935143,
+      "p90_total": 2.8102099544863455,
+      "median_fit": 1.5755539950041566,
+      "p90_fit": 2.8056157858896773
     },
     "2": {
-      "median_total": 5.287058608490042,
-      "p90_total": 9.174040052783676,
-      "median_fit": 5.253218727011699,
-      "p90_fit": 9.140948183988804
+      "median_total": 2.21981051498733,
+      "p90_total": 3.2302380660083148,
+      "median_fit": 2.2074426764884265,
+      "p90_fit": 3.219755785405869
     },
     "13": {
-      "median_total": 8.185297186500975,
-      "p90_total": 16.06185804520792,
-      "median_fit": 8.058500580998953,
-      "p90_fit": 15.95186346070259
+      "median_total": 4.768140553496778,
+      "p90_total": 6.723065296906862,
+      "median_fit": 4.703098567493726,
+      "p90_fit": 6.652248775106273
     }
   },
   "config": {
@@ -352,12 +352,14 @@
       0.33,
       0.4
     ],
+    "seed_offset": 0,
+    "fit_kwargs": {},
     "sectors": [
       1,
       2,
       13
     ],
-    "wall_seconds": 364.53308486938477,
+    "wall_seconds": 148.95535016059875,
     "code_root": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-angry-einstein-cb10da/e85155a6-25b9-4ee9-aeb7-048ee32eb553/scratchpad/before_code"
   }
 }

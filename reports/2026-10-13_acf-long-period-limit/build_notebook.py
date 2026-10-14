@@ -147,7 +147,7 @@ multiples (dashed gray), the selected period's comb (solid), and the old B/3
 cut (dotted).""")
 
 code("""from synthetic import make_lightcurve
-from acf_utils import compute_acf
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf
 from guesses import gather_initial_guesses
 from comb_fit import fit_rotation_period
 
@@ -168,14 +168,16 @@ for q, why in ((sig[(sig.outcome == "half") & (sig.P_over_B <= 0.335)], "P/2 ali
                (sig[(sig.outcome != "correct") & (sig.P_over_B <= 0.071)], "short-P failure (P/B<=0.07)"),
                (noi[(noi.outcome == "false_pos") & (noi.measured_P > 0.1 * noi.baseline)], "red-noise long-period false positive"),
                (sig[(sig.outcome != "correct") & (sig.P_over_B > 0.39)], "beyond target (P/B=0.40)")):
-    q = q[[(r.n_sectors, r.seed) not in used for r in q.itertuples()]].sort_values("n_sectors")
+    keep = np.array([(r.n_sectors, r.seed) not in used for r in q.itertuples()], dtype=bool)
+    q = q.loc[keep].sort_values("n_sectors") if len(q) else q
     if len(q):
         picks.append((q.iloc[0], why)); used.add((q.iloc[0].n_sectors, q.iloc[0].seed))
 fig, axes = plt.subplots(2, len(picks), figsize=(3.6 * len(picks), 5.2), squeeze=False)
 for k, (r, why) in enumerate(picks):
     lc = resim(r)
     lags, acf, cnt = compute_acf(lc.time, lc.flux, return_counts=True)
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags, acf, n_guesses=10)
+    l1, a1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # same two-view Stage 1 as pb_scan
+    g, _ = gather_initial_guesses(lc.time, lc.flux, l1, a1, n_guesses=10, long_view=(lags, acf))
     res = fit_rotation_period(lags, acf, g, acf_counts=cnt)
     a, b = axes[0, k], axes[1, k]
     a.plot(lc.time, lc.flux, ".", ms=1, color="#52514e")

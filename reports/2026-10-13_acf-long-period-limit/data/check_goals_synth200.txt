@@ -1,5 +1,5 @@
-Run: runs/synth200_after/metrics.json  (dataset synthetic:n=200,seed=0, commit 0d6ed38)
-Baseline: /private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-angry-einstein-cb10da/e85155a6-25b9-4ee9-aeb7-048ee32eb553/scratchpad/synth200_before/metrics.json  (commit unknown)
+Run: runs/synth200_after/metrics.json  (dataset synthetic:n=200,seed=0, commit 7bad1e1)
+Baseline: /private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-angry-einstein-cb10da/e85155a6-25b9-4ee9-aeb7-048ee32eb553/scratchpad/synth200_before_retime/metrics.json  (commit unknown)
 
 goal  status  result  value    target   base  metric
 G1    draft   FAIL    0.725 >= 0.75    0.670  final.overall.success

@@ -740,8 +740,8 @@
     }
   },
   "runtime": {
-    "median_seconds": 12.361313684494235,
-    "p90_seconds": 16.88090877951181
+    "median_seconds": 4.81421172649425,
+    "p90_seconds": 6.321722299797693
   },
   "errors": {
     "n_star_errors": 0
@@ -760,7 +760,7 @@
     "n_guesses_overrides": {
       "acf_fft_highpass": 5
     },
-    "wall_seconds": 285.14176201820374,
-    "created": "2026-10-13 22:46:38"
+    "wall_seconds": 103.58926320075989,
+    "created": "2026-10-14 02:36:34"
   }
 }
