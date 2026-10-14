@@ -1636,7 +1636,12 @@ def fit_rotation_period(
                 allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
                 max_reject_iters=max_reject_iters,
                 reject_threshold_sigma=reject_threshold_sigma,
-                min_peaks_required=min(min_peaks_required, 2),
+                # few-peak regime: never let the MAD-based outlier rejection
+                # drop below the required count -- a robust-sigma estimate
+                # from 3 windows is meaningless (two near-identical RMS
+                # values give MAD ~ 0 and the third, genuine peak gets
+                # rejected; seen on clean P ~ B/6 stars).
+                min_peaks_required=n_required if few else min(min_peaks_required, 2),
                 weights=weights, min_keep_after_trim=n_required,
                 trim_decayed_tail=trim_decayed_tail,
                 max_points_per_window=max_points_per_window,
