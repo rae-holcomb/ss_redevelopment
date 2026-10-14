@@ -153,7 +153,7 @@ for confirmation (ask Rae first).
 
 ### T15. No guess_* method raises on degenerate input
 - **Agent:** `method-improver`
-- **Status:** ready (from the T4 report, approved by Rae 2026-10-13)
+- **Status:** done, merged 2026-10-14 (report `reports/2026-10-14_t15-no-raise-all-guess-methods/`).
 - **Problem:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still
   `raise RuntimeError` on degenerate input (guesses.py around lines 380, 510 and
   1000–1030). That breaks the "return [], never raise" contract T4 established.
@@ -429,3 +429,13 @@ for confirmation (ask Rae first).
   Then run `pytest tests/test_determinism.py` (must PASS, not XFAIL), two 200-star
   scorecards + `tools/compare_runs.py`, and the worker-count timing sweep from the T14 report.
   Overlaps with F2 if Rae has filed it there.
+
+### P6. Recalibrate guess_wavelet's GWPS peak-SNR threshold
+- **Proposed by:** T15 report (2026-10-14)
+- **Idea:** `guess_wavelet` keeps a Gaussian peak only if it exceeds
+  median + `min_peak_snr`·1.4826·MAD of the GWPS. The GWPS of a typical star
+  rises toward long periods (red noise), which inflates the median/MAD, so clean,
+  isolated true-period peaks fall below the threshold (synthetic stars 00055 and
+  00131; T15 report Figure 3). Try a noise estimate relative to a smoothed or
+  power-law continuum, or SNR in log power. The wavelet counterpart of T13.
+  Measure with wavelet recall by bin.

@@ -1,0 +1,34 @@
+Run: runs/t15_after/metrics.json  (dataset synthetic:n=200,seed=0, commit 1a076f0-dirty)
+Baseline: benchmarks/baselines/synth200_s0.json  (commit 4896568-dirty)
+
+goal  status  result  value    target   base  metric
+G1    draft   FAIL    0.670 >= 0.75    0.670  final.overall.success
+                     Overall success, i.e. measured a physical rotation period (baseline 0.67).
+G2    draft   FAIL    0.647 >= 0.75    0.647  final.by_bin.<1d.success
+                     Success for P_eq<1d (baseline 0.65). Task T5.
+G3    draft   FAIL    0.882 >= 0.94    0.882  union_recall.by_bin.<1d
+                     Some Stage-1 method lists a success period, P_eq<1d (baseline 0.88). Task T5.
+G4    draft   FAIL    0.698 >= 0.82    0.698  final.by_bin.10-30d.success
+                     Success 10-30d (baseline 0.70 although Stage-1 recall is 0.98: an arbitration problem). Tasks T6/P1/T11.
+G5    met     PASS    0.000 <= 0.0     0.000  methods.pairwise_histogram.overall.error_rate
+                     guess_pairwise_histogram never raises (baseline: raises on 27.5% of stars). Task T4 / open issue 8. MET 2026-10-13 (T4 merged).
+G6    draft   FAIL    0.055 <= 0.04    0.055  final.overall.wrong
+                     Confidently-wrong answers are costlier than declining (baseline 0.055).
+G7    draft   FAIL    0.240 <= 0.18    0.240  final.overall.none
+                     Fewer declines on measurable stars (baseline 0.24). High-SNR (5-20) stars are declined as often as SNR<2 (29%), and solar-like shear raises declines; some declines (near pole-on) are legitimate. Robustness to differential rotation.
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.670   0.670  +0.000  0.020  final.overall.success
+  0.689   0.689  +0.000  0.060  final.by_bin.1-3d.success
+  0.698   0.698  +0.000  0.060  final.by_bin.10-30d.success
+  0.806   0.806  +0.000  0.060  final.by_bin.3-10d.success
+  0.647   0.647  +0.000  0.060  final.by_bin.<1d.success
+  0.000   0.000  +0.000  0.060  final.by_bin.>30d.success
+  0.889   0.889  +0.000  0.060  union_recall.by_bin.1-3d
+  0.977   0.977  +0.000  0.060  union_recall.by_bin.10-30d
+  0.972   0.972  +0.000  0.060  union_recall.by_bin.3-10d
+  0.882   0.882  +0.000  0.060  union_recall.by_bin.<1d
+  1.000   1.000  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS

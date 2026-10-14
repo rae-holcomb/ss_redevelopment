@@ -410,3 +410,5 @@ chats should know:
   The backend switch shifted final periods once, by ≤9e-5 relative, with no outcome changes.
   New test `tests/test_determinism.py` (slow; XFAILs on non-OpenBLAS). New `tools/compare_runs.py`.
   New open issue 13, proposals P4/P5. See `reports/2026-10-14_t14-bit-reproducible-scorecards/`.
+
+- **2026-10-14: T15 (merged): no guess_* method raises.** Every degenerate exit in `guess_lombscargle`, `guess_acf_fft`, `guess_acf_fft_highpass` and `guess_wavelet` (plus the `_short` wrappers) now returns `[]`. That covers too few points, NaN/constant input, an empty, inverted, zero or NaN period window, too few FFT bins, and no GWPS peak above SNR. The new helper `_valid_period_window` checks the window. LS on constant flux and acf_fft on a flat or NaN ACF also return `[]` instead of meaningless candidates. A missing astropy still raises ImportError. 53 new introspection-parametrized tests. On synthetic n=200 seed 0, every method's error_rate is 0 (wavelet 0.035 → 0), and final outcomes and Stage 1 are identical. Follow-up P4 (wavelet SNR threshold calibration). See `reports/2026-10-14_t15-no-raise-all-guess-methods/`.

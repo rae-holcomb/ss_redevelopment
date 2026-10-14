@@ -113,6 +113,22 @@ def _peak_coverage_fraction(
     return float(np.mean(matched))
 
 
+def _valid_period_window(min_period: float, max_period: float) -> bool:
+    """True if [min_period, max_period] is a usable period search window:
+    both edges finite, min_period > 0, and max_period > min_period.
+
+    The frequency-domain methods (guess_lombscargle, guess_acf_fft,
+    guess_wavelet) divide by or take logs of these edges, so a zero/NaN
+    edge or an inverted window would otherwise crash them. Callers return
+    [] when this is False -- an empty search window simply has no
+    candidates in it (T15; same contract as guess_pairwise_histogram).
+    """
+    return bool(
+        np.isfinite(min_period) and np.isfinite(max_period)
+        and min_period > 0 and max_period > min_period
+    )
+
+
 @dataclass
 class InitialGuess:
     """One candidate period proposed by a guess_* function.
@@ -370,7 +386,13 @@ def guess_lombscargle(
 
     Returns
     -------
-    list[InitialGuess], sorted strongest-first (by LS power), method="lombscargle"
+    list[InitialGuess], sorted strongest-first (by LS power), method="lombscargle".
+    Returns an empty list (never raises) when there is nothing to propose:
+    fewer than 10 finite (time, flux) points, constant flux, an unusable
+    period window (min_period <= 0 or NaN, or max_period <= min_period --
+    e.g. from a too-short baseline), or a periodogram with no finite power.
+    The one exception that still raises is a missing astropy (ImportError),
+    which is an environment problem, not a property of the input.
     """
     if LombScargle is None:
         raise ImportError(
@@ -380,14 +402,18 @@ def guess_lombscargle(
     # Real light curves are often shipped as NaN at missing cadences on an
     # otherwise even grid; LombScargle silently returns all-NaN power if fed
     # NaNs, so filter explicitly.
+    # Like every early exit below, too little data returns [] rather than
+    # raising: "nothing to propose" is a normal outcome at batch scale, not
+    # an error (T15; same contract as guess_pairwise_histogram, T4).
     finite = np.isfinite(time) & np.isfinite(flux)
     if finite.sum() < 10:
-        raise RuntimeError(
-            "guess_lombscargle: fewer than 10 finite (time, flux) points "
-            "after dropping NaNs."
-        )
+        return []
     time = time[finite]
     flux = flux[finite]
+    # Constant flux has no variability; its "standard"-normalized periodogram
+    # is pure round-off (power ~1e-6 everywhere), so its peaks are meaningless.
+    if not np.ptp(flux) > 0:
+        return []
 
     dt_lc = np.median(np.diff(time))
     baseline = time[-1] - time[0]
@@ -395,6 +421,8 @@ def guess_lombscargle(
         min_period = 4 * dt_lc
     if max_period is None:
         max_period = baseline / 2
+    if not _valid_period_window(min_period, max_period):
+        return []
 
     freq_max = 1.0 / min_period
     freq_min = 1.0 / max_period
@@ -405,6 +433,8 @@ def guess_lombscargle(
         maximum_frequency=freq_max,
         samples_per_peak=samples_per_peak,
     )
+    if not np.isfinite(power).any():
+        return []
     periods = 1.0 / freq
 
     # find_peaks wants ascending x; periods (from ascending freq) descend.
@@ -485,14 +515,33 @@ def guess_acf_fft(
 
     Returns
     -------
-    list[InitialGuess], sorted strongest-first (by FFT power), method="acf_fft"
+    list[InitialGuess], sorted strongest-first (by FFT power), method="acf_fft".
+    Returns an empty list (never raises) when there is nothing to propose:
+    fewer than 3 ACF lags, an unusable period window (min_period <= 0 or
+    NaN, or max_period <= min_period), fewer than 3 FFT frequency bins
+    inside the window, or no finite, positive power there (a flat or
+    all-NaN ACF).
     """
+    # Too few lags to define a lag spacing (or to FFT at all) -> no
+    # candidates; like every early exit below this returns [] rather than
+    # raising (T15; same contract as guess_pairwise_histogram, T4).
+    if len(acf_lags) < 3:
+        return []
     dt = np.median(np.diff(acf_lags))
     if not np.allclose(np.diff(acf_lags), dt, rtol=1e-3):
         warnings.warn(
             "guess_acf_fft: acf_lags does not appear evenly spaced; "
             "FFT-based period estimate may be unreliable."
         )
+
+    # Period-window defaults are resolved before the FFT (they depend only
+    # on the lags) so an unusable window exits early without dividing by it.
+    if min_period is None:
+        min_period = 4 * dt
+    if max_period is None:
+        max_period = (acf_lags[-1] - acf_lags[0]) / 2
+    if not _valid_period_window(min_period, max_period):
+        return []
 
     n = len(acf_lags)
     y = acf - np.mean(acf)
@@ -504,28 +553,28 @@ def guess_acf_fft(
     fft_freq = np.fft.rfftfreq(n_fft, d=dt)
     power = np.abs(fft_vals) ** 2
 
-    if min_period is None:
-        min_period = 4 * dt
-    if max_period is None:
-        max_period = (acf_lags[-1] - acf_lags[0]) / 2
-
     freq_mask = (fft_freq > 1.0 / max_period) & (fft_freq < 1.0 / min_period)
     freq_sub = fft_freq[freq_mask]
     power_sub = power[freq_mask]
 
+    # Too few frequency bins in the window to find a local maximum. If you
+    # expected candidates, widen [min_period, max_period], check acf_lags,
+    # or increase `oversample`.
     if len(freq_sub) < 3:
-        raise RuntimeError(
-            "guess_acf_fft: fewer than 3 frequency bins in the requested "
-            "period range; widen [min_period, max_period], check acf_lags, "
-            "or increase `oversample`."
-        )
+        return []
+
+    # A flat ACF gives zero power everywhere and an ACF containing NaNs gives
+    # NaN power everywhere; either way the argmax fallback below would
+    # propose an arbitrary bin, so there is nothing real to return.
+    power_max = float(np.max(power_sub))
+    if not (np.isfinite(power_max) and power_max > 0):
+        return []
 
     idx, _ = find_peaks(power_sub)
     if len(idx) == 0:
         idx = np.array([int(np.argmax(power_sub))])
     idx = idx[np.argsort(power_sub[idx])[::-1][:n_guesses]]
 
-    power_max = float(np.max(power_sub))
     guesses = []
     for rank, i in enumerate(idx, start=1):
         guesses.append(InitialGuess(
@@ -592,7 +641,9 @@ def guess_lombscargle_short(
     Returns
     -------
     list[InitialGuess], method relabeled "lombscargle_short" so it's
-    tracked separately from the ordinary "lombscargle" candidates.
+    tracked separately from the ordinary "lombscargle" candidates. Returns
+    an empty list (never raises) whenever guess_lombscargle does, e.g.
+    when max_period <= min_period for a very coarse cadence.
     """
     guesses = guess_lombscargle(
         time, flux, acf_lags, acf,
@@ -625,7 +676,8 @@ def guess_acf_fft_short(
 
     Returns
     -------
-    list[InitialGuess], method relabeled "acf_fft_short".
+    list[InitialGuess], method relabeled "acf_fft_short". Returns an empty
+    list (never raises) whenever guess_acf_fft does.
     """
     guesses = guess_acf_fft(
         time, flux, acf_lags, acf,
@@ -722,17 +774,25 @@ def guess_acf_fft_highpass(
     Returns
     -------
     list[InitialGuess], candidates from every window concatenated
-    together, each method-tagged by its originating window.
+    together, each method-tagged by its originating window. Returns an
+    empty list (never raises) when there is nothing to propose: fewer than
+    10 finite (time, flux) points (compute_acf's minimum), or no window
+    yielding any guess_acf_fft candidates.
     """
     from acf_utils import compute_acf as _compute_acf
+
+    # compute_acf raises below 10 finite points, and _highpass_flux needs at
+    # least two time stamps; return [] up front instead (T15).
+    if np.count_nonzero(np.isfinite(time) & np.isfinite(flux)) < 10:
+        return []
 
     all_guesses = []
     for window in smooth_windows:
         flux_hp = _highpass_flux(time, flux, window)
-        lags_hp, acf_hp = _compute_acf(
-            time, flux_hp, max_lag_frac=max_lag_frac, min_valid_frac=min_valid_frac
-        )
         try:
+            lags_hp, acf_hp = _compute_acf(
+                time, flux_hp, max_lag_frac=max_lag_frac, min_valid_frac=min_valid_frac
+            )
             guesses = guess_acf_fft(
                 time, flux_hp, lags_hp, acf_hp,
                 min_period=min_period, max_period=max_period,
@@ -978,18 +1038,22 @@ def guess_wavelet(
     Returns
     -------
     list[InitialGuess], sorted strongest-first (by fitted peak height),
-    method="wavelet"
+    method="wavelet". Returns an empty list (never raises) when there is
+    nothing to propose: fewer than 2 points, any NaN in time or flux (the
+    gap-free precondition above is violated -- interpolate first), an
+    unusable period window (min_period <= 0 or NaN, or max_period <=
+    min_period -- e.g. from a too-short baseline), or no GWPS peak above
+    `min_peak_snr` (including constant flux).
     """
-    if not np.isfinite(flux).all():
-        raise ValueError(
-            "guess_wavelet: flux contains NaNs; the CWT implementation "
-            "used here has no gap-awareness. Interpolate short gaps "
-            "first, or restrict to a gap-free stretch -- see this "
-            "function's docstring."
-        )
-
     time = np.asarray(time, dtype=float)
     flux = np.asarray(flux, dtype=float)
+    # Like every early exit below, these return [] rather than raising
+    # (T15; same contract as guess_pairwise_histogram, T4). NaN flux used to
+    # raise ValueError: the CWT here has no gap-awareness, so callers must
+    # interpolate short gaps first (see Caveats) -- gappy input now simply
+    # yields no candidates.
+    if len(time) < 2 or not (np.isfinite(flux).all() and np.isfinite(time).all()):
+        return []
     dt = np.median(np.diff(time))
     if not np.allclose(np.diff(time), dt, rtol=1e-3):
         warnings.warn(
@@ -1002,11 +1066,8 @@ def guess_wavelet(
         min_period = 4 * dt
     if max_period is None:
         max_period = baseline / 2
-    if max_period <= min_period:
-        raise RuntimeError(
-            "guess_wavelet: max_period <= min_period; widen the requested "
-            "range or check the light curve's baseline."
-        )
+    if not _valid_period_window(min_period, max_period):
+        return []
 
     periods = np.geomspace(min_period, max_period, n_periods)
     scales = _period_to_morlet_scale(periods, dt, w0)
@@ -1033,11 +1094,11 @@ def guess_wavelet(
         peak_info, residual = out
         fitted.append(peak_info)
 
+    # No peak cleared min_peak_snr (or a constant light curve gave a flat,
+    # zero GWPS). If you expected one, lower min_peak_snr or widen
+    # [min_period, max_period].
     if len(fitted) == 0:
-        raise RuntimeError(
-            "guess_wavelet: no wavelet GWPS peak exceeded min_peak_snr; "
-            "try lowering min_peak_snr or widening [min_period, max_period]."
-        )
+        return []
 
     fitted.sort(key=lambda d: d["height"], reverse=True)
     height_max = fitted[0]["height"]
@@ -1075,8 +1136,10 @@ def gather_initial_guesses(
     concatenate their candidate lists into one pool, ready to hand to
     fit_rotation_period. Returns (guesses, failed_methods), where
     failed_methods maps method name -> error message for any method that
-    raised (e.g. astropy missing, too few ACF peaks found) so one method's
-    failure doesn't stop the others from contributing candidates.
+    raised (e.g. astropy missing) so one method's failure doesn't stop the
+    others from contributing candidates. Degenerate input (too few points
+    or ACF peaks, an empty period window, ...) is not a failure: every
+    guess_* returns [] for it, so it contributes nothing and is not listed.
 
     `methods` defaults to the three cheap, always-safe methods. "wavelet"
     (guess_wavelet) is registered and available but deliberately NOT
