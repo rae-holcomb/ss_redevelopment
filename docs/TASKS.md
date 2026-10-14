@@ -29,7 +29,8 @@ report (`write-report` skill) and, if code changed, a before/after
   training on it.
 - **Done when:** report covers inventory, label sanity, recoverability
   (amplitude vs background noise), gap/baseline coverage, distributions and
-  biases, duplicates/blends. Includes a CSV of files recommended for exclusion
+  biases, duplicates/blends. checks for patterns in sectors with spuriously 
+  large noise. Includes a CSV of files recommended for exclusion
   (corrupt) or flagging (hard-but-valid), each with a reason.
 
 ### T2. Build frozen dev sets and holdout
