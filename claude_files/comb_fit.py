@@ -590,6 +590,7 @@ def _fit_single_candidate(
     reject_threshold_sigma: float = 4.0,
     min_peaks_required: int = 2,
     weights: Optional[np.ndarray] = None,
+    weighted_rejection: bool = False,
     trim_decayed_tail: bool = True,
     min_keep_after_trim: Optional[int] = None,
 ) -> CombFitResult:
@@ -645,9 +646,11 @@ def _fit_single_candidate(
        not rescued. Trimmed windows are counted in n_peaks_trimmed.
 
     `weights` (optional, per-lag, aligned with acf_lags) are forwarded to
-    _fit_comb_core, and the step-4 outlier test uses the same weighted
-    residuals (so a long-lag window isn't rejected merely for being built
-    from fewer ACF pairs). per_peak residual_rms stays unweighted.
+    _fit_comb_core. The step-4 outlier test uses UNWEIGHTED residual RMS
+    unless weighted_rejection=True: measured on the P/B dev scan
+    (2026-10-13), weighted rejection stops dropping noisy long-lag windows,
+    which then drag mean height SNR just under fit_rotation_period's 1.0
+    gate and cost a few correct stars. per_peak residual_rms is unweighted.
 
     Returns
     -------
@@ -682,7 +685,7 @@ def _fit_single_candidate(
             A = fit["A"][n]
             h = fit["h"][n]
             model = h - A * (lag_sub - c) ** 2
-            w_sub = 1.0 if weights is None else weights[w.mask]
+            w_sub = weights[w.mask] if (weighted_rejection and weights is not None) else 1.0
             per_peak_rms[n] = float(np.sqrt(np.mean((w_sub * (model - acf_sub)) ** 2)))
 
         if iteration == max_reject_iters or len(windows) <= min_peaks_required:
