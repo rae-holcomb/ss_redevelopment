@@ -143,7 +143,7 @@ for confirmation (ask Rae first).
 
 ### T14. Make scorecard runs bit-reproducible
 - **Agent:** `performance-optimizer` or `method-improver` (small task)
-- **Status:** done, in review (2026-10-14, branch `claude/t14-determinism-18ba05`). Cause: Apple Accelerate's alignment-dependent ddot. Fix: `ss_openblas` env + BLAS pinned to 1 thread per process. See `reports/2026-10-14_t14-bit-reproducible-scorecards/`.
+- **Status:** done, merged 2026-10-14 (report `reports/2026-10-14_t14-bit-reproducible-scorecards/`). Cause: Apple Accelerate's alignment-dependent ddot. Fix: `ss_openblas` env + BLAS pinned to 1 thread per process. See `reports/2026-10-14_t14-bit-reproducible-scorecards/`.
 - **Problem:** with identical inputs, 17/200 final periods differed between runs by up to
   2.3e-4 relative. That's harmless at REL_TOL=0.10, but it makes before/after
   diffs noisy and blocks an exact output-equivalence test (needed by T12).
@@ -241,7 +241,7 @@ for confirmation (ask Rae first).
   to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
   ACF pair-coverage edge (ACF long-period report, open issue 14a).
 - **Agent:** `method-improver`
-- **Status:** blocked on T16b (and the ACF-period-limit branch)
+- **Status:** blocked on T16b (the ACF long-period change it builds on was merged 2026-10-14)
 - **Do:** define the maximum searchable / reportable period as a function of
   coverage (longest contiguous span, total baseline, ACF valid-pair coverage).
   Measure reliability (success vs wrong) as P approaches each candidate limit, and
@@ -328,7 +328,7 @@ for confirmation (ask Rae first).
 
 ### T9. Feature literature and empirical search
 - **Agent:** `feature-researcher`
-- **Status:** done, merged 2026-10-14 (`reports/2026-10-14_t9-feature-search/`). Open questions pending Rae; proposals became P7/P8.
+- **Status:** done, merged 2026-10-14 (`reports/2026-10-14_t9-feature-search/`). Rae answered its open questions 2026-10-14 (see P1, T10, T11, T17, P8).
 - **Goal:** find features that separate correct candidates from P/2 and 2P
   aliases.
 - **Done when:** report with a literature table, per-feature separation (AUC)
@@ -525,6 +525,7 @@ for confirmation (ask Rae first).
   handful of cases seen. Test a gate on a larger noise set, or leave it to the ranker.
 
 ### P11. Recover the runtime the long-period change cost
+- **Folded into T12** (2026-10-14): T12 should profile the post-merge pipeline and treat this as its first target.
 - **Proposed by:** ACF long-period report (2026-10-13)
 - **Idea:** median per-star time rose 1.6x on 1-2 sectors and 1.3x on synth200 (more teeth and candidates per
   fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
