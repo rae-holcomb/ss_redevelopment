@@ -65,6 +65,10 @@ def run_one(task: dict) -> dict:
     """
     warnings.simplefilter("ignore")
     from acf_utils import compute_acf
+    try:
+        from acf_utils import STAGE1_MAX_LAG_FRAC
+    except ImportError:  # pre-2026-10-13 code: one ACF for both stages
+        STAGE1_MAX_LAG_FRAC = None
     from comb_fit import fit_rotation_period
     from evaluation import classify_period
     from guesses import gather_initial_guesses
@@ -91,7 +95,11 @@ def run_one(task: dict) -> dict:
         lags, acf = compute_acf(lc.time, lc.flux)
         fit_kw = {}
     fit_kw.update(task.get("fit_kwargs", {}))
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags, acf, n_guesses=10)
+    if STAGE1_MAX_LAG_FRAC is not None:
+        lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
+    else:
+        lags1, acf1 = lags, acf
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
     t1 = time.perf_counter()
     res = fit_rotation_period(lags, acf, g, **fit_kw)
     t2 = time.perf_counter()

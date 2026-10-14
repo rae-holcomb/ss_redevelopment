@@ -16,7 +16,7 @@ Full pipeline starting from a raw SMARTS FITS file:
 
 import numpy as np
 from preprocessing import load_smarts_fits, plot_split_diagnostics
-from acf_utils import compute_acf
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf
 from guesses import gather_initial_guesses
 from comb_fit import fit_rotation_period
 from ml_features import extract_candidate_features
@@ -39,9 +39,10 @@ if __name__ == "__main__":
 
     # --- 2. gap-aware ACF ---
     acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
+    acf_lags1, acf1 = compute_acf(pre.time, pre.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage-1 view (B/3)
 
     # --- 3. candidate generation + fitting/arbitration ---
-    guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags, acf, n_guesses=5)
+    guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1, n_guesses=5)
     result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
     print(f"\n{result.message}")
     if result.success:

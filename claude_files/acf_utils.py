@@ -24,6 +24,16 @@ from __future__ import annotations
 
 import numpy as np
 
+# Lag range (fraction of baseline) of the ACF handed to the Stage-1 guess_*
+# methods. The comb fit (Stage 2) uses compute_acf's default 0.7 B, but the
+# candidate generators keep the old B/3 view: on the longer ACF,
+# guess_acf_fft's top-N spectral peaks fill up with low-frequency structure
+# from the long-lag tail and drop short periods off its list (measured
+# 2026-10-13 on synthetic n=200 seed 0: 6/34 stars with P < 1 d lost their
+# only correct candidate). Stage 1 already proposes periods up to B/3 from
+# the B/3 view (via guess_lombscargle, max_period = B/2), so nothing is lost.
+STAGE1_MAX_LAG_FRAC = 1 / 3
+
 
 def compute_acf(
     time: np.ndarray,

@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 import comb_fit
-from acf_utils import compute_acf
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf
 from comb_fit import fit_rotation_period
 from evaluation import CORRECT, classify_period
 from guesses import gather_initial_guesses
@@ -24,7 +24,8 @@ def _baseline(lc) -> float:
 def _run(lc):
     """compute_acf (with pair counts) -> default candidates -> comb fit."""
     lags, acf, counts = compute_acf(lc.time, lc.flux, return_counts=True)
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags, acf, n_guesses=10)
+    lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
     res = fit_rotation_period(lags, acf, g, acf_counts=counts)
     return res, (res.best_fit.P if res.success else None)
 
@@ -162,7 +163,8 @@ def test_ml_features_expose_peak_budget_and_baseline_fraction():
     from ml_features import extract_candidate_features
     lc = make_lightcurve(6.0, amplitude=0.01, white_noise=0.001, n_sectors=1, seed=5, n_spots=1)
     lags, acf, counts = compute_acf(lc.time, lc.flux, return_counts=True)
-    g, _ = gather_initial_guesses(lc.time, lc.flux, lags, acf, n_guesses=10)
+    lags1, acf1 = compute_acf(lc.time, lc.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)
+    g, _ = gather_initial_guesses(lc.time, lc.flux, lags1, acf1, n_guesses=10)
     res = fit_rotation_period(lags, acf, g, acf_counts=counts)
     df = extract_candidate_features(res, g, lc.time, lc.flux, lags, acf)
     for col in ("n_peaks_used", "n_teeth_available", "n_peaks_required", "few_peaks",

@@ -30,7 +30,7 @@ from astropy.io import fits
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "repo" / "claude_files"))
 
-from acf_utils import compute_acf  # noqa: E402
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from preprocessing import load_smarts_fits  # noqa: E402
 from guesses import gather_initial_guesses  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
@@ -69,8 +69,9 @@ def process_one_file(fits_path: str) -> dict:
 
         pre = load_smarts_fits(fits_path)
         acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
+        acf_lags1, acf1 = compute_acf(pre.time, pre.flux, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage-1 view (B/3)
 
-        guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags, acf)
+        guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags1, acf1)
         result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
 
         row["success"] = bool(result.success)

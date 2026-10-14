@@ -75,7 +75,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 
 import evaluation as ev  # noqa: E402
 import guesses  # noqa: E402
-from acf_utils import compute_acf  # noqa: E402
+from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
 SCORECARD_VERSION = 2  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
@@ -163,7 +163,8 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
         star_id, t, f, true_p, prange, meta = _load(task)
         rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta,
                    period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None)
-        lags, acf, counts = compute_acf(t, f, return_counts=True)
+        lags, acf, counts = compute_acf(t, f, return_counts=True)  # Stage 2 (comb fit): ~0.7 B
+        lags1, acf1 = compute_acf(t, f, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage 1 view: B/3
 
         methods = {}
         pooled = []
@@ -171,7 +172,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
             t0 = time.perf_counter()
             try:
                 flux_in = _gap_filled(f) if name == "wavelet" else f
-                out = fn(t, flux_in, lags, acf, n_guesses=N_GUESSES.get(name, N_GUESSES_DEFAULT))
+                out = fn(t, flux_in, lags1, acf1, n_guesses=N_GUESSES.get(name, N_GUESSES_DEFAULT))
                 outcome, rank = ev.best_outcome([g.P0 for g in out], true_p, rel_tol, prange)
                 methods[name] = dict(outcome=outcome, rank=rank, n_candidates=len(out),
                                      top1=(out[0].P0 if out else None), error=None,
