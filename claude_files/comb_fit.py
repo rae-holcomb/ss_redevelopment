@@ -73,6 +73,18 @@ def _teeth_count(P: float, t0: float, lag_max: float) -> int:
     return int(np.floor((lag_max - t0) / P)) + 1
 
 
+def _teeth_in_range(P: float, t0: float, lag_max: float, n_peaks: int, window_frac: float = 0.25) -> int:
+    """Number of comb teeth (n < n_peaks) whose fitting window _build_windows
+    would actually build, i.e. whose centre t0 + n*P lies at least
+    <= lag_max (the same rule _build_windows uses), capped at n_peaks.
+    Used for the adaptive peak gate in fit_rotation_period.
+    """
+    if P <= 0:
+        return 0
+    edge = lag_max
+    return int(min(n_peaks, max(0, int(np.floor((edge - t0) / P)) + 1)))
+
+
 def default_comb_weight(n: int) -> float:
     """Default per-tooth weight for comb_score: 1/(n+1). Teeth at low n
     (short lags) are weighted more heavily than teeth at high n (long
@@ -289,6 +301,7 @@ class PeakWindow:
     lag_lo: float
     lag_hi: float
     mask: np.ndarray     # boolean mask into acf_lags/acf
+    nominal_hi: Optional[float] = None  # unclipped upper bound if the ACF's end clipped this window
 
 
 def _build_windows(
@@ -304,6 +317,15 @@ def _build_windows(
     the available lag range. Windows are frozen once built: point selection
     happens once, before optimization, rather than being re-derived every
     iteration as P and t0 are refined.
+
+    Upper edge (2026-10-13): a window clipped by the end of the ACF keeps
+    its NOMINAL upper bound in `nominal_hi`; the vertex-in-window check uses
+    it (see _fit_single_candidate). With only its rising side in range, a
+    clipped window's vertex legitimately lands past the data, and judging it
+    against the clipped bound failed the vertex gate on 6/12 clean 1-sector
+    P = 0.17 B stars (4th tooth at 4P = 0.68 B, right at the ACF's end).
+    Dropping clipped windows instead was tried and made P = B/3 unfittable
+    (its 2nd tooth is always clipped).
 
     max_points_per_window: if set, a window with more ACF points than this
     is stride-decimated to at most that many (evenly spaced, both ends
@@ -330,7 +352,8 @@ def _build_windows(
         if mask.sum() < 4:
             # not enough points to constrain a 3-parameter parabola well
             continue
-        windows.append(PeakWindow(n=n, lag_lo=lo, lag_hi=hi, mask=mask))
+        windows.append(PeakWindow(n=n, lag_lo=lo, lag_hi=hi, mask=mask,
+                                  nominal_hi=(center + half_width) if hi < center + half_width else None))
     return windows
 
 
@@ -768,7 +791,9 @@ def _fit_single_candidate(
         # still produce a deceptively small residual on a smooth/shallow
         # stretch of the ACF (e.g. the near-lag-0 decay envelope) without
         # reflecting any real periodic structure there.
-        vertex_in_window = bool(w.lag_lo <= c <= w.lag_hi)
+        # (upper bound: the nominal one if the ACF's end clipped the window
+        # -- see _build_windows)
+        vertex_in_window = bool(w.lag_lo <= c <= (w.nominal_hi if w.nominal_hi is not None else w.lag_hi))
         per_peak[n] = dict(
             center=c,
             height=h,
@@ -1620,13 +1645,13 @@ def fit_rotation_period(
             # large fraction of the comb and biases P / fails the vertex
             # gate (see _grid_search_t0). Saturated (short-P) combs keep
             # the old seeding, where the lag-0 window filters noise combs.
-            skip0 = _teeth_count(guess.P0, guess.P0, lag_max) < n_peaks
+            skip0 = _teeth_in_range(guess.P0, guess.P0, lag_max, n_peaks, window_frac) < n_peaks
             t0 = _grid_search_t0(acf_lags, acf, guess.P0, min_lag=min_lag, skip_lag0_tooth=skip0)
         # Adaptive peak gate: a period near B/3 only has 2-3 teeth inside
         # the ACF's lag range, so demanding min_peaks_required (4) of them
         # would reject it by construction. Require every available tooth,
         # but never fewer than 2.
-        n_teeth = min(n_peaks, _teeth_count(guess.P0, t0, lag_max))
+        n_teeth = _teeth_in_range(guess.P0, t0, lag_max, n_peaks, window_frac)
         n_required = int(np.clip(n_teeth, 2, min_peaks_required))
         few = n_required < min_peaks_required
         try:
