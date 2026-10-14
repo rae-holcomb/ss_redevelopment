@@ -1,0 +1,8 @@
+method,n,errors_before,errors_after,outcome_changed,n_candidates_changed,top1_max_rel_diff
+acf_fft,200,0,0,0,0,0.0
+acf_fft_highpass,200,0,0,0,0,0.0
+acf_fft_short,200,0,0,0,0,0.0
+lombscargle,200,0,0,0,0,0.0
+lombscargle_short,200,0,0,0,0,0.0
+pairwise_histogram,200,55,0,0,0,0.0
+wavelet,200,7,0,0,0,7.979423614667988e-16
