@@ -297,12 +297,20 @@ def _build_windows(
     t0: float,
     n_peaks: int,
     window_frac: float = 0.25,
+    max_points_per_window: Optional[int] = None,
 ) -> list:
     """Build one fitting window per harmonic n=0..n_peaks-1, each spanning
     +/- window_frac * P0 around the expected center t0 + n*P0, clipped to
     the available lag range. Windows are frozen once built: point selection
     happens once, before optimization, rather than being re-derived every
     iteration as P and t0 are refined.
+
+    max_points_per_window: if set, a window with more ACF points than this
+    is stride-decimated to at most that many (evenly spaced, both ends
+    kept). A 3-parameter parabola over a smooth ACF peak gains nothing from
+    hundreds of points, but least_squares' per-iteration SVD cost scales
+    with them; long periods on the ~0.7 B ACF otherwise give windows of
+    ~P/(2 dt) ~ 1000 points each (profiled 2026-10-13).
     """
     lag_min, lag_max = acf_lags[0], acf_lags[-1]
     half_width = window_frac * P0
@@ -314,6 +322,11 @@ def _build_windows(
         if lo >= hi or center > lag_max:
             break
         mask = (acf_lags >= lo) & (acf_lags <= hi)
+        if max_points_per_window is not None and mask.sum() > max_points_per_window:
+            idx = np.flatnonzero(mask)
+            keep = idx[np.unique(np.round(np.linspace(0, len(idx) - 1, max_points_per_window)).astype(int))]
+            mask = np.zeros_like(mask)
+            mask[keep] = True
         if mask.sum() < 4:
             # not enough points to constrain a 3-parameter parabola well
             continue
@@ -599,6 +612,7 @@ def _fit_single_candidate(
     weighted_rejection: bool = False,
     trim_decayed_tail: bool = True,
     min_keep_after_trim: Optional[int] = None,
+    max_points_per_window: Optional[int] = None,
 ) -> CombFitResult:
     """Run the actual joint least-squares comb-of-parabolae fit for ONE
     candidate (P0, t0). This is the expensive, authoritative step that
@@ -662,7 +676,8 @@ def _fit_single_candidate(
     -------
     CombFitResult for this single candidate.
     """
-    windows = _build_windows(acf_lags, P0, t0, n_peaks, window_frac=window_frac)
+    windows = _build_windows(acf_lags, P0, t0, n_peaks, window_frac=window_frac,
+                             max_points_per_window=max_points_per_window)
     if len(windows) < min_peaks_required:
         raise RuntimeError(
             f"Only {len(windows)} usable peak window(s) built from "
@@ -1359,6 +1374,7 @@ def fit_rotation_period(
     alias_ratio_threshold: float = 0.7,
     alias_rel_tol: float = 0.1,
     trim_decayed_tail: bool = True,
+    max_points_per_window: Optional[int] = 100,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -1492,6 +1508,9 @@ def fit_rotation_period(
         weighted by sqrt(count / count[0]) -- the ACF's noise scales as
         1/sqrt(pairs), and long lags (now reachable, ~0.7 B) have far fewer
         pairs. None = unweighted (the pre-2026-10-13 behavior).
+    max_points_per_window : forwarded to _build_windows (stride-decimate
+        windows larger than this; None = keep every point, the
+        pre-2026-10-13 behavior). Speed only -- see _build_windows.
     trim_decayed_tail : forwarded to _fit_single_candidate (drop a trailing
         run of non-positive teeth past the spot-coherence time; step 4b
         there).
@@ -1620,6 +1639,7 @@ def fit_rotation_period(
                 min_peaks_required=min(min_peaks_required, 2),
                 weights=weights, min_keep_after_trim=n_required,
                 trim_decayed_tail=trim_decayed_tail,
+                max_points_per_window=max_points_per_window,
             )
             diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
             passed = (
