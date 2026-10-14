@@ -154,6 +154,10 @@ for confirmation (ask Rae first).
 ### T15. No guess_* method raises on degenerate input
 - **Agent:** `method-improver`
 - **Status:** done, merged 2026-10-14 (report `reports/2026-10-14_t15-no-raise-all-guess-methods/`).
+- **Rae's decisions (2026-10-14) on its open questions:** keep silent `[]` for wavelet
+  on NaN flux; a missing astropy may still raise `ImportError` (an environment error);
+  keep `[]` for the non-raising degenerate cases; adopted goal **G8** (every method's
+  error_rate = 0, wildcard). The wavelet threshold idea is P6.
 - **Problem:** `guess_lombscargle`, `guess_acf_fft` and `guess_wavelet` still
   `raise RuntimeError` on degenerate input (guesses.py around lines 380, 510 and
   1000–1030). That breaks the "return [], never raise" contract T4 established.
@@ -163,6 +167,15 @@ for confirmation (ask Rae first).
 - **Done when:** the new tests pass and every guess method's error rate is 0 on the
   synthetic scorecard. Consider promoting a goal "all methods' error_rate = 0"
   (Rae edits goals.json).
+
+### T17. Add `s_ph_5P` (literature-standard S_ph) alongside `s_ph`
+- **Agent:** `feature-researcher` (small)
+- **Status:** ready (Rae, 2026-10-14, from T9 open question 3)
+- **Do:** add `s_ph_5P`: S_ph computed over segments of 5·P, as in Mathur+2014 and
+  García+2014. Keep the existing `s_ph` (1·P bins) **unchanged**, so feature-importance
+  analysis decides between them. Add a docstring, a FEATURE_DOCUMENTATION entry and a
+  test. Report its cost and its AUC next to `s_ph` on synthetic n=200 (re-check on
+  dev_small via P8).
 
 ### T16. Patchy sector coverage: robustness, search limits, and safeguards
 - **Requested by:** Rae, 2026-10-14. Multi-part; do the subtasks in order.
@@ -242,6 +255,10 @@ for confirmation (ask Rae first).
     it. Don't build it until D1 is settled.
 - **Done when:** success on patchy classes improves without regressing full
   coverage, and the "wrong" rate on 1–2-sector stars stays low.
+- **Prior art:** Astraea (Lu+2020, AJ 160, 168) predicts periods *longer than one
+  sector* from 27-d light-curve variability statistics plus Gaia parameters (~9%
+  uncertainty on Kepler 27-d segments up to 150 d; ~55% on real TESS). It's a
+  natural comparison and a possible prior or limit companion for single-sector stars.
 
 #### T16e. Coverage-aware ML features
 - **Agent:** `feature-researcher`
@@ -322,12 +339,21 @@ for confirmation (ask Rae first).
   correct spot-latitude period gets label 0. Consider a graded relevance label
   for the ranker (2 = P_eq, 1 = in active-band range per
   `evaluation.active_band_period_range`, 0 = otherwise). XGBoost ranking supports this.
+- **Requirement (Rae, 2026-10-14, from T9):** check that T9's alias features
+  (`fold_half_corr`, `acf_half_lag_contrast`, …) don't penalize spot-latitude
+  (`diffrot`) periods relative to P_eq. Compare their distributions for diffrot vs
+  correct candidates (`reports/2026-10-14_t9-feature-search/data/candidates.csv.gz`)
+  before settling the label scheme.
 
 ### T11. Train and evaluate the ranker
 - **Agent:** `ranking-model-builder`
 - **Status:** blocked (on T10)
 - **Goal:** XGBoost ranker, star-grouped splits, beats hand-tuned arbitration
   per period bin, with a calibrated "decline" threshold.
+- **External benchmark (Rae, 2026-10-14, from T9):** where SMARTS CNN predictions
+  are available (Claytor+2022 σ_P, the only published *learned* reliability score
+  for SMARTS-like data), compare the ranker's decline threshold and
+  coverage-vs-accuracy curve against the CNN's uncertainty cut.
 
 ---
 
@@ -365,6 +391,9 @@ for confirmation (ask Rae first).
   ACF valid-pair coverage, T16c's `max_period(coverage)`), what "no periodicity"
   threshold means statistically, and the output format.
 
+- **Related:** Astraea (Lu+2020) shows what can be inferred about periods beyond the
+  searched range from short light curves plus stellar parameters.
+
 ### D2. Combining widely separated sectors in real data
 - **Raised:** 2026-10-14. SMARTS spans one year, so the pipeline has never seen
   multi-year gaps (e.g. a star observed in Cycle 1 and again in Cycle 3+).
@@ -386,6 +415,11 @@ for confirmation (ask Rae first).
   Try simple, explainable changes to candidate selection in `fit_rotation_period`
   (e.g. weighting cross-method support `n_contributing_methods`, penalizing
   candidates whose multiples also fit well) and measure them against G4.
+- **Also try (Rae, 2026-10-14):** T9's alias-feature gate (P7): select by or gate on
+  `acf_half_lag_contrast`. In-sample it gave 71.5% success vs 67% at the same answer
+  rate, and may rescue >30 d stars. Its threshold was tuned on seed 0, so **validate
+  on a different synthetic seed** (e.g. `--seed 1`) before adopting it, and later on
+  dev_small.
 
 
 ### P2. Other guess_* methods should return [] instead of raising
@@ -441,6 +475,7 @@ for confirmation (ask Rae first).
   Measure with wavelet recall by bin.
 
 ### P7. Alias-feature gate for arbitration (interim fix for open issues 10/12)
+- **Folded into P1** (Rae, 2026-10-14).
 - **Proposed by:** T9 report (2026-10-14)
 - **Idea:** 30 of 36 stars lost in arbitration (synthetic n=200) lose because the
   success candidate fails the gates. Most wrong answers are ~0.2 d noise combs on
@@ -450,6 +485,8 @@ for confirmation (ask Rae first).
   Measure against G4/G7 with a before/after scorecard; validate on dev_small.
 
 ### P8. Re-test star-level SNR and relative peak widths on SMARTS
+- **Rae, 2026-10-14:** also re-validate T9's synthetic findings (AUC table, the P1
+  gate) on dev_small once T2 lands.
 - **Proposed by:** T9 report (2026-10-14)
 - **Idea:** `rvar_p2p_snr` (r_var / point-to-point noise; code in the T9 report's
   `new_features.py`) can't be evaluated on synthetic data (constant white noise).

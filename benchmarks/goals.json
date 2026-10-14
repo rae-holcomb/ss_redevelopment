@@ -63,6 +63,15 @@
       "op": "<=",
       "target": 0.18,
       "description": "Fewer declines on measurable stars (baseline 0.24). High-SNR (5-20) stars are declined as often as SNR<2 (29%), and solar-like shear raises declines; some declines (near pole-on) are legitimate. Robustness to differential rotation."
+    },
+    {
+      "id": "G8",
+      "status": "active",
+      "dataset": "synthetic:n=200,seed=0",
+      "metric": "methods.*.overall.error_rate",
+      "op": "<=",
+      "target": 0.0,
+      "description": "No guess_* method ever raises (generalizes G5; T15). Any new method is covered automatically. Added 2026-10-14 on Rae's approval."
     }
   ],
   "regression_guard": {

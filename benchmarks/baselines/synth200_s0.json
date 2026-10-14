@@ -647,7 +647,7 @@
         "alias": 0.015,
         "recall": 0.675,
         "top1_success": 0.455,
-        "error_rate": 0.035,
+        "error_rate": 0.0,
         "median_rank": 1.0
       },
       "by_bin": {
@@ -663,7 +663,7 @@
           "alias": 0.0,
           "recall": 0.5777777777777777,
           "top1_success": 0.3333333333333333,
-          "error_rate": 0.06666666666666667,
+          "error_rate": 0.0,
           "median_rank": 1.5
         },
         "10-30d": {
@@ -693,7 +693,7 @@
           "alias": 0.0,
           "recall": 0.9444444444444444,
           "top1_success": 0.5833333333333334,
-          "error_rate": 0.027777777777777776,
+          "error_rate": 0.0,
           "median_rank": 1.5
         },
         "<1d": {
@@ -708,7 +708,7 @@
           "alias": 0.0,
           "recall": 0.42647058823529416,
           "top1_success": 0.19117647058823528,
-          "error_rate": 0.04411764705882353,
+          "error_rate": 0.0,
           "median_rank": 2.0
         },
         ">30d": {
@@ -740,15 +740,15 @@
     }
   },
   "runtime": {
-    "median_seconds": 11.358231716483715,
-    "p90_seconds": 17.36756726928288
+    "median_seconds": 2.939136191489524,
+    "p90_seconds": 4.188297739808331
   },
   "errors": {
     "n_star_errors": 0
   },
   "config": {
     "scorecard_version": 2,
-    "git_commit": "4896568-dirty",
+    "git_commit": "761315c",
     "rel_tol": 0.1,
     "dataset": "synthetic:n=200,seed=0",
     "pipeline_methods": [
@@ -760,7 +760,7 @@
     "n_guesses_overrides": {
       "acf_fft_highpass": 5
     },
-    "wall_seconds": 490.87755489349365,
-    "created": "2026-10-13 22:47:19"
+    "wall_seconds": 155.86434483528137,
+    "created": "2026-10-14 15:05:14"
   }
 }

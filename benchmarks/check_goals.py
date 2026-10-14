@@ -21,8 +21,10 @@ Goals file format (benchmarks/goals.json)
                                        {"pattern": "final.by_bin.*.correct", "max_drop": 0.06}]}
     }
 
-`metric` is a dotted path into metrics.json; '*' in a regression-guard
-path expands over every key at that level. A guard entry may be a plain
+`metric` is a dotted path into metrics.json; '*' (in a goal or a
+regression-guard path) expands over every key at that level. A wildcard
+goal passes only if *every* expanded metric meets the target; the table
+shows the worst value. A guard entry may be a plain
 pattern (uses the global max_drop) or {"pattern": ..., "max_drop": ...}
 -- per-bin metrics need looser limits because each bin holds few stars
 (one star in a 50-star bin = 0.02). Only Rae changes goals.json --
@@ -118,9 +120,25 @@ def main(argv=None) -> int:
     for g in goals.get("goals", []):
         if g.get("dataset") and g["dataset"] != dataset:
             continue
-        v = get_path(m, g["metric"])
-        ok = v is not None and OPS[g["op"]](v, g["target"])
-        b = get_path(base, g["metric"]) if base else None
+        if "*" in g["metric"]:
+            # Wildcard goal: every expanded metric must satisfy op/target.
+            # Report the worst value (and which path) so a FAIL is actionable.
+            paths = expand(m, g["metric"])
+            vals = {p_: get_path(m, p_) for p_ in paths}
+            bad = [p_ for p_, x in vals.items() if not OPS[g["op"]](x, g["target"])]
+            ok = bool(paths) and not bad
+            worst_key = max if g["op"] in ("<=", "<") else min
+            v = worst_key(vals.values()) if vals else None
+            b = None
+            if base:
+                bvals = [get_path(base, p_) for p_ in expand(base, g["metric"])]
+                b = worst_key(bvals) if bvals else None
+            if bad:
+                g = dict(g, description=(g.get("description", "") + f" FAILING: {', '.join(bad)}").strip())
+        else:
+            v = get_path(m, g["metric"])
+            ok = v is not None and OPS[g["op"]](v, g["target"])
+            b = get_path(base, g["metric"]) if base else None
         verdict = "PASS" if ok else "FAIL"
         if not ok and g.get("status") == "active":
             failed = True
