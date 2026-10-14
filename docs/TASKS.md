@@ -302,7 +302,7 @@ for confirmation (ask Rae first).
 
 ### T9. Feature literature and empirical search
 - **Agent:** `feature-researcher`
-- **Status:** ready (on synthetic); better after T2
+- **Status:** in review (`reports/2026-10-14_t9-feature-search/`)
 - **Goal:** find features that separate correct candidates from P/2 and 2P
   aliases.
 - **Done when:** report with a literature table, per-feature separation (AUC)
@@ -406,3 +406,19 @@ for confirmation (ask Rae first).
   prominence, or a retry at lower prominence when fewer than 2 peaks are found.
   Measure the change with pairwise_histogram recall by bin. See
   `reports/2026-10-13_t4-pairwise-histogram-no-raise/` (Figure 2).
+
+### P4. Alias-feature gate for arbitration (interim fix for open issues 10/12)
+- **Proposed by:** T9 report (2026-10-14)
+- **Idea:** 30 of 36 stars lost in arbitration (synthetic n=200) lose because the
+  success candidate fails the gates. Most wrong answers are ~0.2 d noise combs on
+  the lag-0 decay with `acf_half_lag_contrast` ~ 0. Try selecting by, or gating on,
+  `acf_half_lag_contrast` (in-sample: "max contrast, answer if >= 0.03" gives 71.5%
+  success vs 67% at the same answer rate). Also check why >30 d stars are 0/8.
+  Measure against G4/G7 with a before/after scorecard; validate on dev_small.
+
+### P5. Re-test star-level SNR and relative peak widths on SMARTS
+- **Proposed by:** T9 report (2026-10-14)
+- **Idea:** `rvar_p2p_snr` (r_var / point-to-point noise; code in the T9 report's
+  `new_features.py`) can't be evaluated on synthetic data (constant white noise).
+  Also test `*_nearest_peak_width / fitted_P` (current widths are in days) and
+  `s_ph` with 5·P bins. Needs dev_small (T2).

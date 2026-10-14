@@ -814,6 +814,117 @@ Stage        : 5 (feature extraction; requires the candidate's fitted P, so
 
 
 ================================================================================
+SECTION G: ALIAS-DISCRIMINATION FEATURES (added 2026-10-14, task T9)
+================================================================================
+Direct tests of "is this candidate P, or really P_true/2 or 2*P_true?",
+evaluated at every candidate's FITTED period. Computed in
+ml_features._alias_discrimination_features (Stage 5). Motivation and the
+univariate separation measured on synthetic data are in
+reports/2026-10-14_t9-feature-search/. None of these use the true period.
+Total cost ~1.5-2 ms per candidate on a 13-sector, 30-min light curve
+(two vectorized phase folds plus ~12 ACF window maxima).
+
+Throughout, h(x) = maximum of the raw ACF within +/- 0.1*P of lag x (NaN if
+that window is not entirely inside the ACF lag range). The ACF is
+normalized to 1 at lag 0, so these are in raw ACF units.
+
+--------------------------------------------------------------------------
+acf_height_at_P
+--------------------------------------------------------------------------
+Definition   : h(P), the ACF window maximum at the candidate's fitted period.
+Description  : The plain ACF peak height at the candidate's period -- the
+               quantity McQuillan et al. (2013, 2014) used to judge
+               detections and ROOSTER's G_ACF (Breton et al. 2021), but
+               evaluated per candidate rather than only at the ACF's
+               highest peak. Unlike mean_height_snr (fitted parabola height
+               / global ACF std) it is not rescaled by the ACF's overall
+               scatter, and unlike the peak-trough depths it is an absolute
+               level. Strong for P/2-vs-P (a half alias's first "peak" is
+               the weaker secondary peak or a trough) and the best single
+               predictor found of whether the top-ranked candidate is
+               recoverable at all (decline prediction).
+Reference    : McQuillan, Aigrain & Mazeh (2013), MNRAS 432, 1203;
+               Breton et al. (2021), A&A 647, A125 (G_ACF).
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+acf_half_lag_contrast
+--------------------------------------------------------------------------
+Definition   : mean over k = 1..6 of [h(k*P) - h((k - 1/2)*P)], using only
+               the k whose two windows both fit in the ACF.
+Description  : Targets the DOUBLE (2P) alias. At the true period of a
+               single-dipped star the half-lags fall in troughs (large
+               positive contrast); a double-dipped star holds its lower
+               secondary peaks there (moderate contrast); for a 2*P_true
+               candidate the half-lags ARE true-period peaks and the
+               contrast collapses to ~0 or below. Also ~0 for spurious
+               candidates with no periodic ACF structure, so it doubles as
+               a general "is this a real comb" measure. A continuous,
+               every-candidate version of McQuillan et al.'s alternating-
+               peak-height test.
+Reference    : McQuillan et al. (2013, 2014) (half-period peak logic).
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+acf_odd_even_contrast
+--------------------------------------------------------------------------
+Definition   : mean over j = 1..3 of [h((2j - 1)*P) - h(2j*P)], using only
+               the j whose two windows both fit in the ACF.
+Description  : Targets the HALF (P/2) alias. For the true period this is
+               slightly positive (peaks decay with lag). For a P_true/2
+               candidate the odd multiples land on the weaker secondary
+               peaks (or troughs) and the even multiples on the true peaks,
+               so it goes clearly negative. Uninformative (~0) for 2P
+               aliases, which is why it is paired with
+               acf_half_lag_contrast.
+Reference    : McQuillan et al. (2013, 2014); the odd/even idea is the
+               ACF analogue of the eclipsing-binary odd/even depth test.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+fold_half_corr
+--------------------------------------------------------------------------
+Definition   : Cut the light curve into segments of 4*P; fold each segment
+               at P into n_bins = min(20, cadences per cycle) phase bins
+               (rounded down to even); take the mean-subtracted binned
+               profile x and compute sum(x * roll(x, n_bins/2)) / sum(x^2)
+               (correlation of the profile with itself half a cycle later);
+               average over segments weighted by point count. Segments
+               spanning < 2*P of data, with < 2 points per bin, or with an
+               empty bin are skipped; NaN if none remain.
+Description  : Targets the DOUBLE alias, independently of the ACF. If P is
+               2*P_true the fold shows the same rotation twice and the
+               value is ~1. At the true period a single-dipped star gives a
+               negative value and a double-dipped star an intermediate one.
+               Segmenting by a few cycles keeps spot evolution over the
+               full baseline from washing the fold out. The circular
+               (roll) form makes it independent of the arbitrary phase
+               origin. Single best feature found for P-vs-2P.
+Reference    : The odd/even comparison used in eclipsing-binary / transit
+               vetting; for rotation, related in spirit to the single- vs
+               double-dip classification of Basri & Nguyen (2018) and
+               "Double-dipping to refine stellar rotation periods"
+               (arXiv:2306.02315), which test which harmonic is physically
+               plausible.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+fold_half_corr_at_2P
+--------------------------------------------------------------------------
+Definition   : fold_half_corr evaluated at 2*P instead of P (same segment,
+               bin and skipping rules, with 2*P in place of P).
+Description  : Targets the HALF alias. For a genuine P, folding at 2P shows
+               the same rotation twice (~1). For a P_true/2 candidate,
+               folding at 2P = P_true compares the two DIFFERENT dips of a
+               double-dipped star, giving a clearly lower value. Spurious
+               candidates also score low. The complement of fold_half_corr:
+               together the pair asks "does this light curve repeat at
+               P/2, at P, at 2P?" directly in flux space.
+Reference    : As fold_half_corr.
+Stage        : 5 (feature extraction).
+
+
+================================================================================
 LABEL (TRAINING ONLY)
 ================================================================================
 

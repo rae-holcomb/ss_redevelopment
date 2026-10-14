@@ -286,6 +286,8 @@ Roughly in priority order as of this writing — re-prioritize freely.
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
    quick hand-tuned fix (TASKS.md P1).
+   T9 (2026-10-14) found most of the loss is in the gates: in 30 of 36 lost stars
+   the success candidate never passed them. See TASKS.md P4.
 
 ---
 
@@ -389,3 +391,13 @@ chats should know:
   Follow-ups P2 (other methods still raise) and P3 (prominence calibration) are
   in TASKS.md. See `reports/2026-10-13_t4-pairwise-histogram-no-raise/`.
 - **2026-10-13: T4 merged; baseline updated.** `benchmarks/baselines/synth200_s0.json` is now T4's post-fix run (final outcomes identical to the v2 baseline; only pairwise_histogram's error rate went 0.275 → 0). G5 marked met. T4 report open questions 1–3 became tasks T13 (prominence recalibration), T14 (bit-reproducible scorecards) and T15 (no guess_* method raises).
+- **2026-10-14: T9 feature search (alias / spurious separation).** Five new
+  per-candidate features in `ml_features.py` (FEATURE_DOCUMENTATION Section G):
+  `acf_height_at_P`, `acf_half_lag_contrast`, `acf_odd_even_contrast`,
+  `fold_half_corr`, `fold_half_corr_at_2P` (~1.7 ms/candidate). The feature
+  schema gained 5 columns; existing definitions are unchanged. On synthetic n=200 seed 0,
+  `fold_half_corr` is the best P-vs-2P separator (pooled AUC 0.06) and
+  `acf_half_lag_contrast` the best overall (0.83). Open issue 12 is mostly gating:
+  30/36 lost stars had their success candidate fail the gates. Literature table,
+  decline analysis and proposals (P4, P5) in `reports/2026-10-14_t9-feature-search/`.
+
