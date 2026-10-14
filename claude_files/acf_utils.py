@@ -28,8 +28,9 @@ import numpy as np
 def compute_acf(
     time: np.ndarray,
     flux: np.ndarray,
-    max_lag_frac: float = 1 / 3,
+    max_lag_frac: float = 0.7,
     min_valid_frac: float = 0.3,
+    return_counts: bool = False,
 ):
     """Compute a gap-aware ACF of an evenly-sampled light curve that may
     contain NaNs.
@@ -39,7 +40,12 @@ def compute_acf(
     time, flux : evenly-sampled arrays (flux may contain NaNs at missing
         cadences; time must not).
     max_lag_frac : upper bound on returned lags, as a fraction of the full
-        baseline (same role as in the original non-gap-aware compute_acf).
+        baseline. Default 0.7 (was 1/3 until 2026-10-13): the pair-coverage
+        cut below is the real limit; 0.7 just keeps the extreme tail, where
+        only a few contiguous stretches overlap, out of reach. With 1/3 the
+        comb fit could never see more than ~B/(3P) peaks, which capped
+        recoverable periods at ~B/12 (4 teeth required) -- far too short
+        for 1-2 sector TESS stars. Pass 1/3 to reproduce the old behavior.
     min_valid_frac : additionally truncate the returned ACF wherever the
         number of valid (i, i+k) pairs at lag k drops below this fraction
         of the number of valid points at lag 0. Lags beyond this point are
@@ -48,12 +54,18 @@ def compute_acf(
         single big dropout (e.g. a multi-week TESS downlink gap) can make
         the *nominal* max_lag_frac cut include lag ranges where almost no
         pairs actually survive, giving a noise-dominated tail that can
-        fool peak-finding.
+        fool peak-finding. For contiguous data the coverage at lag L is
+        ~(1 - L/B), so the default 0.3 binds at L ~ 0.7 B.
+    return_counts : if True, also return the number of valid pairs at each
+        returned lag. The ACF at lag L is a mean over that many products,
+        so its noise scales ~1/sqrt(count); comb_fit.fit_rotation_period
+        uses these (acf_counts=) to weight its residuals.
 
     Returns
     -------
     lags, acf : arrays truncated to min(max_lag_frac * baseline, the point
         where valid-pair coverage drops below min_valid_frac).
+    counts : (only if return_counts) valid-pair count per returned lag.
     """
     flux = np.asarray(flux, dtype=float)
     time = np.asarray(time, dtype=float)
@@ -105,4 +117,7 @@ def compute_acf(
         # keep only the max_lag_frac and finiteness cuts
         cutoff_mask = (lags <= max_lag) & np.isfinite(acf)
 
+    if return_counts:
+        # counts are integers computed through an FFT; round off float noise
+        return lags[cutoff_mask], acf[cutoff_mask], np.rint(valid_count[cutoff_mask])
     return lags[cutoff_mask], acf[cutoff_mask]

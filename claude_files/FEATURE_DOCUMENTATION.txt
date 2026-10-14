@@ -299,6 +299,9 @@ Stage        : 5 (feature extraction; trivial derived transform).
 period_frac_of_baseline
 --------------------------------------------------------------------------
 Definition   : period / (acf_lags[-1] - acf_lags[0]).
+Note         : relative to the ACF LAG RANGE, not the light-curve baseline;
+               its scale changed when compute_acf's default max_lag_frac
+               went 1/3 -> 0.7 (2026-10-13). Prefer P_over_lc_baseline.
 Description  : What fraction of the available ACF lag range this period
                represents. A period using 90% of the baseline is
                fundamentally less trustworthy (very few cycles observed)
@@ -386,6 +389,51 @@ Description  : How many of the expected periodic peaks actually survived
                n_peaks_used_frac suggests the "comb" structure wasn't a good
                match to begin with.
 Stage        : 2 (joint comb fit).
+
+--------------------------------------------------------------------------
+n_teeth_available, n_peaks_required, few_peaks   (added 2026-10-13)
+--------------------------------------------------------------------------
+Definition   : n_teeth_available = number of comb teeth t0 + n*P0
+               (n < n_peaks) inside the ACF's lag range for this candidate
+               (comb_fit._teeth_count, capped at n_peaks).
+               n_peaks_required = the peak gate actually applied,
+               clamp(n_teeth_available, 2, min_peaks_required).
+               few_peaks = n_peaks_required < min_peaks_required (bool).
+Description  : Since compute_acf now reaches ~0.7 of the baseline and the
+               peak gate is adaptive, periods up to ~B/3 can pass with only
+               2-3 peaks. Those are weaker measurements (fewer independent
+               cycles, easier for a P/2 alias or red noise to imitate), so
+               the ranker should know how much of the comb was actually
+               testable. Read together with n_peaks_used and
+               P_over_lc_baseline.
+Stage        : 2/3 (joint comb fit + gating).
+
+--------------------------------------------------------------------------
+P_over_lc_baseline, lc_baseline_days   (added 2026-10-13)
+--------------------------------------------------------------------------
+Definition   : lc_baseline_days = time span of the finite-flux points of the
+               light curve (time[-1] - time[0] over finite flux).
+               P_over_lc_baseline = fitted_P / lc_baseline_days.
+Description  : The physically meaningful "how many cycles did we see"
+               ratio. Unlike period_frac_of_baseline / baseline_days, which
+               are relative to the ACF LAG RANGE (and therefore changed
+               meaning when compute_acf's default max_lag_frac went from
+               1/3 to 0.7), this is independent of ACF settings. Values
+               above ~0.2 mean only 2-3 ACF peaks were available.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+half_tooth_ratio   (added 2026-10-13)
+--------------------------------------------------------------------------
+Definition   : comb_fit._half_tooth_height_ratio for this candidate and its
+               ~2x / ~0.5x partner, if the factor-of-2 guard compared them
+               (NaN otherwise): median height of the short comb's
+               interleaved teeth relative to its neighbouring shared teeth.
+Description  : ~1 -> the ACF genuinely repeats at the shorter period;
+               clearly < 1 -> the interleaved bumps are double-dip secondary
+               peaks and the longer period is the rotation period. Lets the
+               ranker learn its own threshold instead of the guard's 0.7.
+Stage        : 4 (arbitration, factor-of-2 guard).
 
 --------------------------------------------------------------------------
 frac_positive_heights, frac_non_increasing_height

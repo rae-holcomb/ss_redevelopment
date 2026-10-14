@@ -68,10 +68,10 @@ def process_one_file(fits_path: str) -> dict:
         row["true_period"] = true_period
 
         pre = load_smarts_fits(fits_path)
-        acf_lags, acf = compute_acf(pre.time, pre.flux)
+        acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
 
         guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags, acf)
-        result = fit_rotation_period(acf_lags, acf, guesses)
+        result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
 
         row["success"] = bool(result.success)
         row["message"] = result.message

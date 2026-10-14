@@ -101,7 +101,7 @@ def process_one_file(fits_path: str) -> dict:
         row["true_period"] = true_period
 
         pre = load_smarts_fits(fits_path)
-        acf_lags, acf = compute_acf(pre.time, pre.flux)
+        acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
         wavelet_flux = _prep_wavelet_flux(pre.flux)
 
         all_guesses = []
@@ -120,7 +120,7 @@ def process_one_file(fits_path: str) -> dict:
         row["method_failures"] = "; ".join(f"{k}: {v}" for k, v in failed_methods.items())
         row["raw_method_counts_json"] = json.dumps(raw_method_counts)
 
-        result = fit_rotation_period(acf_lags, acf, all_guesses)
+        result = fit_rotation_period(acf_lags, acf, all_guesses, acf_counts=acf_counts)
 
         row["success"] = bool(result.success)
         row["message"] = result.message

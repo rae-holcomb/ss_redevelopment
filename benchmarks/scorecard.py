@@ -163,7 +163,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
         star_id, t, f, true_p, prange, meta = _load(task)
         rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta,
                    period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None)
-        lags, acf = compute_acf(t, f)
+        lags, acf, counts = compute_acf(t, f, return_counts=True)
 
         methods = {}
         pooled = []
@@ -185,7 +185,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
         rec["methods"] = methods
 
         t0 = time.perf_counter()
-        res = fit_rotation_period(lags, acf, pooled)
+        res = fit_rotation_period(lags, acf, pooled, acf_counts=counts)
         P = float(res.best_fit.P) if res.success else None
         rec.update(final_period=P, final_outcome=ev.classify_period(P, true_p, rel_tol, prange),
                    pipeline_success=bool(res.success), pipeline_message=res.message[:300],

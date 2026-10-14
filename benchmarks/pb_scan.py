@@ -84,10 +84,16 @@ def run_one(task: dict) -> dict:
                              red_noise_sigma=0.001 if task["red"] else 0.0, red_noise_tau_days=2.0)
 
     t0 = time.perf_counter()
-    lags, acf = compute_acf(lc.time, lc.flux)
+    try:  # current code: pair-count-weighted comb fit
+        lags, acf, counts = compute_acf(lc.time, lc.flux, return_counts=True)
+        fit_kw = {"acf_counts": counts}
+    except TypeError:  # pre-2026-10-13 code (no pair counts)
+        lags, acf = compute_acf(lc.time, lc.flux)
+        fit_kw = {}
+    fit_kw.update(task.get("fit_kwargs", {}))
     g, _ = gather_initial_guesses(lc.time, lc.flux, lags, acf, n_guesses=10)
     t1 = time.perf_counter()
-    res = fit_rotation_period(lags, acf, g)
+    res = fit_rotation_period(lags, acf, g, **fit_kw)
     t2 = time.perf_counter()
 
     Pm = float(res.best_fit.P) if res.success else None
@@ -109,15 +115,23 @@ def run_one(task: dict) -> dict:
     )
 
 
-def build_tasks(n_per_cell: int, n_noise: int) -> list:
-    """Build the (deterministic) task list for the signal grid and the noise set."""
+def build_tasks(n_per_cell: int, n_noise: int, seed_offset: int = 0, fit_kwargs: dict = None) -> list:
+    """Build the (deterministic) task list for the signal grid and the noise set.
+
+    seed_offset shifts every seed (use a nonzero offset for tuning/ablation
+    runs so the default-seed evaluation set stays untouched); fit_kwargs are
+    passed through to fit_rotation_period.
+    """
+    fit_kwargs = fit_kwargs or {}
     tasks = []
     for ns in SECTORS:
         for fi, frac in enumerate(FRACS):
             for s in range(n_per_cell):
-                tasks.append(dict(kind="signal", n_sectors=ns, frac=frac, seed=10000 * ns + 100 * fi + s))
+                tasks.append(dict(kind="signal", n_sectors=ns, frac=frac, fit_kwargs=fit_kwargs,
+                                  seed=10000 * ns + 100 * fi + s + seed_offset))
         for s in range(n_noise):
-            tasks.append(dict(kind="noise", n_sectors=ns, seed=900000 + 1000 * ns + s, red=bool(s % 2)))
+            tasks.append(dict(kind="noise", n_sectors=ns, seed=900000 + 1000 * ns + s + seed_offset,
+                              red=bool(s % 2), fit_kwargs=fit_kwargs))
     return tasks
 
 
@@ -159,10 +173,14 @@ def main(argv=None):
     p.add_argument("--n-per-cell", type=int, default=12)
     p.add_argument("--n-noise", type=int, default=40, help="noise LCs per n_sectors value")
     p.add_argument("--n-workers", type=int, default=DEFAULT_N_WORKERS)
+    p.add_argument("--seed-offset", type=int, default=0,
+                   help="shift all seeds (tuning/ablation runs); keep 0 for the evaluation set")
+    p.add_argument("--fit-kwargs", default="{}",
+                   help='JSON dict passed to fit_rotation_period, e.g. \'{"alias_guard": false}\'')
     args = p.parse_args(argv)
     args.outdir.mkdir(parents=True, exist_ok=True)
 
-    tasks = build_tasks(args.n_per_cell, args.n_noise)
+    tasks = build_tasks(args.n_per_cell, args.n_noise, args.seed_offset, json.loads(args.fit_kwargs))
     # longest tasks first for better load balance
     tasks.sort(key=lambda t: -t["n_sectors"])
     t0 = time.time()
@@ -175,6 +193,7 @@ def main(argv=None):
     df.to_csv(args.outdir / "rows.csv", index=False)
     summ = summarize(df)
     summ["config"] = dict(n_per_cell=args.n_per_cell, n_noise=args.n_noise, fracs=list(FRACS),
+                          seed_offset=args.seed_offset, fit_kwargs=json.loads(args.fit_kwargs),
                           sectors=list(SECTORS), wall_seconds=time.time() - t0,
                           code_root=str(ROOT))
     (args.outdir / "summary.json").write_text(json.dumps(summ, indent=2, default=float))

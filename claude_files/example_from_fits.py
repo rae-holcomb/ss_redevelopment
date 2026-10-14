@@ -38,11 +38,11 @@ if __name__ == "__main__":
           f"{np.isnan(pre.flux).mean():.1%} missing")
 
     # --- 2. gap-aware ACF ---
-    acf_lags, acf = compute_acf(pre.time, pre.flux)
+    acf_lags, acf, acf_counts = compute_acf(pre.time, pre.flux, return_counts=True)
 
     # --- 3. candidate generation + fitting/arbitration ---
     guesses, failed_methods = gather_initial_guesses(pre.time, pre.flux, acf_lags, acf, n_guesses=5)
-    result = fit_rotation_period(acf_lags, acf, guesses)
+    result = fit_rotation_period(acf_lags, acf, guesses, acf_counts=acf_counts)
     print(f"\n{result.message}")
     if result.success:
         print(f"recovered P = {result.best_fit.P:.4f} d "

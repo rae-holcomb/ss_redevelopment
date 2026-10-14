@@ -247,13 +247,25 @@ def _grid_search_t0(
     n_phase: int = 200,
     n_teeth_for_score: int = 5,
     weight_func: Optional[Callable[[int], float]] = None,
+    skip_lag0_tooth: bool = True,
 ) -> float:
     """Given a candidate period P0, grid-search the phase t0 in
-    [min_lag, min_lag + P0) that maximizes comb_score. The returned t0 is
+    [lo, lo + P0) that maximizes comb_score, where lo = max(min_lag,
+    P0/2) if skip_lag0_tooth (default) else min_lag. The returned t0 is
     itself the lag of the (n=0) tooth. This is a coarse, cheap phase
     estimate meant to seed the real joint fit -- not a fit in itself.
+
+    Why skip_lag0_tooth (2026-10-13): with lo = min_lag (a few cadences),
+    comb_score almost always picks t0 ~ min_lag, because ACF ~ 1 there --
+    the trivial lag-0 peak, which every candidate period "matches". The
+    n=0 window then sits on the ACF's lag-0 decay, its vertex is pulled
+    to negative lag and P gets biased. With 8 teeth that is one bad window
+    out of 8 (tolerated by min_frac_vertex_in_window=0.8); for a long
+    period with only 2-3 teeth in range it sinks the whole fit. Starting
+    the grid at P0/2 makes the first tooth the first genuine peak (~P0).
     """
-    trial_t0 = np.linspace(min_lag, min_lag + P0, n_phase, endpoint=False)
+    lo = max(min_lag, 0.5 * P0) if skip_lag0_tooth else min_lag
+    trial_t0 = np.linspace(lo, lo + P0, n_phase, endpoint=False)
     scores = [
         comb_score(acf_lags, acf, P0, t0, n_max=n_teeth_for_score, weight_func=weight_func)
         for t0 in trial_t0
@@ -303,7 +315,7 @@ def _build_windows(
     return windows
 
 
-def _fit_comb_core(
+def _comb_model_setup(
     windows: list,
     acf_lags: np.ndarray,
     acf: np.ndarray,
@@ -312,50 +324,40 @@ def _fit_comb_core(
     P_bounds_frac: float = 0.3,
     allow_jitter: bool = True,
     jitter_frac: float = 0.05,
-    loss: str = "soft_l1",
-):
-    """Fit the joint comb-of-parabolae model directly via
-    scipy.optimize.least_squares with a hand-derived ANALYTIC Jacobian,
-    rather than through lmfit.Parameters with a finite-difference Jacobian.
+    weights: Optional[np.ndarray] = None,
+) -> dict:
+    """Build the joint comb-of-parabolae least-squares problem for
+    _fit_comb_core: starting vector, bounds, parameter-index layout, and the
+    residual / analytic-Jacobian closures.
 
-    Why: profiling found two compounding costs in the old lmfit-based
-    approach (see this project's fitting-performance notes): (1) tying
-    each window's center to the shared P/t0 via an lmfit `expr=` string
-    made every residual evaluation re-interpret that expression through
-    lmfit's asteval engine -- fixed separately by computing centers with
-    plain arithmetic instead; (2) without an analytic Jacobian, scipy
-    estimates one by finite differences, which perturbs every one of the
-    ~20-30 free parameters separately and re-evaluates the FULL residual
-    for each -- roughly 20-30x more residual evaluations than fitting
-    needs, per Jacobian estimate, per optimizer iteration. This function
-    fixes the second, larger cost: the model is just h - A*(lag-c)**2
-    with c = t0 + n*P (+ delta_n), so its Jacobian is a few lines of
-    closed-form algebra (see the `jacobian` closure below) -- giving
-    scipy the exact Jacobian directly, in one cheap vectorized call,
-    instead of estimating an approximate one the expensive way.
+    Split out of _fit_comb_core (2026-10-13) so the weighted residual and its
+    Jacobian can be unit-tested against finite differences.
 
-    This also drops the lmfit.Parameters layer entirely (not just the
-    `expr=` ties within it): the parameter vector here is a plain numpy
-    array with plain scipy bounds, with no per-call attribute-lookup
-    overhead. CombFitResult.fit_result stores the raw scipy OptimizeResult
-    for anyone who needs to inspect the fit directly, in place of the
-    lmfit MinimizerResult this field used to hold.
-
-    Parameter vector layout (built fresh per call, since `windows` can
-    change between RANSAC-rejection iterations): [P, t0, delta_n for each
-    window with n>0 (only if allow_jitter), A_n for each window in order,
-    h_n for each window in order].
+    Parameters
+    ----------
+    windows : list[PeakWindow] from _build_windows.
+    acf_lags, acf : the ACF being fit.
+    P0, t0 : starting period and phase.
+    P_bounds_frac, allow_jitter, jitter_frac : see _fit_comb_core.
+    weights : optional per-lag weights aligned with acf_lags (typically
+        sqrt(pair count / pair count at lag 0), see fit_rotation_period's
+        acf_counts). The residual for point i becomes w_i * (model - acf);
+        the Jacobian rows are scaled by the same w_i. None = unweighted.
 
     Returns
     -------
-    dict with keys: P, P_err, t0, t0_err, redchi, success, centers (dict
-    n -> fitted center), A (dict n -> fitted curvature), h (dict n ->
-    fitted height), raw (the scipy OptimizeResult).
+    dict with residual, jacobian (callables of the parameter vector), x0,
+    lb, ub, and index bookkeeping (idx_P, idx_t0, idx_A0, idx_h0, ns,
+    centers (callable), total_pts, n_params).
     """
     m = len(windows)
     ns = [w.n for w in windows]
     lag_subs = [acf_lags[w.mask] for w in windows]
     acf_subs = [acf[w.mask] for w in windows]
+    if weights is None:
+        w_subs = [np.ones(len(l)) for l in lag_subs]
+    else:
+        w_subs = [np.asarray(weights, dtype=float)[w.mask] for w in windows]
     n_points = [len(l) for l in lag_subs]
     total_pts = sum(n_points)
     starts = np.cumsum([0] + n_points)  # residual-block start offsets
@@ -406,7 +408,7 @@ def _fit_comb_core(
         out = np.empty(total_pts)
         for i in range(m):
             A, h, c = x[idx_A0 + i], x[idx_h0 + i], centers[i]
-            out[starts[i]:starts[i + 1]] = (h - A * (lag_subs[i] - c) ** 2) - acf_subs[i]
+            out[starts[i]:starts[i + 1]] = w_subs[i] * ((h - A * (lag_subs[i] - c) ** 2) - acf_subs[i])
         return out
 
     def jacobian(x):
@@ -415,15 +417,92 @@ def _fit_comb_core(
         for i in range(m):
             n, A, c = ns[i], x[idx_A0 + i], centers[i]
             s0, s1 = starts[i], starts[i + 1]
+            wi = w_subs[i]
             diff = lag_subs[i] - c
-            dresid_dc = 2.0 * A * diff  # d/dc[h - A*(lag-c)^2] = 2*A*(lag-c)
-            J[s0:s1, idx_A0 + i] = -diff**2
-            J[s0:s1, idx_h0 + i] = 1.0
+            dresid_dc = wi * 2.0 * A * diff  # d/dc[w*(h - A*(lag-c)^2)] = 2*w*A*(lag-c)
+            J[s0:s1, idx_A0 + i] = -wi * diff**2
+            J[s0:s1, idx_h0 + i] = wi
             J[s0:s1, idx_P] = dresid_dc * n
             J[s0:s1, idx_t0] = dresid_dc
             if i in delta_pos_of:
                 J[s0:s1, idx_delta0 + delta_pos_of[i]] = dresid_dc
         return J
+
+    return dict(residual=residual, jacobian=jacobian, x0=x0, lb=lb, ub=ub,
+                idx_P=idx_P, idx_t0=idx_t0, idx_A0=idx_A0, idx_h0=idx_h0,
+                ns=ns, centers=_centers, total_pts=total_pts, n_params=n_params)
+
+
+def _comb_model_functions(windows, acf_lags, acf, P0, t0, weights=None, **kwargs):
+    """Convenience accessor for tests/diagnostics: (residual, jacobian, x0)
+    of the joint comb model built by _comb_model_setup (same arguments)."""
+    st = _comb_model_setup(windows, acf_lags, acf, P0, t0, weights=weights, **kwargs)
+    return st["residual"], st["jacobian"], st["x0"]
+
+
+def _fit_comb_core(
+    windows: list,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    P0: float,
+    t0: float,
+    P_bounds_frac: float = 0.3,
+    allow_jitter: bool = True,
+    jitter_frac: float = 0.05,
+    loss: str = "soft_l1",
+    weights: Optional[np.ndarray] = None,
+):
+    """Fit the joint comb-of-parabolae model directly via
+    scipy.optimize.least_squares with a hand-derived ANALYTIC Jacobian,
+    rather than through lmfit.Parameters with a finite-difference Jacobian.
+
+    Why: profiling found two compounding costs in the old lmfit-based
+    approach (see this project's fitting-performance notes): (1) tying
+    each window's center to the shared P/t0 via an lmfit `expr=` string
+    made every residual evaluation re-interpret that expression through
+    lmfit's asteval engine -- fixed separately by computing centers with
+    plain arithmetic instead; (2) without an analytic Jacobian, scipy
+    estimates one by finite differences, which perturbs every one of the
+    ~20-30 free parameters separately and re-evaluates the FULL residual
+    for each -- roughly 20-30x more residual evaluations than fitting
+    needs, per Jacobian estimate, per optimizer iteration. This function
+    fixes the second, larger cost: the model is just h - A*(lag-c)**2
+    with c = t0 + n*P (+ delta_n), so its Jacobian is a few lines of
+    closed-form algebra (see _comb_model_setup's `jacobian` closure) --
+    giving scipy the exact Jacobian directly, in one cheap vectorized call,
+    instead of estimating an approximate one the expensive way.
+
+    This also drops the lmfit.Parameters layer entirely (not just the
+    `expr=` ties within it): the parameter vector here is a plain numpy
+    array with plain scipy bounds, with no per-call attribute-lookup
+    overhead. CombFitResult.fit_result stores the raw scipy OptimizeResult
+    for anyone who needs to inspect the fit directly, in place of the
+    lmfit MinimizerResult this field used to hold.
+
+    Weighting (added 2026-10-13): if `weights` (per-lag, aligned with
+    acf_lags) is given, every residual is multiplied by its lag's weight.
+    fit_rotation_period passes sqrt(pair count / pair count at lag 0): the
+    ACF at lag L averages ~N(L) products, so its noise ~ 1/sqrt(N(L)), and
+    now that compute_acf reaches ~0.7 B the long-lag windows are several
+    times noisier than the short-lag ones. Weights are normalized to <= 1,
+    so redchi stays on the same scale as the unweighted fit at short lags.
+
+    Parameter vector layout (built fresh per call, since `windows` can
+    change between RANSAC-rejection iterations): [P, t0, delta_n for each
+    window with n>0 (only if allow_jitter), A_n for each window in order,
+    h_n for each window in order].
+
+    Returns
+    -------
+    dict with keys: P, P_err, t0, t0_err, redchi, success, centers (dict
+    n -> fitted center), A (dict n -> fitted curvature), h (dict n ->
+    fitted height), raw (the scipy OptimizeResult).
+    """
+    st = _comb_model_setup(windows, acf_lags, acf, P0, t0, P_bounds_frac=P_bounds_frac,
+                           allow_jitter=allow_jitter, jitter_frac=jitter_frac, weights=weights)
+    residual, jacobian, x0, lb, ub = st["residual"], st["jacobian"], st["x0"], st["lb"], st["ub"]
+    idx_P, idx_t0, idx_A0, idx_h0 = st["idx_P"], st["idx_t0"], st["idx_A0"], st["idx_h0"]
+    ns, _centers, total_pts, n_params = st["ns"], st["centers"], st["total_pts"], st["n_params"]
 
     fit_kws = {"loss": loss} if loss != "linear" else {}
     with warnings.catch_warnings():
@@ -494,6 +573,7 @@ class CombFitResult:
     n_peaks_dropped: int
     redchi: float
     success: bool
+    n_peaks_trimmed: int = 0  # trailing decayed teeth removed (see _fit_single_candidate step 4b)
 
 
 def _fit_single_candidate(
@@ -509,6 +589,9 @@ def _fit_single_candidate(
     max_reject_iters: int = 3,
     reject_threshold_sigma: float = 4.0,
     min_peaks_required: int = 2,
+    weights: Optional[np.ndarray] = None,
+    trim_decayed_tail: bool = True,
+    min_keep_after_trim: Optional[int] = None,
 ) -> CombFitResult:
     """Run the actual joint least-squares comb-of-parabolae fit for ONE
     candidate (P0, t0). This is the expensive, authoritative step that
@@ -550,6 +633,22 @@ def _fit_single_candidate(
        residual RMS into `per_peak`, and package everything into a
        CombFitResult.
 
+    4b. (trim_decayed_tail, added 2026-10-13) If the highest-n windows
+       end in a run of non-positive fitted heights, drop that trailing run
+       (keeping at least `min_keep_after_trim` windows, default
+       min_peaks_required) and refit once. Spot evolution makes ACF peaks
+       decay into noise after a few spot lifetimes; teeth beyond that
+       coherence time say nothing about whether P is right, but they used
+       to sink frac_positive_heights / mean height SNR once compute_acf
+       reached ~0.7 B instead of B/3 (the B/3 cap had been hiding this).
+       Only a TRAILING run is trimmed, so a comb whose early teeth miss is
+       not rescued. Trimmed windows are counted in n_peaks_trimmed.
+
+    `weights` (optional, per-lag, aligned with acf_lags) are forwarded to
+    _fit_comb_core, and the step-4 outlier test uses the same weighted
+    residuals (so a long-lag window isn't rejected merely for being built
+    from fewer ACF pairs). per_peak residual_rms stays unweighted.
+
     Returns
     -------
     CombFitResult for this single candidate.
@@ -569,6 +668,7 @@ def _fit_single_candidate(
         fit = _fit_comb_core(
             windows, acf_lags, acf, P0, t0,
             allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
+            weights=weights,
         )
 
         # --- compute each window's own residual RMS, to decide what (if
@@ -582,7 +682,8 @@ def _fit_single_candidate(
             A = fit["A"][n]
             h = fit["h"][n]
             model = h - A * (lag_sub - c) ** 2
-            per_peak_rms[n] = float(np.sqrt(np.mean((model - acf_sub) ** 2)))
+            w_sub = 1.0 if weights is None else weights[w.mask]
+            per_peak_rms[n] = float(np.sqrt(np.mean((w_sub * (model - acf_sub)) ** 2)))
 
         if iteration == max_reject_iters or len(windows) <= min_peaks_required:
             break  # out of iterations, or can't afford to drop any more
@@ -602,6 +703,24 @@ def _fit_single_candidate(
             n_dropped_total += 1
         else:
             break  # nothing egregious left; stop iterating
+
+    # --- trim a trailing run of decayed (non-positive) teeth, refit once ---
+    n_trimmed = 0
+    if trim_decayed_tail:
+        keep_min = max(min_peaks_required, min_keep_after_trim or 0)
+        ordered = sorted(windows, key=lambda w: w.n)
+        k = 0
+        while k < len(ordered) and fit["h"][ordered[len(ordered) - 1 - k].n] <= 0:
+            k += 1
+        k = min(k, len(ordered) - keep_min)
+        if k > 0:
+            windows = ordered[:len(ordered) - k]
+            n_trimmed = k
+            fit = _fit_comb_core(
+                windows, acf_lags, acf, P0, t0,
+                allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
+                weights=weights,
+            )
 
     # --- final per-peak summary from the surviving windows' last fit ---
     per_peak = {}
@@ -645,6 +764,7 @@ def _fit_single_candidate(
         per_peak=per_peak,
         n_peaks_used=len(windows),
         n_peaks_dropped=n_dropped_total,
+        n_peaks_trimmed=n_trimmed,
         redchi=fit["redchi"],
         success=bool(fit["success"]) and len(windows) >= min_peaks_required,
     )
@@ -1060,6 +1180,21 @@ class CandidateResult:
     # agreement between different (still-distinct) fitted candidates.
     n_duplicate_guesses: int = 0
     contributing_methods: tuple = ()
+    # Peak budget (added 2026-10-13). n_teeth_available: comb teeth
+    # (t0 + n*P0, n < n_peaks) that fit inside the ACF's lag range for this
+    # candidate. n_peaks_required: the peak gate actually applied,
+    # clamp(n_teeth_available, 2, min_peaks_required). few_peaks: True when
+    # the gate was relaxed below min_peaks_required because a long period
+    # simply has fewer teeth in range -- a weaker (but still useful)
+    # measurement that downstream code / the ranker should know about.
+    n_teeth_available: int = 0
+    n_peaks_required: int = 0
+    few_peaks: bool = False
+    # Factor-of-2 guard bookkeeping (see _resolve_factor2_aliases): None if
+    # this candidate was never compared against a ~2x / ~0.5x partner;
+    # otherwise dict(partner_P, half_tooth_ratio, preferred) where preferred
+    # is "short" or "long" for that pair.
+    alias_guard: Optional[dict] = None
 
 
 @dataclass
@@ -1071,6 +1206,126 @@ class EnsembleResult:
     candidates: list        # list[CandidateResult], successfully-fit ones, sorted best-first
     n_candidates_tried: int
     failed_candidates: list  # list[CandidateResult] that errored during fitting
+    few_peaks: bool = False  # the selected candidate passed a relaxed (< min_peaks_required) peak gate
+
+
+def _half_tooth_height_ratio(
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    P_short: float,
+    t0_short: float,
+    P_long: float,
+    t0_long: float,
+    search_frac: float = 0.15,
+) -> float:
+    """For two candidates related by ~2x (P_long ~ 2 P_short), measure how
+    tall the short comb's EXTRA teeth -- the ones interleaved between the
+    long comb's teeth, at odd multiples of P_short -- are compared with the
+    teeth both combs share.
+
+    Each short-comb tooth t0_short + n*P_short (excluding lags < P_short/2,
+    i.e. the trivial lag-0 peak) is labeled "shared" if it lies within
+    P_short/4 of a long-comb tooth t0_long + k*P_long (any integer k) and
+    "interleaved" otherwise. Its height is the raw ACF maximum within
+    +/- search_frac * P_short of the predicted position. For every
+    interleaved tooth with at least one shared neighbor (n +/- 1), the
+    ratio height / mean(neighbor heights) is computed -- comparing against
+    the immediate neighbors cancels the slow decay of ACF peak heights with
+    lag. The median ratio is returned.
+
+    Interpretation: ~1 means the ACF really repeats every P_short (the long
+    candidate is a 2x alias); clearly < 1 means the interleaved bumps are
+    secondary peaks of a double-dip light curve whose true period is
+    P_long (the short candidate is a P/2 alias). This is the
+    McQuillan et al. (2013) odd/even-peak idea, evaluated only on the lag
+    range both combs share, so the long candidate is not penalized for
+    having fewer (and noisier, longer-lag) windows in its own redchi.
+
+    Returns
+    -------
+    float, or NaN if no interleaved tooth has a usable shared neighbor.
+    """
+    lag_lo, lag_hi = acf_lags[0], acf_lags[-1]
+    half = search_frac * P_short
+    n_max = int(np.floor((lag_hi - t0_short) / P_short)) if P_short > 0 else -1
+    if n_max < 1:
+        return float("nan")
+    centers = t0_short + P_short * np.arange(0, n_max + 1)
+    heights, shared = [], []
+    for c in centers:
+        m = (acf_lags >= c - half) & (acf_lags <= c + half)
+        ok = c >= 0.5 * P_short and c >= lag_lo and m.sum() >= 2
+        heights.append(float(np.max(acf[m])) if ok else np.nan)
+        k = np.round((c - t0_long) / P_long)
+        shared.append(abs(c - (t0_long + k * P_long)) < 0.25 * P_short)
+    heights = np.array(heights)
+    ratios = []
+    for i, c in enumerate(centers):
+        if shared[i] or not np.isfinite(heights[i]):
+            continue
+        nb = [heights[j] for j in (i - 1, i + 1)
+              if 0 <= j < len(centers) and shared[j] and np.isfinite(heights[j])]
+        if nb and np.mean(nb) > 0:
+            ratios.append(heights[i] / np.mean(nb))
+    return float(np.median(ratios)) if ratios else float("nan")
+
+
+def _resolve_factor2_aliases(
+    passing: list,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    ratio_threshold: float,
+    rel_tol: float,
+    max_hops: int = 3,
+) -> "CandidateResult":
+    """Factor-of-2 guard for arbitration among gate-passing candidates.
+
+    Raw redchi favours the shorter of two ~2x-related candidates whenever
+    the light curve has a double-dip shape: P/2 gets twice as many teeth,
+    each sitting on a real (primary or secondary) ACF bump, and its windows
+    are narrower. Starting from the lowest-redchi candidate, look for a
+    passing partner at ~2x or ~0.5x its fitted period (within `rel_tol`),
+    and let _half_tooth_height_ratio decide: ratio < ratio_threshold ->
+    the long period wins; otherwise the short one does. Repeat from the
+    winner (to walk P/4 -> P/2 -> P chains) up to `max_hops` times.
+
+    Records the comparison on each compared candidate's `alias_guard`.
+
+    Returns
+    -------
+    The selected CandidateResult (passing[0] if no partner exists).
+    """
+    current = passing[0]
+    visited = {id(current)}
+    for _ in range(max_hops):
+        partner, cur_is_short = None, None
+        for r in passing:
+            if id(r) in visited:
+                continue
+            ratio = r.fit.P / current.fit.P
+            if abs(ratio - 2.0) <= 2.0 * rel_tol:
+                partner, cur_is_short = r, True
+                break
+            if abs(ratio - 0.5) <= 0.5 * rel_tol:
+                partner, cur_is_short = r, False
+                break
+        if partner is None:
+            break
+        S, L = (current, partner) if cur_is_short else (partner, current)
+        hr = _half_tooth_height_ratio(acf_lags, acf, S.fit.P, S.fit.t0, L.fit.P, L.fit.t0)
+        if not np.isfinite(hr):
+            winner = current  # no evidence either way: keep the redchi choice
+            preferred = "short" if cur_is_short else "long"
+        else:
+            winner = L if hr < ratio_threshold else S
+            preferred = "long" if winner is L else "short"
+        S.alias_guard = dict(partner_P=L.fit.P, half_tooth_ratio=hr, preferred=preferred)
+        L.alias_guard = dict(partner_P=S.fit.P, half_tooth_ratio=hr, preferred=preferred)
+        visited.add(id(partner))
+        if winner is current:
+            break
+        current = winner
+    return current
 
 
 def fit_rotation_period(
@@ -1090,6 +1345,11 @@ def fit_rotation_period(
     min_frac_vertex_in_window: float = 0.8,
     dedup_rel_tol: float = 0.03,
     short_period_cap_n: Optional[int] = 3,
+    acf_counts: Optional[np.ndarray] = None,
+    alias_guard: bool = True,
+    alias_ratio_threshold: float = 0.7,
+    alias_rel_tol: float = 0.1,
+    trim_decayed_tail: bool = True,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -1144,7 +1404,14 @@ def fit_rotation_period(
 
     4. Apply four reliability gates to every successfully-fit candidate.
        A candidate must satisfy ALL four to be considered "passed":
-         - n_peaks_used >= min_peaks_required: enough of the expected
+         - n_peaks_used >= n_peaks_required, where n_peaks_required =
+           clamp(n_teeth_available, 2, min_peaks_required) and
+           n_teeth_available is how many comb teeth (t0 + n*P0) fit inside
+           the ACF's lag range (adaptive since 2026-10-13: a period near
+           B/3 only has 2-3 teeth in range, and requiring 4 rejected every
+           P > ~B/12). Candidates whose gate was relaxed are flagged
+           few_peaks=True on the CandidateResult (and on the
+           EnsembleResult if selected). Otherwise: enough of the expected
            peaks survived the fit (and the RANSAC-style rejection inside
            _fit_single_candidate) to be confident this is a real,
            sustained periodicity rather than a couple of coincidental
@@ -1178,10 +1445,17 @@ def fit_rotation_period(
            EVERY window's vertex has drifted away by a large amount (the
            actual near-lag-0 pathology this gate exists to catch).
 
-    5. Among candidates that pass all three gates, pick the one with the
+    5. Among candidates that pass all gates, pick the one with the
        lowest reduced chi-squared -- the tightest joint fit. Candidates
        are returned sorted this way (passed candidates first, each
        sub-sorted by reduced chi-squared) so you can inspect runner-ups.
+       Then (alias_guard=True) the factor-of-2 guard: if another passing
+       candidate sits at ~2x or ~0.5x the winner's period, the pair is
+       decided by _half_tooth_height_ratio (are the short comb's
+       interleaved teeth as tall as the shared ones?) instead of by
+       redchi, which systematically favours P/2 -- see
+       _resolve_factor2_aliases. The selected candidate is moved to the
+       front of `candidates`.
 
     6. If NO candidate passes all three gates, this function does NOT fall
        back to just returning its single best (but not-good-enough)
@@ -1204,6 +1478,18 @@ def fit_rotation_period(
     min_frac_vertex_in_window : the four reliability gates described above.
     dedup_rel_tol : relative-difference tolerance for treating two
         candidate periods as duplicates.
+    acf_counts : optional per-lag valid-pair counts aligned with acf_lags
+        (compute_acf(..., return_counts=True)). If given, comb residuals are
+        weighted by sqrt(count / count[0]) -- the ACF's noise scales as
+        1/sqrt(pairs), and long lags (now reachable, ~0.7 B) have far fewer
+        pairs. None = unweighted (the pre-2026-10-13 behavior).
+    trim_decayed_tail : forwarded to _fit_single_candidate (drop a trailing
+        run of non-positive teeth past the spot-coherence time; step 4b
+        there).
+    alias_guard, alias_ratio_threshold, alias_rel_tol : factor-of-2 guard
+        (step 5). Pairs are ~2x related if their fitted-period ratio is
+        within alias_rel_tol (relative) of 2; the long period wins if the
+        half-tooth height ratio is below alias_ratio_threshold.
     short_period_cap_n : if not None, cap the lombscargle_short,
         acf_fft_short, and acf_fft_highpass candidate families down to
         their top `short_period_cap_n` candidates each (by comb_score)
@@ -1228,6 +1514,13 @@ def fit_rotation_period(
     dt_acf = np.median(np.diff(acf_lags))
     lag_min, lag_max = acf_lags[0], acf_lags[-1]
     min_lag = 3 * dt_acf
+
+    weights = None
+    if acf_counts is not None:
+        acf_counts = np.asarray(acf_counts, dtype=float)
+        if acf_counts.shape != np.shape(acf_lags):
+            raise ValueError("acf_counts must align with acf_lags (use compute_acf(..., return_counts=True)).")
+        weights = np.sqrt(np.clip(acf_counts, 0, None) / max(acf_counts[0], 1.0))
 
     # --- sanity filter + dedup (by period, ascending) ---
     sane = [
@@ -1293,6 +1586,13 @@ def fit_rotation_period(
         t0 = guess.t0 if guess.t0 is not None else _grid_search_t0(
             acf_lags, acf, guess.P0, min_lag=min_lag
         )
+        # Adaptive peak gate: a period near B/3 only has 2-3 teeth inside
+        # the ACF's lag range, so demanding min_peaks_required (4) of them
+        # would reject it by construction. Require every available tooth,
+        # but never fewer than 2.
+        n_teeth = min(n_peaks, _teeth_count(guess.P0, t0, lag_max))
+        n_required = int(np.clip(n_teeth, 2, min_peaks_required))
+        few = n_required < min_peaks_required
         try:
             fit = _fit_single_candidate(
                 acf_lags, acf, guess.P0, t0,
@@ -1301,10 +1601,12 @@ def fit_rotation_period(
                 max_reject_iters=max_reject_iters,
                 reject_threshold_sigma=reject_threshold_sigma,
                 min_peaks_required=min(min_peaks_required, 2),
+                weights=weights, min_keep_after_trim=n_required,
+                trim_decayed_tail=trim_decayed_tail,
             )
-            diag = assess_rotation_candidate(fit, acf, min_peaks=min_peaks_required)
+            diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
             passed = (
-                fit.n_peaks_used >= min_peaks_required
+                fit.n_peaks_used >= n_required
                 and diag["frac_positive_heights"] >= min_frac_positive_heights
                 and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
                 and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
@@ -1313,6 +1615,7 @@ def fit_rotation_period(
                 period=guess.P0, t0=t0, source_guess=guess, fit=fit,
                 diagnostics=diag, passed_gates=bool(passed),
                 n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
             ))
         except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
             results.append(CandidateResult(
@@ -1320,6 +1623,7 @@ def fit_rotation_period(
                 diagnostics=None, passed_gates=False,
                 error=f"{type(exc).__name__}: {exc}",
                 n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
             ))
 
     fit_ok = [r for r in results if r.fit is not None]
@@ -1351,7 +1655,7 @@ def fit_rotation_period(
             message=(
                 f"Tested {len(deduped)} candidate period(s); none met the "
                 f"reliability thresholds (min_peaks_required="
-                f"{min_peaks_required}, min_frac_positive_heights="
+                f"{min_peaks_required} (relaxed to >=2 for long periods with fewer teeth in range), min_frac_positive_heights="
                 f"{min_frac_positive_heights}, min_mean_height_snr="
                 f"{min_mean_height_snr}, min_frac_vertex_in_window="
                 f"{min_frac_vertex_in_window}). The closest attempt was P="
@@ -1369,6 +1673,12 @@ def fit_rotation_period(
         )
 
     best = passing[0]
+    if alias_guard and len(passing) > 1:
+        best = _resolve_factor2_aliases(passing, acf_lags, acf, alias_ratio_threshold, alias_rel_tol)
+        if best is not passing[0]:
+            # keep `candidates` sorted best-first: selected one leads
+            fit_ok.remove(best)
+            fit_ok.insert(0, best)
     return EnsembleResult(
         success=True,
         message=(
@@ -1378,5 +1688,5 @@ def fit_rotation_period(
         best_fit=best.fit,
         best_guess=InitialGuess(P0=best.period, t0=best.t0, method="ensemble_best"),
         candidates=fit_ok, n_candidates_tried=len(deduped),
-        failed_candidates=failed,
+        failed_candidates=failed, few_peaks=bool(best.few_peaks),
     )

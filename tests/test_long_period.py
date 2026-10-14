@@ -168,5 +168,23 @@ def test_ml_features_expose_peak_budget_and_baseline_fraction():
     for col in ("n_peaks_used", "n_teeth_available", "n_peaks_required", "few_peaks",
                 "P_over_lc_baseline", "lc_baseline_days"):
         assert col in df.columns, col
-    np.testing.assert_allclose(df["lc_baseline_days"], _baseline(lc))
-    np.testing.assert_allclose(df["P_over_lc_baseline"], df["fitted_P"] / _baseline(lc))
+    t_ok = lc.time[np.isfinite(lc.flux)]
+    span = t_ok[-1] - t_ok[0]  # baseline of the finite data, as documented
+    np.testing.assert_allclose(df["lc_baseline_days"], span)
+    np.testing.assert_allclose(df["P_over_lc_baseline"], df["fitted_P"] / span)
+
+
+def test_trailing_decayed_teeth_are_trimmed():
+    """Spot evolution: ACF peaks decay through zero at long lag. The trailing
+    run of non-positive teeth is trimmed (and refit) instead of failing the
+    candidate's frac_positive_heights gate; leading teeth are kept."""
+    P = 2.0
+    lags = np.linspace(0, 18, 1801)
+    acf = 0.6 * np.cos(2 * np.pi * lags / P) + 0.4 - lags / 9.0  # peaks: 1 - nP/9 -> <= 0 from 5P on
+    fit = comb_fit._fit_single_candidate(lags, acf, P, P, n_peaks=8, min_keep_after_trim=4)
+    heights = [v["height"] for v in fit.per_peak.values()]
+    assert fit.n_peaks_trimmed >= 3
+    assert min(heights) > 0
+    assert fit.n_peaks_used >= 4
+    untrimmed = comb_fit._fit_single_candidate(lags, acf, P, P, n_peaks=8, trim_decayed_tail=False)
+    assert untrimmed.n_peaks_trimmed == 0 and untrimmed.n_peaks_used == fit.n_peaks_used + fit.n_peaks_trimmed

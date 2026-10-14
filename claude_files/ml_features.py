@@ -780,7 +780,9 @@ def extract_candidate_features(
         return pd.DataFrame()
 
     acf_std = float(np.std(acf))
-    baseline = float(acf_lags[-1] - acf_lags[0])
+    baseline = float(acf_lags[-1] - acf_lags[0])  # ACF lag range (historical name)
+    t_fin = np.asarray(time, dtype=float)[np.isfinite(np.asarray(flux, dtype=float))]
+    lc_baseline = float(t_fin[-1] - t_fin[0]) if len(t_fin) > 1 else np.nan
     method_reps = _group_guesses_by_method(guesses)
     lc_features = _lightcurve_level_features(time, flux, sectors=sectors)
 
@@ -823,6 +825,15 @@ def extract_candidate_features(
             n_peaks_used=n_used,
             n_peaks_dropped=n_dropped,
             n_peaks_used_frac=(n_used / denom) if denom else np.nan,
+            # peak budget (2026-10-13): how many teeth fit in the ACF lag
+            # range, the peak gate actually applied, and whether it was
+            # relaxed below min_peaks_required (long period, short baseline)
+            n_teeth_available=getattr(c, "n_teeth_available", np.nan),
+            n_peaks_required=getattr(c, "n_peaks_required", np.nan),
+            few_peaks=bool(getattr(c, "few_peaks", False)),
+            P_over_lc_baseline=(fit.P / lc_baseline) if lc_baseline > 0 else np.nan,
+            half_tooth_ratio=((c.alias_guard or {}).get("half_tooth_ratio", np.nan)
+                              if hasattr(c, "alias_guard") else np.nan),
 
             # per-peak shape summaries
             frac_positive_heights=diag["frac_positive_heights"],
@@ -847,6 +858,7 @@ def extract_candidate_features(
             # training example)
             acf_std=acf_std,
             baseline_days=baseline,
+            lc_baseline_days=lc_baseline,
             n_acf_points=len(acf_lags),
 
             # per-candidate S_ph (bin width = THIS candidate's period)
