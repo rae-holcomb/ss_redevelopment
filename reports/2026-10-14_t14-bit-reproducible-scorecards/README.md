@@ -113,6 +113,7 @@ This was measured on Rae's workstation, an Intel i5-1038NG7 (4 physical cores / 
 Left: throughput is flat from 4 to 10 workers for both backends, and the spread between passes is larger than any backend or worker-count effect. Right: per-star time roughly doubles from 4 to 8 workers, which shows two hyperthreads sharing one core without adding throughput.
 
 Reading the timings:
+- **One minor overlap:** the pass-1 `after_w4` run (192.5 s) overlapped another session's single-process notebook for under 30 s at its end (01:26:30–01:27:00; that session's wait loop matched a header line in my status file). The cost is at most one of four cores for ~30 s, far below the 66 s pass-to-pass spread, so I flagged it rather than reran it.
 - With two samples per cell and up to 66 s spread within one cell, **I can't resolve a backend or worker-count difference**. OpenBLAS was 24–34% faster in pass 2 than in pass 1 at every worker count (Accelerate: 3% at 4 and 8 workers, 30% at 10), so machine state matters more than either setting.
 - **Recommended default:** one worker per physical performance core. It is as fast as 8–10 here, uses half the processes and memory, and leaves the machine responsive for other work. `determinism.default_n_workers()` reads `hw.perflevel0.physicalcpu` (P-cores on Apple Silicon; on this Intel Mac it equals `hw.physicalcpu` = 4), so on a 10P+4E chip it gives the old value, 10.
 - The new default now applies to `scorecard.py` and the four batch runners; `--n-workers` still overrides it.
@@ -139,7 +140,7 @@ Reading the timings:
    - Then require `tests/test_determinism.py` to PASS (not XFAIL), rerun two scorecards with `tools/compare_runs.py`, and redo the worker sweep.
    - Accelerate on arm64 uses different kernels; I couldn't test whether it has the same alignment dependence.
 4. **Should a wrong env fail loudly?** Right now `ss_local` still runs everything. The scorecard prints a `RuntimeWarning` and the determinism test XFAILs. Making the scorecard refuse to run on non-OpenBLAS would be stricter, but it would stop agents still on `ss_local`.
-5. **Housekeeping.** One idle orphaned `ss_local` worker pool (resource tracker PID 41306, parent PID 1, 0% CPU) is left from this worktree; it predates this session, probably T4's. It holds memory only and is safe to kill. The two orphan pools I'd seen from the "Extend ACF period limit" worktree (PIDs 43379, 49104) are gone.
+5. **Housekeeping.** All the idle orphaned `ss_local` worker pools I'd seen (resource trackers 41306, 43379, 49104) have since exited; nothing is left to clean up.
 6. **`ss_local` uses python 3.13 and `ss_openblas` uses 3.12**, because numpy 1.26 has no 3.13 wheels. Moving to numpy 2.x later would allow 3.13 again, but on macOS ≥ 14 its x86_64 wheels are Accelerate too, so that needs the same hand-picked-wheel care.
 
 ## Reproduce
