@@ -44,6 +44,18 @@ Each TESS-like sector is two orbits of length sector_days/2, separated by
 a ~1 d data downlink gap; consecutive sectors are separated by another
 ~1 d gap. Each orbit can optionally carry a short exponential "ramp"
 systematic at its start, mimicking TESS scattered-light/thermal ramps.
+
+Patchy coverage (T16a)
+----------------------
+`make_lightcurve(sectors=[...])` keeps only the listed 1-indexed sectors of
+the `n_sectors`-sector year, with the same conventions as
+`preprocessing.load_smarts_fits(sectors=...)`: sector s is orbits 2s-1 and 2s;
+cadences outside the kept sectors become NaN; the grid is trimmed to run from
+the first to the last kept (valid) cadence, keeping absolute times (no shift
+to 0). The star itself (spots, noise, ramps) is generated on the full year
+first with the same RNG draws, so a patchy light curve is exactly a subset of
+the full-coverage one, re-centered on the kept data. `sectors=None` (default)
+is the legacy full-grid output, bit-identical to before.
 """
 
 from __future__ import annotations
@@ -205,6 +217,7 @@ def make_lightcurve(
     ramp_amplitude: float = 0.0,
     seed: int = 0,
     star_id: str = "",
+    sectors=None,
 ) -> SyntheticLightCurve:
     """Generate one synthetic light curve with known equatorial period.
 
@@ -222,6 +235,10 @@ def make_lightcurve(
         start of every orbit; 0 disables.
     seed : RNG seed; same seed + same args -> identical output.
     star_id : label carried through to results tables.
+    sectors : optional 1-indexed sector numbers (within 1..n_sectors) to keep,
+        e.g. [1, 2, 13]. Mirrors load_smarts_fits(sectors=...); see the module
+        docstring ("Patchy coverage"). None keeps the full grid (legacy output).
+        When given, params['sectors'] records the kept pattern.
 
     Returns
     -------
@@ -240,8 +257,11 @@ def make_lightcurve(
     if ramp_amplitude > 0:
         idx = np.searchsorted(orbit_starts, time, side="right") - 1
         flux += ramp_amplitude * np.exp(-(time - orbit_starts[idx]) / 0.5)
-    flux = flux - np.mean(flux[valid])
-    flux[~valid] = np.nan
+    if sectors is None:
+        flux = flux - np.mean(flux[valid])
+        flux[~valid] = np.nan
+    else:
+        time, flux, sectors = _apply_sector_pattern(time, flux, valid, orbit_starts, sectors, n_sectors)
     params = dict(period=period, amplitude=amplitude, white_noise=white_noise,
                   red_noise_sigma=red_noise_sigma, red_noise_tau_days=red_noise_tau_days,
                   n_spots=n_spots, inclination_deg=inclination_deg, shear=shear,
@@ -251,8 +271,40 @@ def make_lightcurve(
                   n_sectors=n_sectors,
                   sector_days=sector_days, ramp_amplitude=ramp_amplitude, seed=seed,
                   snr=amplitude / white_noise if white_noise > 0 else np.inf, spots=spots)
+    if sectors is not None:
+        params["sectors"] = list(sectors)
     return SyntheticLightCurve(time=time, flux=flux, true_period=float(period),
                                params=params, star_id=star_id or f"synth-{seed:06d}")
+
+
+def _apply_sector_pattern(time, flux, valid, orbit_starts, sectors, n_sectors):
+    """Keep only `sectors` of a full-year synthetic light curve (load_smarts_fits conventions).
+
+    Parameters
+    ----------
+    time, flux : full-grid arrays (flux not yet centered or NaN-masked).
+    valid : bool mask, False in orbit gaps.
+    orbit_starts : orbit start times from tess_like_time_grid.
+    sectors : 1-indexed sector numbers to keep.
+    n_sectors : sectors in the full grid.
+
+    Returns
+    -------
+    time, flux, pattern : trimmed time grid (first to last kept valid
+    cadence), flux centered on the kept data with NaN elsewhere, and the
+    pattern as a sorted list of ints.
+    """
+    pattern = sorted(set(int(s) for s in sectors))
+    if not pattern or pattern[0] < 1 or pattern[-1] > n_sectors:
+        raise ValueError(f"sectors {sectors} must be non-empty and within 1..{n_sectors}")
+    orbit = np.searchsorted(orbit_starts, time, side="right") - 1
+    keep = valid & np.isin(orbit // 2 + 1, pattern)  # same orbit->sector map as recombine_segments
+    idx = np.flatnonzero(keep)
+    sl = slice(idx[0], idx[-1] + 1)
+    time, flux, keep = time[sl], flux[sl].copy(), keep[sl]
+    flux = flux - np.mean(flux[keep])
+    flux[~keep] = np.nan
+    return time, flux, pattern
 
 
 def _smarts_shear(rng: np.random.Generator) -> float:
@@ -269,6 +321,7 @@ def make_suite(
     period_range: tuple = (0.2, 40.0),
     snr_range: tuple = (1.0, 20.0),
     n_sectors: int = 13,
+    sectors=None,
 ) -> list:
     """Generate a reproducible, varied population of synthetic light curves.
 
@@ -292,11 +345,18 @@ def make_suite(
         peaks inside compute_acf's ~0.7-baseline lag range (>= 4 where
         available), i.e. P <~ 0.3 baseline; answers relying on fewer than 4
         peaks are flagged few_peaks (since 2026-10-13; before, P <~ B/12).
+    sectors : optional coverage. None (default) = full grid, legacy output.
+        One pattern (list of ints, e.g. [1, 13]) applies to every star; a
+        length-n sequence of patterns (each a list/tuple of ints, or None
+        for full) gives star i pattern sectors[i] (e.g. from
+        coverage.sample_patterns). The star population (every RNG draw) is
+        identical whatever `sectors` is.
 
     Returns
     -------
     list[SyntheticLightCurve]
     """
+    per_star = _per_star_sectors(sectors, n)
     rng = np.random.default_rng(seed)
     out = []
     for i in range(n):
@@ -318,5 +378,18 @@ def make_suite(
             ramp_amplitude=float(rng.choice([0.0, rng.uniform(0.5, 2.0) * white])),
             seed=seed * 100000 + i,
             star_id=f"synth-s{seed}-{i:05d}",
+            sectors=per_star[i],
         ))
     return out
+
+
+def _per_star_sectors(sectors, n: int) -> list:
+    """Expand make_suite's `sectors` argument to one pattern (or None) per star."""
+    if sectors is None:
+        return [None] * n
+    seq = list(sectors)
+    if seq and all(np.isscalar(s) for s in seq):
+        return [seq] * n  # one pattern for every star
+    if len(seq) != n:
+        raise ValueError(f"per-star sectors has length {len(seq)}, expected {n}")
+    return [None if s is None else list(s) for s in seq]

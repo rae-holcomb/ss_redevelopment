@@ -62,7 +62,8 @@ All files live in a single flat package (`claude_files/` in the
 | `batch_test_acf_fft_highpass.py` | Companion script isolating `guess_acf_fft_highpass`'s per-smoothing-window behavior specifically. Possibly redundant now that `batch_test_guesses.py` auto-discovers it too — unresolved, see open issues. |
 | `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
 | `determinism.py` | Process setup for bit-reproducible runs (T14): `pin_blas_threads()` (call before importing numpy), `init_worker()` (ProcessPoolExecutor initializer), `blas_backend()`, `default_n_workers()` (one per physical P-core). Requires the OpenBLAS env `ss_openblas` (`environment.yml`); Accelerate is not reproducible. |
-| `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. |
+| `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. `sectors=[...]` keeps only those sectors of the year, with `load_smarts_fits(sectors=...)` conventions (T16a). |
+| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-2`, `gapped-2`, `3-5`, `6-12`, `full`), the real-star library (`datasets/coverage/cycle1_patterns.csv`, built by `tools/build_coverage_library.py`), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle). |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
 ### `guesses.py` in more detail
@@ -276,6 +277,9 @@ Roughly in priority order as of this writing — re-prioritize freely.
    synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
    ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
    account for noise-driven short-lag ACF structure. Task T6.
+   **Much worse on patchy coverage (T16a, 2026-10-14):** on single-sector synthetic stars, 36/100 get
+   a 0.13–0.42 d wrong answer, at every SNR (10 of the 36 have SNR > 5), and most often when P exceeds
+   the longest contiguous span. Task T16b.
 11. **Differential rotation vs the P_eq label: addressed in scoring
    (2026-10-13), still open for ML labels.** SMARTS `PERIOD` is equatorial,
    but spot-latitude periods can differ a lot (shear up to +/-1, latitudes to
@@ -448,3 +452,14 @@ chats should know:
   synth200 success 0.670 -> 0.725 with no regression guard tripped. Costs: rare red-noise long
   few-peak false positives (1/60 eval), and runtime +60% on 1-2 sectors / +30% on synth200. New benchmark `benchmarks/pb_scan.py`. See `reports/2026-10-13_acf-long-period-limit/`.
 - **2026-10-14: ACF long-period branch merged; baseline refreshed.** Post-merge `ss_openblas` run on synth200 reproduces the branch's numbers: success 0.670 → 0.725 (12 stars gained, 1 lost), >30 d 0 → 0.75, 10–30 d 0.698 → 0.767, wrong 0.055 → 0.060, declined 0.24 → 0.185. All regression guards and G8 pass. New baseline at main df7699d; previous kept as `synth200_s0_pre_acf*`. At merge, its proposals P2–P4 became P9–P11 and its open issues 13–14 became 14–15. Rae's decisions: pair-count weighting kept (re-check in T16b); factor-of-2 threshold and few-peak noise guard folded into P1; `min_valid_frac` to T16c; `baseline_days` kept with a scale note; P11 (runtime) folded into T12.
+- **2026-10-14: T16a, patchy-coverage infrastructure.** New `claude_files/coverage.py` and
+  `datasets/coverage/cycle1_patterns.csv` (121 Cycle-1 patterns with star counts from
+  `target_df_shortform.csv`: 3,438 stars, 74.2% single, 15.9% consecutive-2, 1.4% gapped-2, 4.7% 3-5,
+  2.7% 6-12, 1.1% full; supersedes `sector_configs.txt`). New `synthetic.make_lightcurve/make_suite(sectors=...)`,
+  which mirrors `load_smarts_fits(sectors=...)` exactly on the time grid and NaNs. New scorecard
+  `--coverage {full,real-weighted,<class>,pattern:...}` with `--coverage-seed`, and seven per-star coverage
+  descriptor columns. `SCORECARD_VERSION` is now 3; metrics are unchanged, and `full` keeps the v2 dataset string.
+  The default is bit-identical: synth200 matches the baseline 200/200, with only the P4 wavelet residue.
+  Demo on the same 100 stars: success 0.69 (full) → 0.28 (single) / 0.30 (gapped-2) / 0.33 (real-weighted),
+  mostly via confident ~0.2 d wrong answers (wrong 0.08 → 0.36 / 0.44 / 0.37), which extends open issue 10.
+  Proposal P12. See `reports/2026-10-14_t16a-coverage-infrastructure/`.

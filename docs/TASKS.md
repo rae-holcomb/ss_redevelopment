@@ -221,7 +221,11 @@ for confirmation (ask Rae first).
 
 #### T16a. Coverage-degradation infrastructure
 - **Agent:** `method-improver` (infrastructure only)
-- **Status:** in progress (started 2026-10-14)
+- **Status:** done, awaiting review (2026-10-14, branch `claude/t16a-coverage-infra-fe5be3`).
+  See `reports/2026-10-14_t16a-coverage-infrastructure/`. Rae to OK the new `per_star.csv`
+  columns (scorecard v3) and answer the report's open questions (library provenance, class
+  boundaries, within-class weighting). Headline for T16b: on 1 sector, 36% of synthetic stars get
+  confident ~0.2 d wrong answers.
 - **Do:**
   - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
     mirroring `load_smarts_fits(sectors=...)`.
@@ -243,8 +247,11 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** blocked on T16a
+- **Status:** blocked on T16a (infrastructure done 2026-10-14, pending review)
 - **Do:**
+  - Start from the T16a demo: `wrong` jumps from 0.08 (full) to 0.36 (single) and 0.44 (gapped-2)
+    on the same 100 stars. Every single-sector wrong answer is 0.13-0.42 d, at all SNRs (open
+    issues 10/15 amplified). Explain this first.
   - Run the scorecard across coverage classes: 1 sector; 2 consecutive;
     2 non-consecutive; 3–5 gapped; ≥ 6.
   - Map per-method recall/success and final success against P relative to the
@@ -494,6 +501,9 @@ for confirmation (ask Rae first).
   `scipy.fft` (pocketfft plan cache) or the bounded `curve_fit` in
   `_fit_and_subtract_gaussian`. Low priority; until it's explained, T12 can compare
   wavelet candidates with rtol=1e-9.
+  **T16a (2026-10-14) adds:** the residue also changes wavelet's candidate *count*: star 00058
+  gave 6, 7 or 8 in different invocations of the same code, and top-1 on 00038 shifted by
+  1.5e-10. So rtol alone won't make T12's per-method check pass; compare top-1 only, or skip wavelet.
 
 ### P5. Re-verify determinism and the default worker count on Apple Silicon
 - **Proposed by:** T14 report (2026-10-14)
@@ -553,3 +563,12 @@ for confirmation (ask Rae first).
   fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
+
+### P12. Coverage library from a better-defined target sample (and the northern sky)
+- **Proposed by:** T16a report (2026-10-14)
+- **Idea:** `datasets/coverage/cycle1_patterns.csv` comes from `target_df_shortform.csv`, whose
+  selection is unknown. It is Cycle 1 only, so southern only, and drops the 4,718 of 8,156 stars
+  observed only later. Rebuild it from a defined sample (e.g. all 2-min targets, or a magnitude-limited
+  FFI sample from TESS-point) for Cycle 1 and Cycle 2 separately. Compare class fractions, and pass the
+  file with `--coverage-library`. `tools/build_coverage_library.py` only needs a table with a `sec`
+  column; for Cycle 2, map sectors 14-26 to 1-13.
