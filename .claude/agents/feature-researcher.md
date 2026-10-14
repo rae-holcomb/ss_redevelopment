@@ -14,7 +14,10 @@ their rationale) and `claude_files/ml_features.py` first.
    alias-discrimination metrics (for example McQuillan+ ACF heights,
    Santos+ ROOSTER/G_ACF, Ceillier+ CS, Reinhold+, Lu+ 2022 Gaussian-process
    and ML approaches, Claytor+ 2024 CNN, Breimann+ 2021, half-period
-   detection methods). For each idea, record the citation, the definition,
+   detection methods). Only describe a paper you have actually read or fetched
+   this session. If you can't access it, list the citation as **unverified with
+   no description**. Never fill in a description from memory (T9 described
+   Breimann+2021 wrongly that way). For each idea, record the citation, the definition,
    the failure mode it targets, and whether we already have it.
 2. **Empirical.** Using scorecard `per_star`/`per_method` outputs and
    `extract_candidate_features` on synthetic or dev data, look at where the
