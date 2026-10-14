@@ -285,6 +285,17 @@ Roughly in priority order as of this writing — re-prioritize freely.
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
    quick hand-tuned fix (TASKS.md P1).
+13. **Long periods on short baselines: addressed 2026-10-13, edges remain.** The comb
+   fit used to need >= 4 ACF peaks within B/3 (P <~ B/12), so most 1-2 sector TESS stars
+   could never get a period above ~2-5 d. It now reaches P ~ 0.3 B (see changelog).
+   Still open: (a) P = B/3 sits on the ACF coverage edge (min_valid_frac=0.3 -> ~0.67 B);
+   (b) few-peak (`few_peaks=True`) answers have no extra noise guard, and red noise produced
+   2/30 long few-peak false positives on dev seeds; (c) the factor-2 guard's 0.7 ratio
+   threshold is hand-set; (d) `guess_acf_fft` misbehaves on long ACFs (hence two-view Stage 1).
+14. **The comb's lag-0 tooth is an implicit noise filter (found 2026-10-13).** For short
+   candidate periods, `_grid_search_t0` puts the n=0 tooth on the trivial lag-0 ACF peak. Removing
+   it everywhere made 5 low-SNR synth200 stars return confident ~0.2-0.5 d answers. This
+   is likely part of open issue 10's mechanism, and any T6 fix should account for it.
 
 ---
 
@@ -378,3 +389,13 @@ chats should know:
   46% correct + 21% diffrot; 3.5% alias, 5.5% wrong, 24% declined. Declines are
   now the main loss: high-SNR and solar-like-shear stars get rejected by the
   gates (draft goal G7). See `reports/2026-10-13_synthetic-baseline-v2-diffrot/`.
+- **2026-10-13: Long-period ACF limit lifted (P up to ~B/3).** `compute_acf` now reaches
+  ~0.7 B (pair-coverage cut is the real limit) and can return per-lag pair counts. The comb fit's
+  peak gate is adaptive (clamp(teeth in range, 2, 4)), and relaxed answers carry
+  `few_peaks`/`n_teeth_available`, as Rae requested. Also added: a factor-of-2 guard (half-tooth height
+  ratio instead of redchi for ~2x pairs); the lag-0 tooth skipped for unsaturated combs; decayed trailing
+  teeth trimmed; no MAD rejection below the required count; sqrt(pair-count) residual weights (measured
+  neutral); window decimation to <= 100 points (speed); two-view Stage 1 (guessers keep the B/3 ACF,
+  plus out-of-reach long candidates from the 0.7 B ACF, `STAGE1_MAX_LAG_FRAC`). Result: P/B scan
+  correct at 0.10-0.33 went 0.00 -> 0.90; synth200 success 0.670 -> 0.725 with no regression guard
+  tripped. New benchmark `benchmarks/pb_scan.py`. See `reports/2026-10-13_acf-long-period-limit/`.

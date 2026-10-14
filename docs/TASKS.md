@@ -80,7 +80,10 @@ for confirmation (ask Rae first).
   tripped.
 
 ### T6. Long-period recovery and honest failure (>10 d)
-- **Status:** ready
+- **Status:** in progress. Long-period half done on branch `claude/angry-einstein-cb10da`
+  (report `reports/2026-10-13_acf-long-period-limit/`: P up to ~B/3, synth200 >30 d success
+  0 -> 0.75). The low-SNR ~0.2-0.5 d wrong-answer half (open issue 10) is still open; see open issue 14
+  for a clue.
 - **Goal:** understand final-answer failures at long P: how many are the
   baseline limit (<4 ACF peaks in 1/3 baseline) versus fixable. Consider whether
   the 1/3-baseline ACF lag cap or `min_peaks_required=4` should adapt.
@@ -163,3 +166,14 @@ for confirmation (ask Rae first).
   (e.g. weighting cross-method support `n_contributing_methods`, penalizing
   candidates whose multiples also fit well) and measure them against G4.
 
+### P2. Make the P/B scan a standard benchmark with its own goal
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** `benchmarks/pb_scan.py` (P set as a fraction of the baseline, 1/2/13 sectors, plus 120
+  noise LCs) probes the short-baseline regime that synth200 (13 sectors) barely touches. Candidate
+  goal: correct >= 0.8 at P/B 0.10-0.30 on 1-2 sectors, with white/red noise FP not above baseline.
+
+### P3. Noise guard for few-peak answers
+- **Proposed by:** ACF long-period report (2026-10-13)
+- **Idea:** red noise occasionally yields long `few_peaks` false positives (2/30 on dev seeds). Raw
+  ACF peak height and PDM theta separated them cleanly from true few-peak detections on the
+  handful of cases seen. Test a gate on a larger noise set, or leave it to the ranker.
