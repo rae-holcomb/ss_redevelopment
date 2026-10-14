@@ -49,6 +49,7 @@ from typing import Callable, Optional, Union
 import numpy as np
 from scipy.optimize import least_squares as scipy_least_squares
 
+from alias_metrics import acf_window_max, half_lag_contrast_terms
 from guesses import InitialGuess
 
 
@@ -1244,6 +1245,12 @@ class CandidateResult:
     # otherwise dict(partner_P, half_tooth_ratio, preferred) where preferred
     # is "short" or "long" for that pair.
     alias_guard: Optional[dict] = None
+    # T18 (2026-10-14): True if the candidate passed the four original
+    # comb-shape gates (peaks, positive heights, height SNR, vertex in
+    # window). passed_gates additionally requires the half-lag consistency
+    # gate and the few-peak ACF-height guard (see fit_rotation_period), so
+    # passed_base_gates and not passed_gates = "rejected by a T18 gate".
+    passed_base_gates: bool = False
 
 
 @dataclass
@@ -1400,6 +1407,10 @@ def fit_rotation_period(
     alias_rel_tol: float = 0.1,
     trim_decayed_tail: bool = True,
     max_points_per_window: Optional[int] = 100,
+    half_lag_gate: bool = True,
+    half_lag_strong_contrast: float = 0.1,
+    half_lag_fallback_min: Optional[float] = None,
+    few_peaks_min_acf_height: Optional[float] = 0.4,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -1495,6 +1506,29 @@ def fit_rotation_period(
            EVERY window's vertex has drifted away by a large amount (the
            actual near-lag-0 pathology this gate exists to catch).
 
+    4b. Two further gates (T18, 2026-10-14; see
+       reports/2026-10-14_t18-arbitration-gates/):
+         - half-lag consistency (half_lag_gate=True): with h(x) the raw
+           ACF maximum within +/- 0.1 P of lag x, EVERY term
+           h(kP) - h((k-1/2)P), k = 1..6 in range, must be > 0, OR their
+           mean (the T9 ML feature acf_half_lag_contrast) must be >=
+           half_lag_strong_contrast. A real period puts every half-lag in
+           a trough (or on a lower secondary peak); the ~0.2-0.5 d "noise
+           combs" that used to pass every comb-shape gate on red noise and
+           low-SNR stars (open issues 10, 15) have terms scattered around
+           zero, and a 2P alias has half-lags on true peaks. On synth200
+           seed 0 every wrong/alias answer failed this test.
+         - few-peak ACF height (few_peaks_min_acf_height): a few_peaks
+           candidate (relaxed peak gate, 2-3 teeth) must also have a raw
+           ACF maximum within +/- 0.1 P of lag P of at least this much.
+           Long red-noise false positives (open issue 14b) had 0.12-0.29;
+           true few-peak detections >= 0.7 on the P/B scan.
+       If nothing passes and half_lag_fallback_min is not None, candidates
+       that pass the original four gates and the few-peak guard, with
+       mean contrast > half_lag_fallback_min, are used instead (a softer,
+       higher-success / more-wrong-answers operating point; see the T18
+       report). Default None = decline.
+
     5. Among candidates that pass all gates, pick the one with the
        lowest reduced chi-squared -- the tightest joint fit. Candidates
        are returned sorted this way (passed candidates first, each
@@ -1539,6 +1573,18 @@ def fit_rotation_period(
     trim_decayed_tail : forwarded to _fit_single_candidate (drop a trailing
         run of non-positive teeth past the spot-coherence time; step 4b
         there).
+    half_lag_gate : apply the half-lag consistency gate (step 4b). False
+        restores the pre-T18 gating.
+    half_lag_strong_contrast : a candidate whose mean half-lag contrast
+        (acf_half_lag_contrast) is at least this passes the consistency
+        gate even if one term is <= 0 (e.g. a decaying double-dip ACF).
+        Results were flat for 0.05-0.3 on the T18 dev sets.
+    half_lag_fallback_min : None (default) = decline when no candidate
+        passes the T18 gates. A float enables the fallback tier of step 4b
+        (candidates passing the original gates and the few-peak guard with
+        mean contrast > this value); 0.0 is the T18 report's option D.
+    few_peaks_min_acf_height : minimum raw ACF height near lag P for
+        few_peaks candidates (step 4b); None disables the guard.
     alias_guard, alias_ratio_threshold, alias_rel_tol : factor-of-2 guard
         (step 5). Pairs are ~2x related if their fitted-period ratio is
         within alias_rel_tol (relative) of 2; the long period wins if the
@@ -1672,17 +1718,32 @@ def fit_rotation_period(
                 max_points_per_window=max_points_per_window,
             )
             diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
-            passed = (
+            base_passed = bool(
                 fit.n_peaks_used >= n_required
                 and diag["frac_positive_heights"] >= min_frac_positive_heights
                 and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
                 and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
             )
+            # T18 gates (step 4b), evaluated at the fitted period
+            terms = half_lag_contrast_terms(acf_lags, acf, fit.P)
+            hlc = float(np.mean(terms)) if terms.size else float("nan")
+            diag["acf_half_lag_contrast"] = hlc
+            diag["half_lag_min_term"] = float(np.min(terms)) if terms.size else float("nan")
+            diag["acf_height_at_P"] = acf_window_max(acf_lags, acf, fit.P, 0.1 * fit.P)
+            consistent = bool(terms.size and (np.min(terms) > 0 or hlc >= half_lag_strong_contrast))
+            few_ok = bool(
+                not few or few_peaks_min_acf_height is None
+                or diag["acf_height_at_P"] >= few_peaks_min_acf_height  # NaN -> False
+            )
+            diag["passes_half_lag_gate"] = consistent
+            diag["passes_few_peaks_height"] = few_ok
+            passed = base_passed and few_ok and (consistent or not half_lag_gate)
             results.append(CandidateResult(
                 period=guess.P0, t0=t0, source_guess=guess, fit=fit,
                 diagnostics=diag, passed_gates=bool(passed),
                 n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
                 n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
+                passed_base_gates=base_passed,
             ))
         except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
             results.append(CandidateResult(
@@ -1708,6 +1769,18 @@ def fit_rotation_period(
             n_candidates_tried=len(deduped), failed_candidates=failed,
         )
 
+    # Optional fallback tier (step 4b): nothing passed the T18 gates, so
+    # accept candidates that pass the original gates + few-peak guard with
+    # a positive-enough mean half-lag contrast.
+    fallback = False
+    if half_lag_gate and half_lag_fallback_min is not None and not any(r.passed_gates for r in fit_ok):
+        for r in fit_ok:
+            d = r.diagnostics
+            if (r.passed_base_gates and d["passes_few_peaks_height"]
+                    and np.nan_to_num(d["acf_half_lag_contrast"], nan=-np.inf) > half_lag_fallback_min):
+                r.passed_gates = True
+                fallback = True
+
     def _sort_key(r):
         redchi = r.fit.redchi if np.isfinite(r.fit.redchi) else np.inf
         return (r.passed_gates, -redchi)
@@ -1725,7 +1798,9 @@ def fit_rotation_period(
                 f"{min_peaks_required} (relaxed to >=2 for long periods with fewer teeth in range), min_frac_positive_heights="
                 f"{min_frac_positive_heights}, min_mean_height_snr="
                 f"{min_mean_height_snr}, min_frac_vertex_in_window="
-                f"{min_frac_vertex_in_window}). The closest attempt was P="
+                f"{min_frac_vertex_in_window}, plus the half-lag consistency gate "
+                f"(half_lag_gate={half_lag_gate}) and few-peak ACF height >= "
+                f"{few_peaks_min_acf_height}). The closest attempt was P="
                 f"{best.fit.P:.4g} (n_peaks_used={best.fit.n_peaks_used}, "
                 f"frac_positive_heights={best.diagnostics['frac_positive_heights']:.2f}, "
                 f"mean_height_snr={np.nanmean(best.diagnostics['height_snr']):.2f}, "
@@ -1750,7 +1825,9 @@ def fit_rotation_period(
         success=True,
         message=(
             f"Selected P={best.fit.P:.4g} from {len(passing)} candidate(s) "
-            f"that passed reliability gates (of {len(deduped)} tested)."
+            f"that passed reliability gates (of {len(deduped)} tested)"
+            + (" -- via the half-lag fallback tier (no candidate passed the "
+               "half-lag consistency gate)." if fallback else ".")
         ),
         best_fit=best.fit,
         best_guess=InitialGuess(P0=best.period, t0=best.t0, method="ensemble_best"),

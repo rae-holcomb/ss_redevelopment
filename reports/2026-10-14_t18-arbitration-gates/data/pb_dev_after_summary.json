@@ -1,0 +1,365 @@
+{
+  "cells": {
+    "1s_0.02": {
+      "correct": 0.8333333333333334,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.16666666666666666,
+      "n": 6
+    },
+    "1s_0.04": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.07": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.10": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.13": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.17": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.20": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.25": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.30": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.33": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "1s_0.40": {
+      "correct": 0.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 1.0,
+      "n": 6
+    },
+    "2s_0.02": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.04": {
+      "correct": 0.8333333333333334,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.16666666666666666,
+      "n": 6
+    },
+    "2s_0.07": {
+      "correct": 0.8333333333333334,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.16666666666666666,
+      "n": 6
+    },
+    "2s_0.10": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.13": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.17": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.20": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.25": {
+      "correct": 0.8333333333333334,
+      "diffrot": 0.0,
+      "half": 0.16666666666666666,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.30": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "2s_0.33": {
+      "correct": 0.6666666666666666,
+      "diffrot": 0.0,
+      "half": 0.16666666666666666,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.16666666666666666,
+      "n": 6
+    },
+    "2s_0.40": {
+      "correct": 0.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 1.0,
+      "n": 6
+    },
+    "13s_0.02": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.04": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.07": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.10": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.13": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.17": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.20": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.25": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.30": {
+      "correct": 1.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.33": {
+      "correct": 0.8333333333333334,
+      "diffrot": 0.0,
+      "half": 0.16666666666666666,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 0.0,
+      "n": 6
+    },
+    "13s_0.40": {
+      "correct": 0.0,
+      "diffrot": 0.0,
+      "half": 0.0,
+      "double": 0.0,
+      "wrong": 0.0,
+      "none": 1.0,
+      "n": 6
+    }
+  },
+  "noise_false_positive": {
+    "overall": 0.0,
+    "n": 60,
+    "by_sectors": {
+      "1": 0.0,
+      "2": 0.0,
+      "13": 0.0
+    },
+    "white": 0.0,
+    "red": 0.0
+  },
+  "overall": {
+    "correct_all": 0.8737373737373737,
+    "correct_PB_le_0.33": 0.9611111111111111,
+    "correct_PB_le_0.07": 0.9444444444444444,
+    "alias_all": 0.015151515151515152,
+    "wrong_all": 0.0
+  },
+  "runtime_seconds": {
+    "1": {
+      "median_total": 1.3361752569908276,
+      "p90_total": 2.0557813464838546,
+      "median_fit": 1.3260913044941844,
+      "p90_fit": 2.0487290434975876
+    },
+    "2": {
+      "median_total": 1.8166654244996607,
+      "p90_total": 2.8254646104905987,
+      "median_fit": 1.799413785993238,
+      "p90_fit": 2.80024079947907
+    },
+    "13": {
+      "median_total": 2.6082806670019636,
+      "p90_total": 3.7523996840027394,
+      "median_fit": 2.5111793724936433,
+      "p90_fit": 3.617935228496208
+    }
+  },
+  "config": {
+    "n_per_cell": 6,
+    "n_noise": 20,
+    "fracs": [
+      0.02,
+      0.04,
+      0.07,
+      0.1,
+      0.13,
+      0.17,
+      0.2,
+      0.25,
+      0.3,
+      0.33,
+      0.4
+    ],
+    "seed_offset": 500,
+    "fit_kwargs": {},
+    "sectors": [
+      1,
+      2,
+      13
+    ],
+    "wall_seconds": 245.2750449180603,
+    "code_root": "/Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t18-arbitration-gates-39b00d"
+  }
+}

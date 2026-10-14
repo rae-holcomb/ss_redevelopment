@@ -884,6 +884,15 @@ Throughout, h(x) = maximum of the raw ACF within +/- 0.1*P of lag x (NaN if
 that window is not entirely inside the ACF lag range). The ACF is
 normalized to 1 at lag 0, so these are in raw ACF units.
 
+Implementation note (T18, 2026-10-14): the ACF-window and fold helpers now
+live in claude_files/alias_metrics.py (moved verbatim; values are pinned
+bit-for-bit by tests/test_alias_metrics.py) because comb_fit's arbitration
+also uses them: acf_half_lag_contrast's individual terms drive the
+half-lag consistency gate and acf_height_at_P the few-peak guard in
+fit_rotation_period. Feature definitions are unchanged. Training data
+generated with those gates on will have few candidates in the gated region;
+see reports/2026-10-14_t18-arbitration-gates/ (open question 4).
+
 --------------------------------------------------------------------------
 acf_height_at_P
 --------------------------------------------------------------------------

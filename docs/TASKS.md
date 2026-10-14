@@ -173,7 +173,12 @@ for confirmation (ask Rae first).
 
 ### T18. Arbitration and reliability gates (promoted from P1, 2026-10-14)
 - **Agent:** `method-improver`
-- **Status:** in progress (started 2026-10-14)
+- **Status:** done, awaiting review (2026-10-14). Half-lag consistency gate + few-peak ACF-height guard
+  (new defaults). synth200 seed 0: success 0.725 → 0.730, wrong 0.060 → 0, alias 0.030 → 0, declined
+  0.185 → 0.270; seed 1 (held out): 0.700 → 0.710, wrong 0.090 → 0.015, alias 0.050 → 0.005, declined
+  0.160 → 0.270. pb_scan red-noise FP 21/60 → 0/60 (eval). check_goals PASS. Factor-2 threshold and
+  cross-method weighting unchanged (measured neutral). Strict-vs-softer (option D) decision left to Rae.
+  See `reports/2026-10-14_t18-arbitration-gates/`; follow-ups P12–P14.
 - **Why:** Stage 1 lists a success period for 88–100% of stars per bin, but the final
   answer succeeds for only 65–86% (open issue 12). 30/36 of the lost stars fail the
   *gates* (T9). Meanwhile red noise gets a confident period 22/60 times in
@@ -553,3 +558,22 @@ for confirmation (ask Rae first).
   fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
+
+### P12. Mis-phased comb fits of slightly-off candidates
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** synth-s0-00144 (P = 0.531 d, SNR 14) has clean ACF peaks, but its only near-true candidate
+  (P0 = 0.502, 5% off) is fitted with teeth walking off the peaks and fails the vertex gate (T18 report,
+  example 5). Try refining P0 (e.g. from the ACF peak spacing or a local comb_score scan) before the
+  t0 grid search, and measure how many vertex-gate declines it rescues without admitting noise combs.
+
+### P13. TESS orbit-period (13.7 d) false answers
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** after T18, 2 of the 3 remaining wrong answers on synth200 seed 1 are ~13.6-13.7 d for
+  P < 1 d stars: an orbit-gap / ramp periodicity that passes every gate. Relates to T8 / open issue 7.
+  Consider flagging or penalizing candidates within a few % of the orbital period (or its multiples)
+  when the light curve has orbit ramps.
+
+### P14. Stage 1 recall for short-period stars with no success candidate
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** 28 of the 55 lost seed-0 stars have no fitted success candidate at all (24 at P < 1.6 d,
+  SNR 1-18), so no arbitration change can recover them. Feed into T5 (short-period recovery).
