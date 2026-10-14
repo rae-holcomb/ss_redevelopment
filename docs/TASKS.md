@@ -237,6 +237,12 @@ for confirmation (ask Rae first).
 - **Prerequisite:** T1/T2 (real data + dev sets). The scorecard's `diffrot`
   outcome already tags stars where we measured a non-equatorial spot period.
 
+### F2. Re-validate on the Apple Silicon workstation (when Rae switches)
+- **Trigger:** Rae moves back to the 14-core Apple Silicon machine.
+- **Do:** build the env from `environment.yml`, run `pytest`, re-check scorecard
+  determinism (T14), re-time the pipeline (T12 profiler) and choose `--n-workers`
+  for 10 P-cores. Update CLAUDE.md's Hardware section.
+
 ## Proposed (agents add here; Rae promotes)
 
 ### P1. Quick arbitration improvement before the ML ranker

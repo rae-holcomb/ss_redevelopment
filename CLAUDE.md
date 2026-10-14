@@ -57,12 +57,23 @@ packages.
 
 ## Hardware
 
-14-core machine: 10 Performance cores, 4 Efficiency cores.
+**Current main workstation (as of 2026-10-14): Intel Core i5-1038NG7 MacBook,
+4 physical cores / 8 threads, x86_64.** Everything is developed and timed
+here for now. Rae plans to move back to a 14-core Apple Silicon machine
+(10 P-cores + 4 E-cores) later. When that happens, re-time the pipeline and
+re-verify scorecard determinism there (task T14 found that Accelerate-BLAS
+results depend on memory alignment).
+
 Use parallel processing for batch scripts when reasonable
-(`ProcessPoolExecutor`, `DEFAULT_N_WORKERS=10` targeting P-cores,
-`--n-workers 1` as a debugging fallback, `--n-workers` as a CLI override
-generally). Batch jobs at real scale (hundreds to thousands of files) are
-always run locally by Rae, not inside a Claude Code session.
+(`ProcessPoolExecutor`, `--n-workers` CLI override, `--n-workers 1` as a
+debugging fallback). Older scripts hardcode `DEFAULT_N_WORKERS=10`, which was
+tuned for the Apple Silicon machine and oversubscribes the i5. T14 is
+benchmarking 4/8/10 workers and will set the default. Pin BLAS threads to
+1 per worker, or OpenBLAS × many workers can run ~50× slower. Batch jobs at
+real scale (hundreds to thousands of files) are always run locally by Rae,
+not inside a Claude Code session. Timings in reports dated 2026-10-13
+(e.g. "1.16 s/star", "322 CPU-hours per 1M stars") were measured on the i5
+with 10 workers.
 
 ## Working conventions
 
