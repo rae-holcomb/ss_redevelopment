@@ -182,6 +182,17 @@ Availability is no constraint. Even the smallest cell, P < 1 d × amplitude terc
 4. **Should SMARTS_REFERENCE.md record the OVERLAP bound as max(CYCLE, √10)?** I added it as confirmed-from-catalog. Butterpy's generator would explain the √10, but I didn't check the source.
 5. **Suspicious, not resolved:** the 4/50 files with a 36-day end-fill and 4/50 with a 29-day start-fill (galaxies missing whole sectors). Should coverage strata use the *native* missing sectors as well as the T16a patterns?
 
+## Rae's answers (2026-10-15)
+
+1. Dev and holdout sharing galaxies: **acceptable.**
+2. Band-disjoint stars: **keep them everywhere, including training, and track them** (manifest
+   columns `band_disjoint`, `band_extends`, `P_lo`, `P_hi`). They're a case study for how far a
+   measured period can sit from the governing physical periods; proposed as P17.
+3. Corrupt-noise files: **exclude** from dev sets and holdout, as long as the pool stays large and
+   diverse. It does: the >= 800k pool drops to ~176k and the smallest stratum from 73 to ~64.
+4. Native missing sectors: clarified in conversation; the recommendation is to record each file's
+   natively usable sectors in the manifests and pick T16f coverage patterns from those.
+
 ## Phase 2 (if needed): full-corpus scan, for Rae to run locally
 
 - **Bundle index** (member names and sizes for all 180 bundles, resumable; ~17–18 min of drive time):

@@ -44,6 +44,17 @@ report (`write-report` skill) and, if code changed, a before/after
   Number". SIM_ID >= 800,000 uses a disjoint galaxy-noise pool: draw holdout (and dev) from it,
   train on SIM_ID < 800k. ~12% of galaxies have corrupt orbits. Plan, strata and sizes in
   `reports/2026-10-15_t1-smarts-catalog-audit/` ("Recommendations for T2").
+- **Rae's decisions (2026-10-15, on the T1 phase 1 open questions):**
+  - Dev and holdout may share galaxies (both from SIM_ID >= 800k); no galaxy IDs needed for T2.
+  - **Keep "band disjoint" stars** (whole active band outside P_eq +/-10%, ~15%) in every set,
+    including ranker training, and **track them**: every manifest gets `band_disjoint`,
+    `band_extends`, `P_lo`, `P_hi` columns (from `evaluation.active_band_period_range`), so they
+    can be analysed as their own case (see P17). Don't stratify them away.
+  - **Exclude files with corrupt galaxy noise** (raw max |flux - 1| > 0.1) from the dev sets and
+    holdout. Costs ~12% of the pool (>= 800k pool ~176k left; smallest stratum 73 -> ~64), so
+    diversity is fine. Practical route without a full scan: check each drawn file at extraction
+    (`tools/audit/flux_outliers.scan`) and redraw replacements from the same stratum; log the
+    excluded rows.
 - **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
   not just full-year light curves. See T16f.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
@@ -574,4 +585,14 @@ for confirmation (ask Rae first).
   ≤ 0.06 even when restricted near P) because galaxy red noise dominates. Quantify per-file
   injected amplitude vs galaxy noise at P < 3 d on dev_small once T2 lands, and feed it into T3's
   realism check (synthetic SNR may be optimistic at short P).
+
+### P17. Case study: stars whose spot periods never include P_eq
+- **Proposed by:** T1 phase 1 report (2026-10-15), Rae's request
+- **Idea:** ~15% of SMARTS stars have their whole active-band period range outside P_eq +/-10%
+  (strong shear, high-latitude spots). They stay in training as a physically real case. Once dev
+  sets and pipeline runs exist: measure how far the reported period sits from P_eq and from the
+  band (P_lo..P_hi) as a function of shear and latitudes, how often it lands in the band vs wrong,
+  and whether any star-level or candidate-level features (e.g. ACF peak drift, wavelet spread,
+  per-sector period scatter) distinguish this case. Needs the `band_disjoint`/`P_lo`/`P_hi`
+  manifest columns from T2.
 
