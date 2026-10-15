@@ -33,8 +33,19 @@ Columns: `pattern`, `n_stars`, `frac_stars`, `n_sectors`, `consecutive`, `class`
 - **Southern ecliptic only.** Cycle 1 pointed south: every star in the library has
   ecliptic latitude between −89° and −6°. Northern-hemisphere patterns (Cycle 2)
   may differ, for example in how many CVZ stars there are.
-- **Unknown target selection.** How `target_df_shortform.csv`'s 8,156 stars were
-  chosen isn't recorded (Rae to confirm).
+- **Target selection (Rae, 2026-10-15).** `target_df_shortform.csv` comes from a
+  separate analysis by Rae: the few thousand **brightest stars in TESS**, with the sector
+  coverage at each star's sky position computed with **`tess-point`**. It was intended as a
+  guide to typical sector-coverage patterns. Consequences:
+  - The patterns describe **geometric (FFI) coverage at the sky positions of bright stars**.
+    That's the right notion for SMARTS, which emulates FFI light curves. It doesn't
+    reflect any target-list or 2-min-cadence selection.
+  - Brightness itself doesn't change the coverage. The sample's coverage mix follows the
+    sky distribution of bright stars (concentrated toward the Galactic plane), which may
+    differ somewhat from fainter or field-star populations. Ecliptic latitude, which sets
+    the CVZ and overlap fraction, is the main driver.
+  - `tess-point` reports *on-silicon* geometry. It doesn't model data gaps, bad orbits or
+    stars falling in CCD gaps beyond its footprint model.
 - **No multi-year gaps.** SMARTS spans one year, so revisit gaps between cycles
   can't be emulated (see TASKS.md D2).
 - For 37 stars (0.45%), `num_s` differs from `len(sec)` in the input table. The

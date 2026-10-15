@@ -156,6 +156,10 @@ Median s/star at 2 workers: 3.51 (full), 0.62 (single), 0.90 (gapped-2), 1.00 (r
 
 ## Open questions for Rae
 1. **`target_df_shortform.csv` provenance.** How were these 8,156 stars selected (magnitude cut? a rotation catalog's cross-match? CVZ-heavy?) The library inherits that selection. Known biases: Cycle 1 only, southern sky only, and stars observed only after Cycle 1 dropped (4,718 of 8,156). Should we build a Cycle-2 (northern) library too? Or a library from a better-defined target list, e.g. all 2-min targets or a magnitude-limited FFI sample?
+   **Answered (Rae, 2026-10-15):** the few thousand brightest TESS stars, with sector coverage
+   from `tess-point` at each sky position, meant as a guide to typical coverage patterns. So the
+   library is geometric FFI coverage at bright-star positions, which suits SMARTS (FFI). See
+   `datasets/coverage/README.md`. The Cycle-2 / northern-library question remains open.
 2. **Class boundaries.** Keep the six classes, or split `3-5` into consecutive (127 stars) and gapped (33)? And should `1-13` (21 of 49 `gapped-2` stars, an 11-month gap) be its own case? It behaves very differently from `5-7`.
 3. **Within-class sampling.** It's uniform over patterns as specified, so `gapped-2` draws `1-13` 10% of the time instead of 43%. `--coverage-weighting frequency` is available. Which should T16b and T16f use by default?
 4. **Approve the new `per_star.csv` columns** (the task asked for your OK): `n_sectors, sectors, coverage_class, total_baseline_days, longest_contiguous_days, largest_gap_days, duty_cycle`, plus `meta_sectors_requested` for FITS. The scorecard version is bumped to 3. `GAP_SPLIT_DAYS = 5` defines "contiguous". Is that right for real SMARTS gaps, where some Cycle-1 interruptions are 2–4 d?
