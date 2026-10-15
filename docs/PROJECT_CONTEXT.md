@@ -524,4 +524,6 @@ chats should know:
   T18's gates turned the pre-T18 patchy-coverage wrong answers (0.36–0.44) into declines. The open problem is
   now over-declining on short data: half the single-sector stars under 1 d are declined. See T16b and the T16a
   report. Rae deferred Year 8+ coverage (irregular pointings).
+- **2026-10-15: T16a open questions closed (Rae).** Keep `fit_to_year`'s truncation of over-long Year-4–6
+  patterns (635 star-seasons), and keep pooling years in proportion to their star counts.
 

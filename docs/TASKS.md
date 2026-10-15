@@ -256,10 +256,8 @@ for confirmation (ask Rae first).
   - 3-5 / 6-12 split into consecutive/gapped;
   - libraries extended to TESS Years 1–7, with `all_cycles_patterns.csv` as the default;
   - within-class sampling first uniform, then **frequency-weighted** (now the default) once Years 1–7 were pooled.
-- **Still pending Rae:**
-  - (1) truncate, shorten-the-gap, or exclude the 635 over-long Year-4–6 star-seasons. Context: Years 4–6 are
-    376–434 d long with normal ~27-d sectors.
-  - (2) when pooling years, weight by stars per year (current) or equally per year.
+- **Settled (Rae, 2026-10-15):** keep truncating the 635 over-long Year-4–6 star-seasons (Years 4–6 are 376–434 d
+  long with normal ~27-d sectors), and keep pooling years in proportion to their star counts. No open questions remain.
 - **Deferred (Rae, 2026-10-15):** Year 8+ (S97+, irregular ~13–58 d pointings). It needs a tess-point rerun and
   a days-based, not sector-index, mapping.
 - **Headline for T16b:** before T18, 36% of single-sector synthetic stars got confident ~0.2 d wrong answers.

@@ -23,7 +23,7 @@ patchy coverage.
   - **Shifted:** a pattern that spans ≤ 13 sectors but ends after sector 13 is moved
     earlier, keeping its spacing. This affects 446 Cycle-4, 347 Cycle-5 and 404 Cycle-6
     star-seasons.
-  - **Truncated:** a pattern spanning > 13 sectors keeps its 13-sector window with the
+  - **Truncated** (kept as the policy, Rae 2026-10-15): a pattern spanning > 13 sectors keeps its 13-sector window with the
     most sectors. This affects 610 Cycle-4 and 25 Cycle-6 star-seasons, losing 1–2 sectors
     each (median 1).
   - `n_shifted` / `n_truncated` record this per pattern.
@@ -34,7 +34,7 @@ patchy coverage.
   (`--coverage-weighting frequency`, the default). Rae first chose uniform sampling to avoid
   tuning to Year 1's mix, then switched to weighted once the library pooled Years 1–7
   (2026-10-15). `uniform` is still available. With the pooled library, weighting is
-  proportional to each year's star count in the input table (Years 5 and 7 have ~4,000 each,
+  proportional to each year's star count in the input table (kept, Rae 2026-10-15) (Years 5 and 7 have ~4,000 each,
   Year 2 ~2,600).
 - **Sector and year lengths:** from the TESS Science Office orbit times
   (`https://tess.mit.edu/public/files/TESS_orbit_times.csv`, fetched 2026-10-15). Sectors keep
