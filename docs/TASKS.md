@@ -216,6 +216,9 @@ for confirmation (ask Rae first).
   (`half_lag_fallback_min=0.0`) on SMARTS dev_small (P8). Its other open questions
   (restating G7, factor-2 ratio 0.7 vs 0.8, training data with `half_lag_gate=False`) are
   still pending Rae.
+- **Caveat found 2026-10-15 (T16a demo rerun):** the strict gates were tuned on *full-year* data, and on
+  single-sector coverage they decline many measurable short-period stars (see the T16b priority finding).
+  Re-evaluate strict vs option D **per coverage class**, not just on dev_small overall.
 - **Why:** Stage 1 lists a success period for 88–100% of stars per bin, but the final
   answer succeeds for only 65–86% (open issue 12). 30/36 of the lost stars fail the
   *gates* (T9). Meanwhile red noise gets a confident period 22/60 times in
@@ -298,6 +301,16 @@ for confirmation (ask Rae first).
   new columns.
 
 #### T16b. How do candidate methods degrade with coverage?
+- **Priority finding (T16a, 2026-10-15): T18's gates are too strict on short coverage.**
+  - On one sector, T18 turned wrong answers into declines: wrong went 0.36 → 0.00, but 70% are now declined.
+  - Of 73 full-year successes among 100 stars, single-sector coverage declines 43, including
+    5 at <1 d, 6 at 1–3 d and 8 at 3–10 d. Those short-period losses shouldn't be coverage-limited.
+  - The 10–30 d and >30 d losses are expected.
+  - The pipeline message doesn't say which gate fired. **First step:** instrument and identify the
+    responsible gate(s) per declined star (half-lag consistency, few-peak height, n_peaks, vertex-in-window,
+    height SNR), then propose coverage-aware thresholds (e.g. scaled by teeth available or cycles
+    observed) for T16d, without bringing back the ~0.2 d noise answers T18 removed.
+  - Also check: the comb_fit `decline reason` should name the failing gates (useful for D1 and debugging).
 - **Update 2026-10-15:** use the pooled all-cycles library (single-season patterns from every TESS year),
   report by coverage class *and* by year/hemisphere, and include T18's gates (check the ~0.2 d single-sector
   wrong answers T16a found).
