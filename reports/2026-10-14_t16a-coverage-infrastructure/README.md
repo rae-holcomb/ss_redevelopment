@@ -9,12 +9,13 @@
   - **Classes:** `3-5` and `6-12` are split into consecutive/gapped; `--coverage 3-5` / `6-12` still draw from both halves.
   - **Sampling:** frequency-weighted within a class is now the default (Rae, after the extended-mission patterns were added). Uniform sampling is still available.
   - **Sector length:** the 14–16-sector years have normal ~27-d sectors. The *years* are longer: 434 d (Year 4), 383 d (5) and 376 d (6), against 349–358 d otherwise (TESS orbit times).
-  - **Demos not rerun:** the demo runs below predate this update and the T18 merge. They'll be rerun once this branch can sync with main.
+  - **Demos rerun after merging main (T18):** T18's gates removed the patchy-coverage failure mode. On one sector, wrong answers went from 0.36 to 0.00, but those stars are now declined (none = 0.70) rather than measured; success is 0.29. Many declines look measurable: 17/34 single-sector stars under 1 d and 27/36 at SNR > 5. That's the new lead for T16b/T16d.
+  - **Year 8 deferred** (Rae).
 - **New coverage library:** `datasets/coverage/cycle1_patterns.csv` lists the 121 real Cycle-1 sector patterns with star counts (sum = 3,438). By class: 74.2% `single`, 15.9% `consecutive-2`, 1.4% `gapped-2`, 4.7% `3-5`, 2.7% `6-12`, 1.1% `full`. It's built by `tools/build_coverage_library.py`, and a test checks it against a fresh build.
 - **Synthetic `sectors=` option:** `synthetic.make_lightcurve(sectors=[...])` / `make_suite(sectors=...)` give the same time grid and NaN structure as `load_smarts_fits(sectors=...)` (exact match in tests). The star itself is unchanged; only coverage differs.
 - **Scorecard `--coverage` option:** `--coverage {full, real-weighted, single, consecutive-2, gapped-2, 3-5, 6-12, pattern:…}` with `--coverage-seed`, for synthetic and FITS manifests. It adds seven coverage descriptor columns to `per_star.csv`, and `SCORECARD_VERSION` is now 3. Metric definitions are unchanged.
 - **The default is unchanged:** `--coverage full` on `synthetic:n=200,seed=0` reproduces the committed baseline for 200/200 final periods and outcomes, bit for bit, and `check_goals` passes with every delta +0.000. The only differences are in wavelet on 3 stars (top-1 ≤1.5e-10 relative, and candidate counts): the known P4 nondeterminism, not this change (see "What didn't work").
-- **Demo (illustration for T16b, not a conclusion):** on the same 100 stars, success falls from 0.69 (full) to 0.28 (single), 0.30 (gapped-2) and 0.33 (real-weighted). The loss is mostly confident wrong answers, not declines: wrong is 0.08 → 0.36 / 0.44 / 0.37. All 36 single-sector wrong answers are 0.13–0.42 d periods that passed every gate.
+- **Demo (first version, pre-T18; superseded by the rerun above):** on the same 100 stars, success fell from 0.69 (full) to 0.28 (single), 0.30 (gapped-2) and 0.33 (real-weighted), mostly through confident ~0.2 d wrong answers (wrong 0.08 → 0.36 / 0.44 / 0.37).
 
 ## Question / goal
 This is task **T16a** in `docs/TASKS.md`, the infrastructure for T16b–f. It makes no method changes and touches no goal in `goals.json`. Scope:
@@ -191,34 +192,63 @@ Tests pin bit-identity in three ways:
 - `test_default_suite_matches_baseline_population`: per-star parameters against the baseline CSV;
 - `test_default_scorecard_rows_bit_identical_to_baseline` (slow): 3 stars end to end, exact final periods.
 
-### Demo: outcome vs coverage (same 100 stars)
+### Demo: outcome vs coverage (rerun 2026-10-15, post-T18)
+Pipeline at main after the T18 merge. Coverage uses the defaults (pooled Years 1–7 library, frequency weighting, coverage seed 0). The same 100 stars are used throughout; `full` is those stars from the committed post-T18 baseline. Dataset strings look like `synthetic:n=100,seed=0,coverage=single,coverage_weighting=frequency,coverage_seed=0,coverage_library=all_cycles`.
 
 | run | n | success | correct | diffrot | alias | wrong | none |
 |---|---|---|---|---|---|---|---|
-| full (first 100 of n=200) | 100 | 0.690 | 0.440 | 0.250 | 0.020 | 0.080 | 0.210 |
-| single | 100 | 0.280 | 0.150 | 0.130 | 0.040 | 0.360 | 0.320 |
-| gapped-2 | 100 | 0.300 | 0.180 | 0.120 | 0.020 | 0.440 | 0.240 |
-| real-weighted | 100 | 0.330 | 0.190 | 0.140 | 0.040 | 0.370 | 0.260 |
+| full | 100 | 0.730 | 0.470 | 0.260 | 0.000 | 0.000 | 0.270 |
+| single | 100 | 0.290 | 0.180 | 0.110 | 0.010 | 0.000 | 0.700 |
+| consecutive-2 | 100 | 0.390 | 0.240 | 0.150 | 0.020 | 0.030 | 0.560 |
+| gapped-2 | 100 | 0.290 | 0.170 | 0.120 | 0.010 | 0.020 | 0.680 |
+| gapped-3-5 | 100 | 0.400 | 0.240 | 0.160 | 0.000 | 0.020 | 0.580 |
+| real-weighted | 100 | 0.310 | 0.180 | 0.130 | 0.000 | 0.000 | 0.690 |
 
 ![outcome vs coverage](figures/fig2_outcome_vs_coverage.png)
-Look at the red: patchy coverage mostly turns stars into confident wrong answers, not declines. The right panel is the real-weighted run split by sampled class. Its n is tiny outside `single` (69), so it only shows the infrastructure working.
+Look at the grey: patchy coverage now mostly produces declines, not wrong answers. The right panel is the real-weighted run split by sampled class; outside `single` (59) its n is tiny, so it only shows the plumbing working.
 
 ![success by bin](figures/fig3_success_by_bin_and_coverage.png)
-On one or two sectors, success at 10–30 d and >30 d drops to 0. That's expected, since one sector is about 27 d. Short periods lose much less, but still lose.
+On one or two sectors, success above 10 d is 0–0.35, as expected for ~27-d sectors. But short periods lose too: on one sector, success under 1 d is 16/34 (full: 22/34), and 3–10 d is 7/19 (full: 15/19).
 
 ![outcome vs P/span](figures/fig4_outcome_vs_p_over_span.png)
-`wrong` climbs with P / longest contiguous span: 0.15 (≤0.03), 0.33 (0.03–0.1), 0.41 (0.1–1/3), 0.65 (1/3–1), 0.81 (>1). Stars whose period can't fit in the data get a confident short answer instead of a decline. This plot is the axis for T16c's `max_period(coverage)`.
+Pooled over all five patchy runs (n=500), wrong stays at ≤ 0.06 in every P / longest-span bin. Declines are 0.50 even at P / span ≤ 0.03, where the data hold more than 30 cycles. Above P / span = 1/3, declines are 0.94–0.95. That's the right behaviour there, and T16c's axis.
 
-### Failure mode: short confident wrong answers
-In the single-sector run, all 36 wrong answers are 0.13–0.42 d (median 0.21 d). They aren't only low-SNR stars: by SNR bin, wrong is 8 (≤2), 18 (2–5) and 10 (5–20).
+### Declines on short data (post-T18)
+
+| single sector, by SNR | correct | diffrot | half | none | total |
+|---|---|---|---|---|---|
+| ≤ 2 | 5 | 3 | 0 | 16 | 24 |
+| 2–5 | 9 | 4 | 0 | 27 | 40 |
+| 5–20 | 4 | 4 | 1 | 27 | 36 |
+
+Of the 73 full-coverage successes among these 100 stars, single-sector coverage declines 43:
+
+| period bin | declined |
+|---|---|
+| <1 d | 5 |
+| 1–3 d | 6 |
+| 3–10 d | 8 |
+| 10–30 d | 19 |
+| >30 d | 5 |
+
+The 10–30 d and >30 d losses are expected. The short-period ones suggest the gates, which T18 tuned on full-year data, are too strict for one sector. Which gate fires is a question for T16b; the pipeline message only says none met the reliability thresholds.
+
+### History: the first demo (pre-T18, 2026-10-14)
+Cycle-1 library, uniform weighting, pipeline before T18. The coverage draws differ from the rerun, so only aggregates compare:
+
+| | full | single | gapped-2 | real-weighted |
+|---|---|---|---|---|
+| success, pre → post T18 | 0.69 → 0.73 | 0.28 → 0.29 | 0.30 → 0.29 | 0.33 → 0.31 |
+| wrong | 0.08 → 0.00 | 0.36 → 0.00 | 0.44 → 0.02 | 0.37 → 0.00 |
+| none | 0.21 → 0.27 | 0.32 → 0.70 | 0.24 → 0.68 | 0.26 → 0.69 |
+
+Before T18, all 36 single-sector wrong answers were 0.13–0.42 d (median 0.21 d), at every SNR.
 
 ![failure examples](figures/fig5_single_sector_wrong_examples.png)
-One star per SNR bin. The ACF has no peak at the chosen lag, only noise texture on a slowly decaying envelope. The comb still passed the gates at 0.15–0.39 d. This looks like open issues 10/15 (low-SNR short-lag answers; the lag-0 tooth acting as a noise filter), strongly amplified by short baselines.
-
-A quick side check, not in the notebook: pure noise on one sector (12 seeds, white 0.002 plus red 0.0005) gave 2/12 confident answers near 0.16 d.
+Pre-T18 history, one star per SNR bin. The ACF had no peak at the chosen lag, only noise texture on a slowly decaying envelope, yet the comb passed the old gates. T18's half-lag gate and few-peak guard now reject these. A side check at the time (not in the notebook): pure noise on one sector gave 2/12 confident answers near 0.16 d.
 
 ### Runtime
-Median s/star at 2 workers: 3.51 (full), 0.62 (single), 0.90 (gapped-2), 1.00 (real-weighted).
+Median s/star at 2 workers, post-T18: 0.59 (single), 0.82 (consecutive-2), 1.09 (gapped-2), 1.24 (gapped-3-5), 0.63 (real-weighted). The full-year baseline was 3.51 pre-T18.
 
 ## What didn't work
 - **Wavelet counts looked like a regression, but aren't.** The full run's wavelet output differed from the baseline on stars 00038, 00058 and 00158 (counts; top-1 by ≤1.5e-10 relative), which at first looked like a side effect of the extra descriptor computation. Pristine main 589cb8d, run in-process, gives 6 candidates on 00058 every time, including under heap perturbation. This branch gave 8 once in-process (while the background scorecard was loading the CPU), then 6 and 6 on reruns, and 7 in the pool run. So the same code produces different counts across invocations: this is P4's wavelet nondeterminism. P4 currently says top-1 differs by ~2e-11. Here it reached 1.5e-10 (00038), and the candidate *count* can change too (6/7/8 on 00058). Wavelet isn't pooled into the fit, so final answers are unaffected.
@@ -238,6 +268,7 @@ Median s/star at 2 workers: 3.51 (full), 0.62 (single), 0.90 (gapped-2), 1.00 (r
 4. **Approve the new `per_star.csv` columns** (the task asked for your OK): `n_sectors, sectors, coverage_class, total_baseline_days, longest_contiguous_days, largest_gap_days, duty_cycle`, plus `meta_sectors_requested` for FITS. The scorecard version is bumped to 3. `GAP_SPLIT_DAYS = 5` defines "contiguous". Is that right for real SMARTS gaps, where some Cycle-1 interruptions are 2–4 d?
    **Answered (Rae, 2026-10-15):** approved.
 5. **The headline failure mode** (36% confident wrong on one sector, all ~0.2 d). It belongs to T16b/T16d, but it also bears directly on T18's gates. I left a note for the T18 session in the shared notes folder. T18's gate changes should be checked with `--coverage single` as well as on full-year synth200.
+   **Update (2026-10-15, post-T18 rerun):** resolved as a wrong-answer problem; wrong on one sector is now 0. It has become a decline problem: 70% declined on one sector, including half the stars under 1 d. That's for T16b/T16d: recalibrate the gates for short data, without bringing back the ~0.2 d false positives.
 6. **Proposed per-coverage-class metrics (T16f).** *(Rae, 2026-10-15: the layout looks reasonable.)* Add `final.by_coverage_class.<class>.{...outcome fractions...}` and `union_recall.by_coverage_class.<class>` alongside `by_bin`, computed the same way from the new `coverage_class` column. Possibly also `final.by_coverage_class_and_bin`. Regression guards per class would need goals.json entries. Not implemented here; that's T16f.
 
 7. **New (2026-10-15): squeezing Cycles 4–6 into 13 sectors.** Cycles 4–6 have 14–16 sectors. Shifting (1,197 star-seasons) preserves spacing exactly. Truncation (635 star-seasons) drops 1–2 sectors from patterns longer than a SMARTS year, and always the sector beyond the long gap: 174 gapped-2 star-seasons become single, and 122 gapped-3 become consecutive-2 (see "Truncating the over-long years"). Keep truncation, shorten the longest gap instead (keeps every sector and the gapped class), or exclude these star-seasons? Context: those years' sectors are normal length; the years themselves are 376–434 d long, so a 356-d SMARTS light curve physically can't hold their full span. Shortening the gap would compress real time by 1–3 sectors (27–82 d); truncating keeps the real spacing but loses the far sector. Is pooling cycles in proportion to this table's stars per cycle fine, or should each cycle get equal weight? This only matters for `real-weighted` and `--coverage-weighting frequency`.

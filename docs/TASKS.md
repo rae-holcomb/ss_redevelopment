@@ -262,8 +262,9 @@ for confirmation (ask Rae first).
   - (2) when pooling years, weight by stars per year (current) or equally per year.
 - **Deferred (Rae, 2026-10-15):** Year 8+ (S97+, irregular ~13–58 d pointings). It needs a tess-point rerun and
   a days-based, not sector-index, mapping.
-- **Headline for T16b:** on 1 sector, 36% of synthetic stars got confident ~0.2 d wrong answers before T18.
-  Re-check post-T18 in the demo rerun.
+- **Headline for T16b:** before T18, 36% of single-sector synthetic stars got confident ~0.2 d wrong answers.
+  The post-T18 rerun (2026-10-15) has 0 wrong on one sector, but 70% declined, including 17/34 stars under 1 d
+  and 27/36 at SNR > 5. See the T16a report.
 - **Do:**
   - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
     mirroring `load_smarts_fits(sectors=...)`.
@@ -290,9 +291,12 @@ for confirmation (ask Rae first).
 - **Agent:** `method-improver` (diagnostic report; no method changes)
 - **Status:** blocked on T16a (infrastructure done 2026-10-14, pending review)
 - **Do:**
-  - Start from the T16a demo: `wrong` jumps from 0.08 (full) to 0.36 (single) and 0.44 (gapped-2)
-    on the same 100 stars. Every single-sector wrong answer is 0.13-0.42 d, at all SNRs (open
-    issues 10/15 amplified). Explain this first.
+  - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
+    declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
+    0.58 gapped-3-5 (full 0.27), with wrong ≤ 0.03. Single-sector declines include half the <1 d stars,
+    where the data hold dozens of cycles. Find which gate fires on short data, and whether it can be
+    recalibrated without bringing back the pre-T18 ~0.2 d false positives (36% wrong on one sector
+    before T18).
   - Run the scorecard across coverage classes: 1 sector; 2 consecutive;
     2 non-consecutive; 3–5 gapped; ≥ 6.
   - Map per-method recall/success and final success against P relative to the

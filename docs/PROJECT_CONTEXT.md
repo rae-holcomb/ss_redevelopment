@@ -509,3 +509,19 @@ chats should know:
   349–358 d for Years 1–3 and 7. So a 356-d SMARTS light curve can't hold Years 4–6 (why `coverage.fit_to_year`
   exists). Year 8 (S97–111) is irregular: ~55–58-d four-orbit sectors (S97–98) and single-orbit sectors (S102–103),
   15 sectors over 450 d. See `datasets/coverage/README.md`.
+- **2026-10-15: T16a demo rerun after T18; Year 8 deferred.** Same 100 synthetic stars with the new
+  coverage defaults (pooled Years 1–7, frequency-weighted) on the post-T18 pipeline:
+
+  | coverage | success | wrong | none |
+  |---|---|---|---|
+  | full | 0.73 | 0 | 0.27 |
+  | single | 0.29 | 0 | 0.70 |
+  | consecutive-2 | 0.39 | 0.03 | 0.56 |
+  | gapped-2 | 0.29 | 0.02 | 0.68 |
+  | gapped-3-5 | 0.40 | 0.02 | 0.58 |
+  | real-weighted | 0.31 | 0 | 0.69 |
+
+  T18's gates turned the pre-T18 patchy-coverage wrong answers (0.36–0.44) into declines. The open problem is
+  now over-declining on short data: half the single-sector stars under 1 d are declined. See T16b and the T16a
+  report. Rae deferred Year 8+ coverage (irregular pointings).
+
