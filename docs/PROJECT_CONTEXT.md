@@ -57,14 +57,14 @@ All files live in a single flat package (`claude_files/` in the
 | `preprocessing.py` | Raw SMARTS FITS → pipeline-ready `(time, flux)`. Re-detects the original per-orbit gaps (SMARTS ships gap-*interpolated*), lets you drop bad orbits and/or degrade to a sparser TESS-like sector pattern, regrids to even cadence. `load_smarts_fits()` is the one-call entry point. |
 | `plotting.py` | Diagnostic plots mirroring every pipeline stage. |
 | `alias_metrics.py` | Shared ACF-window / phase-fold alias metrics (T9 features; moved out of `ml_features.py` in T18 so `comb_fit` can use them without a circular import). `half_lag_contrast_terms` drives the half-lag consistency gate. |
-| `ml_features.py` | Flattens a fitted `EnsembleResult` into a ~100-column-per-candidate feature table for ranking-model training. `extract_candidate_features()` is the entry point. |
+| `ml_features.py` | Flattens a fitted `EnsembleResult` into a ~120-column-per-candidate feature table for ranking-model training. `extract_candidate_features()` is the entry point. Includes coverage-context features (T16e, Section H of FEATURE_DOCUMENTATION) computed from the light curve's own finite-flux sampling. |
 | `FEATURE_DOCUMENTATION.txt` | The definitive reference for every ML feature: name, definition, rationale, literature references, pipeline stage. Read this instead of re-deriving feature meanings from code. |
 | `batch_test_guesses.py` | Production batch runner: evaluates every `guess_*` method's hit rate across many light curves, in parallel, with auto-discovery of new methods via introspection. |
 | `batch_test_acf_fft_highpass.py` | Companion script isolating `guess_acf_fft_highpass`'s per-smoothing-window behavior specifically. Possibly redundant now that `batch_test_guesses.py` auto-discovers it too — unresolved, see open issues. |
 | `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
 | `determinism.py` | Process setup for bit-reproducible runs (T14): `pin_blas_threads()` (call before importing numpy), `init_worker()` (ProcessPoolExecutor initializer), `blas_backend()`, `default_n_workers()` (one per physical P-core). Requires the OpenBLAS env `ss_openblas` (`environment.yml`); Accelerate is not reproducible. |
 | `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. `sectors=[...]` keeps only those sectors of the year, with `load_smarts_fits(sectors=...)` conventions (T16a). |
-| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-/gapped-2`, `consecutive-/gapped-3-5`, `consecutive-/gapped-6-12`, `full`), real-star libraries per TESS year 1–7 plus a pooled default (`datasets/coverage/*_patterns.csv`, built by `tools/build_coverage_library.py`; `fit_to_year` maps 14–16-sector cycles into 13), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle). |
+| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-/gapped-2`, `consecutive-/gapped-3-5`, `consecutive-/gapped-6-12`, `full`), real-star libraries per TESS year 1–7 plus a pooled default (`datasets/coverage/*_patterns.csv`, built by `tools/build_coverage_library.py`; `fit_to_year` maps 14–16-sector cycles into 13), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle), whose label-free time-sampling part is `sampling_descriptors` / `contiguous_segments` (shared with T16e's ML coverage features). |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
 ### `guesses.py` in more detail
@@ -526,4 +526,15 @@ chats should know:
   report. Rae deferred Year 8+ coverage (irregular pointings).
 - **2026-10-15: T16a open questions closed (Rae).** Keep `fit_to_year`'s truncation of over-long Year-4–6
   patterns (635 star-seasons), and keep pooling years in proportion to their star counts.
-
+- **2026-10-15: T16e, coverage-context ML features.** Seven new columns in `ml_features.py` (FEATURE_DOCUMENTATION
+  Section H), computed only from the light curve's finite-flux sampling (no sector label; no-leakage test):
+  star-level `n_sectors_observed`, `n_contiguous_segments`, `longest_contiguous_days`, `largest_gap_days`; per-candidate
+  `P_over_longest_segment`, `n_cycles_observed_total`, `tess_timescale_rel_dist`. ~38 µs/candidate. Existing
+  definitions unchanged; `coverage.py` gained `contiguous_segments` / `sampling_descriptors` (descriptor output
+  bit-identical). Skipped as duplicates: total span, P/total span, duty cycle, 1/P_over_longest_segment. On synthetic
+  n=200 seed 0 under 6 coverage specs: several existing features change meaning on short data (success AUC full ->
+  single: `P_over_lc_baseline` 0.26 -> 0.51, `n_cycles_spanned` 0.74 -> 0.49, `mean_height_snr` 0.88 -> 0.75;
+  `s_ph` 0.61 -> 0.72), while `mean_peak_trough_depth_snr` and the T9 alias features are stable. The new features
+  add little alone (logistic candidate AUC +0.000); with coverage x feature interactions +0.014 [0.007, 0.021],
+  top-1 not significant. `tess_timescale_rel_dist` shows no signal on synthetic data. Multi-season features deferred
+  (Rae). See `reports/2026-10-15_t16e-coverage-features/`.

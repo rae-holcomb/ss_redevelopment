@@ -381,7 +381,7 @@ for confirmation (ask Rae first).
 - **Update 2026-10-15:** add n_seasons, per-season period agreement and per-season scatter alongside the
   single-season coverage descriptors. **Unblocked by T16a (merged 2026-10-15).**
 - **Agent:** `feature-researcher`
-- **Status:** blocked on T16a
+- **Status:** in review (`reports/2026-10-15_t16e-coverage-features/`, branch `claude/t16e-coverage-features-450578`): 7 single-season coverage features (FEATURE_DOCUMENTATION Section H); mostly null on synthetic data, but several existing features change meaning with coverage (see report).
 - **Do:** add coverage descriptors (n_sectors, longest span, duty cycle, P/longest
   span, n_cycles observed) to `ml_features.py`, so the ranker can learn how much to
   trust a candidate under a given coverage. Relates to open issue 6 (multi-sector

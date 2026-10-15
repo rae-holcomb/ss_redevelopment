@@ -381,6 +381,73 @@ def sample_patterns(spec: str, n: int, seed: int = 0, library: Optional[pd.DataF
     return [parse_pattern(pats[i]) for i in idx]
 
 
+def contiguous_segments(time: np.ndarray, flux: np.ndarray,
+                        gap_split_days: float = GAP_SPLIT_DAYS) -> tuple:
+    """Split a light curve's finite-flux sampling into contiguous stretches.
+
+    Uses only *where* the flux is finite, never its values or any sector
+    label, so it behaves identically on synthetic, SMARTS and real TESS data
+    (and at inference). Shared by coverage_descriptors and the T16e
+    coverage-context ML features (ml_features._coverage_context_features).
+
+    Parameters
+    ----------
+    time : sample times (days).
+    flux : flux, NaN (or inf) at missing cadences.
+    gap_split_days : a gap between consecutive finite cadences longer than
+        this ends a stretch (default GAP_SPLIT_DAYS = 5 d: longer than TESS
+        orbit/sector downlink gaps, shorter than a missing sector).
+
+    Returns
+    -------
+    (t, starts, ends, dt): t = times of the finite cadences; starts / ends =
+    integer indices into t of each stretch's first and last cadence (equal
+    length, in time order); dt = np.diff(t). For fewer than 2 finite points,
+    starts / ends / dt are empty.
+    """
+    t = np.asarray(time, float)[np.isfinite(np.asarray(flux, float))]
+    if len(t) < 2:
+        empty = np.array([], dtype=int)
+        return t, empty, empty, np.array([], dtype=float)
+    dt = np.diff(t)
+    breaks = np.flatnonzero(dt > gap_split_days)
+    starts = np.r_[0, breaks + 1]
+    ends = np.r_[breaks, len(t) - 1]
+    return t, starts, ends, dt
+
+
+def sampling_descriptors(time: np.ndarray, flux: np.ndarray,
+                         gap_split_days: float = GAP_SPLIT_DAYS) -> dict:
+    """The time-sampling part of coverage_descriptors (no sector label needed).
+
+    Parameters
+    ----------
+    time, flux, gap_split_days : see contiguous_segments.
+
+    Returns
+    -------
+    dict with total_baseline_days, longest_contiguous_days, largest_gap_days,
+    duty_cycle (definitions in coverage_descriptors), plus
+        segment_days : np.ndarray of each contiguous stretch's span (first to
+                       last finite cadence), in time order (empty if < 2 points).
+    """
+    t, starts, ends, dt = contiguous_segments(time, flux, gap_split_days)
+    if len(t) < 2:
+        return dict(total_baseline_days=0.0, longest_contiguous_days=0.0,
+                    largest_gap_days=0.0, duty_cycle=float(len(t) > 0),
+                    segment_days=np.zeros(len(t)))
+    cadence = float(np.median(dt))
+    baseline = float(t[-1] - t[0])
+    seg = t[ends] - t[starts]
+    return dict(
+        total_baseline_days=baseline,
+        longest_contiguous_days=float(np.max(seg)),
+        largest_gap_days=float(dt.max()),
+        duty_cycle=float(len(t) / (round(baseline / cadence) + 1)),
+        segment_days=seg,
+    )
+
+
 def coverage_descriptors(time: np.ndarray, flux: np.ndarray, sectors: Sequence[int],
                          gap_split_days: float = GAP_SPLIT_DAYS) -> dict:
     """Describe what a light curve actually covers.
@@ -404,23 +471,11 @@ def coverage_descriptors(time: np.ndarray, flux: np.ndarray, sectors: Sequence[i
                                    cadences (0 if < 2 points);
         duty_cycle               : finite cadences / cadences spanned by the
                                    baseline (first to last finite cadence, inclusive).
+    The four time-based values come from sampling_descriptors.
     """
     pat = normalize_pattern(sectors, n_total=10**6)
-    t = np.asarray(time, float)[np.isfinite(np.asarray(flux, float))]
     out = dict(n_sectors=len(pat), sectors=format_pattern(pat),
                coverage_class=coverage_class(pat) if pat[-1] <= N_SECTORS_YEAR else None)
-    if len(t) < 2:
-        return out | dict(total_baseline_days=0.0, longest_contiguous_days=0.0,
-                          largest_gap_days=0.0, duty_cycle=float(len(t) > 0))
-    dt = np.diff(t)
-    cadence = float(np.median(dt))
-    breaks = np.flatnonzero(dt > gap_split_days)
-    starts = np.r_[0, breaks + 1]
-    ends = np.r_[breaks, len(t) - 1]
-    baseline = float(t[-1] - t[0])
-    return out | dict(
-        total_baseline_days=baseline,
-        longest_contiguous_days=float(np.max(t[ends] - t[starts])),
-        largest_gap_days=float(dt.max()),
-        duty_cycle=float(len(t) / (round(baseline / cadence) + 1)),
-    )
+    samp = sampling_descriptors(time, flux, gap_split_days)
+    samp.pop("segment_days")
+    return out | samp

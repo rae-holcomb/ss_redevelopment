@@ -45,6 +45,7 @@ from alias_metrics import (  # shared with comb_fit (T18); moved verbatim from h
     fold_half_cycle_corr as _fold_half_cycle_corr,
 )
 from comb_fit import EnsembleResult
+from coverage import GAP_SPLIT_DAYS, sampling_descriptors
 from guesses import _peak_coverage_fraction
 
 
@@ -750,6 +751,104 @@ def _lightcurve_level_features(time: np.ndarray, flux: np.ndarray, sectors: Opti
 
 
 # ==========================================================================
+# Coverage-context features (T16e, 2026-10-15)
+# ==========================================================================
+# What the observing window allows, computed only from WHERE the flux is
+# finite (never from flux values, a manifest's sector pattern or a `sectors`
+# label), so training and inference see the same thing. Segmentation is
+# coverage.sampling_descriptors / contiguous_segments (T16a), reused rather
+# than duplicated. Multi-season features (n_seasons, per-season agreement)
+# are deferred to T16g/D2 (Rae, 2026-10-15).
+
+# TESS orbit and nominal sector length (days). Sectors stay ~27 d in every year
+# through Year 7 (PROJECT_CONTEXT changelog 2026-10-15); Year 8+ pointings are
+# ~55 d and would count as 2 sector-equivalents in n_sectors_observed.
+TESS_ORBIT_DAYS = 13.7
+TESS_SECTOR_DAYS = 27.4
+# Orbit-period ladder for tess_timescale_rel_dist: 13.7 d times these factors,
+# i.e. 3.43, 4.57, 6.85, 13.7, 27.4 (one sector), 41.1, 54.8 d.
+TESS_TIMESCALE_FACTORS = (1.0 / 4.0, 1.0 / 3.0, 1.0 / 2.0, 1.0, 2.0, 3.0, 4.0)
+
+
+def _star_coverage_features(time: np.ndarray, flux: np.ndarray,
+                            gap_split_days: float = GAP_SPLIT_DAYS) -> tuple:
+    """Star-level coverage context from the light curve's own finite-flux sampling.
+
+    Parameters
+    ----------
+    time, flux : the light curve (flux NaN at missing cadences). Only the
+        finite-flux mask and the times are used.
+    gap_split_days : gap that splits contiguous segments (coverage.GAP_SPLIT_DAYS).
+
+    Returns
+    -------
+    (features, segment_days):
+        features : dict with
+            n_sectors_observed      : sum over contiguous segments of
+                                      max(1, floor((span + 1 d) / 27.4 d + 0.5)),
+                                      i.e. 27.4-d sector equivalents (the +1 d
+                                      restores the trimmed trailing orbit gap);
+            n_contiguous_segments   : stretches separated by gaps > gap_split_days;
+            longest_contiguous_days : span of the longest segment;
+            largest_gap_days        : largest gap between finite cadences.
+        segment_days : np.ndarray of segment spans (for the per-candidate features).
+    total_baseline_days and duty_cycle are deliberately not returned: they equal
+    the existing lc_baseline_days and duty_cycle features (see
+    FEATURE_DOCUMENTATION Section H).
+    """
+    d = sampling_descriptors(time, flux, gap_split_days)
+    seg = np.asarray(d["segment_days"], float)
+    n_sec = int(np.sum(np.maximum(1, np.floor((seg + 1.0) / TESS_SECTOR_DAYS + 0.5)))) if len(seg) else 0
+    feats = dict(
+        n_sectors_observed=n_sec,
+        n_contiguous_segments=int(len(seg)),
+        longest_contiguous_days=d["longest_contiguous_days"] if len(seg) else np.nan,
+        largest_gap_days=d["largest_gap_days"] if len(seg) else np.nan,
+    )
+    return feats, seg
+
+
+def _tess_timescale_rel_dist(P: float) -> float:
+    """Relative distance |P/T - 1| from P to the nearest TESS timescale T.
+
+    T runs over 13.7 d x TESS_TIMESCALE_FACTORS (orbit-gap / ramp period, its
+    fractions and its multiples, including the 27.4-d sector). NaN for a
+    non-positive or non-finite P.
+    """
+    if not (np.isfinite(P) and P > 0):
+        return float("nan")
+    ladder = TESS_ORBIT_DAYS * np.asarray(TESS_TIMESCALE_FACTORS)
+    return float(np.min(np.abs(P / ladder - 1.0)))
+
+
+def _candidate_coverage_features(P: float, star_cov: dict, segment_days: np.ndarray) -> dict:
+    """Per-candidate coverage context for fitted period P.
+
+    Parameters
+    ----------
+    P : the candidate's fitted period (days).
+    star_cov, segment_days : output of _star_coverage_features.
+
+    Returns
+    -------
+    dict with
+        P_over_longest_segment  : P / longest_contiguous_days (NaN if undefined);
+        n_cycles_observed_total : sum over segments of floor(span / P), the
+                                  number of complete cycles seen inside
+                                  contiguous data (gaps and partial cycles
+                                  don't count);
+        tess_timescale_rel_dist : see _tess_timescale_rel_dist.
+    """
+    longest = star_cov["longest_contiguous_days"]
+    ok = np.isfinite(P) and P > 0
+    return dict(
+        P_over_longest_segment=(P / longest) if ok and np.isfinite(longest) and longest > 0 else np.nan,
+        n_cycles_observed_total=int(np.sum(np.floor(segment_days / P))) if ok else np.nan,
+        tess_timescale_rel_dist=_tess_timescale_rel_dist(P),
+    )
+
+
+# ==========================================================================
 # Top-level extraction function
 # ==========================================================================
 
@@ -825,6 +924,7 @@ def extract_candidate_features(
     lc_baseline = float(t_fin[-1] - t_fin[0]) if len(t_fin) > 1 else np.nan
     method_reps = _group_guesses_by_method(guesses)
     lc_features = _lightcurve_level_features(time, flux, sectors=sectors)
+    star_cov, segment_days = _star_coverage_features(time, flux)
 
     # --- per-candidate (intrinsic) features ---
     rows = []
@@ -908,6 +1008,8 @@ def extract_candidate_features(
         row.update(_alias_discrimination_features(time, flux, acf_lags, acf, fit.P))
         row.update(_method_spectrum_features(fit.P, fit.t0, method_reps, agreement_rel_tol))
         row.update(lc_features)
+        row.update(star_cov)
+        row.update(_candidate_coverage_features(fit.P, star_cov, segment_days))
         rows.append(row)
 
     df = pd.DataFrame(rows)
