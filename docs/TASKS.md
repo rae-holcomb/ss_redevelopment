@@ -35,7 +35,13 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ### T2. Build frozen dev sets and holdout
 - **Agent:** `dev-set-builder`
-- **Status:** in progress (started 2026-10-15, overnight)
+- **Status:** built, awaiting Rae's approval (2026-10-15; report `reports/2026-10-15_t2-dev-sets/`).
+  `datasets/dev_small.csv` (50), `dev_medium.csv` (1,000), `holdout.csv` (3,000) from
+  `tools/build_dev_sets.py` (seed 20261015); baselines `benchmarks/baselines/dev_{small,medium}_{assigned,fullyear}`.
+  Dev sets score with `--data-root data/smarts_dev`; `--ignore-manifest-sectors` gives full-year.
+  Deviation: coverage patterns come from `native_whole_sectors` (both orbits unflagged), since an
+  explicit `sectors=` request drops half-flagged sectors. Headline: dev_medium full-year success
+  0.248 (wrong 0.088, declined 0.650) vs synth200 0.730.
 - **Note:** SMARTS periods are uniform in 0.1–180 d, so only ~17% of the corpus
   has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
   would make dev sets mostly unrecoverable long periods. Stratify, and use the
@@ -751,6 +757,22 @@ for confirmation (ask Rae first).
   and whether any star-level or candidate-level features (e.g. ACF peak drift, wavelet spread,
   per-sector period scatter) distinguish this case. Needs the `band_disjoint`/`P_lo`/`P_hi`
   manifest columns from T2.
+
+### P19. Confident wrong answers on undetectable SMARTS stars
+- **Proposed by:** T2 report (2026-10-15)
+- **Idea:** on dev_medium (full year), 8.4% of low-amplitude-tercile stars, which have almost no
+  recoverable signal (success 0.033), still get a wrong period that passes every gate. Wrong
+  answers span 0.8–34 d, so this isn't only the ~0.2 d failure T16a found. Characterize what lets
+  them through (which method, ACF peak heights, comb-fit statistics) and test a noise guard on
+  dev_medium, alongside T18's P8 strict-vs-option-D re-check. Synthetic data has 0 wrong answers,
+  so this can only be tuned on SMARTS.
+
+### P20. load_smarts_fits on a fully-flagged requested pattern
+- **Proposed by:** T2 report (2026-10-15)
+- **Idea:** `load_smarts_fits(path, sectors=[s])` raises `ValueError: attempt to get argmax of an
+  empty sequence` inside `to_even_cadence` when every requested sector has a flagged orbit
+  (e.g. row 005139, sector 11). Return an empty light curve or raise a clear error, with a test.
+  The T2 manifests avoid it via `native_whole_sectors`, but `--coverage` runs on SMARTS can hit it.
 
 ### P18. Coverage library from a better-defined target sample
 - **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover

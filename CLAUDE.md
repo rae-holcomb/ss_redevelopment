@@ -34,7 +34,9 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
   figures), `check_goals.py` (grades against `goals.json` and a baseline),
   `baselines/` (committed reference metrics).
-- `datasets/`: frozen dev/holdout manifests (once built, see `docs/TASKS.md`).
+- `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
+  `datasets/README.md`). Dev files are local in `data/smarts_dev/`; score them with
+  `--data-root data/smarts_dev` (`--ignore-manifest-sectors` for full-year).
   `datasets/coverage/` holds the real-star TESS sector-pattern libraries with star counts
   (T16a): `cycle<N>_patterns.csv` for TESS years 1–7, plus `all_cycles_patterns.csv`
   pooled (the default). Rebuild them with `tools/build_coverage_library.py`;
