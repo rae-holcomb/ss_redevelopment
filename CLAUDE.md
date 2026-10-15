@@ -47,8 +47,8 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
   `write-report` procedure.
 - `results_products/` — batch outputs and `run_full_analysis.py`. Result
   CSVs are gitignored.
-- `data/` — light curve inputs; **gitignored and not currently present
-  locally.** Ask Rae for the path before assuming a debug set exists.
+- `data/` — light curve inputs; **gitignored.** The SMARTS corpus is on an
+  external drive; see "SMARTS data location" below.
 - Root-level notebooks (`ss_claude_sandbox.ipynb`, `smarts_sandbox.ipynb`,
   `analyze_batch_processing.ipynb`) are Rae's working scratch space.
 
@@ -126,6 +126,35 @@ with 10 workers.
   success.
   Score periods only via `evaluation.classify_period`/`best_outcome`.
   `n_guesses=10` for most methods (5 for `acf_fft_highpass`).
+
+## SMARTS data location (external drive, often unplugged)
+
+The full SMARTS-TESS DR1 corpus is on an **external drive** at
+`/Volumes/Data_Vault/smarts_data/tess_retry/`: 180 period bundles
+`hlsp_smarts_tess_ffi_NNN_tess_v1.0_sim.tar.gz` (bundle NNN = periods
+NNN−1 to NNN d, ~0.5 GB each, 89 GB total) plus the input-parameter catalog
+`hlsp_smarts_tess_ffi_all_tess_v1.0_cat.tar.gz`. **Rae moves the laptop daily,
+so the drive is regularly unplugged between work sessions, and possibly
+mid-session.** Consequences:
+
+- **Check before use:** test that `/Volumes/Data_Vault` is mounted, and if it
+  isn't, stop with a clear message ("plug in the Data_Vault drive"); don't fail
+  deep inside a loop. Never assume the mount point is fixed (macOS may mount it
+  as `Data_Vault 1`); take the root from a `SMARTS_DATA_ROOT` env var or CLI
+  option, defaulting to the path above.
+- **Never write extracted data to the laptop's disk in bulk:** the laptop has about
+  120 GB free. Extract to the external drive. The exception is a small,
+  deliberately chosen **local working set** (e.g. dev_small, a few hundred MB at
+  most) kept on the laptop, so development and tests still work when the drive
+  is unplugged.
+- **Everything that reads the drive must be resumable** (`--resume`, per-file
+  outputs or append-only logs), and must write outputs **atomically** (write to
+  a temp file, then rename), so an unplug mid-run leaves no corrupt partial files.
+- **Manifests store paths relative to `SMARTS_DATA_ROOT`,** never absolute
+  `/Volumes/...` paths.
+- **Don't start long jobs that need the drive** without telling Rae roughly how
+  long they'll take, so she doesn't unplug mid-run.
+- Tests must never require the drive. Skip cleanly when it's absent.
 
 ## Debug workflow
 

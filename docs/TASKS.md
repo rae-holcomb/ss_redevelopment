@@ -24,7 +24,7 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ### T1. Audit the SMARTS training set
 - **Agent:** `data-auditor`
-- **Status:** blocked (data being copied to external drive)
+- **Status:** phase 1 in review (`reports/2026-10-15_t1-smarts-catalog-audit/`, branch `claude/t1-data-audit-phase1-41159b`): catalog + 50-file sample + 1,050-file noise/leakage check. Phase 2 = full-corpus scan (bundle index, corrupt-noise list, per-file galaxy IDs), if Rae wants it; see P15.
 - **Goal:** know what's in the ~1M-file corpus and what's wrong with it before
   training on it.
 - **Done when:** report covers inventory, label sanity, recoverability
@@ -40,6 +40,25 @@ report (`write-report` skill) and, if code changed, a before/after
   has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
   would make dev sets mostly unrecoverable long periods. Stratify, and use the
   MAST input-parameter catalog rather than opening FITS headers.
+- **Note (2026-10-15, T1 phase 1):** file number = catalog **row index**, not "Simulation
+  Number". SIM_ID >= 800,000 uses a disjoint galaxy-noise pool: draw holdout (and dev) from it,
+  train on SIM_ID < 800k. ~12% of galaxies have corrupt orbits. Plan, strata and sizes in
+  `reports/2026-10-15_t1-smarts-catalog-audit/` ("Recommendations for T2").
+- **Rae's decisions (2026-10-15, on the T1 phase 1 open questions):**
+  - Dev and holdout may share galaxies (both from SIM_ID >= 800k); no galaxy IDs needed for T2.
+  - **Keep "band disjoint" stars** (whole active band outside P_eq +/-10%, ~15%) in every set,
+    including ranker training, and **track them**: every manifest gets `band_disjoint`,
+    `band_extends`, `P_lo`, `P_hi` columns (from `evaluation.active_band_period_range`), so they
+    can be analysed as their own case (see P17). Don't stratify them away.
+  - **Exclude files with corrupt galaxy noise** (raw max |flux - 1| > 0.1) from the dev sets and
+    holdout. Costs ~12% of the pool (>= 800k pool ~176k left; smallest stratum 73 -> ~64), so
+    diversity is fine. Practical route without a full scan: check each drawn file at extraction
+    (`tools/audit/flux_outliers.scan`) and redraw replacements from the same stratum; log the
+    excluded rows.
+  - **Native usable sectors (decided 2026-10-15):** while extracting, run `load_smarts_fits`
+    once per file and store its kept sectors (`native_sectors`, e.g. "1 2 3 5 ... 13") in the
+    manifest. T16f coverage patterns are then chosen only from each file's native sectors, so the
+    assigned pattern is exactly what the pipeline sees.
 - **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
   not just full-year light curves. See T16f.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
@@ -173,7 +192,12 @@ for confirmation (ask Rae first).
 
 ### T18. Arbitration and reliability gates (promoted from P1, 2026-10-14)
 - **Agent:** `method-improver`
-- **Status:** in progress (started 2026-10-14)
+- **Status:** done, merged 2026-10-15 (report `reports/2026-10-14_t18-arbitration-gates/`).
+- **Decision (Rae, 2026-10-15):** keep the **strict** gate (default). Low-to-medium confidence,
+  since it was chosen on synthetic data only. **Re-evaluate strict vs option D**
+  (`half_lag_fallback_min=0.0`) on SMARTS dev_small (P8). Its other open questions
+  (restating G7, factor-2 ratio 0.7 vs 0.8, training data with `half_lag_gate=False`) are
+  still pending Rae.
 - **Why:** Stage 1 lists a success period for 88–100% of stars per bin, but the final
   answer succeeds for only 65–86% (open issue 12). 30/36 of the lost stars fail the
   *gates* (T9). Meanwhile red noise gets a confident period 22/60 times in
@@ -215,13 +239,19 @@ for confirmation (ask Rae first).
 - **Known limitation:** SMARTS spans one year, so multi-year revisit gaps can't be
   emulated (see the window_function work and open issue 6). Stars observed only
   after Cycle 1 were dropped when the patterns were built.
+- **Scope update (Rae, 2026-10-15):** the pipeline will eventually run on the **whole TESS extended
+  mission**, so T16 covers all cycles, not just Cycle 1. SMARTS files are single-season (one year on the
+  Cycle-1 27.4 d sector grid), so: SMARTS-based work uses **single-season** patterns drawn from every
+  cycle's library; **multi-season** behavior needs other simulations (T16g); patterns should be defined in
+  **days**, not sector indices, once Year 8+ (~55 d pointings) is added.
 - **Coordination:** the "Extend ACF period limit" session (branch
   `claude/angry-einstein-cb10da`) is changing the ACF lag / period limit. T16c must
   build on whatever lands from it.
 
 #### T16a. Coverage-degradation infrastructure
 - **Agent:** `method-improver` (infrastructure only)
-- **Status:** done, awaiting review (2026-10-14, branch `claude/t16a-coverage-infra-fe5be3`).
+- **Status:** done, merged 2026-10-15 (report `reports/2026-10-14_t16a-coverage-infrastructure/`). Libraries for TESS Years 1–7 plus the pooled default.
+- **Still pending Rae (from its report):** (1) truncate or exclude the 635 over-long Year-4–6 star-seasons; (2) when pooling years for `real-weighted`, weight by stars or equally; (3) Year 8+ (S97+, ~55 d pointings) needs tess-point rerun and a days-based (not sector-index) mapping.
   See `reports/2026-10-14_t16a-coverage-infrastructure/`. Rae to OK the new `per_star.csv`
   columns (scorecard v3) and answer the report's open questions (library provenance, class
   boundaries, within-class weighting). Headline for T16b: on 1 sector, 36% of synthetic stars get
@@ -250,6 +280,9 @@ for confirmation (ask Rae first).
   new columns.
 
 #### T16b. How do candidate methods degrade with coverage?
+- **Update 2026-10-15:** use the pooled all-cycles library (single-season patterns from every TESS year),
+  report by coverage class *and* by year/hemisphere, and include T18's gates (check the ~0.2 d single-sector
+  wrong answers T16a found).
 - **Also (Rae, 2026-10-14):** re-evaluate the comb fit's sqrt(pair-count) residual
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
@@ -272,6 +305,8 @@ for confirmation (ask Rae first).
   and failure-mode examples.
 
 #### T16c. Search upper limits for patchy data
+- **Update 2026-10-15:** define limits **per season** (from season length and coverage). Separately, ask
+  whether combining seasons (D2) can ever justify periods longer than one season. Probably weakly at best.
 - **Also (Rae, 2026-10-14):** test lowering `compute_acf`'s `min_valid_frac` from 0.3
   to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
   ACF pair-coverage edge (ACF long-period report, open issue 14a).
@@ -285,6 +320,9 @@ for confirmation (ask Rae first).
   justification plots, and goals proposed for Rae.
 
 #### T16d. Method policy and safeguards for patchy data
+- **Update 2026-10-15:** with D2 leaning season-by-season, **cross-season consistency** becomes the central
+  safeguard: answer when seasons agree, flag when they disagree (possibly a spot-evolution or diffrot signal; F1).
+  Needs T16g's multi-season data. Status: blocked on T16b/c **and T16g**.
 - **Agent:** `method-improver`
 - **Status:** blocked on T16b/c
 - **Ideas to evaluate (pick by evidence):**
@@ -305,6 +343,8 @@ for confirmation (ask Rae first).
   natural comparison and a possible prior or limit companion for single-sector stars.
 
 #### T16e. Coverage-aware ML features
+- **Update 2026-10-15:** add n_seasons, per-season period agreement and per-season scatter alongside the
+  single-season coverage descriptors. **Unblocked by T16a (merged 2026-10-15).**
 - **Agent:** `feature-researcher`
 - **Status:** blocked on T16a
 - **Do:** add coverage descriptors (n_sectors, longest span, duty cycle, P/longest
@@ -313,6 +353,9 @@ for confirmation (ask Rae first).
   support).
 
 #### T16f. Gappy coverage in the standard development datasets
+- **Update 2026-10-15:** SMARTS dev sets stay single-season, sampling from the pooled all-cycles library
+  constrained by each file's `native_sectors`. Add a small **multi-season** dev set from T16g. Synthetic part
+  **unblocked by T16a**.
 - **Agent:** `dev-set-builder` (for the real-data sets), `method-improver` (for synthetic)
 - **Status:** blocked on T16a (and on T2 for the real-data part)
 - **Why:** so every agent's routine before/after scorecard exercises patchy data,
@@ -323,7 +366,8 @@ for confirmation (ask Rae first).
     benchmark (a fixed fraction of full-year, consecutive, non-consecutive and
     single-sector stars), using the T16a coverage library. Re-baseline
     `benchmarks/baselines/` once, recording the old baseline as history, as with v2.
-  - **Real data (T2):** add coverage pattern as a stratification axis for
+  - **Real data (T2):** pick each file's coverage pattern only from its native usable sectors
+    (manifest column `native_sectors`, decided 2026-10-15; see T2). Add coverage pattern as a stratification axis for
     `dev_small`, `dev_medium` and `holdout`. Apply patterns from the T16a library to
     SMARTS files via `load_smarts_fits(sectors=...)`, stored as a per-row column
     in the manifest (and read by the scorecard), so each set is frozen and reproducible.
@@ -333,6 +377,60 @@ for confirmation (ask Rae first).
 - **Done when:** the default synthetic and dev scorecards include gappy stars, the
   per-coverage-class metrics appear in `metrics.json` and the figures, and the new
   baselines are committed.
+
+#### T16g. Multi-season simulations (for D2 and T16d)
+- **Agent:** `method-improver` (or a data/sim agent)
+- **Status:** not started. **Discuss with Rae before starting**, since the approach may have evolved (see D3).
+- **Plan (Rae, 2026-10-15, tentative):** use **`butterpy`**, the generator behind SMARTS, to simulate
+  multi-year light curves with spot evolution and activity cycles, sampled with real multi-season TESS
+  coverage from the per-cycle libraries. It's a new package install, so confirm with Rae when it starts. Fallback:
+  extend `synthetic.py` to multi-year baselines.
+- **Needed by:** D2 experiments (season-by-season vs stitched) and T16d/T16f.
+
+### T19. Repository cleanup and public-release readiness (recurring + final)
+- **Agent:** `repo-curator`
+- **Requested by:** Rae, 2026-10-15. The repo will be released publicly. Keep it free of
+  cruft, and clean it periodically during development, not just at the end.
+- **Cadence:** a **hygiene pass (T19a)** at each milestone, e.g. after a batch of task
+  merges, after T2, after the ranker lands. The **release pass (T19b)** comes near the
+  final pipeline. Avoid running a pass while other agents edit the same modules.
+
+#### T19a. Hygiene pass (repeatable)
+- **Status:** ready. A first pass is worthwhile once T18/T16a/T1 are merged.
+- **Do:**
+  - remove dead code and duplication;
+  - fix docstring/doc drift;
+  - condense finished tasks in TASKS.md into changelog pointers;
+  - untrack artifacts that shouldn't be in git;
+  - produce a removal-proposal table for anything human-made, which Rae approves.
+  Results must stay bit-identical vs `benchmarks/baselines/synth200_s0_tables/`.
+- **Known candidates (inventory 2026-10-15):**
+  - **`results_products/batch1/candidates.csv` (90 MB) and other result CSVs are
+    tracked**, despite CLAUDE.md saying they're gitignored. GitHub rejects files > 100 MB.
+    Untrack them (and decide on history, see T19b).
+  - `.DS_Store` is tracked; gitignore it.
+  - Root-level `split_smarts_lc.py` (used by `preprocessing.py`) belongs in the package.
+  - `claude_files/old/` (11 superseded files).
+  - `batch_test_acf_fft_highpass.py` may be redundant (open issue 9), and so may the
+    older `run_debug_baseline*.py` runners now that the scorecard exists.
+  - `sector_configs.txt` is superseded by T16a's coverage library (once merged).
+  - Root notebooks, `smarts_lc_gaps1.npz`, `target_df_shortform.csv`, `tic283722336/`:
+    Rae's scratch/data. Propose keep / move / archive; Rae decides.
+
+#### T19b. Public-release pass (near the final pipeline)
+- **Status:** blocked (until the pipeline is close to final).
+- **Do:**
+  - Rename the `claude_files/` package to a real one (e.g. `spinspotter/`) with a
+    `pyproject.toml`, so it can be installed and imported normally.
+  - Public README: what it does, install, quick start, citation (Holcomb+2022 + new
+    paper), license check.
+  - Decide what of `reports/`, `docs/` and the agent infrastructure (`.claude/`,
+    CLAUDE.md, TASKS.md) ships publicly, versus an archive branch.
+  - Optionally purge large files from git history (**destructive; Rae's explicit OK**).
+  - Scan for absolute local paths, secrets, and personal info.
+  - Set up CI to run the test suite on push.
+- **Done when:** a fresh clone installs and passes its tests with no local paths and no
+  oversized files, and the README gets a new user to a measured period in a few commands.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
@@ -450,6 +548,22 @@ for confirmation (ask Rae first).
   - whether to simulate it by stitching separate SMARTS light curves, or by
     generating multi-year synthetic data.
 - **Relates to:** open issue 6 (multi-sector support), T16, F2.
+- **Leaning (Rae, 2026-10-15):** strong prior for **season-by-season analysis, then combining**
+  (phase coherence across multi-year gaps is unlikely given spot evolution; per-season agreement is a
+  reliability signal). Still to be *tested* on T16g's multi-season simulations before it's final.
+  Now needed before T16c/T16d, since the pipeline will run on the whole extended mission.
+
+### D3. Training data beyond SMARTS
+- **Raised:** 2026-10-15. Rae wants to eventually add other sources of training data, so the ranker and
+  validation aren't solely reliant on SMARTS.
+- **To discuss:**
+  - candidates: fresh butterpy simulations (T16g), SMARTS DR2 (Kepler-based), real stars with
+    trusted literature periods as a *validation* set (beware label circularity; see PROJECT_CONTEXT s3),
+    other simulators;
+  - how to combine sources without the ranker learning source-specific artifacts (e.g. source as a
+    grouping/held-out factor);
+  - whether dev and holdout sets should span sources.
+- **Relates to:** T10/T11 (ranker), T16g, T3 (realism).
 
 ## Proposed (agents add here; Rae promotes)
 
@@ -542,6 +656,8 @@ for confirmation (ask Rae first).
   Measure against G4/G7 with a before/after scorecard; validate on dev_small.
 
 ### P8. Re-test star-level SNR and relative peak widths on SMARTS
+- **Rae, 2026-10-15:** also re-evaluate T18's strict half-lag gate vs option D on dev_small
+  (success vs wrong/alias/declines and the noise false-positive rate), since the strict choice was made on synthetic data.
 - **Rae, 2026-10-14:** also re-validate T9's synthetic findings (AUC table, the P1
   gate) on dev_small once T2 lands.
 - **Proposed by:** T9 report (2026-10-14)
@@ -571,7 +687,53 @@ for confirmation (ask Rae first).
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
 
-### P12. Coverage library from a better-defined target sample
+### P12. Mis-phased comb fits of slightly-off candidates
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** synth-s0-00144 (P = 0.531 d, SNR 14) has clean ACF peaks, but its only near-true candidate
+  (P0 = 0.502, 5% off) is fitted with teeth walking off the peaks and fails the vertex gate (T18 report,
+  example 5). Try refining P0 (e.g. from the ACF peak spacing or a local comb_score scan) before the
+  t0 grid search, and measure how many vertex-gate declines it rescues without admitting noise combs.
+
+### P13. TESS orbit-period (13.7 d) false answers
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** after T18, 2 of the 3 remaining wrong answers on synth200 seed 1 are ~13.6-13.7 d for
+  P < 1 d stars: an orbit-gap / ramp periodicity that passes every gate. Relates to T8 / open issue 7.
+  Consider flagging or penalizing candidates within a few % of the orbital period (or its multiples)
+  when the light curve has orbit ramps.
+
+### P14. Stage 1 recall for short-period stars with no success candidate
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** 28 of the 55 lost seed-0 stars have no fitted success candidate at all (24 at P < 1.6 d,
+  SNR 1-18), so no arbitration change can recover them. Feed into T5 (short-period recovery).
+
+### P15. T1 phase 2: full-corpus scan for corrupt noise and galaxy IDs
+- **Proposed by:** T1 phase 1 report (2026-10-15)
+- **Idea:** one resumable streaming pass over all 180 bundles (per-bundle outputs,
+  `ProcessPoolExecutor` over bundles, run locally by Rae) recording per file: max |flux − 1|
+  and the bad orbits (`tools/audit/flux_outliers.py` logic), fill/gap template, and a noise
+  fingerprint; then cluster fingerprints into galaxy IDs (≈ 2,000 galaxies). Gives a complete
+  exclusion list (~12% of files) and lets T2 make dev and holdout galaxy-disjoint, not just
+  train vs holdout. Vectorize `lc_spotcheck.interp_runs` first (~0.25 s/file in Python now).
+  Start with `tools/audit/bundle_index.py --all` (~18 min).
+
+### P16. Short-period signal strength in SMARTS vs synthetic
+- **Proposed by:** T1 phase 1 report (2026-10-15)
+- **Idea:** in the 50-file sample, a raw LS periodogram found 0/10 periods below 2 d (power
+  ≤ 0.06 even when restricted near P) because galaxy red noise dominates. Quantify per-file
+  injected amplitude vs galaxy noise at P < 3 d on dev_small once T2 lands, and feed it into T3's
+  realism check (synthetic SNR may be optimistic at short P).
+
+### P17. Case study: stars whose spot periods never include P_eq
+- **Proposed by:** T1 phase 1 report (2026-10-15), Rae's request
+- **Idea:** ~15% of SMARTS stars have their whole active-band period range outside P_eq +/-10%
+  (strong shear, high-latitude spots). They stay in training as a physically real case. Once dev
+  sets and pipeline runs exist: measure how far the reported period sits from P_eq and from the
+  band (P_lo..P_hi) as a function of shear and latitudes, how often it lands in the band vs wrong,
+  and whether any star-level or candidate-level features (e.g. ACF peak drift, wavelet spread,
+  per-sector period scatter) distinguish this case. Needs the `band_disjoint`/`P_lo`/`P_hi`
+  manifest columns from T2.
+
+### P18. Coverage library from a better-defined target sample
 - **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover
   the northern sky, plus a pooled default. Rae documented the target table's provenance: the
   brightest TESS stars, with coverage from tess-point. The remaining idea is a fainter or field
