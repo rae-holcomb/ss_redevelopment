@@ -23,17 +23,37 @@ patchy coverage.
   - **Shifted:** a pattern that spans ≤ 13 sectors but ends after sector 13 is moved
     earlier, keeping its spacing. This affects 446 Cycle-4, 347 Cycle-5 and 404 Cycle-6
     star-seasons.
-  - **Truncated:** a pattern spanning > 13 sectors keeps its 13-sector window with the
+  - **Truncated** (kept as the policy, Rae 2026-10-15): a pattern spanning > 13 sectors keeps its 13-sector window with the
     most sectors. This affects 610 Cycle-4 and 25 Cycle-6 star-seasons, losing 1–2 sectors
     each (median 1).
   - `n_shifted` / `n_truncated` record this per pattern.
 - **Classes:** single, consecutive-2, gapped-2, consecutive-3-5, gapped-3-5,
   consecutive-6-12, gapped-6-12 and full. The consecutive/gapped split of 3-5 and 6-12 is
   Rae's decision (2026-10-15). `--coverage 3-5` / `6-12` draw from both halves.
-- **Sampling:** uniform over the patterns within a class by default (Rae, 2026-10-15). The
-  extended mission will show gap patterns unlike Year 1's, so we don't weight by one
-  sample's frequencies. `real-weighted` (frequency-weighted over all patterns) remains
-  available.
+- **Sampling:** within a class, patterns are drawn in proportion to their star-season count
+  (`--coverage-weighting frequency`, the default). Rae first chose uniform sampling to avoid
+  tuning to Year 1's mix, then switched to weighted once the library pooled Years 1–7
+  (2026-10-15). `uniform` is still available. With the pooled library, weighting is
+  proportional to each year's star count in the input table (kept, Rae 2026-10-15) (Years 5 and 7 have ~4,000 each,
+  Year 2 ~2,600).
+- **Sector and year lengths:** from the TESS Science Office orbit times
+  (`https://tess.mit.edu/public/files/TESS_orbit_times.csv`, fetched 2026-10-15). Sectors keep
+  their usual length in every year (median start-to-start 26.8–27.7 d). The 14–16-sector years
+  are simply *longer than a year*:
+
+  | year | sectors | span |
+  |---|---|---|
+  | 1 | 13 | 358 d |
+  | 2 | 13 | 352 d |
+  | 3 | 13 | 354 d |
+  | 4 | 16 | 434 d |
+  | 5 | 14 | 383 d |
+  | 6 | 14 | 376 d |
+  | 7 | 13 | 349 d |
+
+  A SMARTS light curve (13 × 27.4 d ≈ 356 d) can't hold Years 4–6, hence `fit_to_year`.
+  Year 8 (S97–111, not in the input table) has irregular pointings: two 4-orbit ~55–58 d
+  sectors (S97–98), single-orbit sectors (S102–103, 13–38 d) and 15 sectors over 450 d.
 
 ### Class fractions per cycle (fraction of star-seasons)
 

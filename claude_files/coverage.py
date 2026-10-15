@@ -49,12 +49,15 @@ N_SECTORS_YEAR = 13  # sectors in one SMARTS year (= TESS Cycle 1, sectors 1-13)
 # Coverage classes, in display order. See coverage_class for definitions.
 COVERAGE_CLASSES = ("single", "consecutive-2", "gapped-2", "consecutive-3-5", "gapped-3-5",
                     "consecutive-6-12", "gapped-6-12", "full")
-# Coarser groups accepted by sample_patterns (uniform over all their patterns).
+# Coarser groups accepted by sample_patterns (draws from all their patterns).
 CLASS_GROUPS = {"3-5": ("consecutive-3-5", "gapped-3-5"), "6-12": ("consecutive-6-12", "gapped-6-12")}
 
 # TESS observing cycles (years) as inclusive sector ranges, as in tess-point
 # (tess_stars2px 0.9.2: Year 5 = S56-69, Year 6 = S70-83, Year 7 = S84-96).
 # Cycle 4 has 16 sectors and cycles 5-6 have 14, more than a SMARTS year holds.
+# Their sectors are normal length (median 26.9-27.7 d start to start, TESS Science
+# Office orbit times, fetched 2026-10-15); the cycles themselves are longer than a
+# year: 434 d (4), 383 d (5), 376 d (6), versus 349-358 d for 1-3 and 7.
 CYCLE_SECTORS = {1: (1, 13), 2: (14, 26), 3: (27, 39), 4: (40, 55), 5: (56, 69), 6: (70, 83), 7: (84, 96)}
 
 # Gaps longer than this split the light curve into separate "contiguous"
@@ -328,7 +331,7 @@ def valid_coverage_specs() -> list:
 
 
 def sample_patterns(spec: str, n: int, seed: int = 0, library: Optional[pd.DataFrame] = None,
-                    weighting: str = "uniform") -> list:
+                    weighting: str = "frequency") -> list:
     """Draw one sector pattern per star.
 
     Parameters
@@ -344,9 +347,9 @@ def sample_patterns(spec: str, n: int, seed: int = 0, library: Optional[pd.DataF
     seed : RNG seed (independent of the synthetic-suite seed, so the same
         stars can be re-run under different coverage draws).
     library : coverage library (default: load_library()).
-    weighting : for a class spec, 'uniform' (each pattern in the class equally
-        likely; the default, Rae 2026-10-15, to avoid tuning to one year's mix)
-        or 'frequency' (weighted by n_stars). Ignored otherwise.
+    weighting : for a class spec, 'frequency' (weighted by n_stars; the default,
+        Rae 2026-10-15, once the library pooled TESS years 1-7) or 'uniform' (each
+        pattern in the class equally likely). Ignored otherwise.
 
     Returns
     -------

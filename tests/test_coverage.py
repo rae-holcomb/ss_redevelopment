@@ -185,7 +185,8 @@ def test_sample_class_uniform_vs_frequency(cycle1):
     """Within Cycle-1 gapped-2, 'uniform' gives each of the 10 patterns ~10%; 'frequency' favors 1-13 (21/49)."""
     n = 20000
     uni = pd.Series([cov.format_pattern(p) for p in
-                     cov.sample_patterns("gapped-2", n, seed=0, library=cycle1)]).value_counts(normalize=True)
+                     cov.sample_patterns("gapped-2", n, seed=0, library=cycle1, weighting="uniform")]
+                    ).value_counts(normalize=True)
     assert len(uni) == 10 and (uni - 0.1).abs().max() < 0.02
     freq = pd.Series([cov.format_pattern(p) for p in
                       cov.sample_patterns("gapped-2", n, seed=0, library=cycle1, weighting="frequency")])
@@ -194,10 +195,22 @@ def test_sample_class_uniform_vs_frequency(cycle1):
 
 @pytest.mark.parametrize("group", list(cov.CLASS_GROUPS))
 def test_sample_class_group(library, group):
-    """'3-5' / '6-12' draw uniformly over both the consecutive and gapped patterns of that size."""
-    draws = cov.sample_patterns(group, 4000, seed=0, library=library)
-    classes = {cov.coverage_class(p) for p in draws}
-    assert classes == set(cov.CLASS_GROUPS[group])
+    """'3-5' / '6-12' draw from both the consecutive and gapped patterns of that size, under either weighting."""
+    for weighting in ("frequency", "uniform"):
+        draws = cov.sample_patterns(group, 4000, seed=0, library=library, weighting=weighting)
+        classes = {cov.coverage_class(p) for p in draws}
+        assert classes == set(cov.CLASS_GROUPS[group])
+
+
+def test_sample_default_weighting_is_frequency(library):
+    """Default within-class weighting is by star-season count (Rae, 2026-10-15)."""
+    n = 20000
+    sub = library[library["class"] == "gapped-2"]
+    want = sub.set_index("pattern")["n_stars"] / sub["n_stars"].sum()
+    got = pd.Series([cov.format_pattern(p) for p in cov.sample_patterns("gapped-2", n, seed=0, library=library)]
+                    ).value_counts(normalize=True)
+    top = want.idxmax()
+    assert abs(got[top] - want[top]) < 0.02
 
 
 def test_sample_explicit_pattern_and_errors(library):
@@ -404,7 +417,7 @@ def cov_rel_tol():
 def _args(**kw):
     """Minimal argparse-like namespace for scorecard helpers."""
     d = dict(synthetic=None, manifest=None, seed=0, coverage="full", coverage_seed=0,
-             coverage_weighting="uniform", coverage_library=None)
+             coverage_weighting="frequency", coverage_library=None)
     d.update(kw)
     return types.SimpleNamespace(**d)
 
@@ -414,11 +427,14 @@ def test_dataset_string():
     import scorecard
     assert scorecard.dataset_string(_args(synthetic=200)) == "synthetic:n=200,seed=0"
     assert (scorecard.dataset_string(_args(synthetic=100, coverage="single", coverage_seed=3))
-            == "synthetic:n=100,seed=0,coverage=single,coverage_seed=3,coverage_library=all_cycles")
-    assert (scorecard.dataset_string(_args(synthetic=100, coverage="gapped-2", coverage_weighting="frequency",
+            == "synthetic:n=100,seed=0,coverage=single,coverage_weighting=frequency,coverage_seed=3,"
+               "coverage_library=all_cycles")
+    assert (scorecard.dataset_string(_args(synthetic=100, coverage="gapped-2", coverage_weighting="uniform",
                                            coverage_library=cov.LIBRARY_DIR / "cycle2_patterns.csv"))
-            == "synthetic:n=100,seed=0,coverage=gapped-2,coverage_weighting=frequency,coverage_seed=0,"
+            == "synthetic:n=100,seed=0,coverage=gapped-2,coverage_weighting=uniform,coverage_seed=0,"
                "coverage_library=cycle2")
+    assert (scorecard.dataset_string(_args(synthetic=100, coverage="real-weighted"))
+            == "synthetic:n=100,seed=0,coverage=real-weighted,coverage_seed=0,coverage_library=all_cycles")
     assert (scorecard.dataset_string(_args(synthetic=10, coverage="pattern:1-13"))
             == "synthetic:n=10,seed=0,coverage=pattern:1-13")
 

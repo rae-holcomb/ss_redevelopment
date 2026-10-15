@@ -490,7 +490,8 @@ chats should know:
   Proposal P18 (numbered P12 in the report). See `reports/2026-10-14_t16a-coverage-infrastructure/`.
 - **2026-10-15: T16a review: coverage libraries for every TESS year; classes split.** Rae's decisions:
   - split 3-5 and 6-12 into consecutive/gapped;
-  - sample patterns uniformly within a class (don't tune to Year 1);
+  - sample patterns uniformly within a class (don't tune to Year 1), then switch to frequency-weighted
+    sampling once Years 1–7 were pooled (now the default);
   - descriptor columns approved;
   - `target_df_shortform.csv` = the brightest TESS stars, with tess-point coverage.
 
@@ -502,3 +503,27 @@ chats should know:
 
   The dataset string now records `coverage_library`. See the T16a report.
 - **2026-10-15: T16a merged; baseline refreshed after T18.** New `synth200_s0.json` + tables = the post-T18 run (success 0.730, correct 0.500, diffrot 0.230, alias 0, wrong 0, declined 0.270), main @ bd9bed2; T16a's default output verified bit-identical to it (threads pinned). Previous baseline kept as `synth200_s0_pre_t18*`. `tests/conftest.py` now pins BLAS threads before importing numpy (T14 rule), so bit-identity tests are stable. T16a's proposal P12 renumbered P18 at merge. Rae's decisions recorded in TASKS.md: T16 scope = whole extended mission (T16b–f updated, new T16g multi-season sims via butterpy, to be discussed first), D2 leaning season-by-season, new D3 (training data beyond SMARTS).
+- **2026-10-15: TESS sector vs year length.** From the TESS Science Office orbit times
+  (tess.mit.edu/public/files/TESS_orbit_times.csv), sectors stay ~27 d in every year (median start-to-start
+  26.8–27.7 d). The 14–16-sector years are longer than a year: 434 d (Year 4), 383 d (5), 376 d (6), against
+  349–358 d for Years 1–3 and 7. So a 356-d SMARTS light curve can't hold Years 4–6 (why `coverage.fit_to_year`
+  exists). Year 8 (S97–111) is irregular: ~55–58-d four-orbit sectors (S97–98) and single-orbit sectors (S102–103),
+  15 sectors over 450 d. See `datasets/coverage/README.md`.
+- **2026-10-15: T16a demo rerun after T18; Year 8 deferred.** Same 100 synthetic stars with the new
+  coverage defaults (pooled Years 1–7, frequency-weighted) on the post-T18 pipeline:
+
+  | coverage | success | wrong | none |
+  |---|---|---|---|
+  | full | 0.73 | 0 | 0.27 |
+  | single | 0.29 | 0 | 0.70 |
+  | consecutive-2 | 0.39 | 0.03 | 0.56 |
+  | gapped-2 | 0.29 | 0.02 | 0.68 |
+  | gapped-3-5 | 0.40 | 0.02 | 0.58 |
+  | real-weighted | 0.31 | 0 | 0.69 |
+
+  T18's gates turned the pre-T18 patchy-coverage wrong answers (0.36–0.44) into declines. The open problem is
+  now over-declining on short data: half the single-sector stars under 1 d are declined. See T16b and the T16a
+  report. Rae deferred Year 8+ coverage (irregular pointings).
+- **2026-10-15: T16a open questions closed (Rae).** Keep `fit_to_year`'s truncation of over-long Year-4–6
+  patterns (635 star-seasons), and keep pooling years in proportion to their star counts.
+
