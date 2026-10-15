@@ -128,6 +128,28 @@ Other findings:
 - No star-season after Cycle 3 has all 13 sectors. `full` comes only from Cycles 1–3.
 - The commonest gapped-2 pattern overall is still `1-13` (115 star-seasons, seen in cycles 1, 2, 3, 4 and 6).
 
+#### Common vs rare patterns within a class
+![common vs rare](figures/fig1c_common_vs_rare_patterns.png)
+Left column: each class's 6 most common pooled patterns. Right column: 6 drawn at random from the patterns with the fewest star-seasons (n = 1), with the TESS years each occurs in. The common patterns are a few repeated shapes, often in several years:
+- gapped-2: `1-13` (115) and `1-8` (48);
+- gapped-3-5: the Year-2/6/7 northern shapes `5-11-12` (74) and `5-6-12-13` (69);
+- gapped-6-12: the Year-2/6/7 `4-7, 10-13` block (67).
+
+The rare ones are mostly irregular, one-year-only shapes: 72 of the 203 gapped-3-5 patterns and 124 of the 231 gapped-6-12 patterns occur once. Under uniform within-class sampling, these one-offs dominate the gapped-3-5 and gapped-6-12 draws.
+
+#### Truncating the over-long years
+![truncation examples](figures/fig1d_truncation_examples.png)
+Each row is a raw Year-4 (16-sector) or Year-6 (14-sector) pattern on that year's own grid. The black box is the 13-sector window kept; red sectors are dropped. Shifting (the lower rows of each year) only renumbers sectors. Truncation always cuts the sector on the far side of the pattern's long gap, so it changes the pattern's character. Of the 635 truncated star-seasons (462 lose 1 sector, 173 lose 2):
+
+| raw shape | becomes |
+|---|---|
+| gapped, 2 sectors (174) | **single** (174) |
+| gapped, 3 sectors (189) | consecutive-2 (122) or gapped-2 (67) |
+| gapped, 4 sectors (97) | consecutive-2 (41), consecutive-3-5 (9) or gapped-3-5 (47) |
+| gapped, 10–11 sectors (88) | consecutive-6-12 (51) or gapped-6-12 (37) |
+
+So truncation removes the longest-baseline gapped patterns from these years. An alternative that keeps them, not implemented and Rae's call, is to **shorten the longest internal gap** by the overflow (span − 13 = 1–3 sectors). For example, Year-4 `2-16` would become `1-13` rather than `1`. This keeps every observed sector and the gapped class, at the cost of a slightly shorter gap.
+
 ### Cycle-1 library
 ![coverage library](figures/fig1_coverage_library.png)
 Single sectors dominate (74%). Beyond consecutive pairs, the long tail of 88 patterns covers just 301 stars, so `real-weighted` almost never draws multi-sector patterns. Per-class runs are needed to study those.
@@ -217,7 +239,7 @@ Median s/star at 2 workers: 3.51 (full), 0.62 (single), 0.90 (gapped-2), 1.00 (r
 5. **The headline failure mode** (36% confident wrong on one sector, all ~0.2 d). It belongs to T16b/T16d, but it also bears directly on T18's gates. I left a note for the T18 session in the shared notes folder. T18's gate changes should be checked with `--coverage single` as well as on full-year synth200.
 6. **Proposed per-coverage-class metrics (T16f).** *(Rae, 2026-10-15: the layout looks reasonable.)* Add `final.by_coverage_class.<class>.{...outcome fractions...}` and `union_recall.by_coverage_class.<class>` alongside `by_bin`, computed the same way from the new `coverage_class` column. Possibly also `final.by_coverage_class_and_bin`. Regression guards per class would need goals.json entries. Not implemented here; that's T16f.
 
-7. **New (2026-10-15): squeezing Cycles 4–6 into 13 sectors.** Cycles 4–6 have 14–16 sectors. Shifting (1,197 star-seasons) preserves spacing exactly. Truncation (635 star-seasons) drops 1–2 sectors from patterns longer than a SMARTS year. Is that acceptable, or should those star-seasons be excluded? Is pooling cycles in proportion to this table's stars per cycle fine, or should each cycle get equal weight? This only matters for `real-weighted` and `--coverage-weighting frequency`.
+7. **New (2026-10-15): squeezing Cycles 4–6 into 13 sectors.** Cycles 4–6 have 14–16 sectors. Shifting (1,197 star-seasons) preserves spacing exactly. Truncation (635 star-seasons) drops 1–2 sectors from patterns longer than a SMARTS year, and always the sector beyond the long gap: 174 gapped-2 star-seasons become single, and 122 gapped-3 become consecutive-2 (see "Truncating the over-long years"). Keep truncation, shorten the longest gap instead (keeps every sector and the gapped class), or exclude these star-seasons? Is pooling cycles in proportion to this table's stars per cycle fine, or should each cycle get equal weight? This only matters for `real-weighted` and `--coverage-weighting frequency`.
 8. **New: Year 8+** (S97 onward: longer ~55-d pointings, partly visible in the pointing table). The input table stops at S96. A Year-8 library would need tess-point rerun on the targets, and SMARTS's 27.4-d sector grid can't represent those pointings directly.
 
 ## Reproduce
