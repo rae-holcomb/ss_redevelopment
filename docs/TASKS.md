@@ -320,6 +320,51 @@ for confirmation (ask Rae first).
   per-coverage-class metrics appear in `metrics.json` and the figures, and the new
   baselines are committed.
 
+### T19. Repository cleanup and public-release readiness (recurring + final)
+- **Agent:** `repo-curator`
+- **Requested by:** Rae, 2026-10-15. The repo will be released publicly. Keep it free of
+  cruft, and clean it periodically during development, not just at the end.
+- **Cadence:** a **hygiene pass (T19a)** at each milestone, e.g. after a batch of task
+  merges, after T2, after the ranker lands. The **release pass (T19b)** comes near the
+  final pipeline. Avoid running a pass while other agents edit the same modules.
+
+#### T19a. Hygiene pass (repeatable)
+- **Status:** ready. A first pass is worthwhile once T18/T16a/T1 are merged.
+- **Do:**
+  - remove dead code and duplication;
+  - fix docstring/doc drift;
+  - condense finished tasks in TASKS.md into changelog pointers;
+  - untrack artifacts that shouldn't be in git;
+  - produce a removal-proposal table for anything human-made, which Rae approves.
+  Results must stay bit-identical vs `benchmarks/baselines/synth200_s0_tables/`.
+- **Known candidates (inventory 2026-10-15):**
+  - **`results_products/batch1/candidates.csv` (90 MB) and other result CSVs are
+    tracked**, despite CLAUDE.md saying they're gitignored. GitHub rejects files > 100 MB.
+    Untrack them (and decide on history, see T19b).
+  - `.DS_Store` is tracked; gitignore it.
+  - Root-level `split_smarts_lc.py` (used by `preprocessing.py`) belongs in the package.
+  - `claude_files/old/` (11 superseded files).
+  - `batch_test_acf_fft_highpass.py` may be redundant (open issue 9), and so may the
+    older `run_debug_baseline*.py` runners now that the scorecard exists.
+  - `sector_configs.txt` is superseded by T16a's coverage library (once merged).
+  - Root notebooks, `smarts_lc_gaps1.npz`, `target_df_shortform.csv`, `tic283722336/`:
+    Rae's scratch/data. Propose keep / move / archive; Rae decides.
+
+#### T19b. Public-release pass (near the final pipeline)
+- **Status:** blocked (until the pipeline is close to final).
+- **Do:**
+  - Rename the `claude_files/` package to a real one (e.g. `spinspotter/`) with a
+    `pyproject.toml`, so it can be installed and imported normally.
+  - Public README: what it does, install, quick start, citation (Holcomb+2022 + new
+    paper), license check.
+  - Decide what of `reports/`, `docs/` and the agent infrastructure (`.claude/`,
+    CLAUDE.md, TASKS.md) ships publicly, versus an archive branch.
+  - Optionally purge large files from git history (**destructive; Rae's explicit OK**).
+  - Scan for absolute local paths, secrets, and personal info.
+  - Set up CI to run the test suite on push.
+- **Done when:** a fresh clone installs and passes its tests with no local paths and no
+  oversized files, and the README gets a new user to a measured period in a few commands.
+
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
 - **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
