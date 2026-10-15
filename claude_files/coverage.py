@@ -207,16 +207,28 @@ def fit_to_year(rel_pattern: Sequence[int], n_total: int = N_SECTORS_YEAR) -> tu
     (pattern tuple, action str)
     """
     pat = tuple(sorted(set(int(s) for s in rel_pattern)))
+    start, action = year_window(pat, n_total)
+    kept = [s for s in pat if start <= s < start + n_total]
+    return tuple(s - start + 1 for s in kept), action
+
+
+def year_window(rel_pattern: Sequence[int], n_total: int = N_SECTORS_YEAR) -> tuple:
+    """The n_total-sector window of a within-cycle pattern that fit_to_year keeps.
+
+    Returns
+    -------
+    (start, action): the window covers relative sectors start..start+n_total-1;
+    action is "none", "shifted" or "truncated" (see fit_to_year).
+    """
+    pat = tuple(sorted(set(int(s) for s in rel_pattern)))
     if pat[-1] <= n_total:
-        return pat, "none"
+        return 1, "none"
     if pat[-1] - pat[0] + 1 <= n_total:
-        shift = pat[-1] - n_total
-        return tuple(s - shift for s in pat), "shifted"
+        return pat[-1] - n_total + 1, "shifted"
     arr = np.array(pat)
     best = max(range(pat[0], pat[-1] - n_total + 2),
                key=lambda a: (np.sum((arr >= a) & (arr < a + n_total)), -a))
-    kept = arr[(arr >= best) & (arr < best + n_total)]
-    return tuple(int(s - best + 1) for s in kept), "truncated"
+    return int(best), "truncated"
 
 
 def _library_rows(patterns: pd.Series, n_total: int) -> pd.DataFrame:
