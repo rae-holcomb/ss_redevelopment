@@ -34,7 +34,10 @@ Procedure
    SMARTS data root (``$SMARTS_DATA_ROOT``) for the holdout.
 5. **Coverage.** Each row gets a sector pattern from the pooled all-cycles library
    (``datasets/coverage/all_cycles_patterns.csv``), drawn only from patterns
-   that are subsets of its ``native_sectors``. Coverage classes are balanced
+   that are subsets of its ``native_whole_sectors`` (sectors with both orbits
+   unflagged: what ``load_smarts_fits(sectors=...)`` keeps; ``native_sectors``,
+   the default load's kept sectors, can include half-flagged sectors that an
+   explicit request would drop). Coverage classes are balanced
    within every period bin of every set (classes dealt in shuffled blocks of 8,
    then a feasibility-respecting assignment), and the pattern is uniform within the
    class among the feasible ones (T16a's default weighting).
@@ -108,7 +111,8 @@ SHEAR_CLASSES = ("anti", "none", "solar")
 CELLS = [(a, s) for a in AMP_TIERS for s in SHEAR_CLASSES]
 
 CHECK_FIELDS = ["row", "member", "passed", "reason", "max_abs_dev", "n_dev_gt_thresh",
-                "orbits_hit", "native_sectors", "n_native_sectors", "n_orbits_flagged"]
+                "orbits_hit", "native_sectors", "n_native_sectors", "native_whole_sectors",
+                "n_whole_sectors", "n_orbits_flagged"]
 
 MANIFEST_COLUMNS = [
     # identifiers
@@ -119,7 +123,8 @@ MANIFEST_COLUMNS = [
     # differential rotation (evaluation.active_band_period_range)
     "P_lo", "P_hi", "band_disjoint", "band_extends",
     # native data and assigned coverage
-    "native_sectors", "n_native_sectors", "native_class", "max_abs_dev",
+    "native_sectors", "n_native_sectors", "native_whole_sectors", "n_whole_sectors",
+    "native_class", "max_abs_dev",
     "sectors", "n_sectors", "coverage_class", "n_feasible_patterns",
     # strata and weights
     "stratum", "pbin", "eval_pbin", "amp_tier", "amp_proxy", "shear_class",
@@ -259,26 +264,44 @@ def check_file(path: Path) -> dict:
 
     Returns a dict with the CHECK_FIELDS (except row/member). ``passed`` is False
     with ``reason`` 'corrupt_noise' (raw max |flux - 1| > CORRUPT_THRESH),
-    'load_error' (load_smarts_fits raised) or 'no_native_sectors'.
+    'load_error' (load_smarts_fits raised) or 'no_whole_sectors'.
+
+    Two sector lists come from the same load_smarts_fits call:
+
+    - ``native_sectors``: the sectors the default load (``sectors=None``) keeps,
+      i.e. every sector with at least one unflagged orbit (what full-year
+      scoring sees);
+    - ``native_whole_sectors``: the sectors with *both* orbits unflagged. This is
+      what ``load_smarts_fits(sectors=[...])`` keeps for a requested sector
+      (recombine_segments drops a requested sector if either orbit is flagged),
+      so coverage patterns are drawn from these and the assigned pattern is
+      exactly what the pipeline sees.
     """
+    from preprocessing import _orbit_idxs_for_sector
     from flux_outliers import scan
     from preprocessing import load_smarts_fits
     s = scan(path, CORRUPT_THRESH)
     rec = dict(max_abs_dev=s["max_abs_dev"], n_dev_gt_thresh=s["n_dev_gt_thresh"],
                orbits_hit=s["orbits_hit"], native_sectors="", n_native_sectors=0,
+               native_whole_sectors="", n_whole_sectors=0,
                n_orbits_flagged=-1, passed=True, reason="")
     try:
         lc = load_smarts_fits(path)
         secs = sorted(int(x) for x in lc.sectors_used)
+        flagged = lc.diagnostics.get("segment_flagged")
+        n_orb = len(lc.segments)
+        whole = [x for x in secs if _orbit_idxs_for_sector(x, n_orb) and
+                 (flagged is None or not any(flagged[i] for i in _orbit_idxs_for_sector(x, n_orb)))]
         rec.update(native_sectors=" ".join(map(str, secs)), n_native_sectors=len(secs),
+                   native_whole_sectors=" ".join(map(str, whole)), n_whole_sectors=len(whole),
                    n_orbits_flagged=int(lc.n_orbits_flagged))
     except Exception as exc:  # noqa: BLE001 -- recorded as an exclusion
         rec.update(passed=False, reason=f"load_error: {type(exc).__name__}: {exc}"[:200])
         return rec
     if s["max_abs_dev"] > CORRUPT_THRESH:
         rec.update(passed=False, reason="corrupt_noise")
-    elif not secs:
-        rec.update(passed=False, reason="no_native_sectors")
+    elif not whole:
+        rec.update(passed=False, reason="no_whole_sectors")
     return rec
 
 
@@ -297,8 +320,9 @@ def process_bundle(n: int, rows: list, root: str) -> tuple:
     root = Path(root)
     t0 = time.time()
     cp = check_path(root, n)
-    cached = pd.read_csv(cp, dtype={"native_sectors": str, "orbits_hit": str}).fillna(
-        {"native_sectors": "", "orbits_hit": "", "reason": ""}) if cp.exists() else pd.DataFrame(columns=CHECK_FIELDS)
+    cached = _read_check_csv(cp) if cp.exists() else pd.DataFrame(columns=CHECK_FIELDS)
+    if "native_whole_sectors" not in cached.columns:  # cache from before that column: re-check
+        cached = pd.DataFrame(columns=CHECK_FIELDS)
     todo = sorted(set(int(r) for r in rows) - set(cached.row.astype(int)))
     if not todo:
         return n, 0, 0.0
@@ -329,14 +353,23 @@ def warnings_off():
     warnings.simplefilter("ignore")
 
 
+def _read_check_csv(path: Path) -> pd.DataFrame:
+    """Read one bundle's check cache with string sector columns."""
+    strs = ["native_sectors", "native_whole_sectors", "orbits_hit", "reason"]
+    df = pd.read_csv(path, dtype={c: str for c in strs})
+    for c in strs:
+        if c in df.columns:
+            df[c] = df[c].fillna("")
+    return df
+
+
 def load_checks(root: Path, bundles) -> pd.DataFrame:
-    """Concatenate cached check results for ``bundles``."""
-    parts = [pd.read_csv(check_path(root, n), dtype={"native_sectors": str, "orbits_hit": str})
-             for n in sorted(set(bundles)) if check_path(root, n).exists()]
+    """Concatenate cached check results for ``bundles`` (current-format caches only)."""
+    parts = [_read_check_csv(check_path(root, n)) for n in sorted(set(bundles)) if check_path(root, n).exists()]
+    parts = [p for p in parts if "native_whole_sectors" in p.columns]
     if not parts:
         return pd.DataFrame(columns=CHECK_FIELDS)
     out = pd.concat(parts, ignore_index=True)
-    out[["native_sectors", "orbits_hit", "reason"]] = out[["native_sectors", "orbits_hit", "reason"]].fillna("")
     out["passed"] = out.passed.astype(str).str.lower().eq("true")
     return out
 
@@ -459,7 +492,8 @@ def assign_coverage(df: pd.DataFrame, lib: pd.DataFrame, seed: int, set_index: i
     Within each period bin, classes are dealt in shuffled blocks of all eight
     classes (so counts differ by at most one), then matched to rows with
     ``scipy.optimize.linear_sum_assignment`` so that each row only gets a class it
-    can support (some pattern of the class is a subset of its native sectors).
+    can support (some pattern of the class is a subset of its native whole sectors,
+    see check_file).
     Ties are broken randomly. A row that can't get any slot it supports (only
     when a bin lacks enough 13-sector files for 'full') falls back to a random
     feasible class and is counted in the build summary. The pattern is then
@@ -477,7 +511,7 @@ def assign_coverage(df: pd.DataFrame, lib: pd.DataFrame, seed: int, set_index: i
         rng = np.random.default_rng([seed, 2000 + set_index, bi])
         n_blocks = math.ceil(len(sub) / len(classes))
         slots = np.concatenate([rng.permutation(classes) for _ in range(n_blocks)])[: len(sub)]
-        feas = [feasible_patterns(lib, set(map(int, df.at[i, "native_sectors"].split()))) for i in sub]
+        feas = [feasible_patterns(lib, set(map(int, df.at[i, "native_whole_sectors"].split()))) for i in sub]
         cost = np.array([[0.0 if c in f else 1e6 for c in slots] for f in feas])
         cost += rng.random(cost.shape) * 1e-3
         ri, ci = linear_sum_assignment(cost)
@@ -514,15 +548,34 @@ def finish_manifest(df: pd.DataFrame, name: str, pool: pd.DataFrame, lib: pd.Dat
     df["band_extends"] = (hi_r > 1 + ev.REL_TOL) | (lo_r < 1 - ev.REL_TOL)
     df["eval_pbin"] = df.true_period.map(ev.period_bin)
     df["native_class"] = df.native_sectors.map(lambda s: cov.coverage_class(cov.parse_pattern(s)))
-    corpus_frac = pool.groupby("stratum").size() / len(pool)
-    set_frac = df.groupby("stratum").size() / len(df)
-    df["sampling_weight"] = df.stratum.map(corpus_frac / set_frac)
+    df["sampling_weight"] = df.stratum.map(stratum_weights(df.stratum, pool.stratum))
     real = lib.groupby("class").n_stars.sum() / lib.n_stars.sum()
     cls_frac = df.groupby("coverage_class").size() / len(df)
     df["coverage_weight"] = df.coverage_class.map(real / cls_frac)
     df["combined_weight"] = df.sampling_weight * df.coverage_weight
     df["n_native_sectors"] = df.n_native_sectors.astype(int)
+    df["n_whole_sectors"] = df.n_whole_sectors.astype(int)
     return df.sort_values("row")[MANIFEST_COLUMNS].reset_index(drop=True)
+
+
+def stratum_weights(set_strata: pd.Series, pool_strata: pd.Series) -> pd.Series:
+    """Per-stratum sampling weight: corpus share / set share, with empty cells collapsed.
+
+    A stratum that has no rows in the set (dev_small has 50 rows for 63 strata)
+    can't carry its own weight, so its corpus share is spread over the set's
+    strata in the same period bin, in proportion to their corpus shares. Every
+    period bin is represented, so the weights sum to the set size and a weighted
+    mean estimates the corpus-level rate (exactly so when every stratum is
+    present, as in dev_medium and holdout).
+    """
+    corpus = pool_strata.value_counts() / len(pool_strata)
+    have = set_strata.value_counts() / len(set_strata)
+    pbin = lambda idx: pd.Index(idx).str.split("|").str[0]  # noqa: E731
+    bin_total = corpus.groupby(pbin(corpus.index)).sum()
+    present = corpus.reindex(have.index)
+    bin_present = present.groupby(pbin(present.index)).sum()
+    scale = (bin_total / bin_present).reindex(pbin(present.index)).to_numpy()
+    return present * scale / have
 
 
 def install_files(df: pd.DataFrame, name: str, root: Path) -> int:

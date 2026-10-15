@@ -37,7 +37,7 @@ def _load(name):
     """Read one manifest, skipping the test if it hasn't been built."""
     if not SETS[name].exists():
         pytest.skip(f"{SETS[name]} not built")
-    return pd.read_csv(SETS[name], dtype={"native_sectors": str, "sectors": str})
+    return pd.read_csv(SETS[name], dtype={"native_sectors": str, "native_whole_sectors": str, "sectors": str})
 
 
 # ---------------------------------------------------------------- builder logic
@@ -107,12 +107,12 @@ def test_assign_coverage_feasible_and_balanced():
         for i in range(24):
             full = i % 2 == 0
             native = list(range(1, 14)) if full else sorted(rng.choice(np.arange(1, 14), 10, replace=False))
-            rows.append(dict(pbin=pb, native_sectors=" ".join(map(str, native))))
+            rows.append(dict(pbin=pb, native_whole_sectors=" ".join(map(str, native))))
     df = bds.assign_coverage(pd.DataFrame(rows), lib, seed=0, set_index=0)
     libset = dict(zip(lib.pattern, lib["class"]))
     for _, r in df.iterrows():
         assert libset[r.sectors] == r.coverage_class
-        assert set(cov.parse_pattern(r.sectors)) <= set(map(int, r.native_sectors.split()))
+        assert set(cov.parse_pattern(r.sectors)) <= set(map(int, r.native_whole_sectors.split()))
     assert not df.coverage_fallback.any()
     for _, g in df.groupby("pbin"):
         c = g.coverage_class.value_counts().reindex(cov.COVERAGE_CLASSES, fill_value=0)
@@ -169,7 +169,8 @@ def test_manifest_schema():
         assert list(m.columns) == bds.MANIFEST_COLUMNS
         assert len(m) == bds.SET_SIZES[name]
         key = ["path", "star_id", "row", "sim_id", "bundle", "member", "true_period", "shear",
-               "minlat", "maxlat", "P_lo", "P_hi", "native_sectors", "sectors", "coverage_class",
+               "minlat", "maxlat", "P_lo", "P_hi", "native_sectors", "native_whole_sectors", "sectors",
+               "coverage_class",
                "stratum", "sampling_weight", "coverage_weight"]
         assert not m[key].isna().any().any(), name
         assert m.row.is_unique and m.star_id.is_unique
@@ -225,7 +226,8 @@ def _capacity_limited(counts: pd.DataFrame, pb: str, name: str) -> bool:
 
 
 def test_coverage_pattern_within_native_sectors():
-    """Each assigned pattern is a library pattern of its class and a subset of native_sectors;
+    """Each assigned pattern is a library pattern of its class and a subset of native_whole_sectors
+    (itself a subset of native_sectors);
     coverage classes are balanced within each period bin (counts differ by at most 1, apart
     from recorded fallbacks)."""
     lib = cov.load_library()
@@ -235,7 +237,9 @@ def test_coverage_pattern_within_native_sectors():
         for _, r in m.iterrows():
             pat = cov.parse_pattern(r.sectors)
             assert libset[cov.format_pattern(pat)] == r.coverage_class
-            assert set(pat) <= set(map(int, r.native_sectors.split())), (name, r.star_id)
+            whole = set(map(int, r.native_whole_sectors.split()))
+            assert whole <= set(map(int, r.native_sectors.split()))
+            assert set(pat) <= whole, (name, r.star_id)
             assert r.n_sectors == len(pat)
         for pb, g in m.groupby("pbin"):
             c = g.coverage_class.value_counts().reindex(cov.COVERAGE_CLASSES, fill_value=0)
@@ -271,13 +275,13 @@ def test_exclusions_not_in_sets():
 
 def test_local_dev_files_present_and_native_sectors():
     """dev_small files exist under data/smarts_dev; load_smarts_fits reproduces native_sectors and
-    keeps exactly the assigned pattern."""
+    keeps exactly the assigned pattern (every row)."""
     m = _load("dev_small")
     paths = [bds.LOCAL_DIR / p for p in m.path]
     if not all(p.exists() for p in paths):
         pytest.skip("local dev files (data/smarts_dev) not present")
     from preprocessing import load_smarts_fits
-    for (_, r), p in list(zip(m.iterrows(), paths))[:10]:
+    for (_, r), p in zip(m.iterrows(), paths):
         assert sorted(load_smarts_fits(p).sectors_used) == list(map(int, r.native_sectors.split()))
         assert tuple(load_smarts_fits(p, sectors=list(cov.parse_pattern(r.sectors))).sectors_used) \
             == cov.parse_pattern(r.sectors)
