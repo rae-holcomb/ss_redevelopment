@@ -289,7 +289,7 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** blocked on T16a (infrastructure done 2026-10-14, pending review)
+- **Status:** unblocked: T16a merged 2026-10-15 (demo rerun post-T18 in its report). Rae to start.
 - **Do:**
   - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
     declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
