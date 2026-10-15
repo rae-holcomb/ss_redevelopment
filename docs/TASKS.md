@@ -192,7 +192,12 @@ for confirmation (ask Rae first).
 
 ### T18. Arbitration and reliability gates (promoted from P1, 2026-10-14)
 - **Agent:** `method-improver`
-- **Status:** in progress (started 2026-10-14)
+- **Status:** done, merged 2026-10-15 (report `reports/2026-10-14_t18-arbitration-gates/`).
+- **Decision (Rae, 2026-10-15):** keep the **strict** gate (default). Low-to-medium confidence,
+  since it was chosen on synthetic data only. **Re-evaluate strict vs option D**
+  (`half_lag_fallback_min=0.0`) on SMARTS dev_small (P8). Its other open questions
+  (restating G7, factor-2 ratio 0.7 vs 0.8, training data with `half_lag_gate=False`) are
+  still pending Rae.
 - **Why:** Stage 1 lists a success period for 88–100% of stars per bin, but the final
   answer succeeds for only 65–86% (open issue 12). 30/36 of the lost stars fail the
   *gates* (T9). Meanwhile red noise gets a confident period 22/60 times in
@@ -590,6 +595,8 @@ for confirmation (ask Rae first).
   Measure against G4/G7 with a before/after scorecard; validate on dev_small.
 
 ### P8. Re-test star-level SNR and relative peak widths on SMARTS
+- **Rae, 2026-10-15:** also re-evaluate T18's strict half-lag gate vs option D on dev_small
+  (success vs wrong/alias/declines and the noise false-positive rate), since the strict choice was made on synthetic data.
 - **Rae, 2026-10-14:** also re-validate T9's synthetic findings (AUC table, the P1
   gate) on dev_small once T2 lands.
 - **Proposed by:** T9 report (2026-10-14)
@@ -618,6 +625,25 @@ for confirmation (ask Rae first).
   fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
+
+### P12. Mis-phased comb fits of slightly-off candidates
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** synth-s0-00144 (P = 0.531 d, SNR 14) has clean ACF peaks, but its only near-true candidate
+  (P0 = 0.502, 5% off) is fitted with teeth walking off the peaks and fails the vertex gate (T18 report,
+  example 5). Try refining P0 (e.g. from the ACF peak spacing or a local comb_score scan) before the
+  t0 grid search, and measure how many vertex-gate declines it rescues without admitting noise combs.
+
+### P13. TESS orbit-period (13.7 d) false answers
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** after T18, 2 of the 3 remaining wrong answers on synth200 seed 1 are ~13.6-13.7 d for
+  P < 1 d stars: an orbit-gap / ramp periodicity that passes every gate. Relates to T8 / open issue 7.
+  Consider flagging or penalizing candidates within a few % of the orbital period (or its multiples)
+  when the light curve has orbit ramps.
+
+### P14. Stage 1 recall for short-period stars with no success candidate
+- **Proposed by:** T18 report (2026-10-14)
+- **Idea:** 28 of the 55 lost seed-0 stars have no fitted success candidate at all (24 at P < 1.6 d,
+  SNR 1-18), so no arbitration change can recover them. Feed into T5 (short-period recovery).
 
 ### P15. T1 phase 2: full-corpus scan for corrupt noise and galaxy IDs
 - **Proposed by:** T1 phase 1 report (2026-10-15)

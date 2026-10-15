@@ -1,0 +1,231 @@
+split,dataset,rule,bin,n,success
+dev,synth_s0,base (pre-T18),1-3d,45,0.6888888888888889
+dev,synth_s0,base (pre-T18),10-30d,43,0.7674418604651163
+dev,synth_s0,base (pre-T18),3-10d,36,0.8611111111111112
+dev,synth_s0,base (pre-T18),<1d,68,0.6470588235294118
+dev,synth_s0,base (pre-T18),>30d,8,0.75
+dev,synth_s0,+ half-lag gate only,1-3d,45,0.6444444444444445
+dev,synth_s0,+ half-lag gate only,10-30d,43,0.813953488372093
+dev,synth_s0,+ half-lag gate only,3-10d,36,0.8611111111111112
+dev,synth_s0,+ half-lag gate only,<1d,68,0.6323529411764706
+dev,synth_s0,+ half-lag gate only,>30d,8,1.0
+dev,synth_s0,+ few-peak guard only,1-3d,45,0.6888888888888889
+dev,synth_s0,+ few-peak guard only,10-30d,43,0.7674418604651163
+dev,synth_s0,+ few-peak guard only,3-10d,36,0.8611111111111112
+dev,synth_s0,+ few-peak guard only,<1d,68,0.6470588235294118
+dev,synth_s0,+ few-peak guard only,>30d,8,0.75
+dev,synth_s0,RECOMMENDED: half-lag gate + few-peak guard,1-3d,45,0.6444444444444445
+dev,synth_s0,RECOMMENDED: half-lag gate + few-peak guard,10-30d,43,0.813953488372093
+dev,synth_s0,RECOMMENDED: half-lag gate + few-peak guard,3-10d,36,0.8611111111111112
+dev,synth_s0,RECOMMENDED: half-lag gate + few-peak guard,<1d,68,0.6323529411764706
+dev,synth_s0,RECOMMENDED: half-lag gate + few-peak guard,>30d,8,1.0
+dev,synth_s0,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",10-30d,43,0.7906976744186046
+dev,synth_s0,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",>30d,8,1.0
+dev,synth_s0,"rec, few-peak guard 0.3",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, few-peak guard 0.3",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, few-peak guard 0.3",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, few-peak guard 0.3",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, few-peak guard 0.3",>30d,8,1.0
+dev,synth_s0,"rec, few-peak guard 0.5",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, few-peak guard 0.5",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, few-peak guard 0.5",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, few-peak guard 0.5",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, few-peak guard 0.5",>30d,8,1.0
+dev,synth_s0,"rec, few-peak guard = PDM theta <= 0.7",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, few-peak guard = PDM theta <= 0.7",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, few-peak guard = PDM theta <= 0.7",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, few-peak guard = PDM theta <= 0.7",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, few-peak guard = PDM theta <= 0.7",>30d,8,1.0
+dev,synth_s0,"rec, factor-2 guard off",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, factor-2 guard off",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, factor-2 guard off",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, factor-2 guard off",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, factor-2 guard off",>30d,8,1.0
+dev,synth_s0,"rec, factor-2 ratio 0.6",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, factor-2 ratio 0.6",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, factor-2 ratio 0.6",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, factor-2 ratio 0.6",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, factor-2 ratio 0.6",>30d,8,1.0
+dev,synth_s0,"rec, factor-2 ratio 0.8",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, factor-2 ratio 0.8",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, factor-2 ratio 0.8",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, factor-2 ratio 0.8",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, factor-2 ratio 0.8",>30d,8,1.0
+dev,synth_s0,"rec, factor-2 by fold_half_corr_at_2P < 0.5",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, factor-2 by fold_half_corr_at_2P < 0.5",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, factor-2 by fold_half_corr_at_2P < 0.5",3-10d,36,0.8333333333333334
+dev,synth_s0,"rec, factor-2 by fold_half_corr_at_2P < 0.5",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, factor-2 by fold_half_corr_at_2P < 0.5",>30d,8,1.0
+dev,synth_s0,"rec, select max contrast",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, select max contrast",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, select max contrast",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, select max contrast",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, select max contrast",>30d,8,1.0
+dev,synth_s0,"rec, select redchi / n_methods",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, select redchi / n_methods",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, select redchi / n_methods",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, select redchi / n_methods",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, select redchi / n_methods",>30d,8,1.0
+dev,synth_s0,"rec, require >= 2 methods",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, require >= 2 methods",10-30d,43,0.7674418604651163
+dev,synth_s0,"rec, require >= 2 methods",3-10d,36,0.8333333333333334
+dev,synth_s0,"rec, require >= 2 methods",<1d,68,0.5441176470588235
+dev,synth_s0,"rec, require >= 2 methods",>30d,8,0.875
+dev,synth_s0,"rec, vertex gate 0.5",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, vertex gate 0.5",10-30d,43,0.813953488372093
+dev,synth_s0,"rec, vertex gate 0.5",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, vertex gate 0.5",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, vertex gate 0.5",>30d,8,1.0
+dev,synth_s0,"rec, height-SNR gate 0.7",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, height-SNR gate 0.7",10-30d,43,0.8372093023255814
+dev,synth_s0,"rec, height-SNR gate 0.7",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, height-SNR gate 0.7",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, height-SNR gate 0.7",>30d,8,1.0
+dev,synth_s0,"rec, height-SNR gate 0.5",1-3d,45,0.6444444444444445
+dev,synth_s0,"rec, height-SNR gate 0.5",10-30d,43,0.8372093023255814
+dev,synth_s0,"rec, height-SNR gate 0.5",3-10d,36,0.8611111111111112
+dev,synth_s0,"rec, height-SNR gate 0.5",<1d,68,0.6323529411764706
+dev,synth_s0,"rec, height-SNR gate 0.5",>30d,8,1.0
+dev,synth_s0,raw contrast gate hlc >= 0.02,1-3d,45,0.6444444444444445
+dev,synth_s0,raw contrast gate hlc >= 0.02,10-30d,43,0.813953488372093
+dev,synth_s0,raw contrast gate hlc >= 0.02,3-10d,36,0.8611111111111112
+dev,synth_s0,raw contrast gate hlc >= 0.02,<1d,68,0.6323529411764706
+dev,synth_s0,raw contrast gate hlc >= 0.02,>30d,8,1.0
+dev,synth_s0,contrast t-stat >= 3,1-3d,45,0.6666666666666666
+dev,synth_s0,contrast t-stat >= 3,10-30d,43,0.7906976744186046
+dev,synth_s0,contrast t-stat >= 3,3-10d,36,0.8611111111111112
+dev,synth_s0,contrast t-stat >= 3,<1d,68,0.6323529411764706
+dev,synth_s0,contrast t-stat >= 3,>30d,8,0.875
+dev,synth_s0,"B: half-lag PREFERRED, else base gates",1-3d,45,0.7333333333333333
+dev,synth_s0,"B: half-lag PREFERRED, else base gates",10-30d,43,0.813953488372093
+dev,synth_s0,"B: half-lag PREFERRED, else base gates",3-10d,36,0.8611111111111112
+dev,synth_s0,"B: half-lag PREFERRED, else base gates",<1d,68,0.6617647058823529
+dev,synth_s0,"B: half-lag PREFERRED, else base gates",>30d,8,1.0
+dev,synth_s0,"C: base gates, select max contrast",1-3d,45,0.7333333333333333
+dev,synth_s0,"C: base gates, select max contrast",10-30d,43,0.813953488372093
+dev,synth_s0,"C: base gates, select max contrast",3-10d,36,0.8611111111111112
+dev,synth_s0,"C: base gates, select max contrast",<1d,68,0.6470588235294118
+dev,synth_s0,"C: base gates, select max contrast",>30d,8,1.0
+dev,synth_s0,"D: half-lag preferred, else base gates + contrast > 0",1-3d,45,0.7111111111111111
+dev,synth_s0,"D: half-lag preferred, else base gates + contrast > 0",10-30d,43,0.813953488372093
+dev,synth_s0,"D: half-lag preferred, else base gates + contrast > 0",3-10d,36,0.8611111111111112
+dev,synth_s0,"D: half-lag preferred, else base gates + contrast > 0",<1d,68,0.6470588235294118
+dev,synth_s0,"D: half-lag preferred, else base gates + contrast > 0",>30d,8,1.0
+val,synth_s1,base (pre-T18),1-3d,36,0.7777777777777778
+val,synth_s1,base (pre-T18),10-30d,31,0.7419354838709677
+val,synth_s1,base (pre-T18),3-10d,47,0.7659574468085106
+val,synth_s1,base (pre-T18),<1d,70,0.6142857142857143
+val,synth_s1,base (pre-T18),>30d,16,0.625
+val,synth_s1,+ half-lag gate only,1-3d,36,0.75
+val,synth_s1,+ half-lag gate only,10-30d,31,0.8387096774193549
+val,synth_s1,+ half-lag gate only,3-10d,47,0.723404255319149
+val,synth_s1,+ half-lag gate only,<1d,70,0.6142857142857143
+val,synth_s1,+ half-lag gate only,>30d,16,0.75
+val,synth_s1,+ few-peak guard only,1-3d,36,0.7777777777777778
+val,synth_s1,+ few-peak guard only,10-30d,31,0.7419354838709677
+val,synth_s1,+ few-peak guard only,3-10d,47,0.7659574468085106
+val,synth_s1,+ few-peak guard only,<1d,70,0.6142857142857143
+val,synth_s1,+ few-peak guard only,>30d,16,0.625
+val,synth_s1,RECOMMENDED: half-lag gate + few-peak guard,1-3d,36,0.75
+val,synth_s1,RECOMMENDED: half-lag gate + few-peak guard,10-30d,31,0.8387096774193549
+val,synth_s1,RECOMMENDED: half-lag gate + few-peak guard,3-10d,47,0.723404255319149
+val,synth_s1,RECOMMENDED: half-lag gate + few-peak guard,<1d,70,0.6142857142857143
+val,synth_s1,RECOMMENDED: half-lag gate + few-peak guard,>30d,16,0.75
+val,synth_s1,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",1-3d,36,0.75
+val,synth_s1,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",3-10d,47,0.7446808510638298
+val,synth_s1,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",<1d,70,0.6142857142857143
+val,synth_s1,"rec, half-lag 'all terms > 0' only (no 0.1 escape)",>30d,16,0.75
+val,synth_s1,"rec, few-peak guard 0.3",1-3d,36,0.75
+val,synth_s1,"rec, few-peak guard 0.3",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, few-peak guard 0.3",3-10d,47,0.723404255319149
+val,synth_s1,"rec, few-peak guard 0.3",<1d,70,0.6142857142857143
+val,synth_s1,"rec, few-peak guard 0.3",>30d,16,0.75
+val,synth_s1,"rec, few-peak guard 0.5",1-3d,36,0.75
+val,synth_s1,"rec, few-peak guard 0.5",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, few-peak guard 0.5",3-10d,47,0.723404255319149
+val,synth_s1,"rec, few-peak guard 0.5",<1d,70,0.6142857142857143
+val,synth_s1,"rec, few-peak guard 0.5",>30d,16,0.75
+val,synth_s1,"rec, few-peak guard = PDM theta <= 0.7",1-3d,36,0.75
+val,synth_s1,"rec, few-peak guard = PDM theta <= 0.7",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, few-peak guard = PDM theta <= 0.7",3-10d,47,0.723404255319149
+val,synth_s1,"rec, few-peak guard = PDM theta <= 0.7",<1d,70,0.6142857142857143
+val,synth_s1,"rec, few-peak guard = PDM theta <= 0.7",>30d,16,0.75
+val,synth_s1,"rec, factor-2 guard off",1-3d,36,0.75
+val,synth_s1,"rec, factor-2 guard off",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, factor-2 guard off",3-10d,47,0.723404255319149
+val,synth_s1,"rec, factor-2 guard off",<1d,70,0.6
+val,synth_s1,"rec, factor-2 guard off",>30d,16,0.75
+val,synth_s1,"rec, factor-2 ratio 0.6",1-3d,36,0.75
+val,synth_s1,"rec, factor-2 ratio 0.6",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, factor-2 ratio 0.6",3-10d,47,0.723404255319149
+val,synth_s1,"rec, factor-2 ratio 0.6",<1d,70,0.6142857142857143
+val,synth_s1,"rec, factor-2 ratio 0.6",>30d,16,0.75
+val,synth_s1,"rec, factor-2 ratio 0.8",1-3d,36,0.75
+val,synth_s1,"rec, factor-2 ratio 0.8",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, factor-2 ratio 0.8",3-10d,47,0.7446808510638298
+val,synth_s1,"rec, factor-2 ratio 0.8",<1d,70,0.6142857142857143
+val,synth_s1,"rec, factor-2 ratio 0.8",>30d,16,0.75
+val,synth_s1,"rec, factor-2 by fold_half_corr_at_2P < 0.5",1-3d,36,0.75
+val,synth_s1,"rec, factor-2 by fold_half_corr_at_2P < 0.5",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, factor-2 by fold_half_corr_at_2P < 0.5",3-10d,47,0.7446808510638298
+val,synth_s1,"rec, factor-2 by fold_half_corr_at_2P < 0.5",<1d,70,0.6142857142857143
+val,synth_s1,"rec, factor-2 by fold_half_corr_at_2P < 0.5",>30d,16,0.75
+val,synth_s1,"rec, select max contrast",1-3d,36,0.75
+val,synth_s1,"rec, select max contrast",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, select max contrast",3-10d,47,0.7446808510638298
+val,synth_s1,"rec, select max contrast",<1d,70,0.6142857142857143
+val,synth_s1,"rec, select max contrast",>30d,16,0.75
+val,synth_s1,"rec, select redchi / n_methods",1-3d,36,0.75
+val,synth_s1,"rec, select redchi / n_methods",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, select redchi / n_methods",3-10d,47,0.723404255319149
+val,synth_s1,"rec, select redchi / n_methods",<1d,70,0.6142857142857143
+val,synth_s1,"rec, select redchi / n_methods",>30d,16,0.75
+val,synth_s1,"rec, require >= 2 methods",1-3d,36,0.7222222222222222
+val,synth_s1,"rec, require >= 2 methods",10-30d,31,0.7419354838709677
+val,synth_s1,"rec, require >= 2 methods",3-10d,47,0.7446808510638298
+val,synth_s1,"rec, require >= 2 methods",<1d,70,0.5428571428571428
+val,synth_s1,"rec, require >= 2 methods",>30d,16,0.6875
+val,synth_s1,"rec, vertex gate 0.5",1-3d,36,0.75
+val,synth_s1,"rec, vertex gate 0.5",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, vertex gate 0.5",3-10d,47,0.723404255319149
+val,synth_s1,"rec, vertex gate 0.5",<1d,70,0.6142857142857143
+val,synth_s1,"rec, vertex gate 0.5",>30d,16,0.8125
+val,synth_s1,"rec, height-SNR gate 0.7",1-3d,36,0.75
+val,synth_s1,"rec, height-SNR gate 0.7",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, height-SNR gate 0.7",3-10d,47,0.723404255319149
+val,synth_s1,"rec, height-SNR gate 0.7",<1d,70,0.6285714285714286
+val,synth_s1,"rec, height-SNR gate 0.7",>30d,16,0.8125
+val,synth_s1,"rec, height-SNR gate 0.5",1-3d,36,0.75
+val,synth_s1,"rec, height-SNR gate 0.5",10-30d,31,0.8387096774193549
+val,synth_s1,"rec, height-SNR gate 0.5",3-10d,47,0.723404255319149
+val,synth_s1,"rec, height-SNR gate 0.5",<1d,70,0.6285714285714286
+val,synth_s1,"rec, height-SNR gate 0.5",>30d,16,0.8125
+val,synth_s1,raw contrast gate hlc >= 0.02,1-3d,36,0.7222222222222222
+val,synth_s1,raw contrast gate hlc >= 0.02,10-30d,31,0.8387096774193549
+val,synth_s1,raw contrast gate hlc >= 0.02,3-10d,47,0.7021276595744681
+val,synth_s1,raw contrast gate hlc >= 0.02,<1d,70,0.5857142857142857
+val,synth_s1,raw contrast gate hlc >= 0.02,>30d,16,0.75
+val,synth_s1,contrast t-stat >= 3,1-3d,36,0.75
+val,synth_s1,contrast t-stat >= 3,10-30d,31,0.8064516129032258
+val,synth_s1,contrast t-stat >= 3,3-10d,47,0.7446808510638298
+val,synth_s1,contrast t-stat >= 3,<1d,70,0.6142857142857143
+val,synth_s1,contrast t-stat >= 3,>30d,16,0.75
+val,synth_s1,"B: half-lag PREFERRED, else base gates",1-3d,36,0.8055555555555556
+val,synth_s1,"B: half-lag PREFERRED, else base gates",10-30d,31,0.8387096774193549
+val,synth_s1,"B: half-lag PREFERRED, else base gates",3-10d,47,0.7872340425531915
+val,synth_s1,"B: half-lag PREFERRED, else base gates",<1d,70,0.6428571428571429
+val,synth_s1,"B: half-lag PREFERRED, else base gates",>30d,16,0.75
+val,synth_s1,"C: base gates, select max contrast",1-3d,36,0.8055555555555556
+val,synth_s1,"C: base gates, select max contrast",10-30d,31,0.8064516129032258
+val,synth_s1,"C: base gates, select max contrast",3-10d,47,0.7872340425531915
+val,synth_s1,"C: base gates, select max contrast",<1d,70,0.6
+val,synth_s1,"C: base gates, select max contrast",>30d,16,0.75
+val,synth_s1,"D: half-lag preferred, else base gates + contrast > 0",1-3d,36,0.8055555555555556
+val,synth_s1,"D: half-lag preferred, else base gates + contrast > 0",10-30d,31,0.8387096774193549
+val,synth_s1,"D: half-lag preferred, else base gates + contrast > 0",3-10d,47,0.7659574468085106
+val,synth_s1,"D: half-lag preferred, else base gates + contrast > 0",<1d,70,0.6285714285714286
+val,synth_s1,"D: half-lag preferred, else base gates + contrast > 0",>30d,16,0.75

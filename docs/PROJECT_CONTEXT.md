@@ -56,6 +56,7 @@ All files live in a single flat package (`claude_files/` in the
 | `comb_fit.py` | **Stage 2**: joint comb-of-parabolae fitting and multi-candidate arbitration. `fit_rotation_period` is the main entry point. Imports `InitialGuess` from `guesses.py`. |
 | `preprocessing.py` | Raw SMARTS FITS → pipeline-ready `(time, flux)`. Re-detects the original per-orbit gaps (SMARTS ships gap-*interpolated*), lets you drop bad orbits and/or degrade to a sparser TESS-like sector pattern, regrids to even cadence. `load_smarts_fits()` is the one-call entry point. |
 | `plotting.py` | Diagnostic plots mirroring every pipeline stage. |
+| `alias_metrics.py` | Shared ACF-window / phase-fold alias metrics (T9 features; moved out of `ml_features.py` in T18 so `comb_fit` can use them without a circular import). `half_lag_contrast_terms` drives the half-lag consistency gate. |
 | `ml_features.py` | Flattens a fitted `EnsembleResult` into a ~100-column-per-candidate feature table for ranking-model training. `extract_candidate_features()` is the entry point. |
 | `FEATURE_DOCUMENTATION.txt` | The definitive reference for every ML feature: name, definition, rationale, literature references, pipeline stage. Read this instead of re-deriving feature meanings from code. |
 | `batch_test_guesses.py` | Production batch runner: evaluates every `guess_*` method's hit rate across many light curves, in parallel, with auto-discovery of new methods via introspection. |
@@ -102,10 +103,14 @@ evaluation happens:
    parabola center algebraically tied to them via `lmfit` expressions,
    robust loss (`soft_l1`), iterative RANSAC-style rejection of
    badly-fitting windows.
-3. Apply three reliability gates to every successfully-fit candidate:
-   enough peaks survived (`n_peaks_used`), fitted heights are genuinely
-   positive bumps (`frac_positive_heights`), peaks are tall enough
-   relative to noise (`min_mean_height_snr`).
+3. Apply the reliability gates to every successfully-fit candidate:
+   enough peaks survived (`n_peaks_used`, adaptive for few-peak long
+   periods), fitted heights are genuinely positive bumps
+   (`frac_positive_heights`), peaks are tall enough relative to noise
+   (`min_mean_height_snr`), vertices inside their windows; plus (T18,
+   2026-10-14) the half-lag consistency gate (every ACF h(kP) - h((k-1/2)P)
+   term > 0, or mean >= 0.1) and, for few-peak candidates, raw ACF height
+   at P >= 0.4. Then the factor-of-2 guard (half-tooth ratio < 0.7).
 4. Among candidates passing all three gates, pick the lowest reduced
    chi-squared. **If nothing passes, return `success=False` with an
    explanation rather than a forced answer** — see decision log.
@@ -272,7 +277,9 @@ Roughly in priority order as of this writing — re-prioritize freely.
    `acf_fft_highpass` as one of its methods generically. Not deleted
    pending confirmation it doesn't do something the general runner
    doesn't.
-10. **Low-SNR stars get confident wrong answers instead of declines.** On the
+10. **Low-SNR stars get confident wrong answers instead of declines.** *(Largely addressed
+   2026-10-14 by T18's half-lag consistency gate: synth200 wrong 0.060 -> 0 on seed 0, 0.090 -> 0.015 on
+   held-out seed 1; red-noise FP 21/60 -> 0/60. The remaining few are noted in the T18 report.)* On the
    synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
    ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
    account for noise-driven short-lag ACF structure. Task T6.
@@ -283,7 +290,9 @@ Roughly in priority order as of this writing — re-prioritize freely.
    `diffrot` success outcome. The ranker's training label still uses P_eq only
    (see T10 in TASKS.md). Detecting and measuring differential rotation itself
    is future feature F1.
-12. **Stage 2 arbitration loses correct candidates.** Stage 1 recall (any
+12. **Stage 2 arbitration loses correct candidates.** *(T18, 2026-10-14: the 7 seed-0 stars lost on
+   selection to ~0.2 d noise combs are mostly rescued; what remains is Stage 1 recall (28 stars) and
+   noise-level success candidates.)* Stage 1 recall (any
    method) is 0.84–0.98 per period bin, but final correctness is 0.63–0.84
    (0.65 in 10–30 d vs 0.95 recall). Motivates the ranker (T11) and possibly a
    quick hand-tuned fix (TASKS.md P1).
@@ -299,7 +308,7 @@ Roughly in priority order as of this writing — re-prioritize freely.
    fit used to need >= 4 ACF peaks within B/3 (P <~ B/12), so most 1-2 sector TESS stars
    could never get a period above ~2-5 d. It now reaches P ~ 0.3 B (see changelog).
    Still open: (a) P = B/3 sits on the ACF coverage edge (min_valid_frac=0.3 -> ~0.67 B);
-   (b) few-peak (`few_peaks=True`) answers have no extra noise guard, and red noise produced
+   (b) [addressed by T18's few-peak ACF-height guard: red-noise few-peak FPs 0 on all pb_scan sets] few-peak (`few_peaks=True`) answers had no extra noise guard, and red noise produced
    long few-peak false positives (1/60 eval, 3/30 dev seeds); (e) runtime +30-60%; (c) the factor-2 guard's 0.7 ratio
    threshold is hand-set; (d) `guess_acf_fft` misbehaves on long ACFs (hence two-view Stage 1).
 15. **The comb's lag-0 tooth is an implicit noise filter (found 2026-10-13).** For short
@@ -453,4 +462,15 @@ chats should know:
   synth200 success 0.670 -> 0.725 with no regression guard tripped. Costs: rare red-noise long
   few-peak false positives (1/60 eval), and runtime +60% on 1-2 sectors / +30% on synth200. New benchmark `benchmarks/pb_scan.py`. See `reports/2026-10-13_acf-long-period-limit/`.
 - **2026-10-14: ACF long-period branch merged; baseline refreshed.** Post-merge `ss_openblas` run on synth200 reproduces the branch's numbers: success 0.670 → 0.725 (12 stars gained, 1 lost), >30 d 0 → 0.75, 10–30 d 0.698 → 0.767, wrong 0.055 → 0.060, declined 0.24 → 0.185. All regression guards and G8 pass. New baseline at main df7699d; previous kept as `synth200_s0_pre_acf*`. At merge, its proposals P2–P4 became P9–P11 and its open issues 13–14 became 14–15. Rae's decisions: pair-count weighting kept (re-check in T16b); factor-of-2 threshold and few-peak noise guard folded into P1; `min_valid_frac` to T16c; `baseline_days` kept with a scale note; P11 (runtime) folded into T12.
+- **2026-10-14: T18, arbitration and reliability gates.** Two new default gates in `fit_rotation_period`:
+  a **half-lag consistency gate** (every ACF term h(kP) - h((k-1/2)P), k=1..6, > 0, or their mean = T9's
+  `acf_half_lag_contrast` >= 0.1) and a **few-peak ACF-height guard** (few-peak candidates need raw ACF
+  height >= 0.4 at P). New keyword args `half_lag_gate`, `half_lag_strong_contrast`, `half_lag_fallback_min`
+  (softer option D), `few_peaks_min_acf_height`; `CandidateResult.passed_base_gates`; T9 helpers moved to
+  `alias_metrics.py` (ML features bit-identical, tested). Tuned on synth200 seed 0 + pb_scan dev seeds,
+  validated on seed 1 + pb_scan eval: wrong 0.060 -> 0 / 0.090 -> 0.015, alias 0.030 -> 0 / 0.050 -> 0.005,
+  success 0.725 -> 0.730 / 0.700 -> 0.710, declined 0.185 -> 0.270 / 0.160 -> 0.270 (seed 0 / seed 1); red-noise
+  FP 21/60 -> 0/60. check_goals PASS. Factor-2 threshold 0.7 and cross-method weighting measured neutral,
+  unchanged. Open issues 10, 14b mostly resolved; 12 narrowed. New proposals P12-P14. Strict vs softer
+  option D is Rae's call. See `reports/2026-10-14_t18-arbitration-gates/`.
 - **2026-10-15: T1 phase 1, SMARTS catalog audit.** Catalog (1M rows, 4.2 GB FITS incl. a 64×64 wavelet cube) extracted to the Data_Vault drive; scripts in `tools/audit/`. Clean: no NaNs, duplicates or bad periods; Table 1 confirmed except OVERLAP (bound max(CYCLE, √10)). Key traps: file number = catalog row index, not "Simulation Number"; SIM_ID ≥ 800k uses a disjoint galaxy-noise pool (use for holdout). ~12% of galaxies have corrupt orbits (flux far from 1); `load_smarts_fits` drops nearly all of it. 15% of stars have their whole active band outside P_eq ± 10%. Facts added to `SMARTS_REFERENCE.md` §6. See `reports/2026-10-15_t1-smarts-catalog-audit/`; phase 2 proposed as P15 (P16: short-P signal strength).
