@@ -190,8 +190,7 @@ Availability is no constraint. Even the smallest cell, P < 1 d × amplitude terc
    measured period can sit from the governing physical periods; proposed as P17.
 3. Corrupt-noise files: **exclude** from dev sets and holdout, as long as the pool stays large and
    diverse. It does: the >= 800k pool drops to ~176k and the smallest stratum from 73 to ~64.
-4. Native missing sectors: **pending** (question re-explained 2026-10-15). Recommendation: record each file's
-   natively usable sectors in the manifests and pick T16f coverage patterns from those.
+4. Native missing sectors: **record each file's natively usable sectors** (`load_smarts_fits` kept sectors) as a manifest column `native_sectors`, and choose T16f coverage patterns only from those.
 
 ## Phase 2 (if needed): full-corpus scan, for Rae to run locally
 

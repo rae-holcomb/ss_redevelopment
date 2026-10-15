@@ -55,6 +55,10 @@ report (`write-report` skill) and, if code changed, a before/after
     diversity is fine. Practical route without a full scan: check each drawn file at extraction
     (`tools/audit/flux_outliers.scan`) and redraw replacements from the same stratum; log the
     excluded rows.
+  - **Native usable sectors (decided 2026-10-15):** while extracting, run `load_smarts_fits`
+    once per file and store its kept sectors (`native_sectors`, e.g. "1 2 3 5 ... 13") in the
+    manifest. T16f coverage patterns are then chosen only from each file's native sectors, so the
+    assigned pattern is exactly what the pipeline sees.
 - **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
   not just full-year light curves. See T16f.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
@@ -324,7 +328,8 @@ for confirmation (ask Rae first).
     benchmark (a fixed fraction of full-year, consecutive, non-consecutive and
     single-sector stars), using the T16a coverage library. Re-baseline
     `benchmarks/baselines/` once, recording the old baseline as history, as with v2.
-  - **Real data (T2):** add coverage pattern as a stratification axis for
+  - **Real data (T2):** pick each file's coverage pattern only from its native usable sectors
+    (manifest column `native_sectors`, decided 2026-10-15; see T2). Add coverage pattern as a stratification axis for
     `dev_small`, `dev_medium` and `holdout`. Apply patterns from the T16a library to
     SMARTS files via `load_smarts_fits(sectors=...)`, stored as a per-row column
     in the manifest (and read by the scorecard), so each set is frozen and reproducible.
