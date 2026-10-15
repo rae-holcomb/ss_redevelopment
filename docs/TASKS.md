@@ -251,18 +251,19 @@ for confirmation (ask Rae first).
 #### T16a. Coverage-degradation infrastructure
 - **Agent:** `method-improver` (infrastructure only)
 - **Status:** done, merged 2026-10-15 (report `reports/2026-10-14_t16a-coverage-infrastructure/`). Libraries for TESS Years 1–7 plus the pooled default.
-- **Still pending Rae (from its report):** (1) truncate or exclude the 635 over-long Year-4–6 star-seasons; (2) when pooling years for `real-weighted`, weight by stars or equally; (3) Year 8+ (S97+, ~55 d pointings) needs tess-point rerun and a days-based (not sector-index) mapping.
-  See `reports/2026-10-14_t16a-coverage-infrastructure/`. Rae to OK the new `per_star.csv`
-  columns (scorecard v3) and answer the report's open questions (library provenance, class
-  boundaries, within-class weighting). Headline for T16b: on 1 sector, 36% of synthetic stars get
-  confident ~0.2 d wrong answers.
-  **2026-10-15 (Rae's review):**
-  - columns approved;
+- **Rae's decisions (2026-10-15):**
+  - `per_star.csv` columns approved;
   - 3-5 / 6-12 split into consecutive/gapped;
-  - within-class sampling: first uniform, then frequency-weighted once Years 1–7 were pooled;
-  - libraries extended to TESS years 1–7, with `all_cycles_patterns.csv` as the default.
-
-  Remaining: sync with main (T18) and rerun the demo scorecards.
+  - libraries extended to TESS Years 1–7, with `all_cycles_patterns.csv` as the default;
+  - within-class sampling first uniform, then **frequency-weighted** (now the default) once Years 1–7 were pooled.
+- **Still pending Rae:**
+  - (1) truncate, shorten-the-gap, or exclude the 635 over-long Year-4–6 star-seasons. Context: Years 4–6 are
+    376–434 d long with normal ~27-d sectors.
+  - (2) when pooling years, weight by stars per year (current) or equally per year.
+- **Deferred (Rae, 2026-10-15):** Year 8+ (S97+, irregular ~13–58 d pointings). It needs a tess-point rerun and
+  a days-based, not sector-index, mapping.
+- **Headline for T16b:** on 1 sector, 36% of synthetic stars got confident ~0.2 d wrong answers before T18.
+  Re-check post-T18 in the demo rerun.
 - **Do:**
   - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
     mirroring `load_smarts_fits(sectors=...)`.
@@ -737,7 +738,7 @@ for confirmation (ask Rae first).
 - **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover
   the northern sky, plus a pooled default. Rae documented the target table's provenance: the
   brightest TESS stars, with coverage from tess-point. The remaining idea is a fainter or field
-  sample, and Year 8+ (S97 on, longer pointings).
+  sample, and Year 8+ (S97 on, longer pointings; deferred by Rae, 2026-10-15).
 - **Proposed by:** T16a report (2026-10-14)
 - **Idea:** `datasets/coverage/cycle1_patterns.csv` comes from `target_df_shortform.csv`, whose
   selection is unknown. It is Cycle 1 only, so southern only, and drops the 4,718 of 8,156 stars
