@@ -465,7 +465,8 @@ chats should know:
   Proposal P12. See `reports/2026-10-14_t16a-coverage-infrastructure/`.
 - **2026-10-15: T16a review: coverage libraries for every TESS year; classes split.** Rae's decisions:
   - split 3-5 and 6-12 into consecutive/gapped;
-  - sample patterns uniformly within a class (don't tune to Year 1);
+  - sample patterns uniformly within a class (don't tune to Year 1), then switch to frequency-weighted
+    sampling once Years 1–7 were pooled (now the default);
   - descriptor columns approved;
   - `target_df_shortform.csv` = the brightest TESS stars, with tess-point coverage.
 
@@ -476,3 +477,9 @@ chats should know:
   - 413 of the 534 patterns never occur in Cycle 1, and no star-season after Cycle 3 is a full 13 sectors.
 
   The dataset string now records `coverage_library`. See the T16a report.
+- **2026-10-15: TESS sector vs year length.** From the TESS Science Office orbit times
+  (tess.mit.edu/public/files/TESS_orbit_times.csv), sectors stay ~27 d in every year (median start-to-start
+  26.8–27.7 d). The 14–16-sector years are longer than a year: 434 d (Year 4), 383 d (5), 376 d (6), against
+  349–358 d for Years 1–3 and 7. So a 356-d SMARTS light curve can't hold Years 4–6 (why `coverage.fit_to_year`
+  exists). Year 8 (S97–111) is irregular: ~55–58-d four-orbit sectors (S97–98) and single-orbit sectors (S102–103),
+  15 sectors over 450 d. See `datasets/coverage/README.md`.

@@ -7,7 +7,8 @@
   - **All TESS years:** there are now libraries for every TESS year, 1–7 (`datasets/coverage/cycle<N>_patterns.csv`). The pooled `all_cycles_patterns.csv` (23,776 star-seasons, 534 patterns) is the new **default**.
   - **Hemisphere matters:** the northern-heavy years (2, 4, 6) have only 48–58% single-sector star-seasons, versus 73–75% for Cycles 1/3/5/7, and far more gapped coverage. 413 of the 534 pooled patterns never occur in Cycle 1.
   - **Classes:** `3-5` and `6-12` are split into consecutive/gapped; `--coverage 3-5` / `6-12` still draw from both halves.
-  - **Sampling:** uniform within a class stays the default.
+  - **Sampling:** frequency-weighted within a class is now the default (Rae, after the extended-mission patterns were added). Uniform sampling is still available.
+  - **Sector length:** the 14–16-sector years have normal ~27-d sectors. The *years* are longer: 434 d (Year 4), 383 d (5) and 376 d (6), against 349–358 d otherwise (TESS orbit times).
   - **Demos not rerun:** the demo runs below predate this update and the T18 merge. They'll be rerun once this branch can sync with main.
 - **New coverage library:** `datasets/coverage/cycle1_patterns.csv` lists the 121 real Cycle-1 sector patterns with star counts (sum = 3,438). By class: 74.2% `single`, 15.9% `consecutive-2`, 1.4% `gapped-2`, 4.7% `3-5`, 2.7% `6-12`, 1.1% `full`. It's built by `tools/build_coverage_library.py`, and a test checks it against a fresh build.
 - **Synthetic `sectors=` option:** `synthetic.make_lightcurve(sectors=[...])` / `make_suite(sectors=...)` give the same time grid and NaN structure as `load_smarts_fits(sectors=...)` (exact match in tests). The star itself is unchanged; only coverage differs.
@@ -49,7 +50,7 @@ I read discussion items D1 and D2. Nothing here pre-empts them: there are no sea
 One small asymmetry: an explicit all-13 pattern also trims the trailing orbit-gap cadences that the legacy grid keeps. That's why `--coverage full` maps to `sectors=None`.
 
 **4. Scorecard.**
-- New flags: `--coverage`, `--coverage-seed` (default 0), `--coverage-weighting uniform|frequency` (for class specs; default uniform, as specified) and `--coverage-library`.
+- New flags: `--coverage`, `--coverage-seed` (default 0), `--coverage-weighting frequency|uniform` (for class specs; default frequency since 2026-10-15, originally uniform) and `--coverage-library`.
 - Patterns are drawn once per star, in star order, from `default_rng(coverage_seed)`, independently of the suite seed. The same stars can therefore be re-run under a different coverage draw.
 - FITS manifests pass the pattern as `load_smarts_fits(sectors=...)`. A manifest may instead carry a per-row `sectors` column ("1-2-13"), which is what T16f needs for frozen dev sets.
 - For FITS, the `sectors` descriptor is what survived flagged-sector removal (`pre.sectors_used`), and the requested pattern goes in `meta_sectors_requested`.
@@ -80,7 +81,7 @@ Classes as revised 2026-10-15 (Rae: split 3-5 and 6-12 into consecutive/gapped).
 | `gapped-6-12` | 6–12 sectors with gaps | 91 (2.6%) | 47 | mostly near-full years missing 1–2 sectors |
 | `full` | all 13 | 38 (1.1%) | 1 | |
 
-`--coverage 3-5` and `--coverage 6-12` still work as groups: uniform over both halves' patterns. The original version of this task used six classes, with 3-5 and 6-12 unsplit.
+`--coverage 3-5` and `--coverage 6-12` still work as groups, drawing from both halves' patterns. The original version of this task used six classes, with 3-5 and 6-12 unsplit.
 
 ### Per-star descriptor columns (scorecard v3)
 - `n_sectors`, `sectors` ("1-2-13"), `coverage_class`;
@@ -122,7 +123,7 @@ Right: pooling multiplies the variety of gapped patterns, with the number of dis
 | gapped-3-5 | 20 | 203 |
 | gapped-6-12 | 47 | 231 |
 
-So uniform within-class sampling now covers a much wider range of gap shapes, which is what Rae wants for the extended mission. Most of those shapes are rare: 361 of the 534 occur in only one cycle.
+Pooling therefore covers a much wider range of gap shapes than Year 1 alone. Most of those shapes are rare: 361 of the 534 occur in only one cycle.
 
 Other findings:
 - No star-season after Cycle 3 has all 13 sectors. `full` comes only from Cycles 1–3.
@@ -135,7 +136,7 @@ Left column: each class's 6 most common pooled patterns. Right column: 6 drawn a
 - gapped-3-5: the Year-2/6/7 northern shapes `5-11-12` (74) and `5-6-12-13` (69);
 - gapped-6-12: the Year-2/6/7 `4-7, 10-13` block (67).
 
-The rare ones are mostly irregular, one-year-only shapes: 72 of the 203 gapped-3-5 patterns and 124 of the 231 gapped-6-12 patterns occur once. Under uniform within-class sampling, these one-offs dominate the gapped-3-5 and gapped-6-12 draws.
+The rare ones are mostly irregular, one-year-only shapes: 72 of the 203 gapped-3-5 patterns and 124 of the 231 gapped-6-12 patterns occur once. Under the default frequency weighting, n=1 patterns get 6.3% of gapped-3-5 draws and 18.8% of gapped-6-12 draws. Under uniform weighting they'd get 35.5% and 53.7%. Patterns seen in only one year still get 45% of the draws in both classes.
 
 #### Truncating the over-long years
 ![truncation examples](figures/fig1d_truncation_examples.png)
@@ -233,13 +234,13 @@ Median s/star at 2 workers: 3.51 (full), 0.62 (single), 0.90 (gapped-2), 1.00 (r
 2. **Class boundaries.** Keep the six classes, or split `3-5` into consecutive (127 stars) and gapped (33)? And should `1-13` (21 of 49 `gapped-2` stars, an 11-month gap) be its own case? It behaves very differently from `5-7`.
    **Answered (Rae, 2026-10-15):** use the consecutive/gapped split. Done for both 3-5 and 6-12, since Cycles 4–6 have real consecutive 6–12-sector runs; the 3-5 / 6-12 groups remain available as specs. `1-13` is not a separate class.
 3. **Within-class sampling.** It's uniform over patterns as specified, so `gapped-2` draws `1-13` 10% of the time instead of 43%. `--coverage-weighting frequency` is available. Which should T16b and T16f use by default?
-   **Answered (Rae, 2026-10-15):** uniform. The extended mission will show gap patterns unlike Year 1's, so don't tune to Year 1's mix. Rae also asked for the other TESS years, which are now pooled into the default library (see "All TESS years").
+   **Answered (Rae, 2026-10-15):** uniform at first, so as not to tune to Year 1's mix. Rae asked for the other TESS years, which are now pooled into the default library (see "All TESS years"). Once that was done, Rae **switched the default to frequency weighting**. `--coverage-weighting uniform` remains available, and dataset strings now always record the weighting for class specs.
 4. **Approve the new `per_star.csv` columns** (the task asked for your OK): `n_sectors, sectors, coverage_class, total_baseline_days, longest_contiguous_days, largest_gap_days, duty_cycle`, plus `meta_sectors_requested` for FITS. The scorecard version is bumped to 3. `GAP_SPLIT_DAYS = 5` defines "contiguous". Is that right for real SMARTS gaps, where some Cycle-1 interruptions are 2–4 d?
    **Answered (Rae, 2026-10-15):** approved.
 5. **The headline failure mode** (36% confident wrong on one sector, all ~0.2 d). It belongs to T16b/T16d, but it also bears directly on T18's gates. I left a note for the T18 session in the shared notes folder. T18's gate changes should be checked with `--coverage single` as well as on full-year synth200.
 6. **Proposed per-coverage-class metrics (T16f).** *(Rae, 2026-10-15: the layout looks reasonable.)* Add `final.by_coverage_class.<class>.{...outcome fractions...}` and `union_recall.by_coverage_class.<class>` alongside `by_bin`, computed the same way from the new `coverage_class` column. Possibly also `final.by_coverage_class_and_bin`. Regression guards per class would need goals.json entries. Not implemented here; that's T16f.
 
-7. **New (2026-10-15): squeezing Cycles 4–6 into 13 sectors.** Cycles 4–6 have 14–16 sectors. Shifting (1,197 star-seasons) preserves spacing exactly. Truncation (635 star-seasons) drops 1–2 sectors from patterns longer than a SMARTS year, and always the sector beyond the long gap: 174 gapped-2 star-seasons become single, and 122 gapped-3 become consecutive-2 (see "Truncating the over-long years"). Keep truncation, shorten the longest gap instead (keeps every sector and the gapped class), or exclude these star-seasons? Is pooling cycles in proportion to this table's stars per cycle fine, or should each cycle get equal weight? This only matters for `real-weighted` and `--coverage-weighting frequency`.
+7. **New (2026-10-15): squeezing Cycles 4–6 into 13 sectors.** Cycles 4–6 have 14–16 sectors. Shifting (1,197 star-seasons) preserves spacing exactly. Truncation (635 star-seasons) drops 1–2 sectors from patterns longer than a SMARTS year, and always the sector beyond the long gap: 174 gapped-2 star-seasons become single, and 122 gapped-3 become consecutive-2 (see "Truncating the over-long years"). Keep truncation, shorten the longest gap instead (keeps every sector and the gapped class), or exclude these star-seasons? Context: those years' sectors are normal length; the years themselves are 376–434 d long, so a 356-d SMARTS light curve physically can't hold their full span. Shortening the gap would compress real time by 1–3 sectors (27–82 d); truncating keeps the real spacing but loses the far sector. Is pooling cycles in proportion to this table's stars per cycle fine, or should each cycle get equal weight? This only matters for `real-weighted` and `--coverage-weighting frequency`.
 8. **New: Year 8+** (S97 onward: longer ~55-d pointings, partly visible in the pointing table). The input table stops at S96. A Year-8 library would need tess-point rerun on the targets, and SMARTS's 27.4-d sector grid can't represent those pointings directly.
 
 ## Reproduce

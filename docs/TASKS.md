@@ -229,7 +229,7 @@ for confirmation (ask Rae first).
   **2026-10-15 (Rae's review):**
   - columns approved;
   - 3-5 / 6-12 split into consecutive/gapped;
-  - uniform within-class sampling;
+  - within-class sampling: first uniform, then frequency-weighted once Years 1–7 were pooled;
   - libraries extended to TESS years 1–7, with `all_cycles_patterns.csv` as the default.
 
   Remaining: sync with main (T18) and rerun the demo scorecards.
