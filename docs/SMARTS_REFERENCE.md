@@ -25,7 +25,7 @@ Claytor & Tayar 2025 (arXiv:2506.03248) and is not used here.
 | Equatorial period P_eq | `PERIOD` | 0.1–180 d | **uniform** | Label used everywhere. The repo's `generate.py` says 0.1–365, but headers confirm 0.1–180. |
 | Activity level A (x solar) | `ACTIVITY` | 0.1–10 | log-uniform | Headers: median 0.98, mean 2.1. `generate.py` says uniform, which is wrong for the released data. |
 | Activity cycle length | `CYCLE` | 1–40 yr | log-uniform | |
-| Cycle overlap | `OVERLAP` | 0.1 yr – cycle length | log-uniform | |
+| Cycle overlap | `OVERLAP` | 0.1 yr – **max(cycle length, √10 yr)** | log-uniform | Confirmed from catalog 2026-10-15: upper bound is max(CYCLE, 3.162), so OVERLAP > CYCLE for 5.2% of stars (all with CYCLE < 3.16 yr). |
 | Inclination i | `INCL` | 0–pi/2 | uniform in sin^2 i | **Header is in radians.** |
 | Min. *average* spot latitude | `MINLAT` | 0–40 deg | uniform | |
 | Max. *average* spot latitude | `MAXLAT` | MINLAT+5 to 80 deg | uniform | |
@@ -108,7 +108,35 @@ using a Gaussian emergence/decay envelope in time.
   training galaxies, so roughly 1,000 reuses each). Keep this in mind for duplicate and
   leakage checks (task T1).
 
-## 6. Implications already acted on
+## 6. The catalog and file layout (confirmed from catalog 2026-10-15)
+
+Source: T1 phase 1, `reports/2026-10-15_t1-smarts-catalog-audit/`; scripts in `tools/audit/`.
+
+- **Catalog file** `hlsp_smarts_tess_ffi_all_tess_v1.0_sim.fits` (inside the `_cat.tar.gz`):
+  HDU 1 is a 1,000,000-row table (`Simulation Number`, `Activity Rate`, `Cycle Length`,
+  `Cycle Overlap`, `Inclination`, `Spot Min`, `Spot Max`, `Period`, `Omega` = 2π/P,
+  `Shear`, `Decay Time`, `Butterfly`); HDU 2 is a uint8 (1M × 64 × 64) cube of the
+  per-file WAVELET images. No noise-galaxy ID, split, amplitude or SNR columns. All
+  values rounded to 1e-4 (headers carry the same values as float32).
+- **File number = 0-based catalog row index** (rows are sorted by period).
+  `Simulation Number` is a *different* (shuffled) index: never join files on it.
+- **Bundle NNN** holds periods in (NNN−1, NNN] d (bundle 001: [0.1, 1]); 5,037–5,707 files each.
+- **Every FITS file is 155,520 B** (PRIMARY + LIGHTCURVE 17,520 × float32 time/flux on one
+  common 30-min grid, t = 0–364.98 d + WAVELET 64×64 uint8, PMIN/PMAX = 0.1/180 d):
+  155.5 GB extracted for the full corpus.
+- **Header units** (from comments): PERIOD d, CYCLE/OVERLAP yr, INCL rad, MINLAT/MAXLAT deg,
+  TSPOT in units of P_eq.
+- **Shear classes are exact quotas**: 500,000 solar / 250,000 zero / 250,000 anti-solar.
+  INCL is uniform in sin²i (not isotropic). Other Table 1 distributions confirmed (KS D ≤ 0.0014).
+- **Galaxy-noise split is encoded in `Simulation Number`:** SIM_ID < 800,000 uses one
+  pool of ≈ 1,000 galaxies, SIM_ID ≥ 800,000 a disjoint pool of ≈ 1,000 (val+test share it).
+  Evidence: 383 same-noise file pairs among 1,050 files, 0 straddling 800k.
+- **~12% of galaxies have corrupt orbits** (|flux − 1| up to ~10², flux < 0), affecting every
+  file that uses them; `load_smarts_fits` flags and drops nearly all of it.
+- **Gap fill:** ~20% of cadences (median file) are linear-interpolated or constant fill;
+  fill patterns vary by galaxy, and some galaxies lack the first or last ~1 sector entirely.
+
+## 7. Implications already acted on
 
 - **Scoring**: a measurement matching the period of the active latitude band
   counts as success (`evaluation.DIFFROT`), computed from `PERIOD`, `DIFFROT`,

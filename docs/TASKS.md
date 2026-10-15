@@ -24,7 +24,7 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ### T1. Audit the SMARTS training set
 - **Agent:** `data-auditor`
-- **Status:** blocked (data being copied to external drive)
+- **Status:** phase 1 in review (`reports/2026-10-15_t1-smarts-catalog-audit/`, branch `claude/t1-data-audit-phase1-41159b`): catalog + 50-file sample + 1,050-file noise/leakage check. Phase 2 = full-corpus scan (bundle index, corrupt-noise list, per-file galaxy IDs), if Rae wants it; see P15.
 - **Goal:** know what's in the ~1M-file corpus and what's wrong with it before
   training on it.
 - **Done when:** report covers inventory, label sanity, recoverability
@@ -40,6 +40,25 @@ report (`write-report` skill) and, if code changed, a before/after
   has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
   would make dev sets mostly unrecoverable long periods. Stratify, and use the
   MAST input-parameter catalog rather than opening FITS headers.
+- **Note (2026-10-15, T1 phase 1):** file number = catalog **row index**, not "Simulation
+  Number". SIM_ID >= 800,000 uses a disjoint galaxy-noise pool: draw holdout (and dev) from it,
+  train on SIM_ID < 800k. ~12% of galaxies have corrupt orbits. Plan, strata and sizes in
+  `reports/2026-10-15_t1-smarts-catalog-audit/` ("Recommendations for T2").
+- **Rae's decisions (2026-10-15, on the T1 phase 1 open questions):**
+  - Dev and holdout may share galaxies (both from SIM_ID >= 800k); no galaxy IDs needed for T2.
+  - **Keep "band disjoint" stars** (whole active band outside P_eq +/-10%, ~15%) in every set,
+    including ranker training, and **track them**: every manifest gets `band_disjoint`,
+    `band_extends`, `P_lo`, `P_hi` columns (from `evaluation.active_band_period_range`), so they
+    can be analysed as their own case (see P17). Don't stratify them away.
+  - **Exclude files with corrupt galaxy noise** (raw max |flux - 1| > 0.1) from the dev sets and
+    holdout. Costs ~12% of the pool (>= 800k pool ~176k left; smallest stratum 73 -> ~64), so
+    diversity is fine. Practical route without a full scan: check each drawn file at extraction
+    (`tools/audit/flux_outliers.scan`) and redraw replacements from the same stratum; log the
+    excluded rows.
+  - **Native usable sectors (decided 2026-10-15):** while extracting, run `load_smarts_fits`
+    once per file and store its kept sectors (`native_sectors`, e.g. "1 2 3 5 ... 13") in the
+    manifest. T16f coverage patterns are then chosen only from each file's native sectors, so the
+    assigned pattern is exactly what the pipeline sees.
 - **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
   not just full-year light curves. See T16f.
 - **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
@@ -309,7 +328,8 @@ for confirmation (ask Rae first).
     benchmark (a fixed fraction of full-year, consecutive, non-consecutive and
     single-sector stars), using the T16a coverage library. Re-baseline
     `benchmarks/baselines/` once, recording the old baseline as history, as with v2.
-  - **Real data (T2):** add coverage pattern as a stratification axis for
+  - **Real data (T2):** pick each file's coverage pattern only from its native usable sectors
+    (manifest column `native_sectors`, decided 2026-10-15; see T2). Add coverage pattern as a stratification axis for
     `dev_small`, `dev_medium` and `holdout`. Apply patterns from the T16a library to
     SMARTS files via `load_smarts_fits(sectors=...)`, stored as a per-row column
     in the manifest (and read by the scorecard), so each set is frozen and reproducible.
@@ -598,3 +618,31 @@ for confirmation (ask Rae first).
   fit; profile in the report). Try capping teeth per candidate on the long ACF, skipping the long-view
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
+
+### P15. T1 phase 2: full-corpus scan for corrupt noise and galaxy IDs
+- **Proposed by:** T1 phase 1 report (2026-10-15)
+- **Idea:** one resumable streaming pass over all 180 bundles (per-bundle outputs,
+  `ProcessPoolExecutor` over bundles, run locally by Rae) recording per file: max |flux − 1|
+  and the bad orbits (`tools/audit/flux_outliers.py` logic), fill/gap template, and a noise
+  fingerprint; then cluster fingerprints into galaxy IDs (≈ 2,000 galaxies). Gives a complete
+  exclusion list (~12% of files) and lets T2 make dev and holdout galaxy-disjoint, not just
+  train vs holdout. Vectorize `lc_spotcheck.interp_runs` first (~0.25 s/file in Python now).
+  Start with `tools/audit/bundle_index.py --all` (~18 min).
+
+### P16. Short-period signal strength in SMARTS vs synthetic
+- **Proposed by:** T1 phase 1 report (2026-10-15)
+- **Idea:** in the 50-file sample, a raw LS periodogram found 0/10 periods below 2 d (power
+  ≤ 0.06 even when restricted near P) because galaxy red noise dominates. Quantify per-file
+  injected amplitude vs galaxy noise at P < 3 d on dev_small once T2 lands, and feed it into T3's
+  realism check (synthetic SNR may be optimistic at short P).
+
+### P17. Case study: stars whose spot periods never include P_eq
+- **Proposed by:** T1 phase 1 report (2026-10-15), Rae's request
+- **Idea:** ~15% of SMARTS stars have their whole active-band period range outside P_eq +/-10%
+  (strong shear, high-latitude spots). They stay in training as a physically real case. Once dev
+  sets and pipeline runs exist: measure how far the reported period sits from P_eq and from the
+  band (P_lo..P_hi) as a function of shear and latitudes, how often it lands in the band vs wrong,
+  and whether any star-level or candidate-level features (e.g. ACF peak drift, wavelet spread,
+  per-sector period scatter) distinguish this case. Needs the `band_disjoint`/`P_lo`/`P_hi`
+  manifest columns from T2.
+
