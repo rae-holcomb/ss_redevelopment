@@ -501,3 +501,4 @@ chats should know:
   - 413 of the 534 patterns never occur in Cycle 1, and no star-season after Cycle 3 is a full 13 sectors.
 
   The dataset string now records `coverage_library`. See the T16a report.
+- **2026-10-15: T16a merged; baseline refreshed after T18.** New `synth200_s0.json` + tables = the post-T18 run (success 0.730, correct 0.500, diffrot 0.230, alias 0, wrong 0, declined 0.270), main @ bd9bed2; T16a's default output verified bit-identical to it (threads pinned). Previous baseline kept as `synth200_s0_pre_t18*`. `tests/conftest.py` now pins BLAS threads before importing numpy (T14 rule), so bit-identity tests are stable. T16a's proposal P12 renumbered P18 at merge. Rae's decisions recorded in TASKS.md: T16 scope = whole extended mission (T16b–f updated, new T16g multi-season sims via butterpy, to be discussed first), D2 leaning season-by-season, new D3 (training data beyond SMARTS).
