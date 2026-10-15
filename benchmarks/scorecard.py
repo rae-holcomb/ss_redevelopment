@@ -36,13 +36,15 @@ Datasets
                                  patchy sector coverage (T16a), applied to either
                                  dataset: full (default, legacy), real-weighted
                                  (patterns drawn by real-star frequency), a class
-                                 (single, consecutive-2, gapped-2, 3-5, 6-12;
-                                 patterns uniform within the class by default),
-                                 or pattern:1-2-13. Patterns come from
-                                 datasets/coverage/cycle1_patterns.csv (see
-                                 claude_files/coverage.py). Non-full coverage is
-                                 appended to config.dataset, e.g.
-                                 "synthetic:n=100,seed=0,coverage=single,coverage_seed=0".
+                                 (single, consecutive-2, gapped-2, consecutive-3-5,
+                                 gapped-3-5, consecutive-6-12, gapped-6-12) or group
+                                 (3-5, 6-12), with patterns uniform within the class
+                                 by default, or pattern:1-2-13. Patterns come from
+                                 datasets/coverage/all_cycles_patterns.csv (TESS
+                                 years 1-7 pooled; --coverage-library picks another,
+                                 e.g. cycle2_patterns.csv; see claude_files/coverage.py).
+                                 Non-full coverage is appended to config.dataset, e.g.
+                                 "synthetic:n=100,seed=0,coverage=single,coverage_seed=0,coverage_library=all_cycles".
 
 Outputs (in --outdir)
 ---------------------
@@ -264,14 +266,15 @@ def dataset_string(args) -> str:
     """config.dataset for metrics.json. --coverage full keeps the v2 string, so
     existing baselines and goals.json entries still apply."""
     base = f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)
-    spec, seed, weighting, _ = _coverage_args(args)
+    spec, seed, weighting, lib_path = _coverage_args(args)
     if spec == cov.FULL:
         return base
     extra = f",coverage={spec}"
-    if spec in cov.COVERAGE_CLASSES and weighting != "uniform":
+    if (spec in cov.COVERAGE_CLASSES or spec in cov.CLASS_GROUPS) and weighting != "uniform":
         extra += f",coverage_weighting={weighting}"
     if not spec.startswith("pattern:"):
-        extra += f",coverage_seed={seed}"
+        lib_name = Path(lib_path).stem.removesuffix("_patterns")
+        extra += f",coverage_seed={seed},coverage_library={lib_name}"
     return base + extra
 
 
@@ -461,7 +464,7 @@ def main(argv=None):
     p.add_argument("--coverage-weighting", choices=("uniform", "frequency"), default="uniform",
                    help="for a class --coverage: patterns equally likely (uniform) or by real-star count")
     p.add_argument("--coverage-library", type=Path, default=None,
-                   help="coverage library CSV (default datasets/coverage/cycle1_patterns.csv)")
+                   help="coverage library CSV (default datasets/coverage/all_cycles_patterns.csv)")
     args = p.parse_args(argv)
     if args.coverage not in cov.valid_coverage_specs() and not args.coverage.startswith("pattern:"):
         p.error(f"--coverage must be one of {cov.valid_coverage_specs()} or pattern:<sectors>")

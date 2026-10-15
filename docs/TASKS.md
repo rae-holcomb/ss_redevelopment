@@ -226,6 +226,13 @@ for confirmation (ask Rae first).
   columns (scorecard v3) and answer the report's open questions (library provenance, class
   boundaries, within-class weighting). Headline for T16b: on 1 sector, 36% of synthetic stars get
   confident ~0.2 d wrong answers.
+  **2026-10-15 (Rae's review):**
+  - columns approved;
+  - 3-5 / 6-12 split into consecutive/gapped;
+  - uniform within-class sampling;
+  - libraries extended to TESS years 1–7, with `all_cycles_patterns.csv` as the default.
+
+  Remaining: sync with main (T18) and rerun the demo scorecards.
 - **Do:**
   - Add a `sectors` / coverage-pattern option to `synthetic.make_lightcurve`,
     mirroring `load_smarts_fits(sectors=...)`.
@@ -564,7 +571,11 @@ for confirmation (ask Rae first).
   Stage-1 pass when a near-identical candidate already exists, or a cheaper first-pass fit. Verify no
   outcome change on pb_scan + synth200. Good fit for the `performance-optimizer` agent.
 
-### P12. Coverage library from a better-defined target sample (and the northern sky)
+### P12. Coverage library from a better-defined target sample
+- **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover
+  the northern sky, plus a pooled default. Rae documented the target table's provenance: the
+  brightest TESS stars, with coverage from tess-point. The remaining idea is a fainter or field
+  sample, and Year 8+ (S97 on, longer pointings).
 - **Proposed by:** T16a report (2026-10-14)
 - **Idea:** `datasets/coverage/cycle1_patterns.csv` comes from `target_df_shortform.csv`, whose
   selection is unknown. It is Cycle 1 only, so southern only, and drops the 4,718 of 8,156 stars

@@ -1,38 +1,78 @@
-# Coverage library (T16a)
+# Coverage libraries (T16a)
 
-`cycle1_patterns.csv` lists the real-star TESS Cycle-1 sector patterns, with how
-many stars share each one. The scorecard's `--coverage` option and
-`claude_files/coverage.py` use it to give synthetic stars or SMARTS files
-realistic patchy coverage.
+Real-star TESS sector-coverage patterns, with how many stars share each one, for every
+TESS observing cycle (year) 1–7. The scorecard's `--coverage` option and
+`claude_files/coverage.py` use them to give synthetic stars or SMARTS files realistic
+patchy coverage.
+
+| file | content |
+|---|---|
+| `all_cycles_patterns.csv` | **Default library.** Cycles 1–7 pooled. `n_stars` counts *star-seasons* (a star observed in two cycles counts twice); `n_cycles` / `cycles` say where each pattern occurs. |
+| `cycle<N>_patterns.csv` | One cycle (N = 1–7), selectable with `--coverage-library`. `cycle1_patterns.csv` holds the same 121 patterns as the old deduplicated `sector_configs.txt`, now with counts. |
 
 - **Built by:** `python tools/build_coverage_library.py`, from `target_df_shortform.csv`
-  (8,156 TIC stars, each with its full observed sector list `sec`). The first line
-  of the CSV is a `#` provenance comment that includes the input file's sha256.
-- **Pattern:** a star's sectors within 1–13, written as `1-2-13`. SMARTS light curves
-  span 13 sectors (one year), so sector s of a pattern is orbits 2s−1 and 2s of a
-  SMARTS file.
-- **Counts:** 3,438 stars have at least one Cycle-1 sector, and they share 121 distinct
-  patterns. These are the same 121 as the old, deduplicated `sector_configs.txt`.
+  (8,156 TIC stars, each with every sector it falls on, `sec`, S1–96). The first line of
+  each CSV is a `#` provenance comment that includes the input file's sha256.
+- **Cycles** (as in tess-point 0.9.2): 1 = S1–13, 2 = S14–26, 3 = S27–39, 4 = S40–55
+  (16 sectors), 5 = S56–69 (14), 6 = S70–83 (14), 7 = S84–96. Every sector here is about 27 d;
+  Year 8's longer pointings, from S97 on, aren't in the input table.
+- **Pattern:** a star's sectors within one cycle, numbered from the cycle's first sector
+  (1 = S1, S14, S27, ...), written as `1-2-13`. SMARTS light curves span 13 sectors, so
+  sector s of a pattern is orbits 2s−1 and 2s of a SMARTS file. Cycles 4–6 are longer
+  than 13 sectors, so `coverage.fit_to_year` maps their patterns into 1–13:
+  - **Shifted:** a pattern that spans ≤ 13 sectors but ends after sector 13 is moved
+    earlier, keeping its spacing. This affects 446 Cycle-4, 347 Cycle-5 and 404 Cycle-6
+    star-seasons.
+  - **Truncated:** a pattern spanning > 13 sectors keeps its 13-sector window with the
+    most sectors. This affects 610 Cycle-4 and 25 Cycle-6 star-seasons, losing 1–2 sectors
+    each (median 1).
+  - `n_shifted` / `n_truncated` record this per pattern.
+- **Classes:** single, consecutive-2, gapped-2, consecutive-3-5, gapped-3-5,
+  consecutive-6-12, gapped-6-12 and full. The consecutive/gapped split of 3-5 and 6-12 is
+  Rae's decision (2026-10-15). `--coverage 3-5` / `6-12` draw from both halves.
+- **Sampling:** uniform over the patterns within a class by default (Rae, 2026-10-15). The
+  extended mission will show gap patterns unlike Year 1's, so we don't weight by one
+  sample's frequencies. `real-weighted` (frequency-weighted over all patterns) remains
+  available.
 
-| class | patterns | stars | fraction |
-|---|---|---|---|
-| single | 13 | 2552 | 0.742 |
-| consecutive-2 | 12 | 547 | 0.159 |
-| gapped-2 | 10 | 49 | 0.014 |
-| 3-5 | 37 | 160 | 0.047 |
-| 6-12 | 48 | 92 | 0.027 |
-| full | 1 | 38 | 0.011 |
+### Class fractions per cycle (fraction of star-seasons)
+
+| cycle | stars | patterns | single | consec-2 | gapped-2 | consec-3-5 | gapped-3-5 | consec-6-12 | gapped-6-12 | full | frac north |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 3438 | 121 | 0.742 | 0.159 | 0.014 | 0.037 | 0.010 | 0.000 | 0.026 | 0.011 | 0.00 |
+| 2 | 2607 | 201 | 0.580 | 0.132 | 0.047 | 0.014 | 0.156 | 0.003 | 0.057 | 0.010 | 1.00 |
+| 3 | 3414 | 126 | 0.731 | 0.176 | 0.011 | 0.033 | 0.012 | 0.001 | 0.026 | 0.010 | 0.00 |
+| 4 | 3206 | 117 | 0.484 | 0.248 | 0.041 | 0.126 | 0.062 | 0.016 | 0.022 | 0.000 | 0.83 |
+| 5 | 4019 | 116 | 0.726 | 0.164 | 0.010 | 0.051 | 0.021 | 0.016 | 0.011 | 0.000 | 0.38 |
+| 6 | 3086 | 152 | 0.518 | 0.270 | 0.033 | 0.017 | 0.109 | 0.019 | 0.034 | 0.000 | 0.84 |
+| 7 | 4006 | 96 | 0.752 | 0.145 | 0.023 | 0.041 | 0.011 | 0.000 | 0.027 | 0.000 | 0.36 |
+| **pooled** | 23776 | 534 | 0.658 | 0.183 | 0.024 | 0.046 | 0.048 | 0.008 | 0.028 | 0.004 | |
+
+(The `stars` column counts star-seasons for the pooled row.)
+
+Patterns per class in the pooled library:
+
+| single | consec-2 | gapped-2 | consec-3-5 | gapped-3-5 | consec-6-12 | gapped-6-12 | full |
+|---|---|---|---|---|---|---|---|
+| 13 | 12 | 39 | 24 | 203 | 11 | 231 | 1 |
+
+413 of the 534 patterns never occur in Cycle 1, and 361 occur in only one cycle.
 
 Columns: `pattern`, `n_stars`, `frac_stars`, `n_sectors`, `consecutive`, `class`,
-`first_sector`, `last_sector`, `span_sectors`, `max_missing_run`.
+`first_sector`, `last_sector`, `span_sectors`, `max_missing_run`, `n_shifted`,
+`n_truncated`, then `cycle` (per-cycle files) or `n_cycles`, `cycles` (pooled file).
 
 ## Known biases
 
-- **Cycle 1 only.** Sectors after 13 are ignored, so a star observed in S1 and S28
-  counts as single-sector. The 4,718 stars observed only after Cycle 1 are dropped.
-- **Southern ecliptic only.** Cycle 1 pointed south: every star in the library has
-  ecliptic latitude between −89° and −6°. Northern-hemisphere patterns (Cycle 2)
-  may differ, for example in how many CVZ stars there are.
+- **One cycle at a time.** Each pattern is one star-season. A star seen in S1 and S28
+  contributes a single-sector pattern to both Cycle 1 and Cycle 3; revisits across years
+  aren't represented, since SMARTS spans one year (see D2 below).
+- **Hemisphere mix differs by cycle.** Cycles 1 and 3 are purely southern, Cycle 2
+  purely northern, and Cycles 4 and 6 mostly northern. The northern-heavy years have far
+  more multi-sector and gapped coverage (single 48–58% vs 73–75%). Pooling mixes these
+  in proportion to this table's stars per cycle.
+- **Cycles 4–6 are squeezed into 13 sectors** (shifted or truncated, above). No 13-sector
+  star-season exists after Cycle 3, so `full` comes only from Cycles 1–3.
 - **Target selection (Rae, 2026-10-15).** `target_df_shortform.csv` comes from a
   separate analysis by Rae: the few thousand **brightest stars in TESS**, with the sector
   coverage at each star's sky position computed with **`tess-point`**. It was intended as a

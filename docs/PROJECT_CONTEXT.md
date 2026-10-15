@@ -63,7 +63,7 @@ All files live in a single flat package (`claude_files/` in the
 | `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
 | `determinism.py` | Process setup for bit-reproducible runs (T14): `pin_blas_threads()` (call before importing numpy), `init_worker()` (ProcessPoolExecutor initializer), `blas_backend()`, `default_n_workers()` (one per physical P-core). Requires the OpenBLAS env `ss_openblas` (`environment.yml`); Accelerate is not reproducible. |
 | `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. `sectors=[...]` keeps only those sectors of the year, with `load_smarts_fits(sectors=...)` conventions (T16a). |
-| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-2`, `gapped-2`, `3-5`, `6-12`, `full`), the real-star library (`datasets/coverage/cycle1_patterns.csv`, built by `tools/build_coverage_library.py`), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle). |
+| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-/gapped-2`, `consecutive-/gapped-3-5`, `consecutive-/gapped-6-12`, `full`), real-star libraries per TESS year 1–7 plus a pooled default (`datasets/coverage/*_patterns.csv`, built by `tools/build_coverage_library.py`; `fit_to_year` maps 14–16-sector cycles into 13), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle). |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
 ### `guesses.py` in more detail
@@ -463,3 +463,16 @@ chats should know:
   Demo on the same 100 stars: success 0.69 (full) → 0.28 (single) / 0.30 (gapped-2) / 0.33 (real-weighted),
   mostly via confident ~0.2 d wrong answers (wrong 0.08 → 0.36 / 0.44 / 0.37), which extends open issue 10.
   Proposal P12. See `reports/2026-10-14_t16a-coverage-infrastructure/`.
+- **2026-10-15: T16a review: coverage libraries for every TESS year; classes split.** Rae's decisions:
+  - split 3-5 and 6-12 into consecutive/gapped;
+  - sample patterns uniformly within a class (don't tune to Year 1);
+  - descriptor columns approved;
+  - `target_df_shortform.csv` = the brightest TESS stars, with tess-point coverage.
+
+  New `datasets/coverage/cycle<N>_patterns.csv` for N = 1–7 (S1–13, 14–26, 27–39, 40–55, 56–69, 70–83,
+  84–96), plus the pooled `all_cycles_patterns.csv`: 23,776 star-seasons, 534 patterns, now the default library.
+  - Cycles 4–6 (14–16 sectors) are shifted (1,197 star-seasons) or truncated (635) into the 13-sector SMARTS year.
+  - Northern-heavy years (2, 4, 6) are 48–58% single-sector, versus 73–75% for the others, with far more gapped coverage.
+  - 413 of the 534 patterns never occur in Cycle 1, and no star-season after Cycle 3 is a full 13 sectors.
+
+  The dataset string now records `coverage_library`. See the T16a report.

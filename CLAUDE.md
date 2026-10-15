@@ -35,9 +35,10 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
   figures), `check_goals.py` (grades against `goals.json` and a baseline),
   `baselines/` (committed reference metrics).
 - `datasets/`: frozen dev/holdout manifests (once built, see `docs/TASKS.md`).
-  `datasets/coverage/cycle1_patterns.csv` is the real-star TESS Cycle-1 sector-pattern
-  library with star counts (T16a). Rebuild it with `tools/build_coverage_library.py`;
-  `claude_files/coverage.py` reads and samples it (scorecard `--coverage`).
+  `datasets/coverage/` holds the real-star TESS sector-pattern libraries with star counts
+  (T16a): `cycle<N>_patterns.csv` for TESS years 1–7, plus `all_cycles_patterns.csv`
+  pooled (the default). Rebuild them with `tools/build_coverage_library.py`;
+  `claude_files/coverage.py` reads and samples them (scorecard `--coverage`).
 - `reports/`: one folder per agent task (README + figures + notebook).
 - `runs/`: scorecard outputs (gitignored, regenerable).
 - `tools/`: helper scripts (`new_report.py`, `run_notebook.py`, `compare_runs.py`,

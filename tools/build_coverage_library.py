@@ -1,33 +1,27 @@
 #!/usr/bin/env python3
 """
-build_coverage_library.py -- count real-star TESS Cycle-1 sector patterns (task T16a).
+build_coverage_library.py -- count real-star TESS sector patterns per observing cycle (task T16a).
 
-Reads `target_df_shortform.csv` (one row per TIC star, with its observed
-sector list in `sec`), keeps each star's Cycle-1 sectors (1-13, the span a
-SMARTS light curve emulates), and counts how many stars share each pattern.
-This replaces `sector_configs.txt`, which held the same 121 patterns
-deduplicated, without frequencies (ss_claude_sandbox.ipynb cell 10).
+Reads `target_df_shortform.csv` (one row per TIC star, with every sector it falls on in
+`sec`, computed with tess-point at the star's position; see datasets/coverage/README.md).
+For each TESS cycle (year) 1-7 it takes each star's sectors within that cycle (one
+"star-season"), expresses them relative to the cycle's first sector, fits them into the
+13-sector SMARTS year (coverage.fit_to_year: cycles 4-6 have 14-16 sectors), and counts
+how many stars share each pattern. Cycle 1 reproduces the old deduplicated
+`sector_configs.txt` patterns, now with frequencies.
 
-Output: datasets/coverage/cycle1_patterns.csv with columns
-    pattern          "1-2-13" (sorted 1-indexed sector numbers)
-    n_stars          stars with exactly this Cycle-1 pattern
-    frac_stars       n_stars / stars with >= 1 Cycle-1 sector
-    n_sectors        len(pattern)
-    consecutive      True if one unbroken run of sectors
-    class            coverage class (claude_files/coverage.py: coverage_class)
-    first_sector, last_sector, span_sectors, max_missing_run
+Outputs (datasets/coverage/):
+    cycle<N>_patterns.csv    one library per cycle (N = 1..7)
+    all_cycles_patterns.csv  cycles pooled (n_stars = star-seasons); the default library
 
-Provenance and known biases (also in datasets/coverage/README.md):
-- Cycle 1 only: later sectors are dropped, so a star seen in S1 and S28 counts as
-  single-sector here. Stars observed only after Cycle 1 are dropped.
-- Southern ecliptic only (Cycle 1 = southern hemisphere): all 3,438 stars have
-  ecliptic latitude < -5.9 deg.
-- How target_df_shortform.csv's stars were selected is unknown.
+Columns: pattern ("1-2-13"), n_stars, frac_stars, n_sectors, consecutive, class,
+first_sector, last_sector, span_sectors, max_missing_run, n_shifted, n_truncated,
+and cycle (per-cycle files) or n_cycles + cycles (pooled file).
 
 Usage
 -----
     python tools/build_coverage_library.py
-    python tools/build_coverage_library.py --targets target_df_shortform.csv --out datasets/coverage/cycle1_patterns.csv
+    python tools/build_coverage_library.py --targets target_df_shortform.csv --outdir datasets/coverage
 """
 
 from __future__ import annotations
@@ -46,27 +40,43 @@ import coverage  # noqa: E402
 
 
 def main(argv=None):
-    """CLI entry point: build the library and write it as CSV with a provenance header."""
+    """CLI entry point: build every per-cycle library and the pooled one."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--targets", type=Path, default=ROOT / "target_df_shortform.csv")
-    p.add_argument("--out", type=Path, default=coverage.DEFAULT_LIBRARY)
+    p.add_argument("--outdir", type=Path, default=coverage.LIBRARY_DIR)
     args = p.parse_args(argv)
 
     targets = pd.read_csv(args.targets, index_col=0)
-    lib = coverage.build_library(targets)
     sha = hashlib.sha256(args.targets.read_bytes()).hexdigest()[:16]
-    n_any = int(lib["n_stars"].sum())
+    args.outdir.mkdir(parents=True, exist_ok=True)
+    libs = []
+    for cycle, (first, last) in coverage.CYCLE_SECTORS.items():
+        lib = coverage.build_library(targets, cycle=cycle)
+        libs.append(lib)
+        n_any = int(lib["n_stars"].sum())
+        header = (f"# Built by tools/build_coverage_library.py from {args.targets.name} (sha256 {sha}...): "
+                  f"TESS cycle {cycle} = sectors {first}-{last} ({last - first + 1} sectors), mapped to SMARTS "
+                  f"sectors 1-13 by coverage.fit_to_year. {len(targets)} stars, {n_any} observed in this cycle, "
+                  f"{len(lib)} distinct patterns. See datasets/coverage/README.md.")
+        _write(args.outdir / f"cycle{cycle}_patterns.csv", lib, header)
+        print(f"cycle {cycle} (S{first}-{last}): {n_any} stars, {len(lib)} patterns, "
+              f"{int(lib.n_shifted.sum())} shifted, {int(lib.n_truncated.sum())} truncated")
+    pooled = coverage.combine_libraries(libs)
+    header = (f"# Built by tools/build_coverage_library.py from {args.targets.name} (sha256 {sha}...): "
+              f"TESS cycles 1-7 pooled; n_stars counts star-seasons ({int(pooled.n_stars.sum())}), "
+              f"{len(pooled)} distinct patterns. Default --coverage library. See datasets/coverage/README.md.")
+    _write(args.outdir / "all_cycles_patterns.csv", pooled, header)
+    n = pooled["n_stars"].sum()
+    print(f"\npooled: {n} star-seasons, {len(pooled)} patterns")
+    print(pooled.groupby("class", sort=False).agg(patterns=("pattern", "size"), star_seasons=("n_stars", "sum"))
+                .assign(frac=lambda d: d.star_seasons / n).to_string())
 
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    with open(args.out, "w") as fh:
-        fh.write(f"# Built by tools/build_coverage_library.py from {args.targets.name} "
-                 f"(sha256 {sha}...): {len(targets)} stars, {n_any} with >= 1 Cycle-1 sector, "
-                 f"{len(lib)} distinct patterns. Cycle 1 = sectors 1-13. See datasets/coverage/README.md.\n")
+
+def _write(path: Path, lib: pd.DataFrame, header: str):
+    """Write a library CSV preceded by a one-line '#' provenance comment."""
+    with open(path, "w") as fh:
+        fh.write(header + "\n")
         lib.to_csv(fh, index=False)
-    print(f"{len(targets)} stars in {args.targets.name}; {n_any} with Cycle-1 data; "
-          f"{len(lib)} patterns -> {args.out}")
-    print(lib.groupby("class", sort=False).agg(patterns=("pattern", "size"), stars=("n_stars", "sum"))
-             .assign(frac=lambda d: d.stars / n_any).to_string())
 
 
 if __name__ == "__main__":

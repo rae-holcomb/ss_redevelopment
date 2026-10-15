@@ -38,13 +38,19 @@ def targets():
 
 @pytest.fixture(scope="module")
 def library():
-    """The committed coverage library."""
+    """The committed default (all-cycles) coverage library."""
     return cov.load_library()
+
+
+@pytest.fixture(scope="module")
+def cycle1():
+    """The committed Cycle-1 library."""
+    return cov.load_library(cov.LIBRARY_DIR / "cycle1_patterns.csv")
 
 
 def test_library_counts_sum_to_cycle1_stars(targets):
     """Every star with >= 1 Cycle-1 sector is counted exactly once."""
-    lib = cov.build_library(targets)
+    lib = cov.build_library(targets, cycle=1)
     assert lib["n_stars"].sum() == N_CYCLE1_STARS
     assert len(lib) == 121  # same distinct patterns as the old sector_configs.txt
     assert lib["pattern"].is_unique
@@ -59,10 +65,44 @@ def test_library_patterns_match_old_sector_configs(targets):
     assert new == old
 
 
-def test_committed_library_is_up_to_date(targets, library):
-    """datasets/coverage/cycle1_patterns.csv equals a fresh build (rerun the builder if not)."""
-    fresh = cov.build_library(targets)
-    pd.testing.assert_frame_equal(library.reset_index(drop=True), fresh, check_dtype=False)
+def test_committed_libraries_are_up_to_date(targets, library):
+    """Every datasets/coverage/*_patterns.csv equals a fresh build (rerun the builder if not)."""
+    libs = []
+    for cycle in cov.CYCLE_SECTORS:
+        fresh = cov.build_library(targets, cycle=cycle)
+        libs.append(fresh)
+        committed = cov.load_library(cov.LIBRARY_DIR / f"cycle{cycle}_patterns.csv")
+        pd.testing.assert_frame_equal(committed, fresh, check_dtype=False)
+    pd.testing.assert_frame_equal(library, cov.combine_libraries(libs), check_dtype=False)
+
+
+def test_cycle_libraries_count_every_star_season(targets, library):
+    """Each cycle's counts sum to the stars observed in that cycle; the pooled library sums them."""
+    from ast import literal_eval
+    sec = targets["sec"].apply(literal_eval)
+    total = 0
+    for cycle, (first, last) in cov.CYCLE_SECTORS.items():
+        n_obs = int(sec.apply(lambda s: any(first <= v <= last for v in s)).sum())
+        lib = cov.build_library(targets, cycle=cycle)
+        assert lib["n_stars"].sum() == n_obs
+        assert lib["last_sector"].max() <= cov.N_SECTORS_YEAR
+        total += n_obs
+    assert library["n_stars"].sum() == total
+    assert library["pattern"].is_unique
+
+
+@pytest.mark.parametrize("raw,want,action", [
+    ((3, 4), (3, 4), "none"),
+    ((13,), (13,), "none"),
+    ((14,), (13,), "shifted"),
+    ((10, 12, 16), (7, 9, 13), "shifted"),
+    ((1, 2, 3, 16), (1, 2, 3), "truncated"),        # window 1-13 holds 3 sectors, 4-16 only 1
+    ((1, 14, 15, 16), (11, 12, 13), "truncated"),   # window 4-16 holds 3 sectors
+    (tuple(range(1, 17)), tuple(range(1, 14)), "truncated"),
+])
+def test_fit_to_year(raw, want, action):
+    """Patterns from 14-16-sector cycles are shifted, or truncated to their best 13-sector window."""
+    assert cov.fit_to_year(raw) == (want, action)
 
 
 def test_build_library_toy_counts():
@@ -88,8 +128,9 @@ def test_library_class_column_consistent(library):
 
 @pytest.mark.parametrize("pat,cls", [
     ((5,), "single"), ((5, 6), "consecutive-2"), ((5, 7), "gapped-2"), ((1, 13), "gapped-2"),
-    ((1, 2, 3), "3-5"), ((1, 5, 9, 12, 13), "3-5"), (tuple(range(1, 7)), "6-12"),
-    (tuple(range(1, 13)), "6-12"), (tuple(range(1, 14)), "full"),
+    ((1, 2, 3), "consecutive-3-5"), ((1, 5, 9, 12, 13), "gapped-3-5"), ((4, 5, 6, 7, 8), "consecutive-3-5"),
+    (tuple(range(1, 7)), "consecutive-6-12"), ((1, 2, 3, 4, 5, 7), "gapped-6-12"),
+    (tuple(range(1, 13)), "consecutive-6-12"), (tuple(range(1, 14)), "full"),
 ])
 def test_coverage_class(pat, cls):
     """Class boundaries as documented in coverage.coverage_class."""
@@ -140,15 +181,23 @@ def test_sample_real_weighted_frequencies(library):
         assert abs(got.get(cls, 0.0) - frac) < 0.015, cls
 
 
-def test_sample_class_uniform_vs_frequency(library):
-    """Within gapped-2, 'uniform' gives each of the 10 patterns ~10%; 'frequency' favors 1-13 (21/49)."""
+def test_sample_class_uniform_vs_frequency(cycle1):
+    """Within Cycle-1 gapped-2, 'uniform' gives each of the 10 patterns ~10%; 'frequency' favors 1-13 (21/49)."""
     n = 20000
     uni = pd.Series([cov.format_pattern(p) for p in
-                     cov.sample_patterns("gapped-2", n, seed=0, library=library)]).value_counts(normalize=True)
+                     cov.sample_patterns("gapped-2", n, seed=0, library=cycle1)]).value_counts(normalize=True)
     assert len(uni) == 10 and (uni - 0.1).abs().max() < 0.02
     freq = pd.Series([cov.format_pattern(p) for p in
-                      cov.sample_patterns("gapped-2", n, seed=0, library=library, weighting="frequency")])
+                      cov.sample_patterns("gapped-2", n, seed=0, library=cycle1, weighting="frequency")])
     assert abs((freq == "1-13").mean() - 21 / 49) < 0.02
+
+
+@pytest.mark.parametrize("group", list(cov.CLASS_GROUPS))
+def test_sample_class_group(library, group):
+    """'3-5' / '6-12' draw uniformly over both the consecutive and gapped patterns of that size."""
+    draws = cov.sample_patterns(group, 4000, seed=0, library=library)
+    classes = {cov.coverage_class(p) for p in draws}
+    assert classes == set(cov.CLASS_GROUPS[group])
 
 
 def test_sample_explicit_pattern_and_errors(library):
@@ -365,9 +414,11 @@ def test_dataset_string():
     import scorecard
     assert scorecard.dataset_string(_args(synthetic=200)) == "synthetic:n=200,seed=0"
     assert (scorecard.dataset_string(_args(synthetic=100, coverage="single", coverage_seed=3))
-            == "synthetic:n=100,seed=0,coverage=single,coverage_seed=3")
-    assert (scorecard.dataset_string(_args(synthetic=100, coverage="gapped-2", coverage_weighting="frequency"))
-            == "synthetic:n=100,seed=0,coverage=gapped-2,coverage_weighting=frequency,coverage_seed=0")
+            == "synthetic:n=100,seed=0,coverage=single,coverage_seed=3,coverage_library=all_cycles")
+    assert (scorecard.dataset_string(_args(synthetic=100, coverage="gapped-2", coverage_weighting="frequency",
+                                           coverage_library=cov.LIBRARY_DIR / "cycle2_patterns.csv"))
+            == "synthetic:n=100,seed=0,coverage=gapped-2,coverage_weighting=frequency,coverage_seed=0,"
+               "coverage_library=cycle2")
     assert (scorecard.dataset_string(_args(synthetic=10, coverage="pattern:1-13"))
             == "synthetic:n=10,seed=0,coverage=pattern:1-13")
 
