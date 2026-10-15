@@ -35,7 +35,7 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ### T2. Build frozen dev sets and holdout
 - **Agent:** `dev-set-builder`
-- **Status:** blocked (on T1 inventory)
+- **Status:** in progress (started 2026-10-15, overnight)
 - **Note:** SMARTS periods are uniform in 0.1–180 d, so only ~17% of the corpus
   has P < 30 d (the 1-yr-baseline limit) and ~5.5% has P < 10 d. Random sampling
   would make dev sets mostly unrecoverable long periods. Stratify, and use the
@@ -61,8 +61,26 @@ report (`write-report` skill) and, if code changed, a before/after
     assigned pattern is exactly what the pipeline sees.
 - **Note (2026-10-14):** dev sets must also stratify on **sector-coverage pattern**,
   not just full-year light curves. See T16f.
-- **Goal:** `datasets/dev_small.csv` (~30–50), `dev_medium.csv` (~1000),
-  `holdout.csv` (~2000–5000), stratified by period/SNR/baseline, reproducible
+- **Rae's design decisions (2026-10-15, overnight run):**
+  1. Sizes: dev_small **50**, dev_medium **1,000** (both local under `data/`), holdout **3,000** (drive only).
+  2. Period mix: **equal per bin** for <1, 1–3, 3–10, 10–30, 30–60 d; fewer for 60–120 and 120–180 d
+     (~1/7 of each set, as "should decline" tests). Record per-row **sampling weights** for reweighting
+     to the corpus.
+  3. Other strata: amplitude-proxy tercile × shear class (solar / zero / anti-solar).
+  4. **T16f's real-data part is folded in:** each row gets a coverage pattern from the pooled
+     all-cycles library (`datasets/coverage/all_cycles_patterns.csv`), drawn only from its
+     `native_sectors`, stored in a per-row `sectors` column (the scorecard already reads it), plus
+     `coverage_class`.
+  5. Coverage mix: **balanced across coverage classes** (diagnostic power), with sampling weights
+     so results can be reweighted to the real-world mix.
+  6. Add a scorecard switch to **ignore the manifest's `sectors`** (full-year scoring of the same
+     stars), for paired coverage comparisons, and make manifest `path`s resolve relative to
+     `SMARTS_DATA_ROOT` (or `--data-root`). These are dataset options; metric definitions stay untouched.
+  7. Baselines: score **dev_small and dev_medium** (both with assigned coverage *and* full-year) and
+     commit them to `benchmarks/baselines/`. Rae's standing OK for the dev_medium runs. **Never run
+     the holdout.**
+- **Goal:** `datasets/dev_small.csv` (50), `dev_medium.csv` (1,000),
+  `holdout.csv` (3,000), stratified as above, reproducible
   from `tools/build_dev_sets.py`.
 - **Done when:** Rae approves the strata and counts; disjointness test passes;
   baseline scorecard run on dev_small committed to `benchmarks/baselines/`.
@@ -343,6 +361,7 @@ for confirmation (ask Rae first).
   natural comparison and a possible prior or limit companion for single-sector stars.
 
 #### T16e. Coverage-aware ML features
+- **Decision (Rae, 2026-10-15):** **defer the multi-season features** (n_seasons, per-season agreement/scatter) until T16g/D2. Single-season coverage features only for now.
 - **Update 2026-10-15:** add n_seasons, per-season period agreement and per-season scatter alongside the
   single-season coverage descriptors. **Unblocked by T16a (merged 2026-10-15).**
 - **Agent:** `feature-researcher`
@@ -357,7 +376,7 @@ for confirmation (ask Rae first).
   constrained by each file's `native_sectors`. Add a small **multi-season** dev set from T16g. Synthetic part
   **unblocked by T16a**.
 - **Agent:** `dev-set-builder` (for the real-data sets), `method-improver` (for synthetic)
-- **Status:** blocked on T16a (and on T2 for the real-data part)
+- **Status:** real-data part folded into T2 (2026-10-15); synthetic part ready.
 - **Why:** so every agent's routine before/after scorecard exercises patchy data,
   not just the clean full-year case. Regressions on gappy stars should be caught
   as they happen, not discovered at the end.
