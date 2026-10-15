@@ -1,0 +1,194 @@
+{
+ "n_rows": 1000000,
+ "sim_id_min": 0,
+ "sim_id_max": 999999,
+ "sim_id_unique": 1000000,
+ "sim_id_is_permutation_of_range": true,
+ "sim_id_equals_row": false,
+ "rows_sorted_by_period": true,
+ "n_duplicate_param_rows": 0,
+ "n_nan": {
+  "SIM_ID": 0,
+  "ACTIVITY": 0,
+  "CYCLE": 0,
+  "OVERLAP": 0,
+  "INCL": 0,
+  "MINLAT": 0,
+  "MAXLAT": 0,
+  "PERIOD": 0,
+  "OMEGA": 0,
+  "DIFFROT": 0,
+  "TSPOT": 0,
+  "BFLY": 0
+ },
+ "n_inf": {
+  "ACTIVITY": 0,
+  "CYCLE": 0,
+  "OVERLAP": 0,
+  "INCL": 0,
+  "MINLAT": 0,
+  "MAXLAT": 0,
+  "PERIOD": 0,
+  "OMEGA": 0,
+  "DIFFROT": 0,
+  "TSPOT": 0
+ },
+ "n_period_nonpositive": 0,
+ "range": {
+  "ACTIVITY": [
+   0.1,
+   10.0
+  ],
+  "CYCLE": [
+   1.0,
+   39.8106
+  ],
+  "OVERLAP": [
+   0.1,
+   39.5593
+  ],
+  "INCL": [
+   0.0013,
+   1.5698
+  ],
+  "MINLAT": [
+   0.0,
+   40.0
+  ],
+  "MAXLAT": [
+   5.0256,
+   80.0
+  ],
+  "PERIOD": [
+   0.1005,
+   180.0
+  ],
+  "OMEGA": [
+   0.0349,
+   62.5138
+  ],
+  "DIFFROT": [
+   -1.0,
+   1.0
+  ],
+  "TSPOT": [
+   1.0,
+   10.0
+  ]
+ },
+ "median": {
+  "ACTIVITY": 0.99965,
+  "CYCLE": 6.31725,
+  "OVERLAP": 0.8026,
+  "INCL": 0.7851,
+  "MINLAT": 20.0131,
+  "MAXLAT": 53.8032,
+  "PERIOD": 90.10855000000001,
+  "OMEGA": 0.0697,
+  "DIFFROT": 0.05,
+  "TSPOT": 3.1608
+ },
+ "mean": {
+  "ACTIVITY": 2.1518450049999993,
+  "CYCLE": 10.545083673499999,
+  "OVERLAP": 2.202141122700001,
+  "INCL": 0.7850726772000001,
+  "MINLAT": 20.0141058131,
+  "MAXLAT": 52.5287032844,
+  "PERIOD": 90.0599998175,
+  "OMEGA": 0.26317130720000004,
+  "DIFFROT": 0.0982207451,
+  "TSPOT": 3.908849744700001
+ },
+ "all_on_1e-4_grid": {
+  "ACTIVITY": true,
+  "CYCLE": true,
+  "OVERLAP": true,
+  "INCL": true,
+  "MINLAT": true,
+  "MAXLAT": true,
+  "PERIOD": true,
+  "OMEGA": true,
+  "DIFFROT": true,
+  "TSPOT": true
+ },
+ "omega_vs_2pi_over_P_max_rel_dev": 0.0014300799260715813,
+ "n_exact_integer_period": 118,
+ "shear_mix": {
+  "solar(>0)": 0.5,
+  "zero": 0.25,
+  "anti(<0)": 0.25,
+  "0<|shear|<0.1": 0.0
+ },
+ "bfly_true_frac": 0.800587,
+ "ks_vs_reference": {
+  "PERIOD": {
+   "D": 0.000565048916064459,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "ACTIVITY": {
+   "D": 0.0005873153186671809,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "CYCLE": {
+   "D": 0.001351950188146045,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "OVERLAP": {
+   "D": 0.05198193830889686,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "INCL": {
+   "D": 0.0008055338476478102,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "MINLAT": {
+   "D": 0.0009739999999999749,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "MAXLAT": {
+   "D": 0.0010556036442254113,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "TSPOT": {
+   "D": 0.0006096424955777391,
+   "n": 1000000,
+   "D_crit_1pct": 0.00163
+  },
+  "|DIFFROT|": {
+   "D": 0.0014131877481357025,
+   "n": 750000,
+   "D_crit_1pct": 0.00188216187755818
+  }
+ },
+ "ks_incl_uniform_cos_i": 0.25067959542821144,
+ "ks_incl_uniform_i": 0.10600998987405874,
+ "batch1": {
+  "n_files": 10000,
+  "max_abs_diff_row_join": {
+   "PERIOD": 7.61718749231477e-06,
+   "ACTIVITY": 4.760742182696731e-07,
+   "CYCLE": 1.9042968801841198e-06,
+   "OVERLAP": 1.51367188294671e-06,
+   "INCL": 5.950927683961993e-08,
+   "MINLAT": 1.9042968801841198e-06,
+   "MAXLAT": 3.808593746157385e-06,
+   "DIFFROT": 2.9754638752876872e-08,
+   "TSPOT": 4.7607422004602995e-07
+  },
+  "bfly_mismatch_row_join": 0,
+  "frac_period_mismatch_if_joined_on_sim_id": 1.0
+ },
+ "overlap": {
+  "frac_overlap_gt_cycle": 0.051954,
+  "max_overlap_where_cycle_lt_sqrt10": 3.1623,
+  "ks_logU_0.1_to_max_cycle_sqrt10": 0.001114621013174888
+ }
+}

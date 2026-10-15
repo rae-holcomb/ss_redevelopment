@@ -306,6 +306,11 @@ Roughly in priority order as of this writing — re-prioritize freely.
    candidate periods, `_grid_search_t0` puts the n=0 tooth on the trivial lag-0 ACF peak. Removing
    it everywhere made 5 low-SNR synth200 stars return confident ~0.2-0.5 d answers. This
    is likely part of open issue 10's mechanism, and any T6 fix should account for it.
+16. **SMARTS galaxy-noise reuse and corrupt galaxies (found 2026-10-15, T1).** Each noise galaxy is
+   reused ~800 times; there is no galaxy ID, but `Simulation Number` < 800k vs >= 800k separates two
+   disjoint galaxy pools, so train/holdout can be galaxy-disjoint (T2). Dev vs holdout separation
+   needs per-file galaxy IDs (TASKS.md P15). ~12% of galaxies contain corrupt orbits (relative flux
+   far from 1); `load_smarts_fits` drops nearly all of it, but raw-flux and WAVELET consumers don't.
 
 ---
 
@@ -448,3 +453,4 @@ chats should know:
   synth200 success 0.670 -> 0.725 with no regression guard tripped. Costs: rare red-noise long
   few-peak false positives (1/60 eval), and runtime +60% on 1-2 sectors / +30% on synth200. New benchmark `benchmarks/pb_scan.py`. See `reports/2026-10-13_acf-long-period-limit/`.
 - **2026-10-14: ACF long-period branch merged; baseline refreshed.** Post-merge `ss_openblas` run on synth200 reproduces the branch's numbers: success 0.670 → 0.725 (12 stars gained, 1 lost), >30 d 0 → 0.75, 10–30 d 0.698 → 0.767, wrong 0.055 → 0.060, declined 0.24 → 0.185. All regression guards and G8 pass. New baseline at main df7699d; previous kept as `synth200_s0_pre_acf*`. At merge, its proposals P2–P4 became P9–P11 and its open issues 13–14 became 14–15. Rae's decisions: pair-count weighting kept (re-check in T16b); factor-of-2 threshold and few-peak noise guard folded into P1; `min_valid_frac` to T16c; `baseline_days` kept with a scale note; P11 (runtime) folded into T12.
+- **2026-10-15: T1 phase 1, SMARTS catalog audit.** Catalog (1M rows, 4.2 GB FITS incl. a 64×64 wavelet cube) extracted to the Data_Vault drive; scripts in `tools/audit/`. Clean: no NaNs, duplicates or bad periods; Table 1 confirmed except OVERLAP (bound max(CYCLE, √10)). Key traps: file number = catalog row index, not "Simulation Number"; SIM_ID ≥ 800k uses a disjoint galaxy-noise pool (use for holdout). ~12% of galaxies have corrupt orbits (flux far from 1); `load_smarts_fits` drops nearly all of it. 15% of stars have their whole active band outside P_eq ± 10%. Facts added to `SMARTS_REFERENCE.md` §6. See `reports/2026-10-15_t1-smarts-catalog-audit/`; phase 2 proposed as P15 (P16: short-P signal strength).

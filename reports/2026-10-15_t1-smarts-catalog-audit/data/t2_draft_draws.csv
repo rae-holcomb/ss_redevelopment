@@ -1,0 +1,6 @@
+draw,n_files,n_bundles,extracted_MB,scan_minutes
+dev_small ~42,42,31.0,6.53184,3.1
+dev_medium ~1000,1001,167.0,155.67552,16.7
+holdout ~3500,3500,180.0,544.32,18.0
+local budget 300 MB,1929,,300.0,
+full corpus,1000000,180.0,155520.0,18.0

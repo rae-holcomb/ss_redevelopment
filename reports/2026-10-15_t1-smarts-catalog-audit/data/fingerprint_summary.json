@@ -1,0 +1,48 @@
+{
+ "n_files": 1050,
+ "n_pairs_total": 550725,
+ "null_sigma_expected": 0.007555189184400237,
+ "null_sigma_observed_robust": 0.012537297971919178,
+ "pairs_above": {
+  "0.05": 5851,
+  "0.1": 1304,
+  "0.2": 551,
+  "0.3": 413,
+  "0.5": 384,
+  "0.8": 383
+ },
+ "n_galaxies_est_thresh_0.2": 999.5009074410164,
+ "n_galaxies_est_thresh_0.3": 1333.4745762711864,
+ "n_galaxies_est_thresh_0.5": 1434.1796875,
+ "split": {
+  "match_thresh": 0.8,
+  "n_match_pairs": 383,
+  "sim_lt_800k": {
+   "n_files": 834,
+   "n_pairs": 355,
+   "n_galaxies_est": 978.4816901408451,
+   "ci95": [
+    881.8095788459968,
+    1088.8119854370443
+   ]
+  },
+  "sim_ge_800k": {
+   "n_files": 216,
+   "n_pairs": 28,
+   "n_galaxies_est": 829.2857142857143,
+   "ci95": [
+    573.7895889499918,
+    1247.998160438339
+   ]
+  },
+  "n_noise_groups": 756,
+  "group_size_counts": {
+   "1": 527,
+   "2": 179,
+   "3": 41,
+   "4": 5,
+   "5": 3,
+   "7": 1
+  }
+ }
+}

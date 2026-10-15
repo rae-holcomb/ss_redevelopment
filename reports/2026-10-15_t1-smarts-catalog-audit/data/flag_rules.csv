@@ -1,0 +1,8 @@
+rule,n,frac,reason
+P_eq > B/2 (B = 357.04 d),8292,0.008292,fewer than 2 cycles in the 13-sector baseline: unmeasurable; keep only as decline/negative examples
+P_eq > B/3,339283,0.339283,beyond the current few-peak comb-fit reach (~B/3)
+active band P_hi > B/2,125579,0.125579,part of the spot-period band is unmeasurable even when P_eq is in reach
+active band disjoint from P_eq +/-10%,149681,0.149681,P_eq is never a spot period; P_eq label is not directly observable (diffrot outcome only)
+active band extends beyond P_eq +/-10%,556401,0.556401,measured period can legitimately differ from P_eq by >REL_TOL
+amplitude proxy < 0.05,46772,0.046772,low activity and/or near pole-on: likely undetectable (proxy only; calibrate in phase 2)
+OVERLAP > CYCLE,51954,0.051954,"valid but outside the documented range: overlapping cycles, weak cycle modulation"
