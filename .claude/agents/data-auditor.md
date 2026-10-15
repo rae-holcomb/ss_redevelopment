@@ -39,7 +39,7 @@ Questions to answer, roughly in order:
   hundred files is a batch job: write a resumable script
   (`ProcessPoolExecutor`, `--n-workers`, `--resume`, module-level worker)
   and **give Rae the command to run locally**. Don't run it yourself.
-- Ask Rae for the data path. Never guess it.
+- The data lives on an external drive that is often unplugged (see CLAUDE.md "SMARTS data location"): check the mount first, extract only to the drive, and make every reader resumable.
 - Every finding needs a number and, where possible, a plot plus 2–3
   example files showing it.
 - Finish with the `write-report` skill. Put recommended exclusion or flag
