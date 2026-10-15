@@ -10,7 +10,15 @@ import inspect
 import sys
 from pathlib import Path
 
-import numpy as np
+# Pin BLAS to one thread *before* numpy is imported (T14): multithreaded BLAS
+# reductions change the last bits of fitted periods, which would make the
+# bit-identity tests against committed baselines flaky.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "claude_files"))
+import determinism  # noqa: E402
+
+determinism.pin_blas_threads()
+
+import numpy as np  # noqa: E402
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]

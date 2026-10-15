@@ -63,7 +63,8 @@ All files live in a single flat package (`claude_files/` in the
 | `batch_test_acf_fft_highpass.py` | Companion script isolating `guess_acf_fft_highpass`'s per-smoothing-window behavior specifically. Possibly redundant now that `batch_test_guesses.py` auto-discovers it too — unresolved, see open issues. |
 | `evaluation.py` | **Scoring convention, single source of truth.** `REL_TOL=0.10`; `classify_period` → correct / half (P/2) / double (2P) / wrong / none; `best_outcome` for ranked candidate lists; `PERIOD_BIN_LABELS`. |
 | `determinism.py` | Process setup for bit-reproducible runs (T14): `pin_blas_threads()` (call before importing numpy), `init_worker()` (ProcessPoolExecutor initializer), `blas_backend()`, `default_n_workers()` (one per physical P-core). Requires the OpenBLAS env `ss_openblas` (`environment.yml`); Accelerate is not reproducible. |
-| `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. |
+| `synthetic.py` | Synthetic spotted-star light curves (evolving spots, differential rotation, inclination, red noise, TESS-like orbit gaps and ramps) with known period, in the same format `load_smarts_fits` returns. `make_suite(n, seed)` is the benchmark population. `sectors=[...]` keeps only those sectors of the year, with `load_smarts_fits(sectors=...)` conventions (T16a). |
+| `coverage.py` | Sector-coverage patterns (T16a): pattern parsing, coverage classes (`single`, `consecutive-/gapped-2`, `consecutive-/gapped-3-5`, `consecutive-/gapped-6-12`, `full`), real-star libraries per TESS year 1–7 plus a pooled default (`datasets/coverage/*_patterns.csv`, built by `tools/build_coverage_library.py`; `fit_to_year` maps 14–16-sector cycles into 13), `sample_patterns` for the scorecard's `--coverage`, and `coverage_descriptors` (baseline, longest contiguous span, largest gap, duty cycle). |
 | `example_usage.py`, `example_messy_data.py`, `example_from_fits.py` | Worked examples of the pipeline at increasing levels of real-world messiness. |
 
 ### `guesses.py` in more detail
@@ -283,6 +284,9 @@ Roughly in priority order as of this writing — re-prioritize freely.
    synthetic baseline, 7/200 stars with SNR 1–3 and P = 18–36 d got a
    ~0.2–0.5 d period that passed all reliability gates. The gates don't seem to
    account for noise-driven short-lag ACF structure. Task T6.
+   **Much worse on patchy coverage (T16a, 2026-10-14):** on single-sector synthetic stars, 36/100 get
+   a 0.13–0.42 d wrong answer, at every SNR (10 of the 36 have SNR > 5), and most often when P exceeds
+   the longest contiguous span. Task T16b.
 11. **Differential rotation vs the P_eq label: addressed in scoring
    (2026-10-13), still open for ML labels.** SMARTS `PERIOD` is equatorial,
    but spot-latitude periods can differ a lot (shear up to +/-1, latitudes to
@@ -471,6 +475,29 @@ chats should know:
   validated on seed 1 + pb_scan eval: wrong 0.060 -> 0 / 0.090 -> 0.015, alias 0.030 -> 0 / 0.050 -> 0.005,
   success 0.725 -> 0.730 / 0.700 -> 0.710, declined 0.185 -> 0.270 / 0.160 -> 0.270 (seed 0 / seed 1); red-noise
   FP 21/60 -> 0/60. check_goals PASS. Factor-2 threshold 0.7 and cross-method weighting measured neutral,
-  unchanged. Open issues 10, 14b mostly resolved; 12 narrowed. New proposals P12-P14. Strict vs softer
-  option D is Rae's call. See `reports/2026-10-14_t18-arbitration-gates/`.
+  unchanged. Open issues 10, 14b mostly resolved; 12 narrowed. New proposals P12-P14. **Rae (2026-10-15): strict kept, low-to-medium confidence; re-evaluate on dev_small (P8).** See `reports/2026-10-14_t18-arbitration-gates/`.
 - **2026-10-15: T1 phase 1, SMARTS catalog audit.** Catalog (1M rows, 4.2 GB FITS incl. a 64×64 wavelet cube) extracted to the Data_Vault drive; scripts in `tools/audit/`. Clean: no NaNs, duplicates or bad periods; Table 1 confirmed except OVERLAP (bound max(CYCLE, √10)). Key traps: file number = catalog row index, not "Simulation Number"; SIM_ID ≥ 800k uses a disjoint galaxy-noise pool (use for holdout). ~12% of galaxies have corrupt orbits (flux far from 1); `load_smarts_fits` drops nearly all of it. 15% of stars have their whole active band outside P_eq ± 10%. Facts added to `SMARTS_REFERENCE.md` §6. See `reports/2026-10-15_t1-smarts-catalog-audit/`; phase 2 proposed as P15 (P16: short-P signal strength).
+- **2026-10-14: T16a, patchy-coverage infrastructure.** New `claude_files/coverage.py` and
+  `datasets/coverage/cycle1_patterns.csv` (121 Cycle-1 patterns with star counts from
+  `target_df_shortform.csv`: 3,438 stars, 74.2% single, 15.9% consecutive-2, 1.4% gapped-2, 4.7% 3-5,
+  2.7% 6-12, 1.1% full; supersedes `sector_configs.txt`). New `synthetic.make_lightcurve/make_suite(sectors=...)`,
+  which mirrors `load_smarts_fits(sectors=...)` exactly on the time grid and NaNs. New scorecard
+  `--coverage {full,real-weighted,<class>,pattern:...}` with `--coverage-seed`, and seven per-star coverage
+  descriptor columns. `SCORECARD_VERSION` is now 3; metrics are unchanged, and `full` keeps the v2 dataset string.
+  The default is bit-identical: synth200 matches the baseline 200/200, with only the P4 wavelet residue.
+  Demo on the same 100 stars: success 0.69 (full) → 0.28 (single) / 0.30 (gapped-2) / 0.33 (real-weighted),
+  mostly via confident ~0.2 d wrong answers (wrong 0.08 → 0.36 / 0.44 / 0.37), which extends open issue 10.
+  Proposal P18 (numbered P12 in the report). See `reports/2026-10-14_t16a-coverage-infrastructure/`.
+- **2026-10-15: T16a review: coverage libraries for every TESS year; classes split.** Rae's decisions:
+  - split 3-5 and 6-12 into consecutive/gapped;
+  - sample patterns uniformly within a class (don't tune to Year 1);
+  - descriptor columns approved;
+  - `target_df_shortform.csv` = the brightest TESS stars, with tess-point coverage.
+
+  New `datasets/coverage/cycle<N>_patterns.csv` for N = 1–7 (S1–13, 14–26, 27–39, 40–55, 56–69, 70–83,
+  84–96), plus the pooled `all_cycles_patterns.csv`: 23,776 star-seasons, 534 patterns, now the default library.
+  - Cycles 4–6 (14–16 sectors) are shifted (1,197 star-seasons) or truncated (635) into the 13-sector SMARTS year.
+  - Northern-heavy years (2, 4, 6) are 48–58% single-sector, versus 73–75% for the others, with far more gapped coverage.
+  - 413 of the 534 patterns never occur in Cycle 1, and no star-season after Cycle 3 is a full 13 sectors.
+
+  The dataset string now records `coverage_library`. See the T16a report.

@@ -30,12 +30,30 @@ Datasets
                                  (optional `star_id`, `true_period`, `shear`,
                                  `minlat`, `maxlat`; anything absent is read
                                  from the FITS header: PERIOD, DIFFROT,
-                                 MINLAT, MAXLAT)
+                                 MINLAT, MAXLAT). An optional `sectors`
+                                 column ("1-2-13") fixes each row's coverage.
+    --coverage SPEC [--coverage-seed S] [--coverage-weighting uniform|frequency]
+                                 patchy sector coverage (T16a), applied to either
+                                 dataset: full (default, legacy), real-weighted
+                                 (patterns drawn by real-star frequency), a class
+                                 (single, consecutive-2, gapped-2, consecutive-3-5,
+                                 gapped-3-5, consecutive-6-12, gapped-6-12) or group
+                                 (3-5, 6-12), with patterns uniform within the class
+                                 by default, or pattern:1-2-13. Patterns come from
+                                 datasets/coverage/all_cycles_patterns.csv (TESS
+                                 years 1-7 pooled; --coverage-library picks another,
+                                 e.g. cycle2_patterns.csv; see claude_files/coverage.py).
+                                 Non-full coverage is appended to config.dataset, e.g.
+                                 "synthetic:n=100,seed=0,coverage=single,coverage_seed=0,coverage_library=all_cycles".
 
 Outputs (in --outdir)
 ---------------------
     rows.jsonl                   one JSON record per star (resume log)
-    per_star.csv                 flattened per-star table
+    per_star.csv                 flattened per-star table, incl. coverage
+                                 descriptors (v3): n_sectors, sectors,
+                                 coverage_class, total_baseline_days,
+                                 longest_contiguous_days, largest_gap_days,
+                                 duty_cycle
     per_method.csv               one row per (star, method)
     metrics.json                 summary metrics (what check_goals reads)
     fig_final_outcomes_by_bin.png
@@ -48,6 +66,7 @@ Usage
     python benchmarks/scorecard.py --manifest datasets/dev_small.csv --outdir runs/dev_small_baseline
     python benchmarks/scorecard.py ... --resume       # skip stars already in rows.jsonl
     python benchmarks/scorecard.py ... --n-workers 1  # serial, for debugging
+    python benchmarks/scorecard.py --synthetic 100 --coverage single --outdir runs/synth100_single
 """
 
 from __future__ import annotations
@@ -79,13 +98,17 @@ import matplotlib  # noqa: E402
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
+import coverage as cov  # noqa: E402
 import evaluation as ev  # noqa: E402
 import guesses  # noqa: E402
 from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-SCORECARD_VERSION = 2  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
+SCORECARD_VERSION = 3  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
+# v3 (2026-10-14, T16a): --coverage dataset option + per-star coverage descriptor
+# columns. Metric definitions and outcome logic are unchanged from v2, and
+# --coverage full (default) reproduces v2 per-star results exactly.
 # One worker per physical performance core (4 on the i5 workstation, 10 on a
 # 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
 # i5: identical throughput within run-to-run noise, so extra hyperthread workers
@@ -123,15 +146,17 @@ def _missing(x) -> bool:
 
 
 def _load(task: dict):
-    """Materialize (star_id, time, flux, true_period, period_range, meta) for one task.
+    """Materialize (star_id, time, flux, true_period, period_range, meta, sectors) for one task.
 
     period_range is the active-latitude-band (P_lo, P_hi) for the DIFFROT
     outcome, or None if the differential-rotation truth isn't available.
+    sectors is the list of sectors actually present (for coverage descriptors).
     """
     if task["kind"] == "synthetic":
         lc = task["lc"]
-        meta = {k: v for k, v in lc.params.items() if k not in ("spots", "period_range")}
-        return lc.star_id, lc.time, lc.flux, lc.true_period, lc.params.get("period_range"), meta
+        meta = {k: v for k, v in lc.params.items() if k not in ("spots", "period_range", "sectors")}
+        sectors = lc.params.get("sectors") or list(range(1, int(lc.params.get("n_sectors", 1)) + 1))
+        return lc.star_id, lc.time, lc.flux, lc.true_period, lc.params.get("period_range"), meta, sectors
     from astropy.io import fits
     from preprocessing import load_smarts_fits
     pre = load_smarts_fits(task["path"], **task.get("load_kwargs", {}))
@@ -147,7 +172,17 @@ def _load(task: dict):
     if not any(_missing(v) for v in (shear, minlat, maxlat)):
         prange = ev.active_band_period_range(float(true_p), float(shear), float(minlat), float(maxlat))
     meta = {"path": str(task["path"]), "shear": shear, "minlat_deg": minlat, "maxlat_deg": maxlat}
-    return task["star_id"], pre.time, pre.flux, float(true_p), prange, meta
+    if task.get("load_kwargs", {}).get("sectors") is not None:
+        # requested pattern; `sectors` (descriptor column) is what survived flagged-sector removal
+        meta["sectors_requested"] = cov.format_pattern(task["load_kwargs"]["sectors"])
+    return task["star_id"], pre.time, pre.flux, float(true_p), prange, meta, pre.sectors_used
+
+
+def _coverage_columns(t: np.ndarray, f: np.ndarray, sectors) -> dict:
+    """Per-star coverage descriptor columns (scorecard v3); empty dict if no sectors."""
+    if not sectors:
+        return {}
+    return cov.coverage_descriptors(t, f, sectors)
 
 
 def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
@@ -171,9 +206,10 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
     rec = {"star_id": task.get("star_id") or getattr(task.get("lc"), "star_id", None)}
     t_start = time.perf_counter()
     try:
-        star_id, t, f, true_p, prange, meta = _load(task)
+        star_id, t, f, true_p, prange, meta, sectors = _load(task)
         rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta,
                    period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None)
+        rec.update(_coverage_columns(t, f, sectors))
         lags, acf, counts = compute_acf(t, f, return_counts=True)  # Stage 2 (comb fit): ~0.7 B
         lags1, acf1 = compute_acf(t, f, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage 1 view: B/3
 
@@ -210,20 +246,60 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
     return rec
 
 
+def _coverage_args(args) -> tuple:
+    """(spec, seed, weighting, library_path) from CLI args, with defaults for callers lacking them."""
+    return (getattr(args, "coverage", cov.FULL), getattr(args, "coverage_seed", 0),
+            getattr(args, "coverage_weighting", "uniform"),
+            getattr(args, "coverage_library", None) or cov.DEFAULT_LIBRARY)
+
+
+def sample_coverage(args, n: int) -> list:
+    """One sector pattern (tuple) or None (= all sectors) per star, per --coverage."""
+    spec, seed, weighting, lib_path = _coverage_args(args)
+    if spec == cov.FULL:
+        return [None] * n
+    lib = None if spec.startswith("pattern:") else cov.load_library(lib_path)
+    return cov.sample_patterns(spec, n, seed=seed, library=lib, weighting=weighting)
+
+
+def dataset_string(args) -> str:
+    """config.dataset for metrics.json. --coverage full keeps the v2 string, so
+    existing baselines and goals.json entries still apply."""
+    base = f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)
+    spec, seed, weighting, lib_path = _coverage_args(args)
+    if spec == cov.FULL:
+        return base
+    extra = f",coverage={spec}"
+    if (spec in cov.COVERAGE_CLASSES or spec in cov.CLASS_GROUPS) and weighting != "uniform":
+        extra += f",coverage_weighting={weighting}"
+    if not spec.startswith("pattern:"):
+        lib_name = Path(lib_path).stem.removesuffix("_patterns")
+        extra += f",coverage_seed={seed},coverage_library={lib_name}"
+    return base + extra
+
+
 def build_tasks(args) -> list:
     """Translate CLI dataset arguments into a list of task dicts."""
     if args.synthetic:
         from synthetic import make_suite
+        pats = sample_coverage(args, args.synthetic)
+        sectors = None if all(p is None for p in pats) else pats
         return [dict(kind="synthetic", lc=lc, star_id=lc.star_id)
-                for lc in make_suite(args.synthetic, seed=args.seed)]
+                for lc in make_suite(args.synthetic, seed=args.seed, sectors=sectors)]
     man = pd.read_csv(args.manifest)
     if "path" not in man.columns:
         raise SystemExit(f"{args.manifest} needs a 'path' column")
+    pats = sample_coverage(args, len(man))
+    if "sectors" in man.columns:
+        if _coverage_args(args)[0] != cov.FULL:
+            raise SystemExit(f"{args.manifest} has a 'sectors' column; don't also pass --coverage")
+        pats = [None if pd.isna(s) or str(s).strip() == "" else cov.parse_pattern(s) for s in man["sectors"]]
     tasks = []
-    for _, r in man.iterrows():
+    for (_, r), pat in zip(man.iterrows(), pats):
         tasks.append(dict(kind="fits", path=r["path"],
                           star_id=str(r["star_id"]) if "star_id" in man.columns else Path(r["path"]).stem,
-                          true_period=float(r["true_period"]) if "true_period" in man.columns else None))
+                          true_period=float(r["true_period"]) if "true_period" in man.columns else None,
+                          load_kwargs={} if pat is None else {"sectors": list(pat)}))
     return tasks
 
 
@@ -382,7 +458,16 @@ def main(argv=None):
     p.add_argument("--n-workers", type=int, default=DEFAULT_N_WORKERS)
     p.add_argument("--resume", action="store_true", help="skip stars already in rows.jsonl")
     p.add_argument("--label", default=None, help="short name for figure titles (default: outdir name)")
+    p.add_argument("--coverage", default=cov.FULL,
+                   help=f"sector coverage: one of {cov.valid_coverage_specs()} or pattern:1-2-13 (default full)")
+    p.add_argument("--coverage-seed", type=int, default=0, help="seed for drawing coverage patterns")
+    p.add_argument("--coverage-weighting", choices=("uniform", "frequency"), default="uniform",
+                   help="for a class --coverage: patterns equally likely (uniform) or by real-star count")
+    p.add_argument("--coverage-library", type=Path, default=None,
+                   help="coverage library CSV (default datasets/coverage/all_cycles_patterns.csv)")
     args = p.parse_args(argv)
+    if args.coverage not in cov.valid_coverage_specs() and not args.coverage.startswith("pattern:"):
+        p.error(f"--coverage must be one of {cov.valid_coverage_specs()} or pattern:<sectors>")
 
     outdir = args.outdir
     outdir.mkdir(parents=True, exist_ok=True)
@@ -427,7 +512,9 @@ def main(argv=None):
     metrics = compute_metrics(per_star, per_method, args.rel_tol)
     metrics["config"] = dict(
         scorecard_version=SCORECARD_VERSION, git_commit=_git_commit(), rel_tol=args.rel_tol,
-        dataset=(f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)),
+        dataset=dataset_string(args),
+        coverage=dict(spec=args.coverage, seed=args.coverage_seed, weighting=args.coverage_weighting,
+                      library=str(args.coverage_library or cov.DEFAULT_LIBRARY.relative_to(ROOT))),
         pipeline_methods=list(methods), n_guesses_default=N_GUESSES_DEFAULT, n_guesses_overrides=N_GUESSES,
         wall_seconds=time.time() - t0, created=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
