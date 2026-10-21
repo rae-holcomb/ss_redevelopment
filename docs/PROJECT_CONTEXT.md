@@ -552,3 +552,10 @@ chats should know:
   T20 ground-truth galaxy IDs and real TIC IDs for source lookups. See `docs/SMARTS_REFERENCE.md` s7.
   T21 merged (`NoUsableSectorsError`).
 
+- **2026-10-21 — T20 phase 2: SMARTS noise sources that aren't quiet** (`reports/2026-10-21_t20-noise-sources-phase2/`).
+  Amplitude-aware median stacks of each of the 1,719 TIC noise light curves (Zach's IDs) show **206 periodic sources
+  (121,502 files, 12.2%)**, mostly contamination by neighbouring variable stars (90 next to Gaia-classified variables;
+  242 "galaxies" lie in crowded LMC fields); only 8 are common-mode systematics. **51 of dev_medium's 88 wrong answers
+  equal the pipeline's period on the star's noise source alone** (null 0.4); wrong rate 43% on periodic sources vs 3.8%
+  on quiet ones. Injection is multiplicative (f = g x s). Per-file flags on the drive:
+  `extracted/galaxy_ids/noise_source_flags.csv.gz`. Keep/flag/exclude and a `noise_period` outcome are Rae's decisions.
