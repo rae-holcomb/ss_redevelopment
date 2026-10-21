@@ -1,0 +1,11 @@
+,,any,any,any,any,any,any,sole,sole,sole,sole,sole,sole
+,n_stars,n_peaks,pos_heights,height_snr,vertex,half_lag,few_height,n_peaks,pos_heights,height_snr,vertex,half_lag,few_height
+coverage_class,,,,,,,,,,,,,
+consecutive-2,37,0,19,29,19,31,5,0,0,2,0,0,0
+consecutive-3-5,45,0,22,32,22,35,6,0,1,2,2,3,0
+consecutive-6-12,51,1,22,38,26,37,14,0,0,3,0,3,3
+full,43,0,23,39,12,33,3,0,0,4,1,0,0
+gapped-2,34,1,17,30,20,25,5,0,0,1,0,0,0
+gapped-3-5,31,0,21,25,16,25,3,0,0,2,0,0,0
+gapped-6-12,46,1,20,40,21,31,11,0,0,5,1,1,2
+single,25,0,6,20,19,20,7,0,0,1,1,0,0

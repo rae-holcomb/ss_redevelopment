@@ -334,7 +334,7 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** in progress (started 2026-10-21): instrumentation + diagnosis; fixes go to T16d.
+- **Status:** gate half in review (`reports/2026-10-21_t16b-gate-diagnosis/`, branch `claude/t16b-gate-diagnosis-5311f5`): gate instrumentation (bit-identical) + diagnosis. Finding: short-coverage declines are mostly Stage 1 / noise-like ACF, not over-strict gates; proposed thresholds for T16d are net negative on dev_medium until T20 resolves noise-galaxy labels. Per-method mechanism half (below) not started.
 - **Do:**
   - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
     declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
@@ -896,6 +896,13 @@ for confirmation (ask Rae first).
   empty sequence` inside `to_even_cadence` when every requested sector has a flagged orbit
   (e.g. row 005139, sector 11). Return an empty light curve or raise a clear error, with a test.
   The T2 manifests avoid it via `native_whole_sectors`, but `--coverage` runs on SMARTS can hit it.
+
+### P21. Height-SNR gate denominator from well-sampled lags (from T16b)
+- **Proposed by:** T16b report (2026-10-21)
+- **Idea:** `mean_height_snr` divides by std(ACF) over all lags to ~0.7 B. On 1-2 sectors the long-lag ACF (few pairs)
+  wanders to +/-0.2 and inflates the std, so clean combs fail the gate (T16b example synth 00007, dev_medium 011716).
+  Estimate the noise from lags with pair fraction >= ~0.5 (or from pair counts). Needs re-runs, not a replay; changes the
+  `mean_height_snr` ML feature's meaning, so add it as a parallel statistic first. Check dev_medium wrong answers (T20).
 
 ### P18. Coverage library from a better-defined target sample
 - **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover
