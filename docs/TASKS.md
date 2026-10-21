@@ -485,7 +485,19 @@ for confirmation (ask Rae first).
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
 - **Agent:** `data-auditor`
-- **Status:** proposed (Rae, 2026-10-21); confirm the plan before starting. Needs the drive.
+- **Status:** in progress, phase 1 (started 2026-10-21).
+- **Rae's decisions (2026-10-21):**
+  - **Scope: all 1,000,000 SMARTS light curves** (both galaxy pools), so we know what we're working with.
+  - **Measure the runtime before the full pass.** Phase 1 builds the script, times it on 2–3 bundles and
+    reports a full-corpus estimate, then stops for Rae's go-ahead.
+  - **Run locally, not in the cloud:** a cloud session can't see the external drive, and uploading
+    89 GB isn't practical. The full pass is resumable per bundle, for overnight / interruptible runs.
+  - **Be careful with injected amplitudes in the stacking** (ACTIVITY 0.1–10× solar sets spot amplitude;
+    inclination and spot latitudes change the visible fraction). Build the galaxy estimate from
+    low-expected-amplitude members, hold out members whose injected signal should dominate the noise,
+    verify empirically via residuals (member − galaxy estimate), and require any recovered galaxy
+    period to persist across disjoint member subsets.
+  - Rae is asking Zach Claytor (SMARTS PI) for the noise-galaxy TIC list; if it arrives, use it in step E.
 - **Why (Rae):** real-SMARTS recovery is low, which is expected (red noise), but some SMARTS features
   are suspect. If a "quiet" galaxy light curve actually contains a periodic signal, every SMARTS star
   injected into it (~1,000 each) carries that signal, and the pipeline may "wrongly" report it. We want
