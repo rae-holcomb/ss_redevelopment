@@ -539,3 +539,9 @@ chats should know:
   add little alone (logistic candidate AUC +0.000); with coverage x feature interactions +0.014 [0.007, 0.021],
   top-1 not significant. `tess_timescale_rel_dist` shows no signal on synthetic data. Multi-season features deferred
   (Rae). See `reports/2026-10-15_t16e-coverage-features/`.
+- **2026-10-21 — T20 phase 1: galaxy-ID pass** (`reports/2026-10-21_t20-galaxy-pass-phase1/`):
+  `tools/audit/galaxy_pass.py` (resumable per-bundle stream: int8 noise fingerprint, corrupt flags, stats)
+  and `galaxy_groups.py` (template clustering, O(N x T x D)). On 31 bundles (172k files) -> 1,718 identical-noise
+  light curves (999 used only by SIM_ID < 800k, 718 only by >= 800k, **1 by both**: ~0.14% of >= 800k files share
+  a train-pool noise LC). New: **"sibling" noise LCs** (distinct LCs correlated at r = 0.5-0.99; T1's r > 0.8 cut
+  lumped 5 such pairs). Full-corpus estimate ~45-60 min wall, ~2 CPU-h, 17.7 GB; awaiting Rae's go-ahead.

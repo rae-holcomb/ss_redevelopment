@@ -485,7 +485,9 @@ for confirmation (ask Rae first).
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
 - **Agent:** `data-auditor`
-- **Status:** in progress, phase 1 (started 2026-10-21).
+- **Status:** phase 1 done, awaiting Rae's go-ahead for the full run (`reports/2026-10-21_t20-galaxy-pass-phase1/`,
+  branch `claude/t20-galaxy-quietness-c3bb9b`): `tools/audit/galaxy_pass.py` + `galaxy_groups.py`, tested on 31 bundles
+  (172k files -> 1,718 noise light curves); full corpus est. ~45-60 min wall, ~2 CPU-h, 17.7 GB. Phase 2/3 plan in the report.
 - **Rae's decisions (2026-10-21):**
   - **Scope: all 1,000,000 SMARTS light curves** (both galaxy pools), so we know what we're working with.
   - **Measure the runtime before the full pass.** Phase 1 builds the script, times it on 2–3 bundles and
