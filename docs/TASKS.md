@@ -334,7 +334,21 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** gate half in review (`reports/2026-10-21_t16b-gate-diagnosis/`, branch `claude/t16b-gate-diagnosis-5311f5`): gate instrumentation (bit-identical) + diagnosis. Finding: short-coverage declines are mostly Stage 1 / noise-like ACF, not over-strict gates; proposed thresholds for T16d are net negative on dev_medium until T20 resolves noise-galaxy labels. Per-method mechanism half (below) not started.
+- **Status:** done, merged 2026-10-21 (report `reports/2026-10-21_t16b-gate-diagnosis/`): gate instrumentation + diagnosis.
+  The per-method half is folded into T16c (below).
+- **Rae's decisions on T16b's open questions (2026-10-21, all as recommended):**
+  1. **No gate relaxation before T20 reports.** Afterwards, rerun T16b's offline trade-off replay (section 5;
+     `make_data.py` + notebook) excluding the periodic noise galaxies T20 flags, then decide in T16d.
+  2. Wide diffrot bands inflate success. **Report `correct` alongside `success` by band-width class** as an
+     *added* metric (success definition unchanged); see T22. Capping the band waits for T20/D4.
+  3. Height-SNR denominator from well-sampled lags only → **T16d**. Keep `mean_height_snr` unchanged and add the
+     new version as a parallel ML feature.
+  4. Per-method degradation mechanisms (ACF truncation, pairwise_histogram peaks, LS window aliasing, wavelet
+     across gaps) → **folded into T16c**.
+  5. Year/hemisphere breakdown: **deferred**; add the year tag to scorecard draws only if T16c finds year sensitivity.
+  6. **Bump `SCORECARD_VERSION` to 4** for T16b's new columns / `per_candidate.csv` (T22). Rule from now on: bump
+     whenever output columns or files change.
+  7. sqrt(pair-count) weighting re-evaluation on gappy data → **T16d**.
 - **Do:**
   - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
     declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
@@ -355,6 +369,9 @@ for confirmation (ask Rae first).
   and failure-mode examples.
 
 #### T16c. Search upper limits for patchy data
+- **Now also includes (from T16b, Rae 2026-10-21):** the per-method degradation mechanisms by coverage (ACF
+  truncation by `min_valid_frac`, pairwise_histogram running out of peaks, LS window aliasing, wavelet across gaps).
+  **Waits for the D4 decision.**
 - **Update 2026-10-15:** define limits **per season** (from season length and coverage). Separately, ask
   whether combining seasons (D2) can ever justify periods longer than one season. Probably weakly at best.
 - **Also (Rae, 2026-10-14):** test lowering `compute_acf`'s `min_valid_frac` from 0.3
@@ -370,6 +387,10 @@ for confirmation (ask Rae first).
   justification plots, and goals proposed for Rae.
 
 #### T16d. Method policy and safeguards for patchy data
+- **Now also includes (from T16b, Rae 2026-10-21):** (a) height-SNR noise from well-sampled lags only (new parallel
+  ML feature; old `mean_height_snr` unchanged); (b) re-evaluate sqrt(pair-count) residual weighting on gappy data;
+  (c) gate relaxations only after T20, via T16b's replay excluding flagged noise galaxies. T16b's do-nots stand:
+  no option D on short coverage, don't relax the half-lag gate, and contrast-conditional relaxations need ≥ 4 teeth.
 - **Update 2026-10-15:** with D2 leaning season-by-season, **cross-season consistency** becomes the central
   safeguard: answer when seasons agree, flag when they disagree (possibly a spot-evolution or diffrot signal; F1).
   Needs T16g's multi-season data. Status: blocked on T16b/c **and T16g**.
@@ -544,6 +565,18 @@ for confirmation (ask Rae first).
   sector is flagged. **Do:** raise a named exception (e.g. `NoUsableSectorsError`) early, with a clear message,
   record it as a decline (`none`, with the reason) in the scorecard and batch runners, and add a test.
   Results on the existing dev sets must be unchanged.
+
+### T22. Scorecard v4: band-width breakdown + version bump
+- **Agent:** `method-improver` (small; scorecard reporting only)
+- **Status:** ready (Rae, 2026-10-21, from T16b questions 2 and 6)
+- **Do:**
+  - Bump `SCORECARD_VERSION` to 4, covering T16b's descriptor columns and `per_candidate.csv`.
+  - Add **metrics** `final.by_band_width.<class>.{...outcome fractions...}`, using classes of
+    (P_hi − P_lo)/P_eq (e.g. 0 / < 0.2 / 0.2–0.5 / ≥ 0.5; justify the cuts), so `correct` vs `success` can be seen
+    per class. The success definition is unchanged.
+  - Update `check_goals` docs and the baselines README (old baselines lack the new keys: they're reported, not
+    guarded).
+  - Tests. Existing metrics must be bit-identical.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
