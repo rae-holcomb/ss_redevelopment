@@ -819,6 +819,70 @@ def recombine_segments(segments, diagnostics, drop_gap_points=False,
 # Top-level convenience: raw FITS -> pipeline-ready (time, flux)
 # ==========================================================================
 
+class NoUsableSectorsError(ValueError):
+    """
+    Raised by load_smarts_fits when no data survives orbit/sector selection.
+
+    This happens when every requested sector is flagged bad or lies beyond
+    the end of the file, when `sectors=[]`, or (with `sectors=None` and
+    `drop_flagged_segments=True`) when every orbit is flagged. Callers
+    should treat it as a decline for that star (no period), not a crash.
+    It subclasses ValueError, so existing `except ValueError` handlers
+    still catch it.
+
+    Attributes
+    ----------
+    path : str
+        The FITS file.
+    requested : list of int or None
+        Sorted, de-duplicated requested sectors (None if `sectors=None`).
+    flagged : list of int
+        Requested sectors dropped because an orbit in them is flagged.
+    absent : list of int
+        Requested sectors with no orbits in the file.
+    n_orbits, n_orbits_flagged : int
+        Orbits found in the file, and how many of them are flagged.
+    """
+
+    def __init__(self, path, requested, flagged, absent, n_orbits, n_orbits_flagged):
+        """Store the selection details and build the human-readable message."""
+        self.path = str(path)
+        self.requested = requested
+        self.flagged = flagged
+        self.absent = absent
+        self.n_orbits = n_orbits
+        self.n_orbits_flagged = n_orbits_flagged
+        n_sectors = (n_orbits + 1) // 2
+        if requested is None:
+            msg = (f"{self.path}: no usable data: every orbit is flagged "
+                   f"({n_orbits_flagged} of {n_orbits} orbits) and "
+                   "drop_flagged_segments=True")
+        else:
+            msg = (f"{self.path}: no usable data in requested sectors {requested}: "
+                   f"flagged {flagged}, absent {absent} (file has {n_orbits} orbits "
+                   f"= sectors 1-{n_sectors}, {n_orbits_flagged} orbits flagged)")
+        super().__init__(msg)
+
+    def __reduce__(self):
+        """Pickle by constructor arguments, so the error can cross a process pool."""
+        return (type(self), (self.path, self.requested, self.flagged, self.absent,
+                             self.n_orbits, self.n_orbits_flagged))
+
+
+def _no_usable_sectors_error(path, sectors, segment_flagged, n_orbits):
+    """Build a NoUsableSectorsError, splitting requested sectors into flagged/absent."""
+    flagged_arr = (np.zeros(n_orbits, dtype=bool) if segment_flagged is None
+                   else np.asarray(segment_flagged, dtype=bool))
+    if sectors is None:
+        return NoUsableSectorsError(path, None, [], [], n_orbits, int(flagged_arr.sum()))
+    requested = sorted(set(int(s) for s in sectors))
+    absent = [s for s in requested if not _orbit_idxs_for_sector(s, n_orbits)]
+    flagged = [s for s in requested if s not in absent and
+               any(flagged_arr[i] for i in _orbit_idxs_for_sector(s, n_orbits))]
+    return NoUsableSectorsError(path, requested, flagged, absent, n_orbits,
+                                int(flagged_arr.sum()))
+
+
 @dataclass
 class PreprocessedLightCurve:
     """Everything produced by load_smarts_fits, in one place."""
@@ -875,6 +939,9 @@ def load_smarts_fits(
         to recombine_segments. Use this to deliberately downgrade a long,
         mostly-complete SMARTS light curve to a sparser, more realistic
         TESS-like observing pattern (e.g. `sectors=[1, 2, 6, 7, 12]`).
+        A requested sector is dropped if either of its orbits is flagged,
+        and ignored if it lies beyond the end of the file; if that leaves
+        nothing, NoUsableSectorsError is raised (see Raises).
         Leave as None to keep every available (non-flagged) sector.
     drop_gap_points, drop_flagged_segments : forwarded to
         recombine_segments -- see its docstring. Both default to True:
@@ -895,6 +962,16 @@ def load_smarts_fits(
     Returns
     -------
     PreprocessedLightCurve
+
+    Raises
+    ------
+    NoUsableSectorsError (a ValueError)
+        If no data survives selection, before regridding: every requested
+        sector is flagged (either orbit) or beyond the end of the file, or
+        `sectors=[]`, or `sectors=None` with every orbit flagged and
+        `drop_flagged_segments=True`. The message names the file and the
+        requested, flagged and absent sectors. Partial survival is not an
+        error: check `sectors_used` against `sectors` for that.
     """
     split_kwargs = split_kwargs or {}
 
@@ -913,6 +990,10 @@ def load_smarts_fits(
         drop_flagged_segments=drop_flagged_segments,
         sectors=sectors,
     )
+    if time_stitch.size == 0:
+        # Fail here with a clear reason rather than deep inside to_even_cadence.
+        raise _no_usable_sectors_error(fits_path, sectors,
+                                       diagnostics.get("segment_flagged"), len(segments))
     time_even, flux_even = to_even_cadence(time_stitch, flux_stitch, timestep=timestep)
 
     return PreprocessedLightCurve(
