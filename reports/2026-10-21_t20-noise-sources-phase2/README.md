@@ -16,8 +16,11 @@
   - Several are *families of neighbouring apertures sharing one signal*. For example, ~10 near-consecutive TICs (10002480866–885) all show P ≈ 0.83 d: one variable star leaking into many "galaxies".
 - **Many SMARTS "galaxies" aren't background galaxies.** All 1,719 are TIC `EXTENDED` objects, but **242 lie within 4° of the LMC centre**, in fields with a median of 91 Gaia sources (G < 19) within 63″, vs 5–10 elsewhere. There, 26% are periodic vs 10% away from the LMC.
 - **The injection was multiplicative (f = g × s).** Where the noise light curve departs from 1 by more than 3 (corrupt orbits), f − g grows 6.2× while f/g − 1 stays flat (1.17×).
-- **Deviations from the brief:**
-  - Step (f) (fetching SPOC light curves for a few sources) was **not done**: downloading data files needs Rae's own OK. It's proposed below.
+- **Independent FFI light curves confirm it (follow-up (f), run after Rae's OK).**
+  - No SPOC products exist for these extended TIC IDs, so I used QLP / TASOC / ELEANOR-LITE light curves (TESS sectors 1–5).
+  - **9 of 12 testable periodic sources (P < 5 d) show the same period**, mostly in all 3 sectors checked. None of the 4 quiet controls does.
+  - In the two misses from the 0.83-d family, QLP's aperture picks up a *different* neighbour's 1.38-d period, also seen in the family. Which star leaks in depends on the aperture.
+- **Deviation from the brief:**
   - Public catalog queries went through VizieR rather than the ESA Gaia archive, because the archive's upload join timed out and its per-target cones took ~7 s each.
 
 ## Question / goal
@@ -35,11 +38,12 @@ T20 phase 2 (`docs/TASKS.md` T20 B–E plus Rae's test D, with the amplitude cau
 5. **Periodicity** (`tools/audit/galaxy_periods.py`): each stack is written as a SMARTS-layout FITS file (dummy PERIOD), so the production loader and pipeline see it exactly like a SMARTS star.
    - **LS:** 0.1–60 d on the loaded flux of A, B and all. **A/B persistence:** top peaks agree within 2%.
    - **Pipeline:** `scorecard.score_one_star` with default methods on the A+B stack (1,518 s).
-6. **Source lookups** (`tools/audit/tic_lookup.py`, run in the `codeastro` env; cached on the drive in `extracted/tic_lookup/`):
+6. **Independent FFI light curves** (follow-up (f), `tools/audit/ffi_lc_check.py` in `codeastro` + `ffi_lc_compare.py`): 57 MAST HLSP light curves for 19 sources (results below).
+7. **Source lookups** (`tools/audit/tic_lookup.py`, run in the `codeastro` env; cached on the drive in `extracted/tic_lookup/`):
    - TIC v8.2 rows for all 1,719 TICs;
    - Gaia DR3 (VizieR I/355/gaiadr3) sources with G < 19 within 63″ (3 TESS pixels): 52,305 sources around 1,702 targets;
    - Gaia DR3 variability classes (I/358/vclassre) for the 785 flagged variables.
-7. **Analysis** (`tools/audit/galaxy_phase2_analysis.py`):
+8. **Analysis** (`tools/audit/galaxy_phase2_analysis.py`):
    - **Common modes:** the top 8 principal components across all stacks, then the fraction of LS power at each source's reference period that survives projecting them out (`cm_retained`).
    - **Classification:** as below.
    - **dev_medium test:** against `benchmarks/baselines/dev_medium_fullyear_tables/per_star.csv`.
@@ -130,11 +134,30 @@ Two sources per class, plus two random quiet ones. Middle column: halves A and B
 
 The 33 wrong answers on quiet sources are the pipeline's own errors, the part method work should target.
 
+### Independent FFI light curves (follow-up (f))
+![FFI check](figures/ffi_check.png)
+19 sources: 15 periodic (the top unexplained ones, the largest contaminants, two crowded, two "systematic", the dominant-star case, two members of the 0.83-d family) plus 4 random quiet controls. Light curves come from MAST HLSPs, 3 sectors each from sectors 1–5. Each sector is detrended with a running median of 4·P_ref (0.5–5 d), and the search runs from 0.1 d up to that window. A source counts as **confirmed** if one of the three highest stitched peaks is at P_ref, P_ref/2 or 2·P_ref (within 3%). Only P_ref < 5 d is testable: single 27-d sectors with pipeline trends give spurious 13–15 d "matches" even for the quiet controls, so I don't count those.
+
+- **Confirmed (9/12 testable):**
+  - **Unambiguous**, since no spacecraft systematic makes a coherent signal at these periods with this phase coherence:
+    - the 0.192-d pair (3/3 sectors);
+    - the 0.248-d and 0.217-d eclipsing-binary contaminants (3/3; QLP folds show eclipse shapes);
+    - the 0.609-d Cepheid/RR Lyrae field;
+    - the 0.170-d and 0.955-d crowded sources (3/3).
+  - **Moderate:** the 4.82-d unexplained source (peak at the edge of the detrending window).
+  - **Marginal:** the 0.37-d dominant-point-source case (107 ppm, 2/3 sectors, weak fold).
+  - **3.24-d "systematic_common_mode" source TIC 10000253484:** clean 17,000 ppm sinusoid in TASOC, 3/3 sectors.
+- **Not seen:**
+  - the 4.88-d unexplained source (745 ppm in SMARTS);
+  - both 0.83-d family members tested, where QLP shows 1.38 d instead. That is the period of other family members (10002480877/879), so which neighbour leaks in depends on the aperture.
+- **Amplitudes differ wildly between reductions** at the same period, e.g. 12,244 ppm in SMARTS vs 336 ppm in QLP for TIC 10000584619, and 5.5% vs 80% for TIC 10002408894. The fraction of a neighbour's light in the aperture is reduction-specific. An intrinsically constant galaxy plus a leaking star predicts exactly this.
+- **Caveat on "systematic_common_mode":** three of its eight members have P ≈ 3.24–3.29 d, and one common mode peaks at 3.39 d. Every TESS reduction shares spacecraft systematics, so an independent FFI light curve can't tell a few-day systematic, such as momentum-dump-related, from an intrinsic signal. TIC 10000253484 stays ambiguous: either a strong spacecraft systematic or a real 3.24-d variable that the common-mode test absorbed.
+
 ## Recommendations for Rae's keep / flag / exclude decision
 1. **Flag, don't silently keep.** Add the per-file flags (`noise_source_flags.csv.gz`: classification, `P_ref`, amplitude, `periodic`) to every training and evaluation table. The 12% of files on periodic sources have, in effect, two true periods.
 2. **Exclude `contamination_known_variable` and `contamination_candidate_crowded` from ranker training** (143 sources, 88,786 files, 8.9%), or relabel them. Either way, a candidate at the contaminant's period must not be scored as a negative. These are astrophysical signals the pipeline *should* find.
-3. **Keep `systematic_common_mode`** (8 sources). Real TESS data has these too, and it's small.
-4. **`source_specific_unexplained` (44): exclude for now.** They behave like contamination in every test: source-specific, persistent, and 54% wrong rate on dev_medium. Look at a few with SPOC/QLP light curves (follow-up (f)) before deciding.
+3. **Keep `systematic_common_mode`** (8 sources). Real TESS data has these too, and it's small. One of them (3.24 d) is strong and coherent in TASOC too; treat it as "unclear".
+4. **`source_specific_unexplained` (44): exclude with the contamination classes.** They behave like contamination in every test: source-specific, persistent, 54% wrong rate on dev_medium, and 2 of 3 testable ones confirmed in independent FFI light curves.
 5. **Scoring:** a new outcome, e.g. `noise_period` = "matches the noise source's own period", would separate these 51+ cases from genuine pipeline errors. I didn't touch `evaluation.py`; it's Rae's call.
 6. **Dev/holdout:** 128 of dev_medium's 1,000 stars sit on periodic sources. Report metrics on the quiet subset next to the full set until the training-set decision is made. G9–G12 numbers on dev_medium full-year are currently dragged down by this.
 
@@ -147,7 +170,7 @@ The 33 wrong answers on quiet sources are the pipeline's own errors, the part me
 ## Open questions for Rae
 1. **Keep / flag / exclude:** see the recommendations. The main decision is whether to drop the 206 periodic sources (12% of files) from ranker training, or keep them with a second "noise period" label.
 2. **Add a `noise_period` scoring outcome?** It changes `evaluation.py`, so it's your decision.
-3. **Fetch SPOC/QLP light curves** for ~10 sources (the 0.83-d family, the 9.9-d sinusoid, a few `unexplained`)? This means downloading public MAST files, which needs your OK.
+3. **More FFI checks?** Done for 19 sources (above). Extending to all 206 periodic sources would be ~600 light curves (~170 MB), ~15 min. Long periods (≥ 5 d, e.g. the 9.9-d sinusoid) need multi-sector detrending that keeps slow signals, which is not done here.
 4. **The "periodic" threshold** (pipeline returns a period, or LS power ≥ 0.1 with A/B agreement) is a judgment call. Quiet sources may still carry weaker signals that matter at low injected amplitude. A stricter cut, e.g. LS power ≥ 0.2, gives fewer sources.
 5. **Ask Zach:** were the 242 near-LMC "galaxies" meant to be in the sample? Many are likely LMC clusters or nebulae classified as extended.
 
@@ -163,5 +186,8 @@ $PY tools/audit/galaxy_stack.py stack                                 # ~19 min
 $PY tools/audit/injection_model.py --out reports/2026-10-21_t20-noise-sources-phase2/data/injection_model.csv
 $PY tools/audit/galaxy_periods.py fits && $PY tools/audit/galaxy_periods.py ls && $PY tools/audit/galaxy_periods.py pipeline   # ~2 + 25 min
 $PY tools/audit/galaxy_phase2_analysis.py --outdir reports/2026-10-21_t20-noise-sources-phase2/data
+$PY tools/audit/ffi_lc_compare.py --make-selection reports/2026-10-21_t20-noise-sources-phase2/data/sources.csv --select reports/2026-10-21_t20-noise-sources-phase2/data/ffi_selection.csv
+/opt/anaconda3/envs/codeastro/bin/python -I tools/audit/ffi_lc_check.py --select reports/2026-10-21_t20-noise-sources-phase2/data/ffi_selection.csv --outdir /Volumes/Data_Vault/smarts_data/extracted/ffi_check   # ~2 min, 16 MB
+$PY tools/audit/ffi_lc_compare.py --ffi-dir /Volumes/Data_Vault/smarts_data/extracted/ffi_check --select reports/2026-10-21_t20-noise-sources-phase2/data/ffi_selection.csv --outdir reports/2026-10-21_t20-noise-sources-phase2/data
 $PY tools/run_notebook.py reports/2026-10-21_t20-noise-sources-phase2/notebook.ipynb
 ```

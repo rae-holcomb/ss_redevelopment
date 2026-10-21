@@ -489,7 +489,8 @@ for confirmation (ask Rae first).
   `reports/2026-10-21_t20-galaxy-pass-phase1/`; branch `claude/t20-galaxy-quietness-c3bb9b`). 206/1,719 noise sources
   (12% of files) are periodic, mostly neighbour-star contamination; 51/88 dev_medium wrong answers equal their noise
   source's own pipeline period. Awaiting Rae's keep/flag/exclude decision (recommendations in the report).
-  Follow-up (f): SPOC/QLP light curves for ~10 sources (needs Rae's OK to download).
+  Follow-up (f) done (Rae's OK): independent QLP/TASOC/ELEANOR-LITE light curves confirm 9/12 testable periodic
+  sources (P < 5 d), 0/4 quiet controls.
 - **Rae's decisions (2026-10-21):**
   - **Scope: all 1,000,000 SMARTS light curves** (both galaxy pools), so we know what we're working with.
   - **Measure the runtime before the full pass.** Phase 1 builds the script, times it on 2–3 bundles and

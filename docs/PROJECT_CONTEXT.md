@@ -559,3 +559,7 @@ chats should know:
   equal the pipeline's period on the star's noise source alone** (null 0.4); wrong rate 43% on periodic sources vs 3.8%
   on quiet ones. Injection is multiplicative (f = g x s). Per-file flags on the drive:
   `extracted/galaxy_ids/noise_source_flags.csv.gz`. Keep/flag/exclude and a `noise_period` outcome are Rae's decisions.
+- **2026-10-21 — T20 follow-up (f): independent FFI light curves.** No SPOC products exist for the noise sources
+  (TIC EXTENDED); QLP/TASOC/ELEANOR-LITE light curves (sectors 1-5) for 19 sources confirm the SMARTS period in 9/12
+  testable periodic sources (P < 5 d) and 0/4 quiet controls; amplitudes differ strongly between reductions
+  (aperture-dependent neighbour light), supporting contamination. See the T20 phase-2 report.
