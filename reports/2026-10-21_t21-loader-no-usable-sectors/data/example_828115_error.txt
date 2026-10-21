@@ -1,0 +1,1 @@
+NoUsableSectorsError: data/smarts_sample/smarts-tess-v1.0-828115.fits: no usable data in requested sectors [1, 11]: flagged [1, 11], absent [] (file has 27 orbits = sectors 1-14, 5 orbits flagged)

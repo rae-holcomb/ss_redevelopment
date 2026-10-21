@@ -157,6 +157,13 @@ mid-session.** Consequences:
 - **Don't start long jobs that need the drive** without telling Rae roughly how
   long they'll take, so she doesn't unplug mid-run.
 - Tests must never require the drive. Skip cleanly when it's absent.
+- **The local working set lives only in the main checkout's `data/`**
+  (`data/smarts_dev/`: dev_small + dev_medium, 1,050 files, 156 MB;
+  `data/smarts_sample/`). `data/` is gitignored, so **agent worktrees don't
+  get it.** At the start of a task in a worktree, symlink it:
+  `ln -s /Users/raeholcomb/Documents/GitHub/ss_redevelopment/data/smarts_dev data/smarts_dev`
+  (and the same for `smarts_sample`). Never write new local data inside a worktree:
+  it's deleted with the worktree (T2's dev files nearly were, 2026-10-21).
 
 ## Debug workflow
 

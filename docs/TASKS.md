@@ -334,7 +334,7 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** unblocked: T16a merged 2026-10-15 (demo rerun post-T18 in its report). Rae to start.
+- **Status:** in progress (started 2026-10-21): instrumentation + diagnosis; fixes go to T16d.
 - **Do:**
   - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
     declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
@@ -541,7 +541,7 @@ for confirmation (ask Rae first).
 
 ### T21. `load_smarts_fits` should fail clearly when no requested sector survives
 - **Agent:** `method-improver` (small)
-- **Status:** ready (from T2, Rae 2026-10-21)
+- **Status:** done 2026-10-21, awaiting review (branch `claude/t21-loader-error-c98179`; report `reports/2026-10-21_t21-loader-no-usable-sectors/`). `NoUsableSectorsError(ValueError)` raised before regridding; callers already record it as a decline; dev_small assigned + full-year bit-identical.
 - **Problem:** `load_smarts_fits(sectors=[...])` raises deep inside `to_even_cadence` when every requested
   sector is flagged. **Do:** raise a named exception (e.g. `NoUsableSectorsError`) early, with a clear message,
   record it as a decline (`none`, with the reason) in the scorecard and batch runners, and add a test.
@@ -858,6 +858,7 @@ for confirmation (ask Rae first).
   so this can only be tuned on SMARTS.
 
 ### P20. load_smarts_fits on a fully-flagged requested pattern
+- **Promoted to T21; done 2026-10-21** (`NoUsableSectorsError`).
 - **Proposed by:** T2 report (2026-10-15)
 - **Idea:** `load_smarts_fits(path, sectors=[s])` raises `ValueError: attempt to get argmax of an
   empty sequence` inside `to_even_cadence` when every requested sector has a flagged orbit
@@ -876,3 +877,11 @@ for confirmation (ask Rae first).
   FFI sample from TESS-point) for Cycle 1 and Cycle 2 separately. Compare class fractions, and pass the
   file with `--coverage-library`. `tools/build_coverage_library.py` only needs a table with a `sec`
   column; for Cycle 2, map sectors 14-26 to 1-13.
+
+### P21. `wavelet` candidate counts aren't reproducible from run to run
+- **Proposed by:** T21 report (2026-10-21)
+- **Idea:** on dev_small, `guess_wavelet`'s candidate count for a few stars changes between runs of the same
+  code (e.g. smarts-tess-v1.0-005139 full-year: 10 or 13). This happens at unmodified HEAD too. Final answers are
+  unaffected (`wavelet` isn't pooled), but `tools/compare_runs.py` then reports `DIFFERENT` for identical results.
+  Find the source (a threshold at a float tie? worker-dependent state?) and fix it, or have `compare_runs` report
+  non-pooled methods separately. See `reports/2026-10-21_t21-loader-no-usable-sectors/`.
