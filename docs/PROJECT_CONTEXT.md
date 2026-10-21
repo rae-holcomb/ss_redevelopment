@@ -540,3 +540,9 @@ chats should know:
   top-1 not significant. `tess_timescale_rel_dist` shows no signal on synthetic data. Multi-season features deferred
   (Rae). See `reports/2026-10-15_t16e-coverage-features/`.
 - **2026-10-21: T21 loader error (P20 resolved).** `preprocessing.load_smarts_fits` now raises `NoUsableSectorsError` (a `ValueError`; attributes `requested`/`flagged`/`absent`) before regridding when nothing survives selection: every requested sector flagged or beyond the file, `sectors=[]`, or every orbit flagged with `sectors=None`. Previously it crashed in `to_even_cadence` ("argmax of an empty sequence"). The scorecard, batch runners and `build_dev_sets.py` already caught per-star exceptions, so no caller changes; the scorecard records `none` + the error text (but leaves `true_period`/`period_bin` empty for that row). dev_small assigned and full-year bit-identical to baselines. See `reports/2026-10-21_t21-loader-no-usable-sectors/`.
+- **2026-10-21: Noise-galaxy provenance from Zach Claytor.** `galaxy_files.csv` maps each simulation's
+  *original* number (= catalog SIM_ID) to its noise light curve's TIC ID (1,719 sources). Validated against
+  T20's blind fingerprint groups (99.65% single-TIC; pool split reproduced, with exactly one shared TIC). This gives
+  T20 ground-truth galaxy IDs and real TIC IDs for source lookups. See `docs/SMARTS_REFERENCE.md` s7.
+  T21 merged (`NoUsableSectorsError`).
+

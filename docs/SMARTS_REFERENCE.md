@@ -144,3 +144,27 @@ Source: T1 phase 1, `reports/2026-10-15_t1-smarts-catalog-audit/`; scripts in `t
 - **Synthetic data**: `claude_files/synthetic.py` draws shear, spot-latitude band
   and inclination from the distributions above, keeping log-uniform periods for
   development focus.
+
+## 7. Noise-galaxy provenance (from Zach Claytor, received 2026-10-21)
+
+Zach (SMARTS PI) sent two files, stored **on the drive only** (not in git):
+
+- `/Volumes/Data_Vault/smarts_data/simulation_properties_sorted.csv` (1,000,000 rows): `Published Simulation
+  Number` (= file number = catalog row index, 0..999,999, sorted by period) and `Original Simulation Number`
+  (the generation-order ID; **identical to the catalog's `SIM_ID` / "Simulation Number"**, verified on 16,156
+  files), plus the input parameters.
+- `/Volumes/Data_Vault/smarts_data/galaxy_files.csv` (1,000,000 rows): `Simulation Number` → the noise light
+  curve file used, e.g. `TIC10001389518_full.lc.fits`. **It is keyed by the ORIGINAL simulation number
+  (= SIM_ID), not the file number.** Verified 2026-10-21:
+  - On the original index, the SIM_ID < 800k and ≥ 800k pools use 1,001 and 719 TICs, sharing exactly one
+    (TIC 10001390027), matching T20's blind noise fingerprinting (999 + 718 + 1 shared). On the published
+    index, every TIC appears in both pools, which is wrong.
+  - 99.65% of T20's fingerprint groups map to a single TIC.
+  - 1,719 distinct noise light curves in total.
+
+**To get a file's noise source:** file number → `simulation_properties_sorted.csv` (Published → Original) →
+`galaxy_files.csv` (Original → TIC file). Equivalently, catalog row → `SIM_ID` → `galaxy_files.csv`.
+
+The 94 strongly correlated "sibling" noise pairs T20 found are all *different* TICs, several with near-consecutive
+TIC numbers. That suggests neighboring sources with overlapping apertures (under investigation in T20).
+
