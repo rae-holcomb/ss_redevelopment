@@ -1,0 +1,37 @@
+{
+  "seed": 20261015,
+  "pool_cut": 800000,
+  "corrupt_thresh": 0.1,
+  "oversample": 1.3,
+  "set_sizes": {
+    "dev_small": 50,
+    "dev_medium": 1000,
+    "holdout": 3000
+  },
+  "long_fraction": 0.14285714285714285,
+  "amp_tercile_cuts": [
+    0.2198647561701403,
+    1.027858092556113
+  ],
+  "n_pool": 200000,
+  "n_checked": 5200,
+  "n_excluded": 455,
+  "exclusion_reasons": {
+    "corrupt_noise": 455
+  },
+  "n_used": 4050,
+  "coverage_fallbacks": {
+    "dev_small": 3,
+    "dev_medium": 0,
+    "holdout": 0
+  },
+  "n_bundles_checked": 180,
+  "drive_seconds_this_run": 566.9,
+  "wall_seconds_this_run": 608.6,
+  "data_roots": {
+    "dev_small": "data/smarts_dev",
+    "dev_medium": "data/smarts_dev",
+    "holdout": "$SMARTS_DATA_ROOT"
+  },
+  "library": "datasets/coverage/all_cycles_patterns.csv"
+}

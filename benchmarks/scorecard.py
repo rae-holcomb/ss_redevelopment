@@ -32,6 +32,19 @@ Datasets
                                  from the FITS header: PERIOD, DIFFROT,
                                  MINLAT, MAXLAT). An optional `sectors`
                                  column ("1-2-13") fixes each row's coverage.
+    --data-root DIR              resolve relative manifest `path`s against DIR
+                                 (default $SMARTS_DATA_ROOT if set, else the
+                                 current directory, as before). A relative DIR is
+                                 taken from the repo root. The T2 dev sets need
+                                 `--data-root data/smarts_dev`; the holdout needs
+                                 the SMARTS data root (the Data_Vault drive).
+                                 Recorded in config.dataset as ",data_root=DIR".
+    --ignore-manifest-sectors    load every native sector (full-year scoring)
+                                 even if the manifest has a `sectors` column, for
+                                 paired assigned-vs-full-year comparisons on the
+                                 same stars. A manifest with a `sectors` column
+                                 adds ",sectors=manifest" or ",sectors=ignored"
+                                 to config.dataset.
     --coverage SPEC [--coverage-seed S] [--coverage-weighting frequency|uniform]
                                  patchy sector coverage (T16a), applied to either
                                  dataset: full (default, legacy), real-weighted
@@ -63,7 +76,9 @@ Outputs (in --outdir)
 Usage
 -----
     python benchmarks/scorecard.py --synthetic 200 --seed 0 --outdir runs/synth200_baseline
-    python benchmarks/scorecard.py --manifest datasets/dev_small.csv --outdir runs/dev_small_baseline
+    python benchmarks/scorecard.py --manifest datasets/dev_small.csv --data-root data/smarts_dev --outdir runs/dev_small
+    python benchmarks/scorecard.py --manifest datasets/dev_small.csv --data-root data/smarts_dev \
+        --ignore-manifest-sectors --outdir runs/dev_small_fullyear
     python benchmarks/scorecard.py ... --resume       # skip stars already in rows.jsonl
     python benchmarks/scorecard.py ... --n-workers 1  # serial, for debugging
     python benchmarks/scorecard.py --synthetic 100 --coverage single --outdir runs/synth100_single
@@ -109,6 +124,8 @@ SCORECARD_VERSION = 3  # v2 (2026-10-13): diffrot outcome; recall/union_recall c
 # v3 (2026-10-14, T16a): --coverage dataset option + per-star coverage descriptor
 # columns. Metric definitions and outcome logic are unchanged from v2, and
 # --coverage full (default) reproduces v2 per-star results exactly.
+# (2026-10-15, T2: dataset options --data-root and --ignore-manifest-sectors;
+# metric definitions unchanged, so no version bump.)
 # One worker per physical performance core (4 on the i5 workstation, 10 on a
 # 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
 # i5: identical throughput within run-to-run noise, so extra hyperthread workers
@@ -262,10 +279,48 @@ def sample_coverage(args, n: int) -> list:
     return cov.sample_patterns(spec, n, seed=seed, library=lib, weighting=weighting)
 
 
+def manifest_data_root(args):
+    """Data root for relative manifest paths: --data-root, else $SMARTS_DATA_ROOT, else None.
+
+    Returns (root_as_given, resolved_path) or (None, None). A relative root is
+    resolved against the repo root, so `--data-root data/smarts_dev` works from
+    any working directory.
+    """
+    import os
+    given = getattr(args, "data_root", None) or os.environ.get("SMARTS_DATA_ROOT") or None
+    if not given:
+        return None, None
+    given = str(given)
+    path = Path(given).expanduser()
+    return given, (path if path.is_absolute() else ROOT / path)
+
+
+def resolve_manifest_path(path_value, root) -> str:
+    """Manifest `path` -> path to open: absolute paths unchanged, relative ones joined to `root`."""
+    p = Path(str(path_value)).expanduser()
+    return str(p if p.is_absolute() or root is None else Path(root) / p)
+
+
+def _manifest_has_sectors(manifest) -> bool:
+    """True if the manifest CSV has a `sectors` column (reads the header only)."""
+    try:
+        return "sectors" in pd.read_csv(manifest, nrows=0).columns
+    except (OSError, ValueError):
+        return False
+
+
 def dataset_string(args) -> str:
     """config.dataset for metrics.json. --coverage full keeps the v2 string, so
-    existing baselines and goals.json entries still apply."""
+    existing baselines and goals.json entries still apply. Manifest runs append
+    ",data_root=..." when a data root is used and ",sectors=manifest|ignored" when
+    the manifest has a `sectors` column."""
     base = f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)
+    if not args.synthetic:
+        given, _ = manifest_data_root(args)
+        if given:
+            base += f",data_root={given}"
+        if _manifest_has_sectors(args.manifest):
+            base += ",sectors=" + ("ignored" if getattr(args, "ignore_manifest_sectors", False) else "manifest")
     spec, seed, weighting, lib_path = _coverage_args(args)
     if spec == cov.FULL:
         return base
@@ -290,13 +345,14 @@ def build_tasks(args) -> list:
     if "path" not in man.columns:
         raise SystemExit(f"{args.manifest} needs a 'path' column")
     pats = sample_coverage(args, len(man))
-    if "sectors" in man.columns:
+    if "sectors" in man.columns and not getattr(args, "ignore_manifest_sectors", False):
         if _coverage_args(args)[0] != cov.FULL:
             raise SystemExit(f"{args.manifest} has a 'sectors' column; don't also pass --coverage")
         pats = [None if pd.isna(s) or str(s).strip() == "" else cov.parse_pattern(s) for s in man["sectors"]]
+    _, root = manifest_data_root(args)
     tasks = []
     for (_, r), pat in zip(man.iterrows(), pats):
-        tasks.append(dict(kind="fits", path=r["path"],
+        tasks.append(dict(kind="fits", path=resolve_manifest_path(r["path"], root),
                           star_id=str(r["star_id"]) if "star_id" in man.columns else Path(r["path"]).stem,
                           true_period=float(r["true_period"]) if "true_period" in man.columns else None,
                           load_kwargs={} if pat is None else {"sectors": list(pat)}))
@@ -466,6 +522,11 @@ def main(argv=None):
                         "or equally likely (uniform)")
     p.add_argument("--coverage-library", type=Path, default=None,
                    help="coverage library CSV (default datasets/coverage/all_cycles_patterns.csv)")
+    p.add_argument("--data-root", default=None,
+                   help="root for relative manifest paths (default $SMARTS_DATA_ROOT, else cwd); "
+                        "the T2 dev sets need data/smarts_dev")
+    p.add_argument("--ignore-manifest-sectors", action="store_true",
+                   help="ignore the manifest's `sectors` column (score every native sector)")
     args = p.parse_args(argv)
     if args.coverage not in cov.valid_coverage_specs() and not args.coverage.startswith("pattern:"):
         p.error(f"--coverage must be one of {cov.valid_coverage_specs()} or pattern:<sectors>")
@@ -483,6 +544,11 @@ def main(argv=None):
         log.unlink()
 
     tasks = [t for t in build_tasks(args) if t["star_id"] not in done]
+    missing = [t["path"] for t in tasks if t["kind"] == "fits" and not Path(t["path"]).exists()]
+    if missing:
+        raise SystemExit(f"{len(missing)}/{len(tasks)} manifest files not found (first: {missing[0]}). "
+                         "Pass --data-root (dev sets: data/smarts_dev) or set $SMARTS_DATA_ROOT; "
+                         "for drive data, check the Data_Vault drive is plugged in.")
     methods = tuple(m.strip() for m in args.pipeline_methods.split(",") if m.strip())
     worker = partial(score_one_star, pipeline_methods=methods, rel_tol=args.rel_tol)
     determinism.warn_if_nondeterministic_blas()
@@ -516,6 +582,8 @@ def main(argv=None):
         dataset=dataset_string(args),
         coverage=dict(spec=args.coverage, seed=args.coverage_seed, weighting=args.coverage_weighting,
                       library=str(args.coverage_library or cov.DEFAULT_LIBRARY.relative_to(ROOT))),
+        data_root=manifest_data_root(args)[0] if args.manifest else None,
+        ignore_manifest_sectors=bool(args.ignore_manifest_sectors),
         pipeline_methods=list(methods), n_guesses_default=N_GUESSES_DEFAULT, n_guesses_overrides=N_GUESSES,
         wall_seconds=time.time() - t0, created=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
