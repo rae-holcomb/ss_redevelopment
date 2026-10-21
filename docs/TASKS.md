@@ -678,6 +678,40 @@ for confirmation (ask Rae first).
   - whether dev and holdout sets should span sources.
 - **Relates to:** T10/T11 (ranker), T16g, T3 (realism).
 
+### D4. Coverage-aware expectations: searchable period range, at the start and at the end
+- **Raised:** Rae, 2026-10-21. A long-standing concern, reinforced by T16b: about half of the single-sector
+  declines are 10–30 d / > 30 d periods that one sector simply can't measure. **Don't penalize the algorithm
+  for not finding a 30 d period in 20 d of data.** Needs a joint strategy (Rae + Claude) before T16c/T16d build
+  on it.
+- **Two places it enters:**
+  1. **Start of the pipeline:** what period range is searchable for *this* star's sectors and their
+     clustering, and how that steers candidate search, gates and the ranker.
+  2. **End of analysis:** recovery rates across a sample should be judged against what was searchable
+     (completeness), not against all injected periods.
+- **Options for the start, to discuss (not exclusive):**
+  - **A. Explicit pre-search "search plan" step.** From the time sampling alone (contiguous segments, their
+    lengths and spacing, ACF valid-pair coverage, cadence), compute `[P_min, P_max_reliable, P_max_possible]`,
+    pass it as min/max_period to the guess_* methods and the fit, and record it for D1 ("no periodicity in
+    [a, b] d").
+  - **B. Soft, learned limits:** search everywhere, but give every candidate its detectability context
+    (cycles observed, teeth available, P/longest segment; T16e already has these) and let the gates/ranker
+    weigh it. More flexible, but less transparent.
+  - **C. Hybrid:** hard limits only where physics forbids (fewer than ~2 cycles in any segment); soft
+    weighting between "possible" and "reliable".
+  - **D. Two-tier output:** a confident period inside the reliable range; beyond it, a lower limit or
+    "possible long period" flag (cf. Astraea, Lu+2020, for single-sector long periods).
+  - **E. Empirical limits:** set P_max per coverage pattern from measured recovery curves (T16c), e.g. where
+    success drops below X or wrong rises above Y, rather than from first principles.
+- **Options for the end:**
+  - A per-star **`searchable`** truth flag (true P inside the star's reliable range). Report recovery among
+    searchable stars separately. A decline on an unsearchable star counts as a **correct decline**, and a
+    success there as a bonus. This touches `evaluation.py` / scorecard metric definitions, which are Rae's.
+  - **Completeness maps:** recovery vs (P, amplitude, coverage), injection-recovery style, for science
+    (occurrence-rate work) as well as development.
+  - Restate goals accordingly (e.g. G7 "declines among measurable stars"; T18's open question).
+- **Relates to:** D1 (report searched range), D2 (multi-season), T16b (finding), T16c (limits), T16d (policy),
+  T16e (features), T18 open questions, G7, `evaluation.py`.
+
 ## Proposed (agents add here; Rae promotes)
 
 ### P1. Quick arbitration improvement before the ML ranker
