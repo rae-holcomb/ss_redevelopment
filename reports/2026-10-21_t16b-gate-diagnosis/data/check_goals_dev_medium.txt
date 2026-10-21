@@ -1,0 +1,20 @@
+Run: runs/t16b_dev_medium_assigned/metrics.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest, commit 347ed4a)
+Baseline: benchmarks/baselines/dev_medium_assigned.json  (commit 4c2a994)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.148   0.148  +0.000  0.020  final.overall.success
+  0.227   0.227  +0.000  0.060  final.by_bin.1-3d.success
+  0.175   0.175  +0.000  0.060  final.by_bin.10-30d.success
+  0.193   0.193  +0.000  0.060  final.by_bin.3-10d.success
+  0.180   0.180  +0.000  0.060  final.by_bin.<1d.success
+  0.048   0.048  +0.000  0.060  final.by_bin.>30d.success
+  0.977   0.977  +0.000  0.060  union_recall.by_bin.1-3d
+  0.883   0.883  +0.000  0.060  union_recall.by_bin.10-30d
+  0.959   0.959  +0.000  0.060  union_recall.by_bin.3-10d
+  0.634   0.634  +0.000  0.060  union_recall.by_bin.<1d
+  0.525   0.525  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS

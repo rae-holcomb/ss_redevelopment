@@ -287,6 +287,10 @@ Roughly in priority order as of this writing — re-prioritize freely.
    **Much worse on patchy coverage (T16a, 2026-10-14):** on single-sector synthetic stars, 36/100 get
    a 0.13–0.42 d wrong answer, at every SNR (10 of the 36 have SNR > 5), and most often when P exceeds
    the longest contiguous span. Task T16b.
+   **T16b (2026-10-21):** after T18 these are declines, and the gates are *not* the main cause of the short-coverage
+   over-decline. Declined stars' "correct" candidates mostly have no half-lag ACF structure (noise-like), and only
+   3-6/200 per short class are structured combs blocked by the few-peak height guard, height SNR or vertex. Gate
+   relaxations that are free on synthetic data admit more confident wrong answers than successes on dev_medium (T20).
 11. **Differential rotation vs the P_eq label: addressed in scoring
    (2026-10-13), still open for ML labels.** SMARTS `PERIOD` is equatorial,
    but spot-latitude periods can differ a lot (shear up to +/-1, latitudes to
@@ -539,3 +543,4 @@ chats should know:
   add little alone (logistic candidate AUC +0.000); with coverage x feature interactions +0.014 [0.007, 0.021],
   top-1 not significant. `tess_timescale_rel_dist` shows no signal on synthetic data. Multi-season features deferred
   (Rae). See `reports/2026-10-15_t16e-coverage-features/`.
+- **2026-10-21: T16b gate half (instrumentation + diagnosis).** `fit_rotation_period` now records per-candidate `gate_results`/`failed_gates` and a structured `decline_reason` (named in `message`); scorecard gains descriptor columns (`decline_gates`, `best_success_failed_gates`, ...) and `per_candidate.csv`. Final periods/outcomes bit-identical on synth200 s0, dev_small and dev_medium (assigned). Diagnosis: the half-lag gate fires on every decline but the declined stars' correct candidates are mostly noise-like (dev_medium 202/312 with contrast < 0.02); single-sector losses of full-year successes are mostly Stage 1 / coverage-limited (only 6/79 have a candidate matching the full-year P). Gate statistics barely scale with coverage (height SNR ~0.95x); the few-peak guard's applicability does. Best offline rule (few height 0.25 + contrast-conditional SNR/vertex for >= 4 teeth) is +1-7 per 200 synthetic with 0 wrong/0 noise FP (validated on seed 1) but +10/+17 wrong on dev_medium; recommendation: no default change until T20. Proposed P21. See `reports/2026-10-21_t16b-gate-diagnosis/`.

@@ -1,0 +1,8 @@
+dataset,declined,loose,strict,matched
+full,54,26,20,0
+consecutive-2,109,50,35,10
+gapped-2,128,47,27,10
+single,132,46,26,6
+dev_medium,789,370,312,0
+s1-single,134,57,38,0
+s1-gapped-2,128,48,32,0

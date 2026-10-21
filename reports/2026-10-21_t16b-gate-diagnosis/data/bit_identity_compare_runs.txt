@@ -1,0 +1,35 @@
+200 stars in common
+final_period differs: 0 stars
+final_outcome differs: 0 stars
+  acf_fft                top1 differs:   0   n_candidates differs:   0
+  acf_fft_highpass       top1 differs:   0   n_candidates differs:   0
+  acf_fft_short          top1 differs:   0   n_candidates differs:   0
+  lombscargle            top1 differs:   0   n_candidates differs:   0
+  lombscargle_short      top1 differs:   0   n_candidates differs:   0
+  pairwise_histogram     top1 differs:   0   n_candidates differs:   0
+  wavelet                top1 differs:   0   n_candidates differs:   3
+DIFFERENT
+
+50 stars in common
+final_period differs: 0 stars
+final_outcome differs: 0 stars
+  acf_fft                top1 differs:   0   n_candidates differs:   0
+  acf_fft_highpass       top1 differs:   0   n_candidates differs:   0
+  acf_fft_short          top1 differs:   0   n_candidates differs:   0
+  lombscargle            top1 differs:   0   n_candidates differs:   0
+  lombscargle_short      top1 differs:   0   n_candidates differs:   0
+  pairwise_histogram     top1 differs:   0   n_candidates differs:   0
+  wavelet                top1 differs:   1   n_candidates differs:   0
+DIFFERENT
+
+1000 stars in common
+final_period differs: 0 stars
+final_outcome differs: 0 stars
+  acf_fft                top1 differs:   0   n_candidates differs:   0
+  acf_fft_highpass       top1 differs:   0   n_candidates differs:   0
+  acf_fft_short          top1 differs:   0   n_candidates differs:   0
+  lombscargle            top1 differs:   0   n_candidates differs:   0
+  lombscargle_short      top1 differs:   0   n_candidates differs:   0
+  pairwise_histogram     top1 differs:   0   n_candidates differs:   0
+  wavelet                top1 differs:  12   n_candidates differs:  27
+DIFFERENT
