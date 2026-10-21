@@ -990,6 +990,128 @@ Stage        : 5 (feature extraction).
 
 
 ================================================================================
+SECTION H: COVERAGE-CONTEXT FEATURES (added 2026-10-15, task T16e)
+================================================================================
+What the observing window allows, so the ranker can learn how much to trust
+a candidate under a given coverage (most real TESS star-seasons are 1-2
+sectors). Computed in ml_features._star_coverage_features (star level, copied
+into every row) and ml_features._candidate_coverage_features (per candidate,
+at the FITTED period), Stage 5.
+
+No leakage, same behavior at inference: every value is computed from the
+light curve's own time stamps and finite-flux mask only -- never from flux
+values, a manifest's assigned sector pattern, or a `sectors` label (tested in
+tests/test_ml_features.py). Segmentation reuses coverage.sampling_descriptors
+/ contiguous_segments (T16a; gap_split_days = coverage.GAP_SPLIT_DAYS = 5 d,
+longer than TESS orbit/sector downlink gaps, shorter than a missing sector).
+Cost: ~0.6 ms per star (finite-mask segmentation of the whole light curve),
+~38 microseconds per candidate amortized, <1% of extract_candidate_features (see
+reports/2026-10-15_t16e-coverage-features/). Multi-season features
+(n_seasons, per-season agreement) are deferred to T16g/D2 (Rae, 2026-10-15).
+
+Not added because they duplicate existing columns (decided in T16e):
+  - total_span_days         == lc_baseline_days exactly (first to last finite
+                               cadence; coverage.py calls it total_baseline_days).
+  - P_over_total_span       == P_over_lc_baseline exactly.
+  - duty_cycle (coverage.py) ~= the existing Section A duty_cycle (finite
+                               cadences / nominal grid). They differ by <= 0.003
+                               only where the time array carries NaN cadences
+                               beyond the last finite point (legacy full-year
+                               synthetic grids); the existing column is kept.
+  - n_cycles_longest_segment = 1 / P_over_longest_segment exactly (a tree model
+                               gains nothing from a monotone transform).
+On contiguous data (one segment) longest_contiguous_days == lc_baseline_days
+and P_over_longest_segment == P_over_lc_baseline; they differ only under
+gapped coverage, which is the point of having them.
+
+--------------------------------------------------------------------------
+n_sectors_observed
+--------------------------------------------------------------------------
+Definition   : Sum over contiguous segments of
+               max(1, floor((segment_span + 1 d) / 27.4 d + 0.5)), where
+               segment_span is first-to-last finite cadence of the segment.
+               The +1 d restores the trailing orbit gap that trimming removes.
+Description  : Number of 27.4-d TESS-sector equivalents observed, inferred
+               from the sampling alone. Exactly len(pattern) for every one of
+               the 535 coverage-library patterns plus full coverage on synthetic
+               data. Year 8+ ~55-d pointings would count as 2 (sector
+               equivalents, not pointings). A SMARTS file with a dropped
+               corrupt orbit can count a half sector as 0 or 1.
+Reference    : None; TESS sector length from the TESS Science Office orbit
+               times (docs/PROJECT_CONTEXT.md changelog 2026-10-15).
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+n_contiguous_segments
+--------------------------------------------------------------------------
+Definition   : Number of stretches of finite data separated by gaps longer
+               than 5 d (coverage.GAP_SPLIT_DAYS). 0 if no finite data.
+Description  : 1 for any consecutive-sector pattern; > 1 when whole sectors
+               are missing. Tells the ranker that ACF lags spanning a gap are
+               built from a different (cross-gap) set of point pairs.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+longest_contiguous_days
+--------------------------------------------------------------------------
+Definition   : Span (first to last finite cadence) of the longest contiguous
+               segment; NaN with no finite data.
+Description  : The longest stretch over which a period can be followed
+               cycle to cycle without a multi-week interruption. Same value as
+               coverage_descriptors' column of the same name (scorecard
+               per_star.csv), but computed without a sector label.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+largest_gap_days
+--------------------------------------------------------------------------
+Definition   : Largest difference between consecutive finite cadences (days);
+               NaN with no finite data.
+Description  : ~1 d for consecutive coverage (orbit downlinks), >= ~28 d when a
+               sector is missing, up to ~11 months for a 1-13 pattern.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+P_over_longest_segment
+--------------------------------------------------------------------------
+Definition   : fitted_P / longest_contiguous_days.
+Description  : Like P_over_lc_baseline, but relative to the longest unbroken
+               stretch rather than the full span. For gapped coverage the full
+               span can be many times the longest stretch, so
+               P_over_lc_baseline looks safe while only a fraction of a cycle
+               (or one cycle) was seen contiguously. T16a found pre-T18 wrong
+               answers concentrated at P / longest span > 1/3.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+n_cycles_observed_total
+--------------------------------------------------------------------------
+Definition   : Sum over contiguous segments of floor(segment_span / fitted_P):
+               complete cycles seen inside unbroken data. Integer.
+Description  : Counts the independent cycles the measurement actually rests
+               on; partial cycles and the time inside gaps don't count. Unlike
+               n_cycles_spanned (ACF lag range / P) and 1/P_over_lc_baseline
+               (whole span / P) it does not reward a long, mostly empty
+               baseline. 0 means no segment holds even one full cycle.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+tess_timescale_rel_dist
+--------------------------------------------------------------------------
+Definition   : min over T in 13.7 d x {1/4, 1/3, 1/2, 1, 2, 3, 4} of
+               |fitted_P / T - 1|  (T = 3.43, 4.57, 6.85, 13.7, 27.4, 41.1,
+               54.8 d). NaN for non-positive P.
+Description  : How close the candidate sits to the TESS orbit period, the
+               sector length, or their simple fractions/multiples, where
+               orbit-gap and ramp systematics and the window function create
+               spurious periodicity (TASKS P13: ~13.7 d wrong answers for
+               P < 1 d stars; open issue 7 / T8). Small values flag a
+               candidate the ranker should demand more evidence for.
+               Uses fitted_P only; independent of the light curve.
+Stage        : 5 (feature extraction).
+
+
+================================================================================
 LABEL (TRAINING ONLY)
 ================================================================================
 
