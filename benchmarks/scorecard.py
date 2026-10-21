@@ -68,6 +68,9 @@ Outputs (in --outdir)
                                  longest_contiguous_days, largest_gap_days,
                                  duty_cycle
     per_method.csv               one row per (star, method)
+    per_candidate.csv            one row per (star, candidate tested by the comb
+                                 fit): fitted period and its outcome, every
+                                 gate's value/threshold/pass, failed_gates (T16b)
     metrics.json                 summary metrics (what check_goals reads)
     fig_final_outcomes_by_bin.png
     fig_method_recall_by_bin.png
@@ -126,6 +129,10 @@ SCORECARD_VERSION = 3  # v2 (2026-10-13): diffrot outcome; recall/union_recall c
 # --coverage full (default) reproduces v2 per-star results exactly.
 # (2026-10-15, T2: dataset options --data-root and --ignore-manifest-sectors;
 # metric definitions unchanged, so no version bump.)
+# (2026-10-21, T16b: descriptor columns decline_kind, decline_gates,
+# acf_lag_max, n_fit_candidates, n_success_candidates, best_success_P,
+# best_success_failed_gates, and per_candidate.csv; metric definitions and
+# outcome logic unchanged, so no version bump.)
 # One worker per physical performance core (4 on the i5 workstation, 10 on a
 # 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
 # i5: identical throughput within run-to-run noise, so extra hyperthread workers
@@ -202,6 +209,69 @@ def _coverage_columns(t: np.ndarray, f: np.ndarray, sectors) -> dict:
     return cov.coverage_descriptors(t, f, sectors)
 
 
+def _candidate_rows(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> list:
+    """Per-candidate gate records (T16b): one JSON-able dict per tested candidate.
+
+    Descriptors only (no metric depends on them). `outcome` scores the
+    candidate's *fitted* period with evaluation.classify_period, i.e. what
+    the pipeline would report if it selected that candidate.
+    `acf_pair_frac_at_P` is the ACF's valid-pair count at lag P_fit
+    relative to lag 0 (how much of the light curve overlaps itself at one
+    period), a coverage-dependent quantity some gate statistics scale with.
+    """
+    rows = []
+    selected = res.candidates[0] if (res.success and res.candidates) else None
+    c0 = max(float(acf_counts[0]), 1.0)
+    for r in list(res.candidates) + list(res.failed_candidates):
+        row = dict(P0=float(r.period), method=r.source_guess.method,
+                   contributing_methods="+".join(r.contributing_methods),
+                   n_duplicate_guesses=int(r.n_duplicate_guesses),
+                   n_teeth_available=int(r.n_teeth_available), n_peaks_required=int(r.n_peaks_required),
+                   few_peaks=bool(r.few_peaks), passed_base_gates=bool(r.passed_base_gates),
+                   passed_gates=bool(r.passed_gates), selected=r is selected, error=r.error,
+                   failed_gates=";".join(r.failed_gates))
+        if r.fit is not None:
+            Pf = float(r.fit.P)
+            row.update(P_fit=Pf, redchi=float(r.fit.redchi),
+                       outcome=ev.classify_period(Pf, true_p, rel_tol, prange),
+                       acf_pair_frac_at_P=float(np.interp(Pf, acf_lags, acf_counts) / c0))
+            for g, d in (r.gate_results or {}).items():
+                row[f"{g}_value"] = d["value"]
+                row[f"{g}_pass"] = bool(d["passed"])
+                row[f"{g}_threshold"] = d["threshold"]
+                row[f"{g}_enabled"] = bool(d["enabled"])
+            if r.gate_results:
+                row["half_lag_contrast"] = r.gate_results["half_lag_consistency"]["contrast"]
+        else:
+            row.update(P_fit=None, redchi=None, outcome=None, acf_pair_frac_at_P=None)
+        rows.append(row)
+    return rows
+
+
+def _gate_descriptors(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> dict:
+    """Per-star gate descriptor columns (T16b) plus the per-candidate records.
+
+    decline_kind / decline_gates: EnsembleResult.decline_reason (empty on
+    success). n_success_candidates: fitted candidates whose fitted period is
+    a success (correct/diffrot). best_success_P / best_success_failed_gates:
+    the lowest-redchi such candidate and the gates it failed ('' if it
+    passed every gate). Descriptor columns only: no metric or outcome uses
+    them.
+    """
+    cands = _candidate_rows(res, acf_lags, acf_counts, true_p, rel_tol, prange)
+    reason = res.decline_reason or {}
+    succ = [c for c in cands if c["outcome"] in ev.SUCCESS_OUTCOMES]
+    best_succ = min(succ, key=lambda c: c["redchi"] if np.isfinite(c["redchi"]) else np.inf) if succ else None
+    return dict(
+        decline_kind=reason.get("kind", ""), decline_gates=";".join(reason.get("gates", [])),
+        acf_lag_max=float(acf_lags[-1]),
+        n_fit_candidates=len(res.candidates), n_success_candidates=len(succ),
+        best_success_P=best_succ["P_fit"] if best_succ else None,
+        best_success_failed_gates=best_succ["failed_gates"] if best_succ else None,
+        candidates=cands,
+    )
+
+
 def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
     """Run Stage 1 (every method) and Stage 2 on one star and score both.
 
@@ -252,10 +322,12 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
 
         t0 = time.perf_counter()
         res = fit_rotation_period(lags, acf, pooled, acf_counts=counts)
+        fit_seconds = time.perf_counter() - t0
         P = float(res.best_fit.P) if res.success else None
         rec.update(final_period=P, final_outcome=ev.classify_period(P, true_p, rel_tol, prange),
                    pipeline_success=bool(res.success), pipeline_message=res.message[:300],
-                   n_pooled=len(pooled), fit_seconds=time.perf_counter() - t0, error=None)
+                   n_pooled=len(pooled), fit_seconds=fit_seconds, error=None)
+        rec.update(_gate_descriptors(res, lags, counts, true_p, rel_tol, prange))
     except Exception as exc:  # noqa: BLE001
         rec.update(final_period=None, final_outcome=ev.NONE, pipeline_success=False,
                    error=f"{type(exc).__name__}: {exc}", traceback=traceback.format_exc()[-2000:])
@@ -369,11 +441,22 @@ def _git_commit() -> str:
         return "unknown"
 
 
+def flatten_candidates(records: list) -> pd.DataFrame:
+    """One row per (star, tested candidate) from the records' `candidates` lists (T16b)."""
+    rows = []
+    for r in records:
+        for i, c in enumerate(r.get("candidates") or []):
+            rows.append(dict(star_id=r["star_id"], true_period=r.get("true_period"),
+                             period_bin=r.get("period_bin"), coverage_class=r.get("coverage_class"),
+                             cand_rank=i, **c))
+    return pd.DataFrame(rows)
+
+
 def flatten(records: list) -> tuple:
     """Turn JSON records into (per_star, per_method) DataFrames."""
     star_rows, meth_rows = [], []
     for r in records:
-        star_rows.append({k: v for k, v in r.items() if k not in ("methods", "meta", "traceback")}
+        star_rows.append({k: v for k, v in r.items() if k not in ("methods", "meta", "traceback", "candidates")}
                          | {f"meta_{k}": v for k, v in (r.get("meta") or {}).items()})
         for m, d in (r.get("methods") or {}).items():
             meth_rows.append(dict(star_id=r["star_id"], true_period=r.get("true_period"),
@@ -576,6 +659,7 @@ def main(argv=None):
     per_star, per_method = flatten(list(done.values()))
     per_star.to_csv(outdir / "per_star.csv", index=False)
     per_method.to_csv(outdir / "per_method.csv", index=False)
+    flatten_candidates(list(done.values())).to_csv(outdir / "per_candidate.csv", index=False)
     metrics = compute_metrics(per_star, per_method, args.rel_tol)
     metrics["config"] = dict(
         scorecard_version=SCORECARD_VERSION, git_commit=_git_commit(), rel_tol=args.rel_tol,
