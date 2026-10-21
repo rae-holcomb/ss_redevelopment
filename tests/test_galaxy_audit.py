@@ -144,3 +144,36 @@ def test_sibling_light_curves_stay_separate():
     assert gid[truth == 0][0] != gid[truth == 1][0]
     sib = gg.sibling_pairs(gg._normalize(S), 0.3)
     assert len(sib) == 1 and sib["corr"].iloc[0] > 0.85
+
+
+def test_injection_model_ratios_pick_the_right_model():
+    """residual_ratios gives ~1 for the true model and far from 1 for the other."""
+    import injection_model as im
+    rng = np.random.default_rng(6)
+    g = 1 + 5e-4 * rng.standard_normal(gp.N_CAD)
+    g[5000:6000] = 20 + rng.standard_normal(1000)          # corrupt orbit
+    s = 1 + 5e-3 * np.sin(2 * np.pi * T_GRID / 3.3)
+    add = im.residual_ratios(g + (s - 1), g, 0.3)
+    mul = im.residual_ratios(g * s, g, 0.3)
+    assert abs(add["add_ratio"] - 1) < 0.2 and add["mul_ratio"] < 0.2
+    assert abs(mul["mul_ratio"] - 1) < 0.2 and mul["add_ratio"] > 5
+
+
+def test_stack_fits_roundtrip_through_loader(tmp_path):
+    """A stack written by galaxy_periods.write_fits loads with load_smarts_fits."""
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "claude_files"))
+    import galaxy_periods as gper
+    from preprocessing import load_smarts_fits
+    f = _galaxy(np.random.default_rng(7))
+    p = tmp_path / "x.fits"
+    gper.write_fits(p, f, 123)
+    lc = load_smarts_fits(p)
+    assert lc.true_period == 1.0 and np.isfinite(lc.flux).sum() > 0.7 * gp.N_CAD
+
+
+def test_robust_scatter_matches_sigma():
+    """robust_scatter ~ sigma for Gaussian noise, unaffected by a few huge outliers."""
+    import galaxy_stack as gs
+    x = np.random.default_rng(8).standard_normal(20000)
+    x[:50] = 1e6
+    assert abs(gs.robust_scatter(x) - 1) < 0.05
