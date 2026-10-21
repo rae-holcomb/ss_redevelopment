@@ -710,6 +710,35 @@ for confirmation (ask Rae first).
     grouping/held-out factor);
   - whether dev and holdout sets should span sources.
 - **Relates to:** T10/T11 (ranker), T16g, T3 (realism).
+- **Recorded option (2026-10-21; Rae: keep as an option, not committed): generate our own "SMARTS-like" light
+  curves** from quiet TESS galaxy light curves + butterpy. Purposes: (1) multi-year baselines beyond SMARTS's
+  13 sectors (for D2 / T16g); (2) **more short-period training light curves**, since SMARTS is thin there (P uniform
+  0.1–180 d, so only 1.6% < 3 d).
+  - **Why it's feasible:** of the 8,156 bright stars in `target_df_shortform.csv`, 90% are observed in ≥ 2 TESS
+    years and 63% in ≥ 3; CVZ-like stars get 4–5 years (median 41 sectors). SMARTS's noise sources are southern-CVZ
+    galaxies with known TIC IDs (Zach's `galaxy_files.csv`; SMARTS_REFERENCE s7), so the *same* sources have
+    ~4–5 years of FFIs. T20 vets which are truly quiet.
+  - **Rae's choices:**
+    - **Use the newest butterpy** (v1.1.0 as of 2025-10; has activity cycles, butterfly, diffrot, spot evolution,
+      any duration, plus temperatures/filters including a Roman filter curve). Best tools over exact equivalence
+      with the 2021 version SMARTS used. Its install requirements include `cartopy` (plotting only), so install
+      without it if possible; any install needs Rae's OK.
+    - **Noise light curves: Option B first.** Use existing FFI products (TESS-SPOC, QLP, GSFC-ELEANOR-LITE, TGLC,
+      ...) for the 1,719 noise TICs. Prefer SAP-like products (PDC-style detrending suppresses long periods). Check
+      availability first: these mostly target stars, with magnitude cuts. **Fall back to Option A** (reproduce
+      Zach's TESScut + regression-corrector reduction; possibly hundreds of GB of cutouts; ask Zach for his script)
+      only if availability is poor. Bin mixed FFI cadences (30 min / 10 min / 200 s) to a common cadence.
+  - **Recipe:** vetted quiet noise light curves (T20) → butterpy signals over the full span (SMARTS Table 1
+    distributions, with the period prior adjusted as needed, e.g. oversampling short periods, and per D4) → combine
+    with the operation T20 determines (additive vs multiplicative) and SMARTS's normalization. Optionally match the
+    noise level to real stars' magnitudes, since SMARTS's SNR distribution is somewhat arbitrary.
+  - **Validate before scaling:** 1-year sims with SMARTS's exact parameters on the same galaxies, compared with
+    SMARTS files (amplitudes, ACF properties, pipeline outcomes). Also SMARTS file minus T20's recovered galaxy
+    light curve (= the injected signal) vs fresh butterpy output for the same parameters. Expect small
+    differences from the newer butterpy; that's acceptable.
+  - **Unknowns:** the combination operation (T20); noise-product availability (cheap MAST check, could ride
+    along with T20's lookups); butterpy speed per multi-year light curve (unmeasured); storage, est.
+    ~0.4 MB per 5-year 30-min light curve, ~40 GB per 100k (estimate, not measured).
 
 ### D4. Coverage-aware expectations: searchable period range, at the start and at the end
 - **Raised:** Rae, 2026-10-21. A long-standing concern, reinforced by T16b: about half of the single-sector
