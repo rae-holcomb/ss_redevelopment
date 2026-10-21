@@ -1,5 +1,5 @@
 {
-  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only.",
+  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only. G9-G12 (2026-10-21) are on real SMARTS dev_medium full-year, the default judging set for method changes (Rae); synthetic goals G1-G8 remain as regression checks.",
   "goals": [
     {
       "id": "G1",
@@ -72,6 +72,42 @@
       "op": "<=",
       "target": 0.0,
       "description": "No guess_* method ever raises (generalizes G5; T15). Any new method is covered automatically. Added 2026-10-14 on Rae's approval."
+    },
+    {
+      "id": "G9",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.overall.success",
+      "op": ">=",
+      "target": 0.35,
+      "description": "Real-data overall success (baseline 0.248). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses."
+    },
+    {
+      "id": "G10",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.overall.wrong",
+      "op": "<=",
+      "target": 0.04,
+      "description": "Real-data confident-wrong rate (baseline 0.088; 0 on synthetic). Honest decline beats wrong. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses."
+    },
+    {
+      "id": "G11",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.by_bin.<1d.success",
+      "op": ">=",
+      "target": 0.3,
+      "description": "Real-data success for P<1d (baseline 0.17). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses."
+    },
+    {
+      "id": "G12",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "union_recall.by_bin.<1d",
+      "op": ">=",
+      "target": 0.6,
+      "description": "Real-data Stage-1 recall for P<1d (baseline 0.44; 0.88 on synthetic). Relates to P16. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses."
     }
   ],
   "regression_guard": {

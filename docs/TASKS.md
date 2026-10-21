@@ -35,7 +35,17 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ### T2. Build frozen dev sets and holdout
 - **Agent:** `dev-set-builder`
-- **Status:** built, awaiting Rae's approval (2026-10-15; report `reports/2026-10-15_t2-dev-sets/`).
+- **Status:** done, merged 2026-10-21 (report `reports/2026-10-15_t2-dev-sets/`).
+- **Rae's decisions on T2's open questions (2026-10-21, all as recommended):**
+  1. Keep `native_whole_sectors` (both orbits usable) for coverage assignment, so the assigned pattern is exactly what loads.
+  2. Loader crash on an all-flagged requested pattern: raise a clear, named error that callers record as a decline (task T21).
+  3. Real-data goals: draft G9–G12 on dev_medium full-year added to `goals.json`; synthetic G1–G8 stay as regression checks.
+  4. **Default judging set for method changes: dev_medium full-year**
+     (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`), with Rae's
+     standing OK to run it. Use assigned coverage (drop `--ignore-manifest-sectors`) for coverage-robustness work (T16b–e).
+  5. dev_small's thin >60 d bins are fine for a smoke test.
+  6. No holdout_v2 from the <800k pool (it would break galaxy separation).
+  7. Keep the 774 MB build cache on the drive (`extracted/t2_build/`).
   `datasets/dev_small.csv` (50), `dev_medium.csv` (1,000), `holdout.csv` (3,000) from
   `tools/build_dev_sets.py` (seed 20261015); baselines `benchmarks/baselines/dev_{small,medium}_{assigned,fullyear}`.
   Dev sets score with `--data-root data/smarts_dev`; `--ignore-manifest-sectors` gives full-year.
@@ -472,6 +482,56 @@ for confirmation (ask Rae first).
   - Set up CI to run the test suite on push.
 - **Done when:** a fresh clone installs and passes its tests with no local paths and no
   oversized files, and the README gets a new user to a measured period in a few commands.
+
+### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
+- **Agent:** `data-auditor`
+- **Status:** proposed (Rae, 2026-10-21); confirm the plan before starting. Needs the drive.
+- **Why (Rae):** real-SMARTS recovery is low, which is expected (red noise), but some SMARTS features
+  are suspect. If a "quiet" galaxy light curve actually contains a periodic signal, every SMARTS star
+  injected into it (~1,000 each) carries that signal, and the pipeline may "wrongly" report it. We want
+  to develop the pipeline knowing the training set's weaknesses, **without over-designing to fit
+  its flaws**.
+- **Rae's core test:** group SMARTS light curves by noise galaxy and look for the **same wrong period
+  recurring across many stars from one galaxy**. That would mean the signal existed before injection.
+- **Plan:**
+  - **A. Galaxy groups.** No header identifies the galaxy (checked 2026-10-21: `HLSPTARG` is just the
+    simulation name; there are no TIC/RA/Dec keys). Use T1's noise-fingerprint method (files sharing a
+    galaxy have identical noise) over the corpus, or at least the SIM_ID ≥ 800k pool that the dev
+    sets come from, to assign a `galaxy_id` to every file. This is P15, revived; the same pass can
+    record the corrupt-noise flags. It's a drive-bound streaming pass; estimate the time first.
+  - **B. Recover each galaxy's own light curve** by stacking its member files. The injected spot signals
+    have unrelated periods and phases, so they average away over hundreds of members while the shared
+    galaxy noise remains. First establish from member pairs whether injection was additive or
+    multiplicative (the paper says only "convolved").
+  - **C. Search each recovered galaxy light curve for periodicity,** with the pipeline and with
+    Lomb-Scargle. List the periodic galaxies: period, amplitude relative to typical injected
+    amplitudes, and how many SMARTS files they affect.
+  - **D. Rae's test, made direct:** for dev_medium wrong (and diffrot/alias) answers, do they match their
+    galaxy's own period? How much of the 8.8% wrong rate is "the pipeline correctly found a real
+    pre-existing signal"?
+  - **E. Classify each periodic signal by origin:**
+    - **Spacecraft systematics:** shared across many galaxies at the same times (the galaxies sit in
+      the southern CVZ and were observed simultaneously, so common-mode or PCA analysis across galaxies
+      isolates them); TESS timescales (13.7 d orbit, momentum-dump cadence, ~1 d scattered light);
+      sector-dependent.
+    - **Source-specific:** unique to one galaxy, coherent through the year. That points to a
+      contaminated aperture (a nearby variable star) or a misclassified source (e.g. actually a
+      star).
+- **Decision afterwards (Rae):**
+  - systematics → **keep** (real TESS data has them too), possibly with a label category;
+  - contamination / misclassification → **exclude** from training, or **include with a flag**.
+  The choice depends on what the signals look like. Labels matter too: a pipeline that correctly
+  detects a contaminant's period is currently scored "wrong".
+- **Relates to:** T3 (realism), P15 (galaxy IDs / corrupt noise), P16 (short-period signal strength),
+  T10/T11 (training labels), D3 (other training data).
+
+### T21. `load_smarts_fits` should fail clearly when no requested sector survives
+- **Agent:** `method-improver` (small)
+- **Status:** ready (from T2, Rae 2026-10-21)
+- **Problem:** `load_smarts_fits(sectors=[...])` raises deep inside `to_even_cadence` when every requested
+  sector is flagged. **Do:** raise a named exception (e.g. `NoUsableSectorsError`) early, with a clear message,
+  record it as a decline (`none`, with the reason) in the scorecard and batch runners, and add a test.
+  Results on the existing dev sets must be unchanged.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`

@@ -194,8 +194,13 @@ task from `docs/TASKS.md`:
   `datasets/holdout.csv` unless Rae says so.
 - Any claim of improvement needs a before/after `check_goals.py --baseline`
   on the same dataset string.
-- Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks";
-  `dev_medium` needs Rae's OK; larger is Rae's local job.
+- Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks".
+  **dev_medium full-year is the default judging set for method changes**
+  (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
+  ~20 min at 4 workers; Rae's standing OK, 2026-10-21; baseline
+  `benchmarks/baselines/dev_medium_fullyear.json`). Use assigned coverage (no
+  `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
+  without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go under "Proposed" in `docs/TASKS.md`.
 
 ## Performance changes
