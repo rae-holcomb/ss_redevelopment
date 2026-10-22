@@ -27,6 +27,9 @@ separate from the pipeline itself:
 - descriptors: `coverage_descriptors` measures what a star's (time, flux)
   arrays actually cover (baseline, longest contiguous stretch, largest gap,
   duty cycle).
+- searchable range (T16c, D4): `searchable_range` gives the period range a
+  light curve or one contiguous batch can search, from its time sampling
+  only: P_min (cadence), the ACF reach R and P_max = R/2.
 
 The same pattern means the same thing for synthetic stars
 (`synthetic.make_lightcurve(sectors=...)`) and SMARTS FITS files
@@ -479,3 +482,128 @@ def coverage_descriptors(time: np.ndarray, flux: np.ndarray, sectors: Sequence[i
     samp = sampling_descriptors(time, flux, gap_split_days)
     samp.pop("segment_days")
     return out | samp
+
+
+# --------------------------------------------------------------------------
+# Searchable period range (T16c, decision D4 2026-10-22)
+# --------------------------------------------------------------------------
+
+# Valid-pair fraction that defines the ACF reach R (D4): the same 0.3 as
+# acf_utils.compute_acf's default min_valid_frac and evaluation.acf_reach's
+# frozen value (T23). Kept separate from compute_acf's argument on purpose:
+# changing the pipeline's ACF truncation must not move the searchable range.
+REACH_MIN_VALID_FRAC = 0.3
+# P_max = REACH_PERIOD_FRAC * R (D4: success is flat to P/R = 0.5, ~0 beyond).
+REACH_PERIOD_FRAC = 0.5
+# P_min = PMIN_CADENCES * cadence (Nyquist; the comb fit's sanity filter
+# also requires P0 > 2 * dt).
+PMIN_CADENCES = 2.0
+
+
+def reach_from_pair_counts(lags: np.ndarray, counts: np.ndarray,
+                           min_valid_frac: float = REACH_MIN_VALID_FRAC) -> float:
+    """ACF reach R from per-lag valid-pair counts.
+
+    R is the last lag before the valid-pair count first drops below
+    min_valid_frac x the count at lag 0 (the lag-0 count is the number of
+    finite cadences). This is the one place the reach rule lives:
+    searchable_range applies it to the counts of the sampling mask, and
+    comb_fit.fit_rotation_period to compute_acf's returned counts.
+
+    Parameters
+    ----------
+    lags : lags (days), starting at 0, evenly spaced.
+    counts : valid (i, i+k) pair count at each lag (same length as lags).
+    min_valid_frac : threshold fraction (default REACH_MIN_VALID_FRAC = 0.3).
+
+    Returns
+    -------
+    float R (days). If the counts never drop below the threshold within the
+    given lags (e.g. an ACF that compute_acf already truncated at the
+    breach), R = lags[-1], a lower bound on the full-lag value. NaN for
+    empty input or a zero lag-0 count.
+    """
+    lags = np.asarray(lags, float)
+    counts = np.asarray(counts, float)
+    if len(lags) == 0 or not counts[0] > 0:
+        return float("nan")
+    below = counts < min_valid_frac * counts[0]
+    if not np.any(below):
+        return float(lags[-1])
+    first_bad = int(np.argmax(below))
+    return float(lags[max(first_bad - 1, 0)])
+
+
+def sampling_pair_counts(time: np.ndarray, flux: np.ndarray) -> tuple:
+    """Valid-pair counts of a light curve's finite-flux sampling, per lag.
+
+    The time-sampling-only counterpart of compute_acf(..., return_counts=True):
+    the finite cadences are placed on a regular grid of the median cadence
+    (so it works on gridded arrays with NaN gaps, as from load_smarts_fits /
+    synthetic, and on arrays with the gaps removed), and the grid's 0/1 mask
+    is autocorrelated with the same zero-padded FFT that compute_acf uses.
+    On an already-gridded light curve the counts equal compute_acf's.
+
+    Parameters
+    ----------
+    time : sample times (days).
+    flux : flux, NaN (or inf) at missing cadences. Only finiteness is used.
+
+    Returns
+    -------
+    (lags, counts, cadence): lags = k * cadence for k = 0..n_grid-1; counts =
+    number of finite (i, i+k) pairs at each lag (rounded to integers);
+    cadence = median spacing of consecutive finite cadences. Empty arrays and
+    NaN cadence for fewer than 2 finite points.
+    """
+    t = np.asarray(time, float)[np.isfinite(np.asarray(flux, float))]
+    if len(t) < 2:
+        return np.array([]), np.array([]), float("nan")
+    cadence = float(np.median(np.diff(t)))
+    idx = np.rint((t - t[0]) / cadence).astype(int)
+    m = np.zeros(idx[-1] + 1)
+    m[idx] = 1.0
+    n = len(m)
+    fm = np.fft.fft(m, n=2 * n)
+    counts = np.rint(np.clip(np.fft.ifft(fm * np.conj(fm)).real[:n], 0, None))
+    return np.arange(n) * cadence, counts, cadence
+
+
+def searchable_range(time: np.ndarray, flux: np.ndarray,
+                     min_valid_frac: float = REACH_MIN_VALID_FRAC,
+                     reach_period_frac: float = REACH_PERIOD_FRAC) -> dict:
+    """The period range a light curve (or one contiguous batch of it) can search.
+
+    Decision D4 (2026-10-22): P_max = R/2, where the ACF reach R is the lag
+    out to which at least min_valid_frac of the light curve still overlaps
+    itself (valid-pair fraction >= 0.3; ~0.69x the longest contiguous segment,
+    and it does not bridge sector gaps). Uses only the time sampling (which
+    cadences are finite), never the flux values, so it behaves identically on
+    synthetic, SMARTS and real TESS data and is known before any search.
+
+    Per batch: pass the time/flux of one batch (e.g. one sector cluster) to
+    get that batch's range; batch-wise search (T16h) calls this per batch and
+    takes the union. Passing the whole light curve gives the range of a
+    single search over all of it (what the pipeline does today).
+
+    Parameters
+    ----------
+    time, flux : the light curve or batch (flux NaN at missing cadences).
+    min_valid_frac : valid-pair fraction that defines R (default 0.3, D4).
+    reach_period_frac : P_max / R (default 0.5, D4).
+
+    Returns
+    -------
+    dict with
+        p_min   : PMIN_CADENCES x cadence (days), the shortest period searched;
+        reach   : R (days);
+        p_max   : reach_period_frac x R (days);
+        cadence : median spacing of finite cadences (days);
+        min_valid_frac, reach_period_frac : the parameters used.
+    All NaN for fewer than 2 finite points.
+    """
+    lags, counts, cadence = sampling_pair_counts(time, flux)
+    reach = reach_from_pair_counts(lags, counts, min_valid_frac) if len(lags) else float("nan")
+    return dict(p_min=PMIN_CADENCES * cadence, reach=reach, p_max=reach_period_frac * reach,
+                cadence=cadence, min_valid_frac=float(min_valid_frac),
+                reach_period_frac=float(reach_period_frac))
