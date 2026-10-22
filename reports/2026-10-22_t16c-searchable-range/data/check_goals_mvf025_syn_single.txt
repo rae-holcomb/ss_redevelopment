@@ -1,0 +1,20 @@
+Run: runs/t16c/mvf025/syn_single/metrics.json  (dataset synthetic:n=200,seed=0,coverage=single,coverage_weighting=frequency,coverage_seed=0,coverage_library=all_cycles, commit 736b16f-dirty)
+Baseline: runs/t16c/after/syn_single/metrics.json  (commit 736b16f)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.325   0.325  +0.000  0.020  final.overall.success
+  0.422   0.422  +0.000  0.060  final.by_bin.1-3d.success
+  0.023   0.023  +0.000  0.060  final.by_bin.10-30d.success
+  0.472   0.472  +0.000  0.060  final.by_bin.3-10d.success
+  0.412   0.412  +0.000  0.060  final.by_bin.<1d.success
+  0.000   0.000  +0.000  0.060  final.by_bin.>30d.success
+  0.756   0.756  +0.000  0.060  union_recall.by_bin.1-3d
+  0.395   0.395  +0.000  0.060  union_recall.by_bin.10-30d
+  0.889   0.889  +0.000  0.060  union_recall.by_bin.3-10d
+  0.809   0.809  +0.000  0.060  union_recall.by_bin.<1d
+  0.000   0.000  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS
