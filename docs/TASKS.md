@@ -561,6 +561,7 @@ for confirmation (ask Rae first).
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
 - **Agent:** `data-auditor`
+- **Public release note (2026-10-22, draft for Zach Claytor):** `docs/smarts_release_note/` + public flags CSVs (`tools/audit/smarts_release_products.py`; per-file table on the drive in `extracted/release_note/`).
 - **Status:** done, merged 2026-10-22 (`reports/2026-10-21_t20-noise-sources-phase2/`; phase 1:
   `reports/2026-10-21_t20-galaxy-pass-phase1/`; branch `claude/t20-galaxy-quietness-c3bb9b`). 206/1,719 noise sources
   (12% of files) are periodic, mostly neighbour-star contamination; 51/88 dev_medium wrong answers equal their noise

@@ -1,0 +1,13 @@
+body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10.5pt; line-height: 1.4; max-width: 7in; margin: 0 auto; color: #111; }
+h1 { font-size: 14pt; margin-top: 1.2em; border-bottom: 1px solid #ccc; }
+header h1.title { font-size: 18pt; border: none; margin-bottom: 0; }
+p.subtitle { font-size: 12pt; margin-top: 0.2em; }
+p.author, p.date { margin: 0.1em 0; color: #444; }
+table { border-collapse: collapse; font-size: 8.5pt; margin: 0.6em 0; }
+th, td { border-bottom: 1px solid #ddd; padding: 2px 6px; text-align: left; vertical-align: top; }
+th { border-bottom: 1.5px solid #888; }
+code { font-size: 8.5pt; }
+figure { margin: 0.8em 0; page-break-inside: avoid; }
+figure img { width: 100%; }
+figcaption { font-size: 9pt; color: #333; }
+@page { size: letter; margin: 0.7in; }
