@@ -92,7 +92,7 @@ DR3 sources with G < 19 within 63″ (3 TESS pixels) via VizieR. We recorded:
 this order:
 
 | class | rule | sources | files |
-|---|---|---|---|
+|----------------|-----------------|---|----|
 | `quiet` | not periodic | 1,513 | 878,498 |
 | `systematic_common_mode` | `cm_retained` < 0.5 | 8 | 6,374 |
 | `misclassified_star` | Gaia source within 3″ with star probability PSS > 0.9 and G < Tmag + 1.5 | 1 | 299 |
@@ -114,7 +114,7 @@ sources (26 of them testable).
 
 # 3. What we found
 
-![**Figure 1.** Four noise light curves recovered from SMARTS files, colour-coded by class. Left: the full year (A+B stack). Right: a zoom with the two disjoint halves A (grey) and B (colour) overlaid; they agree to within the line width. From top: a 0.248-d, 5.5%-amplitude contaminant next to a Gaia eclipsing binary; a 0.955-d signal in a crowded field; a coherent 9.9-d, 3,900 ppm sinusoid with no identified cause; a quiet source.](figures/fig1_example_noise_sources.png)
+![Four noise light curves recovered from SMARTS files, colour-coded by class. Left: the full year (A+B stack). Right: a zoom with the two disjoint halves A (grey) and B (colour) overlaid; they agree to within the line width. From top: a 0.248-d, 5.5%-amplitude contaminant next to a Gaia eclipsing binary; a 0.955-d signal in a crowded field; a coherent 9.9-d, 3,900 ppm sinusoid with no identified cause; a quiet source.](figures/fig1_example_noise_sources.png)
 
 **Contamination dominates.** All five of the largest signals (1.5–5.5% amplitude,
 P = 0.2–1.6 d) sit next to Gaia eclipsing binaries or Cepheids. Several contaminants
@@ -136,7 +136,7 @@ Magellanic Cloud.
 - Of these, 62 (26%) are periodic, against 144 of 1,477 (10%) elsewhere.
 - Together they underlie 137,980 files.
 
-| class | sources | files | median `P_ref` (d) | median LS amplitude (ppm) | near LMC |
+| class | sources | files | median `P_ref` (d) | median amp. (ppm) | near LMC |
 |---|---|---|---|---|---|
 | `contamination_known_variable` | 90 | 53,417 | 2.6 | 1,015 | 53 |
 | `contamination_candidate_crowded` | 63 | 35,369 | 4.0 | 420 | 6 |
@@ -146,7 +146,7 @@ Magellanic Cloud.
 | **all periodic** | **206** | **121,502** | 3.4 | | 62 |
 | `quiet` | 1,513 | 878,498 | — | 226 | 180 |
 
-![**Figure 2.** Left: LS amplitude against period for all 1,719 noise light curves. Periodic sources (colours) separate from the quiet red-noise population (grey) mainly at P < 5 d; the high-amplitude, short-period end is dominated by known-variable contamination. Right: sky positions; the dashed ellipse marks 4° around the LMC centre.](figures/fig2_population.png)
+![Left: LS amplitude against period for all 1,719 noise light curves. Periodic sources (colours) separate from the quiet red-noise population (grey) mainly at P < 5 d; the high-amplitude, short-period end is dominated by known-variable contamination. Right: sky positions; the dashed ellipse marks 4° around the LMC centre.](figures/fig2_population.png)
 
 **Independent confirmation.** Table and Fig. 3 compare the confirmation rate of each
 class with the chance-match rate measured on quiet sources. The p-values come from a
@@ -181,7 +181,7 @@ one-sided Fisher exact test against the controls.
   from an astrophysical signal. Three of its eight members have P ≈ 3.2–3.3 d, close
   to a peak of one common mode at 3.4 d.
 
-![**Figure 3.** Fraction of testable periodic sources (`P_ref` < 5 d) whose period is recovered in independent FFI light curves (QLP / TASOC / GSFC-ELEANOR-LITE), with Wilson 95% intervals. The grey band is the chance-match rate measured on quiet sources tested at shuffled periods.](figures/fig3_ffi_check.png)
+![Fraction of testable periodic sources (`P_ref` < 5 d) whose period is recovered in independent FFI light curves (QLP / TASOC / GSFC-ELEANOR-LITE), with Wilson 95% intervals. The grey band is the chance-match rate measured on quiet sources tested at shuffled periods.](figures/fig3_ffi_check.png)
 
 # 4. Impact on period recovery
 
@@ -208,7 +208,7 @@ The method is not failing on these files. It correctly measures a signal that th
 labels do not contain. Any period-recovery method, or any model trained on SMARTS
 labels, will see the same thing.
 
-![**Figure 4.** Left: for test files whose noise light curve has a detectable period, the period recovered from the SMARTS file against the period found in the noise light curve alone. Most wrong answers (red) lie on the 1:1 line. Right: fraction of files with a wrong recovered period, by noise-source class.](figures/fig4_period_recovery.png)
+![Left: for test files whose noise light curve has a detectable period, the period recovered from the SMARTS file against the period found in the noise light curve alone. Most wrong answers (red) lie on the 1:1 line. Right: fraction of files with a wrong recovered period, by noise-source class.](figures/fig4_period_recovery.png)
 
 # 5. How to use the flags
 
@@ -283,7 +283,7 @@ Booleans are `True`/`False`; missing values are empty.
 **File identifiers (per-file table only)**
 
 | column | description |
-|---|---|
+|------|--------------|
 | `file_number` | 0-based file number, equal to the row index of the DR1 catalog (rows are sorted by period) |
 | `filename` | `smarts-tess-v1.0-NNNNNN.fits`, with NNNNNN = `file_number` |
 | `sim_id` | the catalog's `Simulation Number` (the original simulation index; the key of `galaxy_files.csv`) |
@@ -291,7 +291,7 @@ Booleans are `True`/`False`; missing values are empty.
 **Noise-source identity and classification (both tables)**
 
 | column | description |
-|---|---|
+|------|--------------|
 | `noise_tic` | TIC ID of the noise source |
 | `noise_lc_file` | its noise light-curve filename as given in `galaxy_files.csv` (per-source table) |
 | `classification` | one of the six classes in Section 2 |
@@ -304,7 +304,7 @@ Booleans are `True`/`False`; missing values are empty.
 light curve:
 
 | column | description |
-|---|---|
+|------|--------------|
 | `ls_P1_d` | period of the highest LS peak, 0.1–60 d |
 | `ls_P1_power` | normalized LS power of that peak. Population median 0.015; 90th percentile 0.067 |
 | `ls_P1_amp_ppm` | sinusoid semi-amplitude at `ls_P1_d` (ppm) |
@@ -312,12 +312,12 @@ light curve:
 | `ls_periodic` | `ab_persistent` and `ls_P1_power` ≥ 0.1 |
 | `search_detected` | True if the rotation-period search returned a period for the stack |
 | `search_P_d` | that period (d) |
-| `cm_retained` | fraction of LS power at `P_ref` that survives removing 8 common modes; < 0.5 → `systematic_common_mode` |
+| `cm_retained` | fraction of LS power at `P_ref` that survives removing 8 common modes; below 0.5 the source is classed `systematic_common_mode` |
 
 **Per-source table only**
 
 | column | description |
-|---|---|
+|------|--------------|
 | `n_files` | number of SMARTS files that use this noise light curve |
 | `ra_deg`, `dec_deg`, `Tmag` | TIC v8.2 position and TESS magnitude |
 | `d_lmc_deg` | angular distance from the LMC centre (deg) |
