@@ -543,13 +543,42 @@ chats should know:
   add little alone (logistic candidate AUC +0.000); with coverage x feature interactions +0.014 [0.007, 0.021],
   top-1 not significant. `tess_timescale_rel_dist` shows no signal on synthetic data. Multi-season features deferred
   (Rae). See `reports/2026-10-15_t16e-coverage-features/`.
+- **2026-10-21 — T20 phase 1: galaxy-ID pass** (`reports/2026-10-21_t20-galaxy-pass-phase1/`):
+  `tools/audit/galaxy_pass.py` (resumable per-bundle stream: int8 noise fingerprint, corrupt flags, stats)
+  and `galaxy_groups.py` (template clustering, O(N x T x D)). On 31 bundles (172k files) -> 1,718 identical-noise
+  light curves (999 used only by SIM_ID < 800k, 718 only by >= 800k, **1 by both**: ~0.14% of >= 800k files share
+  a train-pool noise LC). New: **"sibling" noise LCs** (distinct LCs correlated at r = 0.5-0.99; T1's r > 0.8 cut
+  lumped 5 such pairs). Full-corpus estimate ~45-60 min wall, ~2 CPU-h, 17.7 GB; awaiting Rae's go-ahead.
 - **2026-10-21: T21 loader error (P20 resolved).** `preprocessing.load_smarts_fits` now raises `NoUsableSectorsError` (a `ValueError`; attributes `requested`/`flagged`/`absent`) before regridding when nothing survives selection: every requested sector flagged or beyond the file, `sectors=[]`, or every orbit flagged with `sectors=None`. Previously it crashed in `to_even_cadence` ("argmax of an empty sequence"). The scorecard, batch runners and `build_dev_sets.py` already caught per-star exceptions, so no caller changes; the scorecard records `none` + the error text (but leaves `true_period`/`period_bin` empty for that row). dev_small assigned and full-year bit-identical to baselines. See `reports/2026-10-21_t21-loader-no-usable-sectors/`.
 - **2026-10-21: Noise-galaxy provenance from Zach Claytor.** `galaxy_files.csv` maps each simulation's
   *original* number (= catalog SIM_ID) to its noise light curve's TIC ID (1,719 sources). Validated against
   T20's blind fingerprint groups (99.65% single-TIC; pool split reproduced, with exactly one shared TIC). This gives
   T20 ground-truth galaxy IDs and real TIC IDs for source lookups. See `docs/SMARTS_REFERENCE.md` s7.
   T21 merged (`NoUsableSectorsError`).
+
+- **2026-10-21 — T20 phase 2: SMARTS noise sources that aren't quiet** (`reports/2026-10-21_t20-noise-sources-phase2/`).
+  Amplitude-aware median stacks of each of the 1,719 TIC noise light curves (Zach's IDs) show **206 periodic sources
+  (121,502 files, 12.2%)**, mostly contamination by neighbouring variable stars (90 next to Gaia-classified variables;
+  242 "galaxies" lie in crowded LMC fields); only 8 are common-mode systematics. **51 of dev_medium's 88 wrong answers
+  equal the pipeline's period on the star's noise source alone** (null 0.4); wrong rate 43% on periodic sources vs 3.8%
+  on quiet ones. Injection is multiplicative (f = g x s). Per-file flags on the drive:
+  `extracted/galaxy_ids/noise_source_flags.csv.gz`. Keep/flag/exclude and a `noise_period` outcome are Rae's decisions.
+- **2026-10-21 — T20 follow-up (f): independent FFI light curves.** No SPOC products exist for the noise sources
+  (TIC EXTENDED); QLP/TASOC/ELEANOR-LITE light curves (sectors 1-5) for 19 sources confirm the SMARTS period in 9/12
+  testable periodic sources (P < 5 d) and 0/4 quiet controls; amplitudes differ strongly between reductions
+  (aperture-dependent neighbour light), supporting contamination. See the T20 phase-2 report.
 - **2026-10-21: T16b gate half (instrumentation + diagnosis).** `fit_rotation_period` now records per-candidate `gate_results`/`failed_gates` and a structured `decline_reason` (named in `message`); scorecard gains descriptor columns (`decline_gates`, `best_success_failed_gates`, ...) and `per_candidate.csv`. Final periods/outcomes bit-identical on synth200 s0, dev_small and dev_medium (assigned). Diagnosis: the half-lag gate fires on every decline but the declined stars' correct candidates are mostly noise-like (dev_medium 202/312 with contrast < 0.02); single-sector losses of full-year successes are mostly Stage 1 / coverage-limited (only 6/79 have a candidate matching the full-year P). Gate statistics barely scale with coverage (height SNR ~0.95x); the few-peak guard's applicability does. Best offline rule (few height 0.25 + contrast-conditional SNR/vertex for >= 4 teeth) is +1-7 per 200 synthetic with 0 wrong/0 noise FP (validated on seed 1) but +10/+17 wrong on dev_medium; recommendation: no default change until T20. Proposed P21. See `reports/2026-10-21_t16b-gate-diagnosis/`.
 - **2026-10-21: Rae's decisions on T16b's open questions** (all as recommended): no gate relaxation before T20; per-method mechanisms folded into T16c (waits for D4); height-SNR denominator + pair-count weighting into T16d; band-width breakdown + scorecard v4 as new small task T22; year tag deferred. See TASKS.md T16b.
 - **2026-10-21: Own SMARTS-like simulations recorded as an option under D3** (not committed): quiet TESS galaxy light curves (T20-vetted; existing FFI products first, own reduction as fallback) + newest butterpy; for multi-year baselines and more short-period training data. Validate against SMARTS before scaling. See TASKS.md D3.
 - **2026-10-22: D4 decided (coverage-aware searchable range).** Searchable limit is **P_max = R/2**, with R the ACF reach (valid-pair fraction >= 0.3; ~0.69x the longest contiguous segment; it does not bridge sector gaps). On T16b's data, success is flat to P/R = 0.5 and zero beyond (dev_medium 0/323). Start: `searchable_range()` per contiguous batch; Stage 1 uncapped, with beyond-R/2 candidates tagged `beyond_reach` and skipped by the fit; the range is recorded for D1; a P/R ranker feature (T16c). End: per-star `searchable` = low end of the success band <= R/2, with R frozen in `evaluation.py` (independent of pipeline defaults); report all-star and searchable-subset metrics, plus wrong/decline rates on unsearchable stars, and propose searchable goals alongside the existing ones (T23). Wrong answers on unsearchable stars are mostly short false detections, which a search limit doesn't fix. Multi-season/clustered sectors: batch-wise search with testability-aware cross-batch comparison vs a stacked within-batch ACF (T16h; the GP option is optional). See TASKS.md D4.
+- **2026-10-22: Rae's decisions on T20 phase 2** (all as recommended): flag every training/evaluation table with the
+  per-file noise-source flags; exclude contamination (known-variable + crowded) and, for now, unexplained
+  source-specific sources from ranker training (197 sources, 114,829 files = 11.5%); keep the 8 common-mode
+  systematics; keep the current `periodic` flags but store signal-strength metrics; new tasks T24 (`noise_period`
+  scoring outcome) and T25 (dev_medium quiet-noise subset metrics); T16b's replay unblocked; D3 points at the flags.
+  Open: Rae asks Zach about the 242 near-LMC sources.
+- **2026-10-22: T20 full independent-FFI check done; T20 merged.** Of 150 testable (P < 5 d) sources, Gaia
+  known-variable contamination is confirmed in independent QLP/TASOC/ELEANOR-LITE light curves 38/60 (p = 4e-5 vs a
+  4/26 shuffled-period quiet null), crowded 13/34 (p = 0.05), but `source_specific_unexplained` only 4/25 (chance):
+  their signal may be specific to Zach's reduction. Exclusion kept, since training uses the SMARTS light curves.
+  `noise_source_flags.csv.gz` on the drive now carries `exclude_from_training` and the signal-strength metrics (T24/T25 read it).

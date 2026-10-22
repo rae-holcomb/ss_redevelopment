@@ -1,0 +1,9 @@
+{
+ "n_rows_overlap": 1031,
+ "n_t1_rows": 1050,
+ "t1_same_pairs": 376,
+ "our_same_pairs": 371,
+ "both": 371,
+ "t1_only": 5,
+ "ours_only": 0
+}

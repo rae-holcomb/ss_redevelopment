@@ -101,7 +101,12 @@ using a Gaussian emergence/decay envelope in time.
   were filled with the mean.
 - The galaxies were split 1,000 train / 1,000 validation+test, with one random galaxy per simulation.
   The paper says the simulation was "convolved" with the galaxy light curve; the
-  exact operation isn't stated.
+  exact operation isn't stated. **T20 measured it: multiplicative, f = g x s** (in corrupt orbits
+  with |g - 1| > 3, f - g grows 6.2x while f/g - 1 stays flat; `reports/2026-10-21_t20-noise-sources-phase2/`).
+- **The "galaxies" are TIC `EXTENDED` objects, not all background galaxies:** 242 of 1,719 lie within 4 deg
+  of the LMC centre in crowded fields. **206 noise light curves (12% of files) carry a real periodic signal**,
+  mostly contamination from neighbouring variable stars; per-file flags in
+  `extracted/galaxy_ids/noise_source_flags.csv.gz` on the drive (T20 phase 2).
 - **Consequence for this repo:** `preprocessing.load_smarts_fits` re-detects the
   interpolated gaps, because SMARTS ships them filled.
 - The same galaxy background appears under many simulations (1M sims over about 1,000

@@ -339,6 +339,9 @@ for confirmation (ask Rae first).
 - **Rae's decisions on T16b's open questions (2026-10-21, all as recommended):**
   1. **No gate relaxation before T20 reports.** Afterwards, rerun T16b's offline trade-off replay (section 5;
      `make_data.py` + notebook) excluding the periodic noise galaxies T20 flags, then decide in T16d.
+     **Unblocked (2026-10-22):** T20 phase 2 is done. Exclude stars whose noise source has
+     `exclude_from_training` (or, stricter, `periodic`) in `<root>/extracted/galaxy_ids/noise_source_flags.csv.gz`
+     (join on catalog row), and feed the result to T16d.
   2. Wide diffrot bands inflate success. **Report `correct` alongside `success` by band-width class** as an
      *added* metric (success definition unchanged); see T22. Capping the band waits for T20/D4.
   3. Height-SNR denominator from well-sampled lags only → **T16d**. Keep `mean_height_snr` unchanged and add the
@@ -558,7 +561,23 @@ for confirmation (ask Rae first).
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
 - **Agent:** `data-auditor`
-- **Status:** in progress, phase 1 (started 2026-10-21).
+- **Status:** done, merged 2026-10-22 (`reports/2026-10-21_t20-noise-sources-phase2/`; phase 1:
+  `reports/2026-10-21_t20-galaxy-pass-phase1/`; branch `claude/t20-galaxy-quietness-c3bb9b`). 206/1,719 noise sources
+  (12% of files) are periodic, mostly neighbour-star contamination; 51/88 dev_medium wrong answers equal their noise
+  source's own pipeline period. Follow-up (f): independent QLP/TASOC/ELEANOR-LITE light curves confirm 9/12
+  testable periodic sources (P < 5 d), 0/4 quiet controls. Full-set FFI check (2026-10-22): known-variable
+  contamination 38/60 confirmed, crowded 13/34, unexplained 4/25 = chance rate (quiet null 4/26); exclusions unchanged
+  (report open questions 6-8). Flags file on the drive regenerated with `exclude_from_training` + signal metrics.
+- **Rae's decisions on phase 2 (2026-10-22; "go with your recommendations"):**
+  - **Flag everywhere:** per-file flags (`<root>/extracted/galaxy_ids/noise_source_flags.csv.gz`: classification,
+    `periodic`, `exclude_from_training`, `P_ref`, signal-strength metrics) go into every training and evaluation table.
+  - **Exclude from ranker training:** `contamination_known_variable`, `contamination_candidate_crowded` and (for now)
+    `source_specific_unexplained`: 197 sources, 114,829 files (11.5%). **Keep** `systematic_common_mode` (8).
+    The single `misclassified_star` source (299 files) isn't in the list: flagged, kept.
+  - **`noise_period` scoring outcome: yes**, as task T24.
+  - **Keep the current "periodic" flags**, with signal-strength metrics stored for later tightening (LS power and
+    amplitude, A/B agreement, pipeline period, common-mode retention).
+  - **Open:** Rae asks Zach about the 242 near-LMC sources.
 - **Rae's decisions (2026-10-21):**
   - **Scope: all 1,000,000 SMARTS light curves** (both galaxy pools), so we know what we're working with.
   - **Measure the runtime before the full pass.** Phase 1 builds the script, times it on 2–3 bundles and
@@ -647,6 +666,31 @@ for confirmation (ask Rae first).
   - **Goals:** propose searchable-subset goals alongside the existing ones (Rae edits `goals.json`); e.g. G7 restated as
     declines among searchable stars.
   - Tests; update the baselines README (old baselines lack the keys).
+
+### T24. Scorecard/evaluation: `noise_period` outcome (from T20, 2026-10-22)
+- **Agent:** `method-improver` (evaluation + scorecard reporting; approved by Rae via T20's recommendations)
+- **Status:** ready once T20 is merged (needs the noise-source flags). Coordinate the scorecard version bump with
+  T22/T23.
+- **Why:** 51 of dev_medium's 88 `wrong` answers equal the period the pipeline finds on the star's noise source alone
+  (T20 phase 2). The pipeline is right about the data, but the label doesn't contain that signal.
+- **Do:**
+  - Join each manifest star to its noise source (catalog row → SIM_ID → TIC; flags in
+    `<root>/extracted/galaxy_ids/noise_source_flags.csv.gz`). Store the noise source's reference period(s) with the
+    truth, e.g. a small committed per-TIC table, so scoring doesn't need the drive.
+  - **`evaluation.py`:** a `noise_period` outcome: a finite answer that isn't correct/diffrot/half/double but matches
+    (within `REL_TOL`) the noise source's own period (`P_ref`: the pipeline's period on the source stack, else its LS
+    peak). Decide with Rae whether halves/doubles of the noise period count. `success` is unchanged.
+  - **Scorecard:** report `noise_period` separately from `wrong`; existing metrics bit-identical where possible.
+  - Tests; baselines README.
+
+### T25. dev_medium metrics on the quiet-noise subset (from T20, 2026-10-22)
+- **Agent:** `method-improver` (scorecard reporting only)
+- **Status:** ready once T20 is merged; can share T24's join.
+- **Why:** 128 of dev_medium's 1,000 stars sit on periodic noise sources, with a 43% wrong rate vs 3.8% on quiet
+  sources. Method changes should be judged on both.
+- **Do:** a per-star descriptor column (`noise_class`, `noise_periodic`, `noise_exclude`) and metrics on the quiet
+  subset (`final.quiet_noise.*`) next to the full-set metrics, plus a `--noise-subset` option or equivalent. Existing
+  metrics stay bit-identical. Propose quiet-subset goals; Rae edits `goals.json`.
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
@@ -790,7 +834,9 @@ for confirmation (ask Rae first).
   - **Why it's feasible:** of the 8,156 bright stars in `target_df_shortform.csv`, 90% are observed in ≥ 2 TESS
     years and 63% in ≥ 3; CVZ-like stars get 4–5 years (median 41 sectors). SMARTS's noise sources are southern-CVZ
     galaxies with known TIC IDs (Zach's `galaxy_files.csv`; SMARTS_REFERENCE s7), so the *same* sources have
-    ~4–5 years of FFIs. T20 vets which are truly quiet.
+    ~4–5 years of FFIs. T20 vets which are truly quiet: **use only sources with `periodic == False`** in
+    `<root>/extracted/galaxy_ids/noise_source_flags.csv.gz` (or `sources.csv` in
+    `reports/2026-10-21_t20-noise-sources-phase2/data/`), and prefer sources away from the LMC (`near_lmc`).
   - **Rae's choices:**
     - **Use the newest butterpy** (v1.1.0 as of 2025-10; has activity cycles, butterfly, diffrot, spot evolution,
       any duration, plus temperatures/filters including a Roman filter curve). Best tools over exact equivalence

@@ -1,0 +1,12 @@
+{
+ "n_files": 172099,
+ "n_assigned": 172083,
+ "n_groups": 1718,
+ "n_groups_single_tic": 1694,
+ "files_in_majority_tic": 0.9983031444128705,
+ "n_tics": 1719,
+ "n_tics_split": 23,
+ "n_sibling_pairs": 94,
+ "n_sibling_pairs_same_tic": 2,
+ "sibling_tic_abs_diff_median": 7.5
+}

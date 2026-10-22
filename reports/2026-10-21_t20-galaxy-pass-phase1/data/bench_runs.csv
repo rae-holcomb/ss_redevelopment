@@ -1,0 +1,7 @@
+label,n_workers,n_bundles,bundles,wall_s,note
+1w x1,1,1,090,18,cold drive read
+2w x2,2,2,001 180,24,001 had been read ~5 min earlier (possibly page-cached)
+3w x3,3,3,045 135 165,24,cold
+4w x4,4,4,015 060 105 150,39,cold; 4 workers + 4 gzip processes on 4 physical cores
+3w x6,3,6,030 075 120 010 100 170,51,cold; two rounds (sustained)
+3w x15,3,15,002-018 (not yet done),142,cold; concurrent with my own test/dev processes (interference)
