@@ -1,5 +1,7 @@
 # Handoff note (2026-10-22, end of day)
 
+> **Update 2026-10-22 (new coordinator):** T20 is **merged** (`cd0e5ba`), with the full FFI check done and the flags file regenerated. Running now: scoring-v4 (T22+T23, Sonnet) and T16c (Opus). T24/T25 go to the scoring agent after it finishes; T16b's replay excluding flagged sources is unblocked.
+
 For a **fresh coordinator session** (and a fresh T20 session if needed). The previous coordinator
 conversation got very large, which made every turn expensive on Rae's Pro plan, so we're restarting lean.
 
