@@ -154,7 +154,7 @@ one-sided Fisher exact test against the controls.
 
 | class (testable, `P_ref` < 5 d) | confirmed | rate [95% CI] | p vs. controls |
 |---|---|---|---|
-| `contamination_known_variable` | 38/60 | 0.63 [0.51, 0.74] | 4 × 10⁻⁵ |
+| `contamination_known_variable` | 38/60 | 0.63 [0.51, 0.74] | 4 × 10^−5^ |
 | `contamination_candidate_crowded` | 13/34 | 0.38 [0.24, 0.55] | 0.05 |
 | `source_specific_unexplained` | 4/25 | 0.16 [0.06, 0.35] | 0.63 |
 | `systematic_common_mode` | 3/4 | 0.75 [0.30, 0.95] | 0.03 |
