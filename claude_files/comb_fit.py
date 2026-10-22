@@ -1251,6 +1251,20 @@ class CandidateResult:
     # gate and the few-peak ACF-height guard (see fit_rotation_period), so
     # passed_base_gates and not passed_gates = "rejected by a T18 gate".
     passed_base_gates: bool = False
+    # T16b (2026-10-21): per-gate evaluation, {gate_name: dict(passed,
+    # value, threshold, op, enabled, ...)} for every gate in GATE_NAMES (see
+    # _gate_results). Inspection only: passed_gates is computed exactly as
+    # before and does not read this dict. None for candidates that errored
+    # during fitting.
+    gate_results: Optional[dict] = None
+
+    @property
+    def failed_gates(self) -> list:
+        """Names of the enabled gates this candidate failed (GATE_NAMES order);
+        ['fit_error'] if it could not be fit at all."""
+        if self.gate_results is None:
+            return ["fit_error"]
+        return failed_gate_names(self.gate_results)
 
 
 @dataclass
@@ -1263,6 +1277,124 @@ class EnsembleResult:
     n_candidates_tried: int
     failed_candidates: list  # list[CandidateResult] that errored during fitting
     few_peaks: bool = False  # the selected candidate passed a relaxed (< min_peaks_required) peak gate
+    # T16b (2026-10-21): None on success. On a decline, a dict saying why:
+    # kind ('no_guesses' | 'none_sane' | 'none_fit' | 'gates'); for 'gates',
+    # also gates (union of the gates that rejected the DECLINE_TOP_N
+    # best-fitting candidates, GATE_NAMES order), best_candidates (their P,
+    # redchi and failed gates), gate_fail_counts / sole_gate_counts over all
+    # fitted candidates (how many failed each gate / failed only that gate).
+    decline_reason: Optional[dict] = None
+
+
+# Gate names, in the order fit_rotation_period documents them (steps 4, 4b).
+GATE_NAMES = (
+    "n_peaks", "frac_positive_heights", "mean_height_snr", "frac_vertex_in_window",
+    "half_lag_consistency", "few_peaks_height",
+)
+# Number of best-fitting (lowest-redchi) candidates whose failed gates are
+# named in a declined EnsembleResult's decline_reason / message.
+DECLINE_TOP_N = 3
+
+
+def _gate_results(
+    fit: CombFitResult, diag: dict, n_required: int, few: bool,
+    min_frac_positive_heights: float, min_mean_height_snr: float,
+    min_frac_vertex_in_window: float, half_lag_gate: bool,
+    half_lag_strong_contrast: float, few_peaks_min_acf_height: Optional[float],
+) -> dict:
+    """Per-gate record (T16b instrumentation) for one fitted candidate.
+
+    Mirrors the pass/fail logic of fit_rotation_period steps 4 and 4b, but
+    only for inspection: fit_rotation_period computes passed_gates itself
+    and never reads this dict, so instrumentation cannot change results.
+
+    Returns
+    -------
+    dict {gate_name: dict(passed, value, threshold, op, enabled)} for every
+    gate in GATE_NAMES. `value` is the measured statistic and `op` how it is
+    compared with `threshold`. Extra keys: half_lag_consistency has
+    `contrast` (mean term, acf_half_lag_contrast) and `strong_contrast`
+    (the alternative pass route: contrast >= strong_contrast), and its
+    `value` is the minimum term (pass route 1: min term > 0);
+    few_peaks_height is enabled only for few_peaks candidates with the
+    guard switched on. `passed` is the measured outcome even for a disabled
+    gate; failed_gate_names ignores disabled gates.
+    """
+    mean_snr = float(np.nanmean(diag["height_snr"]))
+    few_enabled = bool(few and few_peaks_min_acf_height is not None)
+    return {
+        "n_peaks": dict(passed=bool(fit.n_peaks_used >= n_required), value=int(fit.n_peaks_used),
+                        threshold=int(n_required), op=">=", enabled=True),
+        "frac_positive_heights": dict(passed=bool(diag["frac_positive_heights"] >= min_frac_positive_heights),
+                                      value=float(diag["frac_positive_heights"]),
+                                      threshold=float(min_frac_positive_heights), op=">=", enabled=True),
+        "mean_height_snr": dict(passed=bool(mean_snr >= min_mean_height_snr), value=mean_snr,
+                                threshold=float(min_mean_height_snr), op=">=", enabled=True),
+        "frac_vertex_in_window": dict(passed=bool(diag["frac_vertex_in_window"] >= min_frac_vertex_in_window),
+                                      value=float(diag["frac_vertex_in_window"]),
+                                      threshold=float(min_frac_vertex_in_window), op=">=", enabled=True),
+        "half_lag_consistency": dict(passed=bool(diag["passes_half_lag_gate"]),
+                                     value=float(diag["half_lag_min_term"]), threshold=0.0, op=">",
+                                     contrast=float(diag["acf_half_lag_contrast"]),
+                                     strong_contrast=float(half_lag_strong_contrast),
+                                     enabled=bool(half_lag_gate)),
+        "few_peaks_height": dict(passed=bool(diag["passes_few_peaks_height"]),
+                                 value=float(diag["acf_height_at_P"]),
+                                 threshold=(float(few_peaks_min_acf_height)
+                                            if few_peaks_min_acf_height is not None else float("nan")),
+                                 op=">=", enabled=few_enabled),
+    }
+
+
+def failed_gate_names(gate_results: dict) -> list:
+    """Enabled gates that failed in a _gate_results dict, in GATE_NAMES order.
+
+    A half_lag_consistency failure that the fallback tier overrode
+    (gate_results["half_lag_consistency"]["fallback"] is True) is not
+    counted as a failure.
+    """
+    out = []
+    for name in GATE_NAMES:
+        g = gate_results.get(name)
+        if g is None or not g.get("enabled", True) or g["passed"] or g.get("fallback", False):
+            continue
+        out.append(name)
+    return out
+
+
+def _decline_reason(fit_ok: list, top_n: int = DECLINE_TOP_N) -> dict:
+    """Structured decline reason (T16b) for a 'gates' decline.
+
+    fit_ok must already be sorted best-first (on a decline nothing passed,
+    so that is lowest redchi first).
+    """
+    counts = {g: 0 for g in GATE_NAMES}
+    sole = {g: 0 for g in GATE_NAMES}
+    for r in fit_ok:
+        fg = r.failed_gates
+        for g in fg:
+            counts[g] += 1
+        if len(fg) == 1:
+            sole[fg[0]] += 1
+    best = [dict(P=float(r.fit.P), redchi=float(r.fit.redchi), failed_gates=r.failed_gates)
+            for r in fit_ok[:top_n]]
+    union = {g for b in best for g in b["failed_gates"]}
+    return dict(kind="gates", gates=[g for g in GATE_NAMES if g in union], best_candidates=best,
+                gate_fail_counts={g: c for g, c in counts.items() if c},
+                sole_gate_counts={g: c for g, c in sole.items() if c},
+                n_fit=len(fit_ok))
+
+
+def format_decline_reason(reason: Optional[dict]) -> str:
+    """One-line human-readable summary of an EnsembleResult.decline_reason."""
+    if not reason:
+        return ""
+    if reason.get("kind") != "gates":
+        return f"Decline reason: {reason.get('kind')}."
+    parts = [f"P={b['P']:.4g}: {', '.join(b['failed_gates']) or 'none'}" for b in reason["best_candidates"]]
+    return ("Rejecting gates for the best-fitting candidates: " + "; ".join(parts)
+            + f". Fail counts over all {reason['n_fit']} fitted: "
+            + ", ".join(f"{g} {c}" for g, c in reason["gate_fail_counts"].items()) + ".")
 
 
 def _half_tooth_height_ratio(
@@ -1548,7 +1680,12 @@ def fit_rotation_period(
        `best_fit`/`best_guess` still populated with the closest attempt
        (clearly documented as unreliable) purely so you can inspect what
        almost worked -- e.g. via the diagnostic plots -- rather than being
-       left with nothing to look at.
+       left with nothing to look at. Every decline also carries a
+       structured `decline_reason` (T16b), whose gate summary is appended
+       to `message`: which gates rejected the DECLINE_TOP_N best-fitting
+       candidates, and how often each gate failed across the pool. Every
+       fitted CandidateResult carries `gate_results` (per-gate value,
+       threshold, pass/fail) and `failed_gates`.
 
     Parameters
     ----------
@@ -1607,7 +1744,7 @@ def fit_rotation_period(
             success=False,
             message="No candidate periods were provided to fit_rotation_period.",
             best_fit=None, best_guess=None, candidates=[], n_candidates_tried=0,
-            failed_candidates=[],
+            failed_candidates=[], decline_reason=dict(kind="no_guesses"),
         )
 
     dt_acf = np.median(np.diff(acf_lags))
@@ -1674,7 +1811,7 @@ def fit_rotation_period(
                 "the ACF's lag range)."
             ),
             best_fit=None, best_guess=None, candidates=[],
-            n_candidates_tried=0, failed_candidates=[],
+            n_candidates_tried=0, failed_candidates=[], decline_reason=dict(kind="none_sane"),
         )
 
     # --- fit every surviving candidate ---
@@ -1738,12 +1875,17 @@ def fit_rotation_period(
             diag["passes_half_lag_gate"] = consistent
             diag["passes_few_peaks_height"] = few_ok
             passed = base_passed and few_ok and (consistent or not half_lag_gate)
+            gates = _gate_results(
+                fit, diag, n_required, few, min_frac_positive_heights, min_mean_height_snr,
+                min_frac_vertex_in_window, half_lag_gate, half_lag_strong_contrast,
+                few_peaks_min_acf_height,
+            )
             results.append(CandidateResult(
                 period=guess.P0, t0=t0, source_guess=guess, fit=fit,
                 diagnostics=diag, passed_gates=bool(passed),
                 n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
                 n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
-                passed_base_gates=base_passed,
+                passed_base_gates=base_passed, gate_results=gates,
             ))
         except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
             results.append(CandidateResult(
@@ -1767,6 +1909,7 @@ def fit_rotation_period(
             ),
             best_fit=None, best_guess=None, candidates=[],
             n_candidates_tried=len(deduped), failed_candidates=failed,
+            decline_reason=dict(kind="none_fit", n_failed=len(failed)),
         )
 
     # Optional fallback tier (step 4b): nothing passed the T18 gates, so
@@ -1779,6 +1922,7 @@ def fit_rotation_period(
             if (r.passed_base_gates and d["passes_few_peaks_height"]
                     and np.nan_to_num(d["acf_half_lag_contrast"], nan=-np.inf) > half_lag_fallback_min):
                 r.passed_gates = True
+                r.gate_results["half_lag_consistency"]["fallback"] = True
                 fallback = True
 
     def _sort_key(r):
@@ -1790,6 +1934,7 @@ def fit_rotation_period(
 
     if len(passing) == 0:
         best = fit_ok[0]
+        reason = _decline_reason(fit_ok)
         return EnsembleResult(
             success=False,
             message=(
@@ -1806,12 +1951,13 @@ def fit_rotation_period(
                 f"mean_height_snr={np.nanmean(best.diagnostics['height_snr']):.2f}, "
                 f"frac_vertex_in_window={best.diagnostics['frac_vertex_in_window']:.2f}) "
                 "-- attached for inspection, but should NOT be treated as a "
-                "reliable rotation period measurement."
+                "reliable rotation period measurement. "
+                + format_decline_reason(reason)
             ),
             best_fit=best.fit,
             best_guess=InitialGuess(P0=best.period, t0=best.t0, method="ensemble_best_unreliable"),
             candidates=fit_ok, n_candidates_tried=len(deduped),
-            failed_candidates=failed,
+            failed_candidates=failed, decline_reason=reason,
         )
 
     best = passing[0]

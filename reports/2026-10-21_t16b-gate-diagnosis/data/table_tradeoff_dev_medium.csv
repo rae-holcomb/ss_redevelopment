@@ -1,0 +1,19 @@
+rule,d_success,d_wrong,d_alias
+current,0,0,0
+option D (fallback contrast>0),10,36,2
+few height >= 0.25,5,6,1
+few height >= 0.25 (short only),1,4,0
+few: height>=0.4 or contrast>=0.1,12,18,4
+snr>=0.5 if contrast>=0.1,19,36,4
+vertex>=0.5 if contrast>=0.1,6,3,0
+n_peaks-1 if contrast>=0.1,0,1,1
+override: all terms>0 & contrast>=0.1,53,102,19
+override: all terms>0 & contrast>=0.2,34,38,10
+PROPOSED (4 contrast-conditional relaxations),43,85,14
+PROPOSED (short only),14,33,7
+snr>=0.5 if contrast>=0.1 & >=4 teeth,18,35,4
+vertex>=0.5 if contrast>=0.1 & >=4 teeth,6,2,0
+PROPOSED2 (few>=0.25; snr/vertex if contrast & >=4 teeth),29,44,5
+PROPOSED2 (short only),10,17,3
+snr>=0.5 everywhere (no contrast cond.),31,83,11
+half-lag: contrast>=0.0 (min term ignored),9,36,3

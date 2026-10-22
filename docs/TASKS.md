@@ -334,7 +334,21 @@ for confirmation (ask Rae first).
   weighting (measured neutral on full-year data in the ACF long-period report). It
   should matter most for gappy coverage. Keep or remove it on that evidence.
 - **Agent:** `method-improver` (diagnostic report; no method changes)
-- **Status:** in progress (started 2026-10-21): instrumentation + diagnosis; fixes go to T16d.
+- **Status:** done, merged 2026-10-21 (report `reports/2026-10-21_t16b-gate-diagnosis/`): gate instrumentation + diagnosis.
+  The per-method half is folded into T16c (below).
+- **Rae's decisions on T16b's open questions (2026-10-21, all as recommended):**
+  1. **No gate relaxation before T20 reports.** Afterwards, rerun T16b's offline trade-off replay (section 5;
+     `make_data.py` + notebook) excluding the periodic noise galaxies T20 flags, then decide in T16d.
+  2. Wide diffrot bands inflate success. **Report `correct` alongside `success` by band-width class** as an
+     *added* metric (success definition unchanged); see T22. Capping the band waits for T20/D4.
+  3. Height-SNR denominator from well-sampled lags only → **T16d**. Keep `mean_height_snr` unchanged and add the
+     new version as a parallel ML feature.
+  4. Per-method degradation mechanisms (ACF truncation, pairwise_histogram peaks, LS window aliasing, wavelet
+     across gaps) → **folded into T16c**.
+  5. Year/hemisphere breakdown: **deferred**; add the year tag to scorecard draws only if T16c finds year sensitivity.
+  6. **Bump `SCORECARD_VERSION` to 4** for T16b's new columns / `per_candidate.csv` (T22). Rule from now on: bump
+     whenever output columns or files change.
+  7. sqrt(pair-count) weighting re-evaluation on gappy data → **T16d**.
 - **Do:**
   - Start from the T16a demo, **rerun post-T18 (2026-10-15)**. On the same 100 stars, patchy coverage now
     declines rather than answers wrong: none is 0.70 single / 0.56 consecutive-2 / 0.68 gapped-2 /
@@ -355,13 +369,29 @@ for confirmation (ask Rae first).
   and failure-mode examples.
 
 #### T16c. Search upper limits for patchy data
+- **D4 decided (2026-10-22); this replaces the open-ended "define max_period(coverage)" below.** Do:
+  - **`searchable_range(time, flux)`** in `coverage.py`, from the time sampling only:
+    - returns P_min (cadence-based), the ACF reach R and P_max = R/2;
+    - works per contiguous batch, so T16h can call it per batch;
+    - one implementation, reused by the pipeline output (D1) and as the reference for T23's frozen evaluation version.
+  - **Stage 1 stays uncapped.**
+    - Tag candidates with P > R/2 as `beyond_reach`. The comb fit skips them at entry; they stay in the candidate record.
+    - Measure runtime before/after; expect a gain on 1–2 sectors.
+    - Results must be bit-identical except where the fit used to try a beyond-reach candidate.
+  - **Record the range in `EnsembleResult`**, plus a P/R ML feature (with docs).
+  - **Validate R/2 per coverage class** (option E): success and wrong vs P/R, including on dev_medium.
+  - **Test `min_valid_frac` 0.25** (below).
+  - **Per-method mechanisms** (below).
+- **Now also includes (from T16b, Rae 2026-10-21):** the per-method degradation mechanisms by coverage (ACF
+  truncation by `min_valid_frac`, pairwise_histogram running out of peaks, LS window aliasing, wavelet across gaps).
+  **Waits for the D4 decision.**
 - **Update 2026-10-15:** define limits **per season** (from season length and coverage). Separately, ask
   whether combining seasons (D2) can ever justify periods longer than one season. Probably weakly at best.
 - **Also (Rae, 2026-10-14):** test lowering `compute_acf`'s `min_valid_frac` from 0.3
   to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
   ACF pair-coverage edge (ACF long-period report, open issue 14a).
 - **Agent:** `method-improver`
-- **Status:** blocked on T16b (the ACF long-period change it builds on was merged 2026-10-14)
+- **Status:** ready (T16b done; D4 decided 2026-10-22)
 - **Do:** define the maximum searchable / reportable period as a function of
   coverage (longest contiguous span, total baseline, ACF valid-pair coverage).
   Measure reliability (success vs wrong) as P approaches each candidate limit, and
@@ -370,6 +400,12 @@ for confirmation (ask Rae first).
   justification plots, and goals proposed for Rae.
 
 #### T16d. Method policy and safeguards for patchy data
+- **Now also includes (from T16b, Rae 2026-10-21):** (a) height-SNR noise from well-sampled lags only (new parallel
+  ML feature; old `mean_height_snr` unchanged); (b) re-evaluate sqrt(pair-count) residual weighting on gappy data;
+  (c) gate relaxations only after T20, via T16b's replay excluding flagged noise galaxies. T16b's do-nots stand:
+  no option D on short coverage, don't relax the half-lag gate, and contrast-conditional relaxations need ≥ 4 teeth.
+- **Update 2026-10-22 (D4):** cross-batch consistency and segment-wise analysis move to **T16h**. T16d keeps the
+  gates, method selection and safeguards.
 - **Update 2026-10-15:** with D2 leaning season-by-season, **cross-season consistency** becomes the central
   safeguard: answer when seasons agree, flag when they disagree (possibly a spot-evolution or diffrot signal; F1).
   Needs T16g's multi-season data. Status: blocked on T16b/c **and T16g**.
@@ -437,6 +473,43 @@ for confirmation (ask Rae first).
   coverage from the per-cycle libraries. It's a new package install, so confirm with Rae when it starts. Fallback:
   extend `synthetic.py` to multi-year baselines.
 - **Needed by:** D2 experiments (season-by-season vs stitched) and T16d/T16f.
+
+#### T16h. Batch-wise search and combination across sector clusters (from D4, 2026-10-22)
+- **Agent:** `method-improver`
+- **Status:** blocked on T16c (`searchable_range`). Phase 1 can use SMARTS now; multi-year tests need T16g.
+- **Idea (Rae):** split the whole-mission light curve into **batches** of adjacent or near-adjacent sectors. Search each
+  batch separately, then compare the batches. This generalizes D2's season-by-season approach to clusters within a year.
+- **Do:**
+  - **Batch definition:**
+    - group sectors whose gaps are < G. Calibrate G; the data-driven variant merges across a gap only when that
+      increases the ACF reach R.
+    - Each batch gets its own `searchable_range`: [P_min, R_b/2].
+  - **Testability-aware combination.** Batch b can confirm or contradict a period P only if P ≤ R_b/2.
+    - **Testable, b finds ≈ P:** agreement.
+    - **Testable, b finds ≈ P/2:** alias suspect.
+    - **Testable, b finds something else:** conflict.
+    - **Testable, b declines:** weak tension only (amplitude varies between seasons).
+    - **Not testable, b finds ≈ P/2:** consistent with P (expected for a short batch).
+    - **Not testable, any other result:** silent.
+    - **Star-level reliability** = the number of batches that could test P and agreed.
+    - A long P seen only by the one batch that can reach it is "unconfirmable by design": flagged, not penalized.
+    - Differences within the active-latitude band are physical (F1), not conflicts.
+    - The star's searchable range is the union of the batch ranges. `searchable` scoring (T23) uses the same union.
+  - **Alternative to compare: the stacked ACF.**
+    - Run `compute_acf` on the stitched light curve, counting only pairs within the same batch (per-batch mean removal
+      and normalization). That equals the pair-count-weighted average of the per-batch ACFs.
+    - Fit one comb to it: short periods gain signal from every batch, and long lags come from whichever batch reaches them.
+    - Candidate design: the stacked ACF gives the **answer**, the per-batch results give the **consistency** check
+      (features or flag).
+  - **Optional (not required): the ranker combines batches** (T11), using features such as n_batches_testable and
+    n_batches_agree.
+  - **Optional (not required; Rae: likely too expensive to do much of): a quasi-periodic Gaussian process with a period
+    shared across batches** (e.g. celerite's rotation term). At most a validation reference on a small subset.
+  - **Phase 1:** SMARTS's within-year gapped classes (gapped-2 / 3-5 / 6-12) are already multi-batch stars, so test there
+    first (dev_medium assigned plus synthetic `--coverage gapped-*`).
+  - **Phase 2:** multi-year gaps with spot evolution on T16g simulations.
+- **Done when:** a batch-combination rule plus a stacked-ACF comparison is in a report, with success and wrong per
+  coverage class vs the current stitched-ACF pipeline, and no regression on full or consecutive coverage.
 
 ### T19. Repository cleanup and public-release readiness (recurring + final)
 - **Agent:** `repo-curator`
@@ -550,6 +623,36 @@ for confirmation (ask Rae first).
   record it as a decline (`none`, with the reason) in the scorecard and batch runners, and add a test.
   Results on the existing dev sets must be unchanged.
 
+### T22. Scorecard v4: band-width breakdown + version bump
+- **Agent:** `method-improver` (small; scorecard reporting only)
+- **Status:** ready (Rae, 2026-10-21, from T16b questions 2 and 6)
+- **Do:**
+  - Bump `SCORECARD_VERSION` to 4, covering T16b's descriptor columns and `per_candidate.csv`.
+  - Add **metrics** `final.by_band_width.<class>.{...outcome fractions...}`, using classes of
+    (P_hi − P_lo)/P_eq (e.g. 0 / < 0.2 / 0.2–0.5 / ≥ 0.5; justify the cuts), so `correct` vs `success` can be seen
+    per class. The success definition is unchanged.
+  - Update `check_goals` docs and the baselines README (old baselines lack the new keys: they're reported, not
+    guarded).
+  - Tests. Existing metrics must be bit-identical.
+
+### T23. Scorecard/evaluation: `searchable` flag and searchable-subset metrics (from D4, 2026-10-22)
+- **Agent:** `method-improver` (evaluation + scorecard reporting; definitions approved by Rae in D4)
+- **Status:** ready. Can share T22's v4 bump if they run close together; otherwise bump to v5.
+- **Do:**
+  - **`evaluation.py`:**
+    - a frozen `acf_reach(time, flux)` (valid-pair fraction 0.3, independent of the pipeline's `compute_acf` default);
+    - `is_searchable(period_lo, reach)` = P_lo ≤ R/2, where P_lo is the low end of the success range (P_eq for
+      non-diffrot stars). For multi-batch stars (T16h), use the max over batches of R_b.
+  - **Scorecard:**
+    - per-star `acf_reach`, `P_over_reach`, `searchable`;
+    - metrics `final.searchable.*` (and by period bin / coverage class) next to the existing all-star metrics, plus
+      `final.unsearchable.{none,wrong,success}` (correct-decline rate, wrong on unsearchable stars, bonus successes).
+      The existing metrics stay bit-identical.
+  - **Completeness-map figure:** success vs P/R × amplitude (or SNR) × coverage class.
+  - **Goals:** propose searchable-subset goals alongside the existing ones (Rae edits `goals.json`); e.g. G7 restated as
+    declines among searchable stars.
+  - Tests; update the baselines README (old baselines lack the keys).
+
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
 - **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
@@ -647,6 +750,9 @@ for confirmation (ask Rae first).
   range of period space the data and pipeline effectively searched.
 - **Leaning:** a reported output (e.g. a per-star `searched_period_range` plus
   "no significant periodicity in [a, b] d"), **not** part of scoring.
+- **Update 2026-10-22 (D4 decided):** the upper end of the range is **R/2**, where R is the ACF reach. T16c computes it per
+  batch (`searchable_range`); for multi-batch stars, see T16h. What "no significant periodicity" means statistically
+  is still open.
 - **To decide:** how to define the range (sampling/Nyquist, longest contiguous span,
   ACF valid-pair coverage, T16c's `max_period(coverage)`), what "no periodicity"
   threshold means statistically, and the output format.
@@ -682,6 +788,107 @@ for confirmation (ask Rae first).
     grouping/held-out factor);
   - whether dev and holdout sets should span sources.
 - **Relates to:** T10/T11 (ranker), T16g, T3 (realism).
+- **Recorded option (2026-10-21; Rae: keep as an option, not committed): generate our own "SMARTS-like" light
+  curves** from quiet TESS galaxy light curves + butterpy. Purposes: (1) multi-year baselines beyond SMARTS's
+  13 sectors (for D2 / T16g); (2) **more short-period training light curves**, since SMARTS is thin there (P uniform
+  0.1–180 d, so only 1.6% < 3 d).
+  - **Why it's feasible:** of the 8,156 bright stars in `target_df_shortform.csv`, 90% are observed in ≥ 2 TESS
+    years and 63% in ≥ 3; CVZ-like stars get 4–5 years (median 41 sectors). SMARTS's noise sources are southern-CVZ
+    galaxies with known TIC IDs (Zach's `galaxy_files.csv`; SMARTS_REFERENCE s7), so the *same* sources have
+    ~4–5 years of FFIs. T20 vets which are truly quiet.
+  - **Rae's choices:**
+    - **Use the newest butterpy** (v1.1.0 as of 2025-10; has activity cycles, butterfly, diffrot, spot evolution,
+      any duration, plus temperatures/filters including a Roman filter curve). Best tools over exact equivalence
+      with the 2021 version SMARTS used. Its install requirements include `cartopy` (plotting only), so install
+      without it if possible; any install needs Rae's OK.
+    - **Noise light curves: Option B first.** Use existing FFI products (TESS-SPOC, QLP, GSFC-ELEANOR-LITE, TGLC,
+      ...) for the 1,719 noise TICs. Prefer SAP-like products (PDC-style detrending suppresses long periods). Check
+      availability first: these mostly target stars, with magnitude cuts. **Fall back to Option A** (reproduce
+      Zach's TESScut + regression-corrector reduction; possibly hundreds of GB of cutouts; ask Zach for his script)
+      only if availability is poor. Bin mixed FFI cadences (30 min / 10 min / 200 s) to a common cadence.
+  - **Recipe:** vetted quiet noise light curves (T20) → butterpy signals over the full span (SMARTS Table 1
+    distributions, with the period prior adjusted as needed, e.g. oversampling short periods, and per D4) → combine
+    with the operation T20 determines (additive vs multiplicative) and SMARTS's normalization. Optionally match the
+    noise level to real stars' magnitudes, since SMARTS's SNR distribution is somewhat arbitrary.
+  - **Validate before scaling:** 1-year sims with SMARTS's exact parameters on the same galaxies, compared with
+    SMARTS files (amplitudes, ACF properties, pipeline outcomes). Also SMARTS file minus T20's recovered galaxy
+    light curve (= the injected signal) vs fresh butterpy output for the same parameters. Expect small
+    differences from the newer butterpy; that's acceptable.
+  - **Unknowns:** the combination operation (T20); noise-product availability (cheap MAST check, could ride
+    along with T20's lookups); butterpy speed per multi-year light curve (unmeasured); storage, est.
+    ~0.4 MB per 5-year 30-min light curve, ~40 GB per 100k (estimate, not measured).
+
+### D4. Coverage-aware expectations: searchable period range, at the start and at the end
+- **Raised:** Rae, 2026-10-21. A long-standing concern, reinforced by T16b: about half of the single-sector
+  declines are 10–30 d / > 30 d periods that one sector simply can't measure. **Don't penalize the algorithm
+  for not finding a 30 d period in 20 d of data.** Needs a joint strategy (Rae + Claude) before T16c/T16d build
+  on it.
+- **Two places it enters:**
+  1. **Start of the pipeline:** what period range is searchable for *this* star's sectors and their
+     clustering, and how that steers candidate search, gates and the ranker.
+  2. **End of analysis:** recovery rates across a sample should be judged against what was searchable
+     (completeness), not against all injected periods.
+- **Options for the start, to discuss (not exclusive):**
+  - **A. Explicit pre-search "search plan" step.** From the time sampling alone (contiguous segments, their
+    lengths and spacing, ACF valid-pair coverage, cadence), compute `[P_min, P_max_reliable, P_max_possible]`,
+    pass it as min/max_period to the guess_* methods and the fit, and record it for D1 ("no periodicity in
+    [a, b] d").
+  - **B. Soft, learned limits:** search everywhere, but give every candidate its detectability context
+    (cycles observed, teeth available, P/longest segment; T16e already has these) and let the gates/ranker
+    weigh it. More flexible, but less transparent.
+  - **C. Hybrid:** hard limits only where physics forbids (fewer than ~2 cycles in any segment); soft
+    weighting between "possible" and "reliable".
+  - **D. Two-tier output:** a confident period inside the reliable range; beyond it, a lower limit or
+    "possible long period" flag (cf. Astraea, Lu+2020, for single-sector long periods).
+  - **E. Empirical limits:** set P_max per coverage pattern from measured recovery curves (T16c), e.g. where
+    success drops below X or wrong rises above Y, rather than from first principles.
+- **Options for the end:**
+  - A per-star **`searchable`** truth flag (true P inside the star's reliable range). Report recovery among
+    searchable stars separately. A decline on an unsearchable star counts as a **correct decline**, and a
+    success there as a bonus. This touches `evaluation.py` / scorecard metric definitions, which are Rae's.
+  - **Completeness maps:** recovery vs (P, amplitude, coverage), injection-recovery style, for science
+    (occurrence-rate work) as well as development.
+  - Restate goals accordingly (e.g. G7 "declines among measurable stars"; T18's open question).
+- **Relates to:** D1 (report searched range), D2 (multi-season), T16b (finding), T16c (limits), T16d (policy),
+  T16e (features), T18 open questions, G7, `evaluation.py`.
+- **DECIDED (Rae + Claude, 2026-10-22).** Implementation: T16c (start), T23 (end), T16h (multi-batch).
+  - **Grounding** (T16b's `stars.csv.gz`: synthetic 1/2-sector classes ×200 plus held-out seed 1, and dev_medium assigned):
+    - **Reach.** The ACF reach R (the largest lag with valid-pair fraction ≥ 0.3) is ≈ 0.69× the longest contiguous segment.
+      The ACF does **not** bridge sector gaps: on gapped-2, R / total baseline = 0.12. On gapped-6-12, R can exceed the longest
+      segment.
+    - **Cliff at R/2.** Success is flat up to P/R = 0.5 and then collapses:
+      - synthetic short coverage: 0.46 / 0.38 / 0.46 at P/R ≤ 0.25 / 0.25–0.4 / 0.4–0.5, then 0.07 at 0.5–0.6 and 0 beyond;
+      - dev_medium: 0 successes at P/R > 0.5 (n = 323).
+      - This is the comb fit's own limit: it needs ≥ 2 teeth inside R. It agrees with pb_scan (~0.94 correct up to P/B = 0.33).
+    - **Wrong answers on unsearchable stars are short false detections, not mis-measured long periods.**
+      - 25–50% of all wrong answers are on stars with P > L/3 (dev_medium 44%). Almost all are 0.2–7 d answers for true
+        periods of 20–170 d.
+      - So a search limit doesn't remove them; they belong to the T16b/T20 false-detection problem.
+    - **Effect of scoring on searchable stars.** Single-sector success goes 0.33 → 0.43 among searchable stars, and 93–100%
+      of unsearchable stars are already declined. dev_medium only goes 0.15 → 0.22, so the search range isn't the main
+      real-data bottleneck.
+  - **Start (options A + C, with E as T16c's validation):**
+    - a `searchable_range()` computed from the time sampling alone, per contiguous batch (T16h): P_min, the reach R, and
+      **P_max = R/2** (Rae: R/2 is the line).
+    - **Stage 1 stays uncapped**:
+      - candidates beyond R/2 are kept and tagged `beyond_reach`, and the comb fit skips them at entry;
+      - this keeps the information for a later "possible long period" flag (option D, deferred) and for ranker features,
+        and keeps Lomb-Scargle cross-gap candidates testable;
+      - most of the speed of a hard cap is kept.
+    - The range is recorded as pipeline output (D1).
+    - Add a P/R ranker feature (option B as a complement).
+    - Gates are unchanged by D4; T16d's coverage-aware tweaks key on teeth available, which is consistent with R.
+  - **End:**
+    - **Per-star `searchable` truth flag:** true when the **low end of the success range** (P_lo of the active-latitude band,
+      i.e. the lowest period that scores success) ≤ R/2. That means some success answer is reachable.
+    - **R is frozen in `evaluation.py`** (valid-pair fraction 0.3, from the sampling only), **not** taken from the
+      pipeline's `compute_acf` default, so the pipeline can't move its own goalposts. If T16c lowers `min_valid_frac`, the
+      extra reach shows up as bonus successes.
+    - **Report both:** every metric on all stars and on the searchable subset, plus a correct-decline rate and a wrong rate
+      on unsearchable stars. Wrong answers on unsearchable stars still count as `wrong`.
+    - **Goals:** keep the existing goals and propose searchable-subset goals alongside them (Rae-owned).
+    - **Completeness maps:** recovery vs (P/R, amplitude, coverage class) as a scorecard figure.
+  - **Multi-season / clustered sectors (Rae's batch approach):** recorded as **T16h**.
 
 ## Proposed (agents add here; Rae promotes)
 
@@ -867,6 +1074,13 @@ for confirmation (ask Rae first).
   empty sequence` inside `to_even_cadence` when every requested sector has a flagged orbit
   (e.g. row 005139, sector 11). Return an empty light curve or raise a clear error, with a test.
   The T2 manifests avoid it via `native_whole_sectors`, but `--coverage` runs on SMARTS can hit it.
+
+### P21. Height-SNR gate denominator from well-sampled lags (from T16b)
+- **Proposed by:** T16b report (2026-10-21)
+- **Idea:** `mean_height_snr` divides by std(ACF) over all lags to ~0.7 B. On 1-2 sectors the long-lag ACF (few pairs)
+  wanders to +/-0.2 and inflates the std, so clean combs fail the gate (T16b example synth 00007, dev_medium 011716).
+  Estimate the noise from lags with pair fraction >= ~0.5 (or from pair counts). Needs re-runs, not a replay; changes the
+  `mean_height_snr` ML feature's meaning, so add it as a parallel statistic first. Check dev_medium wrong answers (T20).
 
 ### P18. Coverage library from a better-defined target sample
 - **Partly done (2026-10-15):** T16a now has per-cycle libraries for TESS years 1–7, which cover

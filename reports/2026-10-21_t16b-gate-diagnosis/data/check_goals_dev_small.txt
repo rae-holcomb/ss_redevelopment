@@ -1,0 +1,20 @@
+Run: runs/t16b_dev_small_assigned/metrics.json  (dataset datasets/dev_small.csv,data_root=data/smarts_dev,sectors=manifest, commit 4681e36-dirty)
+Baseline: benchmarks/baselines/dev_small_assigned.json  (commit 4c2a994)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.160   0.160  +0.000  0.020  final.overall.success
+  0.222   0.222  +0.000  0.060  final.by_bin.1-3d.success
+  0.125   0.125  +0.000  0.060  final.by_bin.10-30d.success
+  0.333   0.333  +0.000  0.060  final.by_bin.3-10d.success
+  0.222   0.222  +0.000  0.060  final.by_bin.<1d.success
+  0.000   0.000  +0.000  0.060  final.by_bin.>30d.success
+  1.000   1.000  +0.000  0.060  union_recall.by_bin.1-3d
+  0.875   0.875  +0.000  0.060  union_recall.by_bin.10-30d
+  1.000   1.000  +0.000  0.060  union_recall.by_bin.3-10d
+  0.444   0.444  +0.000  0.060  union_recall.by_bin.<1d
+  0.467   0.467  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS
