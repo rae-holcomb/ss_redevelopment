@@ -20,6 +20,11 @@
   - No SPOC products exist for these extended TIC IDs, so I used QLP / TASOC / ELEANOR-LITE light curves (TESS sectors 1–5).
   - **9 of 12 testable periodic sources (P < 5 d) show the same period**, mostly in all 3 sectors checked. None of the 4 quiet controls does.
   - In the two misses from the 0.83-d family, QLP's aperture picks up a *different* neighbour's 1.38-d period, also seen in the family. Which star leaks in depends on the aperture.
+  - **Full check (2026-10-22, all 206 periodic + 40 quiet controls at shuffled periods; 150 testable).** Against a chance-match null of 4/26 (15%):
+    - Gaia known-variable contamination: **38/60 (63%)**, p = 4×10⁻⁵.
+    - Crowded: **13/34 (38%)**, p = 0.05.
+    - **Unexplained: 4/25 (16%), indistinguishable from the null** (p = 0.63). The pilot's "2 of 3 confirmed" did not hold up.
+    - 96 sources have P_ref ≥ 5 d and are untestable.
 - **Deviation from the brief:**
   - Public catalog queries went through VizieR rather than the ESA Gaia archive, because the archive's upload join timed out and its per-target cones took ~7 s each.
 
@@ -151,13 +156,31 @@ The 33 wrong answers on quiet sources are the pipeline's own errors, the part me
   - the 4.88-d unexplained source (745 ppm in SMARTS);
   - both 0.83-d family members tested, where QLP shows 1.38 d instead. That is the period of other family members (10002480877/879), so which neighbour leaks in depends on the aperture.
 - **Amplitudes differ wildly between reductions** at the same period, e.g. 12,244 ppm in SMARTS vs 336 ppm in QLP for TIC 10000584619, and 5.5% vs 80% for TIC 10002408894. The fraction of a neighbour's light in the aperture is reduction-specific. An intrinsically constant galaxy plus a leaking star predicts exactly this.
+- **Full check (all 206 periodic sources + 40 quiet controls at shuffled periods, 2026-10-22):**
+
+  ![FFI full check](figures/ffi_check_all.png)
+
+  | class (testable, P_ref < 5 d) | confirmed | rate [95% CI] | p vs null |
+  |---|---|---|---|
+  | contamination_known_variable | 38/60 | 0.63 [0.51, 0.74] | 4×10⁻⁵ |
+  | contamination_candidate_crowded | 13/34 | 0.38 [0.24, 0.55] | 0.047 |
+  | source_specific_unexplained | 4/25 | 0.16 [0.06, 0.35] | 0.63 |
+  | systematic_common_mode | 3/4 | 0.75 [0.30, 0.95] | 0.031 |
+  | misclassified_star | 1/1 | — | 0.19 |
+  | quiet controls (null) | 4/26 | 0.15 [0.06, 0.34] | — |
+
+  - 96 sources (P_ref ≥ 5 d) are untestable.
+  - Unexplained sources confirmed: the 0.192-d pair member, 1.17 d, 4.82 d, and 2.01 d (at 2P, 1 sector: weak). That's what chance predicts for 25 tries.
+  - **What this means:** contamination by known variables is confirmed as a population. For the unexplained class, independent reductions find no excess, so the signal could be specific to Zach's reduction (his aperture or background) or too faint for QLP/TASOC.
+    - **That doesn't change the training decision.** Training uses the SMARTS light curves, and the signal *is* in those: it's persistent across halves, source-specific, and drives a 54% wrong rate. Only the "it's astrophysical" interpretation weakens.
+  - Outputs: `data/ffi_compare_all.csv`, `ffi_compare_sectors_all.csv`, `ffi_compare_power_all.npz`. The light curves are on the drive in `extracted/ffi_check/lc/`.
 - **Caveat on "systematic_common_mode":** three of its eight members have P ≈ 3.24–3.29 d, and one common mode peaks at 3.39 d. Every TESS reduction shares spacecraft systematics, so an independent FFI light curve can't tell a few-day systematic, such as momentum-dump-related, from an intrinsic signal. TIC 10000253484 stays ambiguous: either a strong spacecraft systematic or a real 3.24-d variable that the common-mode test absorbed.
 
 ## Recommendations for Rae's keep / flag / exclude decision
 1. **Flag, don't silently keep.** Add the per-file flags (`noise_source_flags.csv.gz`: classification, `P_ref`, amplitude, `periodic`) to every training and evaluation table. The 12% of files on periodic sources have, in effect, two true periods.
 2. **Exclude `contamination_known_variable` and `contamination_candidate_crowded` from ranker training** (143 sources, 88,786 files, 8.9%), or relabel them. Either way, a candidate at the contaminant's period must not be scored as a negative. These are astrophysical signals the pipeline *should* find.
 3. **Keep `systematic_common_mode`** (8 sources). Real TESS data has these too, and it's small. One of them (3.24 d) is strong and coherent in TASOC too; treat it as "unclear".
-4. **`source_specific_unexplained` (44): exclude with the contamination classes.** They behave like contamination in every test: source-specific, persistent, 54% wrong rate on dev_medium, and 2 of 3 testable ones confirmed in independent FFI light curves.
+4. **`source_specific_unexplained` (44): exclude with the contamination classes.** They behave like contamination in every test: source-specific, persistent, 54% wrong rate on dev_medium, and 2 of 3 testable ones confirmed in independent FFI light curves. *(Update 2026-10-22: the full FFI check gives 4/25, at the chance rate, so the "contamination" reading is unsupported. Exclusion is still justified by the SMARTS light curves themselves.)*
 5. **Scoring:** a new outcome, e.g. `noise_period` = "matches the noise source's own period", would separate these 51+ cases from genuine pipeline errors. I didn't touch `evaluation.py`; it's Rae's call.
 6. **Dev/holdout:** 128 of dev_medium's 1,000 stars sit on periodic sources. Report metrics on the quiet subset next to the full set until the training-set decision is made. G9–G12 numbers on dev_medium full-year are currently dragged down by this.
 
@@ -177,9 +200,18 @@ Rae: "I do want to go with your recommendations" (relayed by the coordinating se
    - **Not in Rae's list:** the single `misclassified_star` source (299 files). It is flagged and kept, pending a decision.
    - **In the code:** `galaxy_phase2_analysis.EXCLUDE_FROM_TRAINING` → column `exclude_from_training`.
 2. **`noise_period` scoring outcome: YES, as a separate task** (T24 in `docs/TASKS.md`): "the reported period matches the noise source's own period", separate from `wrong`. It touches `evaluation.py` and the scorecard and needs the flags joined to manifests/truth, so it isn't implemented in T20.
-3. **More FFI checks: approved.** Prepared for all 206 periodic sources plus 40 quiet controls tested at shuffled periods (chance-match null): `ffi_selection_all.csv`, commit `8d9eb04`. **Waiting for the Data_Vault drive**, which is unplugged.
+3. **More FFI checks: approved.** Prepared for all 206 periodic sources plus 40 quiet controls tested at shuffled periods (chance-match null): `ffi_selection_all.csv`, commit `8d9eb04`. **DONE 2026-10-22**: see the full-check table in "Independent FFI light curves". The flags file on the drive was regenerated with the signal-strength metrics and `exclude_from_training` (197 sources, 114,829 files, as stated above).
 4. **The "periodic" threshold: KEEP the current flags**, and store each source's signal-strength metrics in the flags table so the threshold can be tightened later. Added: `pow1_all`, `amp1_ppm_all`, `P1_all`/`P1_A`/`P1_B`, `persist` (A/B agreement), `ls_periodic`, `pipe_success`/`pipe_P`, `cm_retained`. The flags file on the drive is regenerated with these when the drive is back.
 5. **Near-LMC sources: OPEN.** Rae will ask Zach whether the 242 near-LMC "galaxies" were meant to be in the sample.
+6. **NEW (from the full FFI check): keep excluding `source_specific_unexplained`?**
+   - Independent reductions confirm them only at chance rate (4/25).
+   - Recommendation: **keep them excluded.** The training labels come from the SMARTS light curves, where the signal is real and drives wrong answers; whether it's astrophysical doesn't matter for that.
+   - It's worth telling Zach, though: if it's an artefact of his reduction, it may affect other files too.
+7. **NEW: the 3.24-d `systematic_common_mode` group (currently kept).**
+   - 3 of the 4 testable members are confirmed in independent reductions (TIC 10000253484 at 17,000 ppm, plus 10000438937 at 3.29 d and 10000455303 at 4.98 d).
+   - Independent reductions share spacecraft systematics, so this can't separate a ~3.2-d systematic from a real variable.
+   - Recommendation: **keep, as decided.** It's 8 sources and they're flagged. Revisit only if T25's quiet-subset metrics show these sources driving wrong answers.
+8. **`misclassified_star` (1 source, 299 files): no decision recorded.** Currently flagged and kept. It's confirmed in FFI (1/1). Recommendation: keep.
 
 ## Reproduce
 ```bash

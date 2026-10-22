@@ -577,3 +577,8 @@ chats should know:
   systematics; keep the current `periodic` flags but store signal-strength metrics; new tasks T24 (`noise_period`
   scoring outcome) and T25 (dev_medium quiet-noise subset metrics); T16b's replay unblocked; D3 points at the flags.
   Open: Rae asks Zach about the 242 near-LMC sources.
+- **2026-10-22: T20 full independent-FFI check done; T20 merged.** Of 150 testable (P < 5 d) sources, Gaia
+  known-variable contamination is confirmed in independent QLP/TASOC/ELEANOR-LITE light curves 38/60 (p = 4e-5 vs a
+  4/26 shuffled-period quiet null), crowded 13/34 (p = 0.05), but `source_specific_unexplained` only 4/25 (chance):
+  their signal may be specific to Zach's reduction. Exclusion kept, since training uses the SMARTS light curves.
+  `noise_source_flags.csv.gz` on the drive now carries `exclude_from_training` and the signal-strength metrics (T24/T25 read it).

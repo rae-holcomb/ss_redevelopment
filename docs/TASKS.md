@@ -561,12 +561,13 @@ for confirmation (ask Rae first).
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
 - **Agent:** `data-auditor`
-- **Status:** phase 2 done, in review (`reports/2026-10-21_t20-noise-sources-phase2/`; phase 1:
+- **Status:** done, merged 2026-10-22 (`reports/2026-10-21_t20-noise-sources-phase2/`; phase 1:
   `reports/2026-10-21_t20-galaxy-pass-phase1/`; branch `claude/t20-galaxy-quietness-c3bb9b`). 206/1,719 noise sources
   (12% of files) are periodic, mostly neighbour-star contamination; 51/88 dev_medium wrong answers equal their noise
   source's own pipeline period. Follow-up (f): independent QLP/TASOC/ELEANOR-LITE light curves confirm 9/12
-  testable periodic sources (P < 5 d), 0/4 quiet controls. Full-set FFI check (206 + 40 controls) prepared, waiting
-  for the drive. Not merged to main yet (Rae will say when).
+  testable periodic sources (P < 5 d), 0/4 quiet controls. Full-set FFI check (2026-10-22): known-variable
+  contamination 38/60 confirmed, crowded 13/34, unexplained 4/25 = chance rate (quiet null 4/26); exclusions unchanged
+  (report open questions 6-8). Flags file on the drive regenerated with `exclude_from_training` + signal metrics.
 - **Rae's decisions on phase 2 (2026-10-22; "go with your recommendations"):**
   - **Flag everywhere:** per-file flags (`<root>/extracted/galaxy_ids/noise_source_flags.csv.gz`: classification,
     `periodic`, `exclude_from_training`, `P_ref`, signal-strength metrics) go into every training and evaluation table.
