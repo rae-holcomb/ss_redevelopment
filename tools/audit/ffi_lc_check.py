@@ -13,7 +13,7 @@ QLP, then TASOC, then GSFC-ELEANOR-LITE; distinct sectors), downloads them to
 ``<outdir>/cache`` (lightkurve's own download cache, so reruns are free) and
 writes each as a plain CSV ``<outdir>/lc/<tic>_<author>_s<sector>.csv``
 (time, flux, normalized, quality-masked, NaNs dropped) plus
-``<outdir>/ffi_index.csv``. Analysis happens in ``ss_openblas``.
+``<outdir>/ffi_index_<selection file stem>.csv``. Analysis happens in ``ss_openblas``.
 
 Usage::
 
@@ -84,6 +84,8 @@ def main():
     ap.add_argument("--n-lc", type=int, default=3)
     args = ap.parse_args()
     out = Path(args.outdir)
+    if not out.parent.is_dir():   # e.g. /Volumes/Data_Vault/... with the drive unplugged
+        raise SystemExit(f"{out.parent} not found: plug in the Data_Vault drive (or pass another --outdir)")
     (out / "lc").mkdir(parents=True, exist_ok=True)
     (out / "cache").mkdir(parents=True, exist_ok=True)
     recs = []
@@ -91,7 +93,7 @@ def main():
         r = fetch_tic(int(tic), args.n_lc, out)
         recs += r
         print(tic, [(x.get("author"), x.get("sector"), x["status"][:20]) for x in r], flush=True)
-    _atomic_csv(pd.DataFrame(recs), out / "ffi_index.csv")
+    _atomic_csv(pd.DataFrame(recs), out / f"ffi_index_{Path(args.select).stem}.csv")
 
 
 if __name__ == "__main__":

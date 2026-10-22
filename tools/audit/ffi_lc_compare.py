@@ -1,6 +1,6 @@
 """T20 follow-up (f): do independent FFI light curves (QLP / TASOC / ELEANOR-LITE) show the SMARTS noise-source periods?
 
-Reads ``<ffi_dir>/ffi_index.csv`` and ``lc/*.csv`` from ``ffi_lc_check.py`` and
+Reads ``<ffi_dir>/ffi_index_<selection stem>.csv`` and ``lc/*.csv`` from ``ffi_lc_check.py`` and
 the selection (with each source's reference period ``P_ref`` from the SMARTS
 stack). Each sector is median-normalized, detrended with a running median of
 ``4 P_ref`` (0.5-5 d) and 5-sigma clipped; then, per sector and stitched,
@@ -103,6 +103,25 @@ def make_selection(sources_csv: Path, out_csv: Path) -> pd.DataFrame:
     return sel
 
 
+def make_selection_all(sources_csv: Path, out_csv: Path, n_null: int = 40, seed: int = 1) -> pd.DataFrame:
+    """Every periodic source, plus ``n_null`` quiet sources tested at periods drawn from the periodic ones.
+
+    The quiet controls get ``P_ref`` = a random periodic source's ``P_ref``
+    (their own value is kept as ``P_ref_own``), so the fraction of them that
+    "confirm" is the chance-match rate of the test at the same period mix.
+    """
+    src = pd.read_csv(sources_csv)
+    cols = ["tic", "galaxy", "classification", "P_ref", "pipe_P", "P1_all", "amp1_ppm_all", "pow1_all"]
+    pp = src.loc[src.periodic, cols].assign(control=False)
+    rng = np.random.default_rng(seed)
+    q = src[src.classification == "quiet"].sample(n_null, random_state=seed)[cols].copy()
+    q["P_ref_own"] = q.P_ref
+    q["P_ref"] = rng.choice(pp.P_ref.values, n_null)
+    sel = pd.concat([pp, q.assign(control=True)], ignore_index=True)
+    sel.to_csv(out_csv, index=False)
+    return sel
+
+
 def main():
     """CLI entry point."""
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -110,13 +129,21 @@ def main():
     ap.add_argument("--select", required=True)
     ap.add_argument("--outdir")
     ap.add_argument("--make-selection", metavar="SOURCES_CSV",
-                    help="only write the selection (--select) from galaxy_phase2_analysis's sources.csv")
+                    help="only write the 19-source selection (--select) from galaxy_phase2_analysis's sources.csv")
+    ap.add_argument("--make-selection-all", metavar="SOURCES_CSV",
+                    help="only write the all-periodic + 40 quiet-control selection (--select)")
     args = ap.parse_args()
     if args.make_selection:
         print(make_selection(Path(args.make_selection), Path(args.select)).to_string())
         return
+    if args.make_selection_all:
+        sel = make_selection_all(Path(args.make_selection_all), Path(args.select))
+        print(f"{int((~sel.control).sum())} periodic sources + {int(sel.control.sum())} quiet controls")
+        return
     ffi = Path(args.ffi_dir)
-    idx = pd.read_csv(ffi / "ffi_index.csv")
+    stem = Path(args.select).stem
+    idx = pd.read_csv(ffi / f"ffi_index_{stem}.csv")
+    suffix = stem.replace("ffi_selection", "")   # "" for the 19-source check, "_all" for the full run
     sel = pd.read_csv(args.select).set_index("tic")
     per_lc, per_tic, powers, phases = [], [], [], []
     for tic, d in idx[idx.status == "ok"].groupby("tic", sort=False):
@@ -139,6 +166,7 @@ def main():
                          else np.nan for k in range(100)])
         secm = [x["match"] for x in per_lc if x["tic"] == tic]
         per_tic.append(dict(tic=tic, classification=sel.loc[tic, "classification"], P_ref=P,
+                            control=bool(sel.loc[tic, "control"]) if "control" in sel else False,
                             smarts_amp_ppm=float(sel.loc[tic, "amp1_ppm_all"]),
                             authors=";".join(sorted(set(d.author))), sectors=";".join(map(str, d.sector)),
                             P_top=a["peaks"][0] if a["peaks"] else np.nan,
@@ -151,9 +179,9 @@ def main():
         phases.append(prof.astype(np.float32))
     out = Path(args.outdir)
     res = pd.DataFrame(per_tic)
-    res.to_csv(out / "ffi_compare.csv", index=False)
-    pd.DataFrame(per_lc).to_csv(out / "ffi_compare_sectors.csv", index=False)
-    np.savez_compressed(out / "ffi_compare_power.npz", tic=res.tic.values, freq=FREQ.astype(np.float32),
+    res.to_csv(out / f"ffi_compare{suffix}.csv", index=False)
+    pd.DataFrame(per_lc).to_csv(out / f"ffi_compare_sectors{suffix}.csv", index=False)
+    np.savez_compressed(out / f"ffi_compare_power{suffix}.npz", tic=res.tic.values, freq=FREQ.astype(np.float32),
                         power=np.stack(powers), phase_profile=np.stack(phases))
     print(res[["tic", "classification", "P_ref", "P_top", "match", "n_sectors_matching", "n_sectors",
                "smarts_amp_ppm", "ffi_amp_at_P_ppm", "pow_at_P"]].round(3).to_string())
