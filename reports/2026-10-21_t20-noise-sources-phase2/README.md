@@ -167,12 +167,19 @@ The 33 wrong answers on quiet sources are the pipeline's own errors, the part me
 - **Period clustering as a systematics test.** It is meaningless here: the 5–30 d red-noise continuum fills every 1% bin with ≥ 10 sources (`period_clusters.csv`, informational only).
 - **"Misclassified star" by parallax or proper motion.** Only 22 targets have a central source with ϖ/σ > 5, and none is periodic; LMC stars have no measurable parallax. It was replaced by a dominant star-like point source (9 sources, 1 periodic).
 
-## Open questions for Rae
-1. **Keep / flag / exclude:** see the recommendations. The main decision is whether to drop the 206 periodic sources (12% of files) from ranker training, or keep them with a second "noise period" label.
-2. **Add a `noise_period` scoring outcome?** It changes `evaluation.py`, so it's your decision.
-3. **More FFI checks?** Done for 19 sources (above). Extending to all 206 periodic sources would be ~600 light curves (~170 MB), ~15 min. Long periods (≥ 5 d, e.g. the 9.9-d sinusoid) need multi-sector detrending that keeps slow signals, which is not done here.
-4. **The "periodic" threshold** (pipeline returns a period, or LS power ≥ 0.1 with A/B agreement) is a judgment call. Quiet sources may still carry weaker signals that matter at low injected amplitude. A stricter cut, e.g. LS power ≥ 0.2, gives fewer sources.
-5. **Ask Zach:** were the 242 near-LMC "galaxies" meant to be in the sample? Many are likely LMC clusters or nebulae classified as extended.
+## Open questions for Rae: answered 2026-10-22
+Rae: "I do want to go with your recommendations" (relayed by the coordinating session).
+
+1. **Keep / flag / exclude: DECIDED.**
+   - **Flag everywhere:** the per-file noise-source flags (`noise_source_flags.csv.gz`) go into every training and evaluation table.
+   - **Exclude from ranker training:** `contamination_known_variable` + `contamination_candidate_crowded` (143 sources) and, for now, `source_specific_unexplained` (44). That is 197 sources and **114,829 files (11.5%)**, of which 23,595 are in the ≥800k pool.
+   - **Keep:** `systematic_common_mode` (8).
+   - **Not in Rae's list:** the single `misclassified_star` source (299 files). It is flagged and kept, pending a decision.
+   - **In the code:** `galaxy_phase2_analysis.EXCLUDE_FROM_TRAINING` → column `exclude_from_training`.
+2. **`noise_period` scoring outcome: YES, as a separate task** (T24 in `docs/TASKS.md`): "the reported period matches the noise source's own period", separate from `wrong`. It touches `evaluation.py` and the scorecard and needs the flags joined to manifests/truth, so it isn't implemented in T20.
+3. **More FFI checks: approved.** Prepared for all 206 periodic sources plus 40 quiet controls tested at shuffled periods (chance-match null): `ffi_selection_all.csv`, commit `8d9eb04`. **Waiting for the Data_Vault drive**, which is unplugged.
+4. **The "periodic" threshold: KEEP the current flags**, and store each source's signal-strength metrics in the flags table so the threshold can be tightened later. Added: `pow1_all`, `amp1_ppm_all`, `P1_all`/`P1_A`/`P1_B`, `persist` (A/B agreement), `ls_periodic`, `pipe_success`/`pipe_P`, `cm_retained`. The flags file on the drive is regenerated with these when the drive is back.
+5. **Near-LMC sources: OPEN.** Rae will ask Zach whether the 242 near-LMC "galaxies" were meant to be in the sample.
 
 ## Reproduce
 ```bash

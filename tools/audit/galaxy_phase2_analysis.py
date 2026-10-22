@@ -52,6 +52,10 @@ CENTRAL_ARCSEC = 3.0
 # stack's LS top peak (0.1-60 d) has power >= LS_POWER_MIN and agrees between the disjoint
 # halves A and B. The population's LS power: median 0.015, 90th percentile 0.067 (see report).
 LS_POWER_MIN = 0.1
+# Rae's decision (2026-10-22): exclude these classes from ranker training; keep systematic_common_mode.
+# (misclassified_star, 1 source, is not in Rae's list and is kept: flag only.)
+EXCLUDE_FROM_TRAINING = ("contamination_known_variable", "contamination_candidate_crowded",
+                         "source_specific_unexplained")
 N_PCS = 8
 
 
@@ -290,8 +294,14 @@ def main():
     names = ["quiet", "systematic_common_mode", "misclassified_star", "contamination_known_variable",
              "contamination_candidate_crowded"]
     src["classification"] = np.select(cond, names, default="source_specific_unexplained")
+    src["exclude_from_training"] = src.classification.isin(EXCLUDE_FROM_TRAINING)
     src.to_csv(out / "sources.csv", index=False)
-    flag_cols = ["galaxy", "tic", "classification", "periodic", "P_ref", "amp1_ppm_all", "pow1_all", "near_lmc"]
+    # Rae (2026-10-22): keep the current "periodic" flag but carry the signal-strength metrics, so the
+    # threshold can be tightened later without rerunning anything: LS power/amplitude of the A+B stack,
+    # A/B agreement (top peaks of the disjoint halves), the pipeline's own period, common-mode retention.
+    flag_cols = ["galaxy", "tic", "classification", "periodic", "exclude_from_training", "P_ref",
+                 "amp1_ppm_all", "pow1_all", "P1_all", "P1_A", "P1_B", "persist", "ls_periodic",
+                 "pipe_success", "pipe_P", "cm_retained", "near_lmc"]
     flags = gmap[["row", "sim_id", "galaxy", "pool"]].merge(src[flag_cols], on="galaxy")
     with sd.atomic_path(ex / "galaxy_ids" / "noise_source_flags.csv.gz") as tmp:
         flags.sort_values("row").to_csv(tmp, index=False, compression="gzip")
