@@ -173,9 +173,30 @@ Two things would make the note stronger than it is now, and both are cheap.
 1. **Q1 (Zach):** may `galaxy_files.csv` (or our per-file mapping, which is equivalent) be published with the note? If not, how should users find a file's noise source?
 2. **Q2 (Zach):** before publishing anything implying a reduction artefact (lines 311, 382), does Zach know of any aperture or background step that could create source-specific 1–5 d signals at a few hundred ppm? Would he rather the note stay neutral?
 3. **Q3 (Zach):** were the near-LMC `EXTENDED` targets and the Tmag ≤ 15 cut intended? Is there a record of how the ~2,000 galaxies were chosen, of which 1,719 appear?
-4. **Q4 (Rae):** was dev_medium used to tune the rotation-period search? If so, Appendix B's numbers are in-sample for that pipeline.
+4. **Q4 (Rae): answered from the project docs, 2026-11-09.** dev_medium was not used to tune the search before Appendix B's numbers were made.
+   - The baseline `benchmarks/baselines/dev_medium_fullyear` (commit `442c65f`, 2026-10-15) was the pipeline's first run on real SMARTS data (`docs/PROJECT_CONTEXT.md`, T2 entry).
+   - The only pipeline commits between then and the T20 stack run are T16b (instrumentation, "final periods bit-identical") and T21 (loader error handling).
+   - dev_medium became the default judging set only on 2026-10-21.
+   - Earlier development used `results_products/batch1` (10,000 files) and `small_batch0` (523), which overlap dev_medium in 17 and 5 files: about 2%.
+   - So Appendix B is effectively out-of-sample. It is still one pipeline on one noise pool (S6).
 5. **Q5 (Rae):** should the 34 coherent "quiet" sources (M1) be reclassified before release (this changes both tables), or only caveated?
 6. **Q6 (Rae):** is the corrupted-segment origin known to Zach? For example, sectors where the target fell near a CCD edge or bleed column. Segment start times are spread through the year, not concentrated in particular sectors.
+
+## Follow-up (2026-11-09): what the coherent "quiet" sources look like (M1, Q5)
+
+![periodograms of the 34](figures/quiet_coherent_periodograms.png)
+
+![detail: light curve, fold by half-year, per-half periodograms](figures/quiet_coherent_detail.png)
+
+`checks/c11_plot_quiet_coherent.py` produces both figures from the cleaned A+B stacks. The first shows the full-year periodograms of all 34 sources. The second shows six of them plus two references: for each, the light curve, the fold at P with each half of the year drawn separately, and LS power near P in each half.
+
+- **Every one is a single sharp line far above the continuum.** Many also show harmonics or a second line.
+- **In the folds, the two halves of the year agree in shape *and phase*.** A 100–600 ppm signal is coherent for a full year in every case shown.
+- **Several shapes are non-sinusoidal, as expected of variable stars.** TIC 10002480884 (0.829 d) shows an eclipse-like dip, the same signal as the known 0.83-d family. TIC 10000425117 (0.617 d) shows a fast-rise, slow-decay pulsation profile.
+- **Families recur:** TICs 10002480870, 872 and 884 at 0.829 d (consecutive TIC numbers within the 0.83-d family), and TICs 10001542650 and 651 at 0.160 d.
+- **These signals are clearer than some sources already classed periodic.** The reference `contamination_known_variable` source TIC 10000275823 (1.55 d, 228 ppm, a pipeline-only detection) does *not* keep its fold or its peak between the two halves of the year. A typical quiet source folded at its 13.7-d LS peak does not either.
+- **The count depends on the threshold.** S/N > 20 in both halves at P < 5 d gives 34 sources. Relaxing it to S/N > 10 adds only a handful, at 1.5–5 d. Longer periods could not be assessed this way.
+- **Reading:** the gap is in the `periodic` definition, not in these sources. They belong with the periodic classes. If they are reclassified, the natural fix is a third detection criterion, "time-split coherent" (local S/N > 20 at the same period in both halves of the year). They would then pass through the existing class rules: 12 have a Gaia variable neighbour and 12 are near the LMC. This would move about 19,554 files (2%) out of `quiet`. Uncertain: why the period search declined them; I did not run it.
 
 ## Verified and correct
 
