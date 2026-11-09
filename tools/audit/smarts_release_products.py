@@ -29,6 +29,7 @@ Usage::
     $PY tools/audit/smarts_release_products.py sources     # per-source table (no drive needed)
     $PY tools/audit/smarts_release_products.py files       # per-file table -> drive (~1 min)
     $PY tools/audit/smarts_release_products.py figures     # note figures (no drive needed)
+    $PY tools/audit/smarts_release_products.py figure-corrupted   # corrupted-segment example (needs the drive)
 """
 from __future__ import annotations
 
@@ -278,14 +279,34 @@ def fig_impact(outdir: Path, src: pd.DataFrame):
     plt.close(fig)
 
 
+def fig_corrupted(outdir: Path, root: Path, tic: int = 10000441469):
+    """Example noise light curve with corrupted segments (needs the T20 stacks on the drive)."""
+    import matplotlib.pyplot as plt
+    sdir = sd.extract_dir(root, "galaxy_stack")
+    i = int(np.where(pd.read_csv(sdir / "stack_index.csv").tic == tic)[0][0])
+    g = np.asarray(np.load(sdir / "stacks.npy", mmap_mode="r")[i, 2], float)
+    fig, ax = plt.subplots(figsize=(9, 3))
+    ax.plot(np.arange(g.size) / 48.0, g, lw=0.4, color="#d62728", rasterized=True)
+    ax.set_yscale("symlog", linthresh=2)
+    ax.axhline(1, color="k", lw=0.6, ls=":")
+    ax.set(xlabel="time (d)", ylabel="normalized noise flux (symlog)")
+    ax.set_title(f"TIC {tic}", fontsize=9, loc="left")
+    fig.tight_layout()
+    fig.savefig(outdir / "fig_corrupted_segments.png", dpi=150)
+    plt.close(fig)
+
+
 def main(argv=None):
     """CLI: ``sources`` | ``files`` | ``figures``."""
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("what", choices=["sources", "files", "figures"])
+    ap.add_argument("what", choices=["sources", "files", "figures", "figure-corrupted"])
     ap.add_argument("--data-root", default=None, help="SMARTS data root (default $SMARTS_DATA_ROOT or the drive)")
     args = ap.parse_args(argv)
-    if args.what == "files":
+    if args.what in ("files", "figure-corrupted"):
         root = sd.require_drive(sd.data_root(args.data_root))
+    if args.what == "figure-corrupted":
+        fig_corrupted(NOTE_DIR / "figures", root)
+        return
     src = public_sources()
     if args.what == "sources":
         NOTE_DIR.mkdir(parents=True, exist_ok=True)
