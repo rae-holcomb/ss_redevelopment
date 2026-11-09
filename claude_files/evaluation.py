@@ -247,3 +247,72 @@ def outcome_fractions(outcomes: Iterable[str]) -> dict:
     res["success"] = (res[CORRECT] + res[DIFFROT]) if n else float("nan")
     res["alias"] = (res[HALF] + res[DOUBLE]) if n else float("nan")
     return res
+
+
+# ---------------------------------------------------------------------------
+# Searchability (T23, decision D4, 2026-10-22)
+# ---------------------------------------------------------------------------
+# A star is "searchable" if the comb fit can in principle see its period: the
+# ACF must reach lag >= 2 P, i.e. P_lo <= R / 2 where R is the ACF reach. R is
+# defined HERE with frozen constants, deliberately independent of the pipeline's
+# compute_acf defaults (which may change, e.g. T16c), so the scorecard's
+# searchable/unsearchable split stays comparable across pipeline versions.
+ACF_REACH_MIN_VALID_FRAC = 0.3   # valid-pair fraction at lag k vs lag 0 (the v3-era pipeline value)
+ACF_REACH_MAX_LAG_FRAC = 0.7     # fraction of the baseline (the v3-era pipeline value)
+SEARCHABLE_REACH_FACTOR = 0.5    # searchable iff P_lo <= SEARCHABLE_REACH_FACTOR * R
+
+
+def acf_reach(time, flux) -> float:
+    """Frozen ACF reach R (days): the largest lag the gap-aware ACF is trusted to.
+
+    Reproduces the lag cut of acf_utils.compute_acf as it stood when D4 was
+    decided, with ACF_REACH_MIN_VALID_FRAC / ACF_REACH_MAX_LAG_FRAC fixed
+    here (the pipeline's own defaults are never read). The valid-pair count
+    at lag k is the autocorrelation of the finite-sample indicator; R is the
+    last lag before that count first falls below ACF_REACH_MIN_VALID_FRAC of
+    its lag-0 value, capped at ACF_REACH_MAX_LAG_FRAC of the baseline.
+
+    Parameters
+    ----------
+    time, flux : evenly sampled arrays (flux may hold NaNs at gaps).
+
+    Returns
+    -------
+    float : reach in days; NaN if fewer than 10 finite points.
+    """
+    flux = np.asarray(flux, dtype=float)
+    time = np.asarray(time, dtype=float)
+    mask = np.isfinite(flux)
+    n = len(flux)
+    if mask.sum() < 10 or n < 2:
+        return float("nan")
+    fm = np.fft.fft(mask.astype(float), n=2 * n)
+    valid = np.clip(np.fft.ifft(fm * np.conj(fm)).real[:n], 0, None)
+    lags = np.arange(n) * np.median(np.diff(time))
+    good = np.ones(n, dtype=bool)
+    below = valid < ACF_REACH_MIN_VALID_FRAC * valid[0]
+    if below.any():
+        good[int(np.argmax(below)):] = False
+    keep = (lags <= lags[-1] * ACF_REACH_MAX_LAG_FRAC) & good & (valid > 0)
+    if keep.sum() < 10:
+        keep = (lags <= lags[-1] * ACF_REACH_MAX_LAG_FRAC) & (valid > 0)
+    return float(lags[keep].max()) if keep.any() else float("nan")
+
+
+def is_searchable(period_lo, reach) -> bool:
+    """True if the low end of the success range can be seen: P_lo <= R / 2.
+
+    Parameters
+    ----------
+    period_lo : P_lo, the low end of the success range (P_eq for stars without
+        an active-band range), days.
+    reach : ACF reach R in days (acf_reach); for multi-batch stars (T16h) pass
+        the maximum of R_b over batches.
+
+    Returns
+    -------
+    bool; False if either input is missing or non-finite.
+    """
+    if _is_missing(period_lo) or _is_missing(reach):
+        return False
+    return float(period_lo) <= SEARCHABLE_REACH_FACTOR * float(reach)

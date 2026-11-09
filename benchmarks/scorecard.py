@@ -66,7 +66,11 @@ Outputs (in --outdir)
                                  descriptors (v3): n_sectors, sectors,
                                  coverage_class, total_baseline_days,
                                  longest_contiguous_days, largest_gap_days,
-                                 duty_cycle
+                                 duty_cycle; and (v4) acf_reach (frozen
+                                 evaluation.acf_reach), P_over_reach (P_eq / R),
+                                 searchable (P_lo <= R/2), band_width
+                                 ((P_hi - P_lo) / P_eq), band_width_class,
+                                 flux_amp (95th - 5th percentile of the flux)
     per_method.csv               one row per (star, method)
     per_candidate.csv            one row per (star, candidate tested by the comb
                                  fit): fitted period and its outcome, every
@@ -75,6 +79,7 @@ Outputs (in --outdir)
     fig_final_outcomes_by_bin.png
     fig_method_recall_by_bin.png
     fig_measured_vs_true.png
+    fig_completeness_map.png     (v4) success vs P/R x flux amplitude x coverage class
 
 Usage
 -----
@@ -123,7 +128,7 @@ from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-SCORECARD_VERSION = 3  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
+SCORECARD_VERSION = 4  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
 # v3 (2026-10-14, T16a): --coverage dataset option + per-star coverage descriptor
 # columns. Metric definitions and outcome logic are unchanged from v2, and
 # --coverage full (default) reproduces v2 per-star results exactly.
@@ -133,6 +138,12 @@ SCORECARD_VERSION = 3  # v2 (2026-10-13): diffrot outcome; recall/union_recall c
 # acf_lag_max, n_fit_candidates, n_success_candidates, best_success_P,
 # best_success_failed_gates, and per_candidate.csv; metric definitions and
 # outcome logic unchanged, so no version bump.)
+# v4 (2026-10-22, T22 + T23): new per-star columns (acf_reach, P_over_reach,
+# searchable, band_width, band_width_class, flux_amp) and new metric groups
+# final.by_band_width, final.by_coverage_class, final.searchable.*,
+# final.unsearchable.*, plus the completeness-map figure. Every v3 metric key
+# and the outcome logic are unchanged (bit-identical on the same data); old
+# baselines simply lack the new keys, so check_goals reports but cannot guard them.
 # One worker per physical performance core (4 on the i5 workstation, 10 on a
 # 10P+4E Apple Silicon chip). T14 measured 4/8/10 workers on the 4-core/8-thread
 # i5: identical throughput within run-to-run noise, so extra hyperthread workers
@@ -207,6 +218,45 @@ def _coverage_columns(t: np.ndarray, f: np.ndarray, sectors) -> dict:
     if not sectors:
         return {}
     return cov.coverage_descriptors(t, f, sectors)
+
+
+# Band-width classes (T22): w = (P_hi - P_lo) / P_eq, the fractional spread of the
+# success range from differential rotation. Cuts: 0 = solid body (or shear 0);
+# 0.2 ~ twice REL_TOL (the band is then comparable to the tolerance window
+# already, so success vs correct barely differ); 0.5 = band wide enough that
+# diffrot answers span a factor ~1.5, where `correct` (P_eq only) and `success`
+# should clearly diverge. Keys avoid '.' so check_goals dotted paths work.
+BAND_WIDTH_CLASSES = ("zero", "lt_0p2", "0p2_to_0p5", "ge_0p5", "unknown")
+
+
+def band_width_class(true_p, prange) -> tuple:
+    """(w, class) with w = (P_hi - P_lo) / P_eq; class in BAND_WIDTH_CLASSES.
+
+    'unknown' when the star has no active-band range; w is inf for an
+    unbounded band (extreme shear), which falls in 'ge_0p5'.
+    """
+    if prange is None or _missing(prange[0]):
+        return None, "unknown"
+    lo, hi = float(prange[0]), float(prange[1])
+    w = (hi - lo) / float(true_p) if np.isfinite(hi) else float("inf")
+    if w <= 1e-9:
+        return w, "zero"
+    return w, "lt_0p2" if w < 0.2 else ("0p2_to_0p5" if w < 0.5 else "ge_0p5")
+
+
+def _searchability_columns(t, f, true_p, prange) -> dict:
+    """Per-star v4 descriptor columns: frozen ACF reach, searchability, band width, flux amplitude.
+
+    P_lo is the low end of the success range (P_eq when there is no band).
+    These feed the new metric groups only; no v3 metric or outcome uses them.
+    """
+    reach = ev.acf_reach(t, f)
+    p_lo = prange[0] if (prange is not None and not _missing(prange[0])) else true_p
+    w, wclass = band_width_class(true_p, prange)
+    ok = np.isfinite(f)
+    amp = float(np.percentile(f[ok], 95) - np.percentile(f[ok], 5)) if ok.sum() > 10 else None
+    return dict(acf_reach=reach, P_over_reach=float(true_p) / reach if np.isfinite(reach) else None,
+                searchable=ev.is_searchable(p_lo, reach), band_width=w, band_width_class=wclass, flux_amp=amp)
 
 
 def _candidate_rows(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> list:
@@ -297,6 +347,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
         rec.update(star_id=star_id, true_period=true_p, period_bin=ev.period_bin(true_p), meta=meta,
                    period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None)
         rec.update(_coverage_columns(t, f, sectors))
+        rec.update(_searchability_columns(t, f, true_p, prange))
         lags, acf, counts = compute_acf(t, f, return_counts=True)  # Stage 2 (comb fit): ~0.7 B
         lags1, acf1 = compute_acf(t, f, max_lag_frac=STAGE1_MAX_LAG_FRAC)  # Stage 1 view: B/3
 
@@ -508,10 +559,51 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
         hit = hit.reset_index()
         m["union_recall"]["overall"] = float(hit["hit"].mean())
         m["union_recall"]["by_bin"] = {b: float(g["hit"].mean()) for b, g in hit.groupby("period_bin")}
+    m["final"].update(_v4_final_breakdowns(per_star))
     m["runtime"] = {"median_seconds": float(per_star["seconds"].median()),
                     "p90_seconds": float(per_star["seconds"].quantile(0.9))}
     m["errors"]["n_star_errors"] = int(per_star["error"].notna().sum())
     return m
+
+
+def _breakdown(df: pd.DataFrame, col: str) -> dict:
+    """{value of `col`: outcome_fractions of final_outcome} over the non-null rows of `col`.
+
+    The one place a new subset breakdown (e.g. T25's quiet-subset metrics) needs
+    to hook in: add a column in score_one_star and call this on it.
+    """
+    if col not in df.columns:
+        return {}
+    d = df[df[col].notna()]
+    return {str(k): ev.outcome_fractions(g["final_outcome"]) for k, g in d.groupby(col)}
+
+
+def _subset_block(df: pd.DataFrame) -> dict:
+    """overall + by_bin + by_coverage_class outcome fractions for a subset of stars."""
+    return {"overall": ev.outcome_fractions(df["final_outcome"]),
+            "by_bin": _breakdown(df, "period_bin"),
+            "by_coverage_class": _breakdown(df, "coverage_class")}
+
+
+def _v4_final_breakdowns(per_star: pd.DataFrame) -> dict:
+    """The scorecard-v4 additions to `final` (T22, T23); {} keys are omitted if the columns are absent.
+
+    final.by_band_width.<class>, final.by_coverage_class.<class>,
+    final.searchable.{overall,by_bin,by_coverage_class},
+    final.unsearchable.{overall,by_bin,by_coverage_class}
+    (overall.none = correct-decline rate, .wrong = wrong answers, .success = bonus successes).
+    """
+    out: dict = {}
+    if "band_width_class" in per_star.columns:
+        out["by_band_width"] = _breakdown(per_star, "band_width_class")
+    if "coverage_class" in per_star.columns:
+        out["by_coverage_class"] = _breakdown(per_star, "coverage_class")
+    if "searchable" in per_star.columns:
+        known = per_star[per_star["searchable"].notna()]
+        flag = known["searchable"].astype(bool)
+        out["searchable"] = _subset_block(known[flag])
+        out["unsearchable"] = _subset_block(known[~flag])
+    return out
 
 
 OUTCOME_COLORS = {ev.CORRECT: "#2e7d32", ev.DIFFROT: "#81c784", ev.HALF: "#f9a825", ev.DOUBLE: "#ef6c00",
@@ -580,6 +672,65 @@ def make_figures(per_star: pd.DataFrame, per_method: pd.DataFrame, outdir: Path,
     ax.legend(fontsize=8, frameon=False)
     fig.tight_layout()
     fig.savefig(outdir / "fig_measured_vs_true.png", dpi=130)
+    plt.close(fig)
+
+
+def make_completeness_map(per_star: pd.DataFrame, outdir: Path, title: str):
+    """Completeness map (T23): final success rate vs P_eq/R, by flux amplitude and coverage class.
+
+    Top: success rate vs P/R per coverage class (the searchable edge is the
+    dashed line at P/R = 0.5 for non-diffrot stars). Bottom: success-rate
+    heatmap over P/R x flux amplitude (amplitude terciles), all coverage
+    classes pooled; cell labels give n. Skipped if the v4 columns are absent.
+    """
+    need = {"P_over_reach", "flux_amp", "final_outcome"}
+    if not need.issubset(per_star.columns):
+        return
+    d = per_star.dropna(subset=["P_over_reach", "flux_amp"]).copy()
+    if len(d) < 10:
+        return
+    d["success"] = d["final_outcome"].isin(ev.SUCCESS_OUTCOMES)
+    edges = np.array([0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.65, 0.8, 1.0, 1.5, np.inf])
+    labels = [f"{a:g}-{b:g}" if np.isfinite(b) else f">{a:g}" for a, b in zip(edges[:-1], edges[1:])]
+    d["x"] = pd.cut(d["P_over_reach"], edges, labels=False, right=False)
+    classes = [c for c in cov.COVERAGE_CLASSES if "coverage_class" in d and (d["coverage_class"] == c).any()] or [None]
+    fig, (ax0, ax1) = plt.subplots(2, 1, figsize=(9, 8.5))
+    xs = np.arange(len(labels))
+    for c in classes:
+        g = d if c is None else d[d.coverage_class == c]
+        rate = g.groupby("x")["success"].agg(["mean", "size"]).reindex(range(len(labels)))
+        rate.loc[rate["size"] < 3, "mean"] = np.nan
+        ax0.plot(xs, rate["mean"], marker="o", ms=4, label=f"{c or 'all'} (n={len(g)})")
+    ax0.axvline(4.5, color="k", ls="--", lw=0.8)
+    ax0.text(4.55, 0.02, "P/R = 0.5", fontsize=8)
+    ax0.set_xticks(xs, labels, rotation=45, ha="right")
+    ax0.set_xlabel("P_eq / R  (frozen ACF reach)")
+    ax0.set_ylabel("final success rate (bins with n<3 hidden)")
+    ax0.set_ylim(-0.02, 1.02)
+    ax0.legend(fontsize=7, frameon=False, bbox_to_anchor=(1.01, 1), loc="upper left")
+    ax0.set_title(f"Completeness vs P/R -- {title}")
+    q = d["flux_amp"].quantile([1 / 3, 2 / 3]).values
+    d["a"] = np.digitize(d["flux_amp"], q)
+    grid = np.full((3, len(labels)), np.nan)
+    cnt = np.zeros((3, len(labels)), dtype=int)
+    for (a, x), g in d.groupby(["a", "x"]):
+        cnt[int(a), int(x)] = len(g)
+        if len(g) >= 3:
+            grid[int(a), int(x)] = g["success"].mean()
+    im = ax1.imshow(grid, vmin=0, vmax=1, cmap="viridis", origin="lower", aspect="auto")
+    for a in range(3):
+        for x in range(len(labels)):
+            if cnt[a, x]:
+                v = grid[a, x]
+                ax1.text(x, a, f"n={cnt[a, x]}", ha="center", va="center", fontsize=7,
+                         color="0.5" if not np.isfinite(v) else ("white" if v < 0.6 else "black"))
+    ax1.set_xticks(xs, labels, rotation=45, ha="right")
+    ax1.set_yticks(range(3), [f"amp tercile {i + 1}\n(<{q[0]:.3g})" if i == 0 else
+                              (f"amp tercile 3\n(>{q[1]:.3g})" if i == 2 else "amp tercile 2") for i in range(3)])
+    ax1.set_xlabel("P_eq / R")
+    fig.colorbar(im, ax=ax1, label="final success rate")
+    fig.tight_layout()
+    fig.savefig(outdir / "fig_completeness_map.png", dpi=130)
     plt.close(fig)
 
 
@@ -673,6 +824,7 @@ def main(argv=None):
     )
     (outdir / "metrics.json").write_text(json.dumps(metrics, indent=2, default=float))
     make_figures(per_star, per_method, outdir, args.label or outdir.name)
+    make_completeness_map(per_star, outdir, args.label or outdir.name)
 
     f = metrics["final"]["overall"]
     print(f"\nFinal answer (n={f['n']}): success {f['success']:.1%} (correct {f['correct']:.1%}, "

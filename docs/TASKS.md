@@ -639,7 +639,7 @@ for confirmation (ask Rae first).
 
 ### T22. Scorecard v4: band-width breakdown + version bump
 - **Agent:** `method-improver` (small; scorecard reporting only)
-- **Status:** ready (Rae, 2026-10-21, from T16b questions 2 and 6)
+- **Status:** done 2026-10-22, awaiting review (branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
 - **Do:**
   - Bump `SCORECARD_VERSION` to 4, covering T16b's descriptor columns and `per_candidate.csv`.
   - Add **metrics** `final.by_band_width.<class>.{...outcome fractions...}`, using classes of
@@ -651,7 +651,7 @@ for confirmation (ask Rae first).
 
 ### T23. Scorecard/evaluation: `searchable` flag and searchable-subset metrics (from D4, 2026-10-22)
 - **Agent:** `method-improver` (evaluation + scorecard reporting; definitions approved by Rae in D4)
-- **Status:** ready. Can share T22's v4 bump if they run close together; otherwise bump to v5.
+- **Status:** done 2026-10-22, awaiting review (branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
 - **Do:**
   - **`evaluation.py`:**
     - a frozen `acf_reach(time, flux)` (valid-pair fraction 0.3, independent of the pipeline's `compute_acf` default);

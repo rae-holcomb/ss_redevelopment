@@ -1,0 +1,1186 @@
+{
+  "final": {
+    "overall": {
+      "n": 50,
+      "correct": 0.12,
+      "diffrot": 0.04,
+      "half": 0.02,
+      "double": 0.0,
+      "wrong": 0.04,
+      "none": 0.78,
+      "success": 0.16,
+      "alias": 0.02
+    },
+    "by_bin": {
+      "1-3d": {
+        "n": 9,
+        "correct": 0.2222222222222222,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.1111111111111111,
+        "none": 0.6666666666666666,
+        "success": 0.2222222222222222,
+        "alias": 0.0
+      },
+      "10-30d": {
+        "n": 8,
+        "correct": 0.125,
+        "diffrot": 0.0,
+        "half": 0.125,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.75,
+        "success": 0.125,
+        "alias": 0.125
+      },
+      "3-10d": {
+        "n": 9,
+        "correct": 0.1111111111111111,
+        "diffrot": 0.2222222222222222,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.6666666666666666,
+        "success": 0.3333333333333333,
+        "alias": 0.0
+      },
+      "<1d": {
+        "n": 9,
+        "correct": 0.2222222222222222,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.7777777777777778,
+        "success": 0.2222222222222222,
+        "alias": 0.0
+      },
+      ">30d": {
+        "n": 15,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.06666666666666667,
+        "none": 0.9333333333333333,
+        "success": 0.0,
+        "alias": 0.0
+      }
+    },
+    "by_band_width": {
+      "0p2_to_0p5": {
+        "n": 6,
+        "correct": 0.16666666666666666,
+        "diffrot": 0.16666666666666666,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.6666666666666666,
+        "success": 0.3333333333333333,
+        "alias": 0.0
+      },
+      "ge_0p5": {
+        "n": 5,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.2,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.8,
+        "success": 0.0,
+        "alias": 0.2
+      },
+      "lt_0p2": {
+        "n": 20,
+        "correct": 0.05,
+        "diffrot": 0.05,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.1,
+        "none": 0.8,
+        "success": 0.1,
+        "alias": 0.0
+      },
+      "zero": {
+        "n": 19,
+        "correct": 0.21052631578947367,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.7894736842105263,
+        "success": 0.21052631578947367,
+        "alias": 0.0
+      }
+    },
+    "by_coverage_class": {
+      "consecutive-2": {
+        "n": 7,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 1.0,
+        "success": 0.0,
+        "alias": 0.0
+      },
+      "consecutive-3-5": {
+        "n": 7,
+        "correct": 0.2857142857142857,
+        "diffrot": 0.14285714285714285,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.14285714285714285,
+        "none": 0.42857142857142855,
+        "success": 0.42857142857142855,
+        "alias": 0.0
+      },
+      "consecutive-6-12": {
+        "n": 5,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.2,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.8,
+        "success": 0.0,
+        "alias": 0.2
+      },
+      "full": {
+        "n": 4,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 1.0,
+        "success": 0.0,
+        "alias": 0.0
+      },
+      "gapped-2": {
+        "n": 6,
+        "correct": 0.3333333333333333,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.6666666666666666,
+        "success": 0.3333333333333333,
+        "alias": 0.0
+      },
+      "gapped-3-5": {
+        "n": 6,
+        "correct": 0.16666666666666666,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.8333333333333334,
+        "success": 0.16666666666666666,
+        "alias": 0.0
+      },
+      "gapped-6-12": {
+        "n": 8,
+        "correct": 0.0,
+        "diffrot": 0.125,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.125,
+        "none": 0.75,
+        "success": 0.125,
+        "alias": 0.0
+      },
+      "single": {
+        "n": 7,
+        "correct": 0.14285714285714285,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.0,
+        "none": 0.8571428571428571,
+        "success": 0.14285714285714285,
+        "alias": 0.0
+      }
+    },
+    "searchable": {
+      "overall": {
+        "n": 32,
+        "correct": 0.1875,
+        "diffrot": 0.0625,
+        "half": 0.03125,
+        "double": 0.0,
+        "wrong": 0.03125,
+        "none": 0.6875,
+        "success": 0.25,
+        "alias": 0.03125
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.1111111111111111,
+          "none": 0.6666666666666666,
+          "success": 0.2222222222222222,
+          "alias": 0.0
+        },
+        "10-30d": {
+          "n": 4,
+          "correct": 0.25,
+          "diffrot": 0.0,
+          "half": 0.25,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.5,
+          "success": 0.25,
+          "alias": 0.25
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 0.1111111111111111,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.6666666666666666,
+          "success": 0.3333333333333333,
+          "alias": 0.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.7777777777777778,
+          "success": 0.2222222222222222,
+          "alias": 0.0
+        },
+        ">30d": {
+          "n": 1,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        }
+      },
+      "by_coverage_class": {
+        "consecutive-2": {
+          "n": 3,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "consecutive-3-5": {
+          "n": 5,
+          "correct": 0.4,
+          "diffrot": 0.2,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.4,
+          "success": 0.6000000000000001,
+          "alias": 0.0
+        },
+        "consecutive-6-12": {
+          "n": 5,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.2,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.8,
+          "success": 0.0,
+          "alias": 0.2
+        },
+        "full": {
+          "n": 3,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "gapped-2": {
+          "n": 3,
+          "correct": 0.6666666666666666,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.3333333333333333,
+          "success": 0.6666666666666666,
+          "alias": 0.0
+        },
+        "gapped-3-5": {
+          "n": 4,
+          "correct": 0.25,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.75,
+          "success": 0.25,
+          "alias": 0.0
+        },
+        "gapped-6-12": {
+          "n": 5,
+          "correct": 0.0,
+          "diffrot": 0.2,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.2,
+          "none": 0.6,
+          "success": 0.2,
+          "alias": 0.0
+        },
+        "single": {
+          "n": 4,
+          "correct": 0.25,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.75,
+          "success": 0.25,
+          "alias": 0.0
+        }
+      }
+    },
+    "unsearchable": {
+      "overall": {
+        "n": 18,
+        "correct": 0.0,
+        "diffrot": 0.0,
+        "half": 0.0,
+        "double": 0.0,
+        "wrong": 0.05555555555555555,
+        "none": 0.9444444444444444,
+        "success": 0.0,
+        "alias": 0.0
+      },
+      "by_bin": {
+        "10-30d": {
+          "n": 4,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        ">30d": {
+          "n": 14,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.07142857142857142,
+          "none": 0.9285714285714286,
+          "success": 0.0,
+          "alias": 0.0
+        }
+      },
+      "by_coverage_class": {
+        "consecutive-2": {
+          "n": 4,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "consecutive-3-5": {
+          "n": 2,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.5,
+          "none": 0.5,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "full": {
+          "n": 1,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "gapped-2": {
+          "n": 3,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "gapped-3-5": {
+          "n": 2,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "gapped-6-12": {
+          "n": 3,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        },
+        "single": {
+          "n": 3,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 1.0,
+          "success": 0.0,
+          "alias": 0.0
+        }
+      }
+    }
+  },
+  "methods": {
+    "acf_fft": {
+      "overall": {
+        "n": 50,
+        "correct": 0.36,
+        "diffrot": 0.1,
+        "half": 0.02,
+        "double": 0.04,
+        "wrong": 0.48,
+        "none": 0.0,
+        "success": 0.45999999999999996,
+        "alias": 0.06,
+        "recall": 0.45999999999999996,
+        "top1_success": 0.3,
+        "error_rate": 0.0,
+        "median_rank": 1.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.8888888888888888,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.4444444444444444,
+          "error_rate": 0.0,
+          "median_rank": 3.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.25,
+          "diffrot": 0.125,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.625,
+          "none": 0.0,
+          "success": 0.375,
+          "alias": 0.0,
+          "recall": 0.375,
+          "top1_success": 0.25,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 0.6666666666666666,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.2222222222222222,
+          "none": 0.0,
+          "success": 0.7777777777777777,
+          "alias": 0.0,
+          "recall": 0.7777777777777777,
+          "top1_success": 0.6666666666666666,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.2222222222222222,
+          "wrong": 0.3333333333333333,
+          "none": 0.0,
+          "success": 0.4444444444444444,
+          "alias": 0.2222222222222222,
+          "recall": 0.4444444444444444,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.06666666666666667,
+          "double": 0.0,
+          "wrong": 0.9333333333333333,
+          "none": 0.0,
+          "success": 0.0,
+          "alias": 0.06666666666666667,
+          "recall": 0.0,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": null
+        }
+      }
+    },
+    "acf_fft_highpass": {
+      "overall": {
+        "n": 50,
+        "correct": 0.5,
+        "diffrot": 0.08,
+        "half": 0.1,
+        "double": 0.04,
+        "wrong": 0.28,
+        "none": 0.0,
+        "success": 0.58,
+        "alias": 0.14,
+        "recall": 0.58,
+        "top1_success": 0.22,
+        "error_rate": 0.0,
+        "median_rank": 5.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 1.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.6666666666666666,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.625,
+          "diffrot": 0.125,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.25,
+          "none": 0.0,
+          "success": 0.75,
+          "alias": 0.0,
+          "recall": 0.75,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": 14.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 1.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.2222222222222222,
+          "error_rate": 0.0,
+          "median_rank": 9.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.2222222222222222,
+          "wrong": 0.3333333333333333,
+          "none": 0.0,
+          "success": 0.4444444444444444,
+          "alias": 0.2222222222222222,
+          "recall": 0.4444444444444444,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.0,
+          "diffrot": 0.06666666666666667,
+          "half": 0.3333333333333333,
+          "double": 0.0,
+          "wrong": 0.6,
+          "none": 0.0,
+          "success": 0.06666666666666667,
+          "alias": 0.3333333333333333,
+          "recall": 0.06666666666666667,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": 21.0
+        }
+      }
+    },
+    "acf_fft_short": {
+      "overall": {
+        "n": 50,
+        "correct": 0.44,
+        "diffrot": 0.06,
+        "half": 0.02,
+        "double": 0.04,
+        "wrong": 0.44,
+        "none": 0.0,
+        "success": 0.5,
+        "alias": 0.06,
+        "recall": 0.5,
+        "top1_success": 0.36,
+        "error_rate": 0.0,
+        "median_rank": 1.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.8888888888888888,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.5555555555555556,
+          "error_rate": 0.0,
+          "median_rank": 3.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.375,
+          "diffrot": 0.0,
+          "half": 0.125,
+          "double": 0.0,
+          "wrong": 0.5,
+          "none": 0.0,
+          "success": 0.375,
+          "alias": 0.125,
+          "recall": 0.375,
+          "top1_success": 0.375,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 1.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.7777777777777778,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.2222222222222222,
+          "wrong": 0.3333333333333333,
+          "none": 0.0,
+          "success": 0.4444444444444444,
+          "alias": 0.2222222222222222,
+          "recall": 0.4444444444444444,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 1.0,
+          "none": 0.0,
+          "success": 0.0,
+          "alias": 0.0,
+          "recall": 0.0,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": null
+        }
+      }
+    },
+    "lombscargle": {
+      "overall": {
+        "n": 50,
+        "correct": 0.42,
+        "diffrot": 0.08,
+        "half": 0.08,
+        "double": 0.04,
+        "wrong": 0.38,
+        "none": 0.0,
+        "success": 0.5,
+        "alias": 0.12,
+        "recall": 0.5,
+        "top1_success": 0.22,
+        "error_rate": 0.0,
+        "median_rank": 2.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.5555555555555556,
+          "diffrot": 0.3333333333333333,
+          "half": 0.0,
+          "double": 0.1111111111111111,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 0.8888888888888888,
+          "alias": 0.1111111111111111,
+          "recall": 0.8888888888888888,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.5,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.5,
+          "none": 0.0,
+          "success": 0.5,
+          "alias": 0.0,
+          "recall": 0.5,
+          "top1_success": 0.25,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 1.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.5555555555555556,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.1111111111111111,
+          "half": 0.1111111111111111,
+          "double": 0.0,
+          "wrong": 0.5555555555555556,
+          "none": 0.0,
+          "success": 0.3333333333333333,
+          "alias": 0.1111111111111111,
+          "recall": 0.3333333333333333,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.06666666666666667,
+          "diffrot": 0.0,
+          "half": 0.2,
+          "double": 0.06666666666666667,
+          "wrong": 0.6666666666666666,
+          "none": 0.0,
+          "success": 0.06666666666666667,
+          "alias": 0.26666666666666666,
+          "recall": 0.06666666666666667,
+          "top1_success": 0.06666666666666667,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        }
+      }
+    },
+    "lombscargle_short": {
+      "overall": {
+        "n": 50,
+        "correct": 0.36,
+        "diffrot": 0.1,
+        "half": 0.06,
+        "double": 0.02,
+        "wrong": 0.46,
+        "none": 0.0,
+        "success": 0.45999999999999996,
+        "alias": 0.08,
+        "recall": 0.45999999999999996,
+        "top1_success": 0.32,
+        "error_rate": 0.0,
+        "median_rank": 1.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.5555555555555556,
+          "diffrot": 0.3333333333333333,
+          "half": 0.0,
+          "double": 0.1111111111111111,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 0.8888888888888888,
+          "alias": 0.1111111111111111,
+          "recall": 0.8888888888888888,
+          "top1_success": 0.5555555555555556,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.375,
+          "diffrot": 0.0,
+          "half": 0.375,
+          "double": 0.0,
+          "wrong": 0.25,
+          "none": 0.0,
+          "success": 0.375,
+          "alias": 0.375,
+          "recall": 0.375,
+          "top1_success": 0.375,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 0.8888888888888888,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.0,
+          "success": 1.0,
+          "alias": 0.0,
+          "recall": 1.0,
+          "top1_success": 0.7777777777777778,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.6666666666666666,
+          "none": 0.0,
+          "success": 0.3333333333333333,
+          "alias": 0.0,
+          "recall": 0.3333333333333333,
+          "top1_success": 0.1111111111111111,
+          "error_rate": 0.0,
+          "median_rank": 3.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.0,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 1.0,
+          "none": 0.0,
+          "success": 0.0,
+          "alias": 0.0,
+          "recall": 0.0,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": null
+        }
+      }
+    },
+    "pairwise_histogram": {
+      "overall": {
+        "n": 50,
+        "correct": 0.22,
+        "diffrot": 0.06,
+        "half": 0.02,
+        "double": 0.02,
+        "wrong": 0.2,
+        "none": 0.48,
+        "success": 0.28,
+        "alias": 0.04,
+        "recall": 0.28,
+        "top1_success": 0.2,
+        "error_rate": 0.0,
+        "median_rank": 1.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.3333333333333333,
+          "none": 0.2222222222222222,
+          "success": 0.4444444444444444,
+          "alias": 0.0,
+          "recall": 0.4444444444444444,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.375,
+          "diffrot": 0.125,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.0,
+          "none": 0.5,
+          "success": 0.5,
+          "alias": 0.0,
+          "recall": 0.5,
+          "top1_success": 0.25,
+          "error_rate": 0.0,
+          "median_rank": 4.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 0.3333333333333333,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.1111111111111111,
+          "wrong": 0.1111111111111111,
+          "none": 0.4444444444444444,
+          "success": 0.3333333333333333,
+          "alias": 0.1111111111111111,
+          "recall": 0.3333333333333333,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.3333333333333333,
+          "none": 0.4444444444444444,
+          "success": 0.2222222222222222,
+          "alias": 0.0,
+          "recall": 0.2222222222222222,
+          "top1_success": 0.2222222222222222,
+          "error_rate": 0.0,
+          "median_rank": 1.0
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.06666666666666667,
+          "diffrot": 0.0,
+          "half": 0.06666666666666667,
+          "double": 0.0,
+          "wrong": 0.2,
+          "none": 0.6666666666666666,
+          "success": 0.06666666666666667,
+          "alias": 0.06666666666666667,
+          "recall": 0.06666666666666667,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": 10.0
+        }
+      }
+    },
+    "wavelet": {
+      "overall": {
+        "n": 50,
+        "correct": 0.4,
+        "diffrot": 0.1,
+        "half": 0.06,
+        "double": 0.04,
+        "wrong": 0.4,
+        "none": 0.0,
+        "success": 0.5,
+        "alias": 0.1,
+        "recall": 0.5,
+        "top1_success": 0.16,
+        "error_rate": 0.0,
+        "median_rank": 2.0
+      },
+      "by_bin": {
+        "1-3d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.2222222222222222,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.5555555555555556,
+          "none": 0.0,
+          "success": 0.4444444444444444,
+          "alias": 0.0,
+          "recall": 0.4444444444444444,
+          "top1_success": 0.1111111111111111,
+          "error_rate": 0.0,
+          "median_rank": 3.0
+        },
+        "10-30d": {
+          "n": 8,
+          "correct": 0.375,
+          "diffrot": 0.125,
+          "half": 0.25,
+          "double": 0.125,
+          "wrong": 0.125,
+          "none": 0.0,
+          "success": 0.5,
+          "alias": 0.375,
+          "recall": 0.5,
+          "top1_success": 0.125,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        "3-10d": {
+          "n": 9,
+          "correct": 0.7777777777777778,
+          "diffrot": 0.1111111111111111,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.1111111111111111,
+          "none": 0.0,
+          "success": 0.8888888888888888,
+          "alias": 0.0,
+          "recall": 0.8888888888888888,
+          "top1_success": 0.3333333333333333,
+          "error_rate": 0.0,
+          "median_rank": 2.0
+        },
+        "<1d": {
+          "n": 9,
+          "correct": 0.2222222222222222,
+          "diffrot": 0.0,
+          "half": 0.0,
+          "double": 0.0,
+          "wrong": 0.7777777777777778,
+          "none": 0.0,
+          "success": 0.2222222222222222,
+          "alias": 0.0,
+          "recall": 0.2222222222222222,
+          "top1_success": 0.0,
+          "error_rate": 0.0,
+          "median_rank": 3.5
+        },
+        ">30d": {
+          "n": 15,
+          "correct": 0.4,
+          "diffrot": 0.06666666666666667,
+          "half": 0.06666666666666667,
+          "double": 0.06666666666666667,
+          "wrong": 0.4,
+          "none": 0.0,
+          "success": 0.4666666666666667,
+          "alias": 0.13333333333333333,
+          "recall": 0.4666666666666667,
+          "top1_success": 0.2,
+          "error_rate": 0.0,
+          "median_rank": 6.0
+        }
+      }
+    }
+  },
+  "union_recall": {
+    "overall": 0.72,
+    "by_bin": {
+      "1-3d": 1.0,
+      "10-30d": 0.875,
+      "3-10d": 1.0,
+      "<1d": 0.4444444444444444,
+      ">30d": 0.4666666666666667
+    }
+  },
+  "runtime": {
+    "median_seconds": 3.224170714001957,
+    "p90_seconds": 4.560393621701223
+  },
+  "errors": {
+    "n_star_errors": 0
+  },
+  "config": {
+    "scorecard_version": 4,
+    "git_commit": "9133239-dirty",
+    "rel_tol": 0.1,
+    "dataset": "datasets/dev_small.csv,data_root=data/smarts_dev,sectors=manifest",
+    "coverage": {
+      "spec": "full",
+      "seed": 0,
+      "weighting": "frequency",
+      "library": "datasets/coverage/all_cycles_patterns.csv"
+    },
+    "data_root": "data/smarts_dev",
+    "ignore_manifest_sectors": false,
+    "pipeline_methods": [
+      "pairwise_histogram",
+      "lombscargle",
+      "acf_fft"
+    ],
+    "n_guesses_default": 10,
+    "n_guesses_overrides": {
+      "acf_fft_highpass": 5
+    },
+    "wall_seconds": 47.638283014297485,
+    "created": "2026-10-22 09:46:05"
+  }
+}

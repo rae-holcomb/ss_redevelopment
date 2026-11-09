@@ -30,6 +30,13 @@ pattern (uses the global max_drop) or {"pattern": ..., "max_drop": ...}
 (one star in a 50-star bin = 0.02). Only Rae changes goals.json --
 agents may propose changes in their report but must not edit it.
 
+Metric groups added in scorecard v4 (T22/T23) are addressable the same way:
+final.by_band_width.<class>.*, final.by_coverage_class.<class>.*,
+final.searchable.{overall,by_bin,by_coverage_class}.* and final.unsearchable.*.
+Baselines written before v4 lack these keys: a goal or guard on them reports
+"n/a" for the baseline and cannot trip, so they are reported, not guarded,
+until a v4 baseline exists.
+
 Usage
 -----
     python benchmarks/check_goals.py runs/new/metrics.json
