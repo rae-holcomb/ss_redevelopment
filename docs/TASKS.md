@@ -639,7 +639,7 @@ for confirmation (ask Rae first).
 
 ### T22. Scorecard v4: band-width breakdown + version bump
 - **Agent:** `method-improver` (small; scorecard reporting only)
-- **Status:** done 2026-10-22, awaiting review (branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
+- **Status:** done, merged 2026-11-09 (was branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
 - **Do:**
   - Bump `SCORECARD_VERSION` to 4, covering T16b's descriptor columns and `per_candidate.csv`.
   - Add **metrics** `final.by_band_width.<class>.{...outcome fractions...}`, using classes of
@@ -651,7 +651,7 @@ for confirmation (ask Rae first).
 
 ### T23. Scorecard/evaluation: `searchable` flag and searchable-subset metrics (from D4, 2026-10-22)
 - **Agent:** `method-improver` (evaluation + scorecard reporting; definitions approved by Rae in D4)
-- **Status:** done 2026-10-22, awaiting review (branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
+- **Status:** done, merged 2026-11-09 (was branch `claude/t22-t23-scorecard-v4-f5b694`; report `reports/2026-10-22_scorecard-v4-bandwidth-searchable/`; single bump to SCORECARD_VERSION 4; v4 baselines in benchmarks/baselines/*_v4.json).
 - **Do:**
   - **`evaluation.py`:**
     - a frozen `acf_reach(time, flux)` (valid-pair fraction 0.3, independent of the pipeline's `compute_acf` default);
@@ -1146,8 +1146,8 @@ for confirmation (ask Rae first).
 
 ### P22. Searchable-range follow-ups from T16c
 - **Proposed by:** T16c (2026-10-22), `reports/2026-10-22_t16c-searchable-range/`.
-- **Ideas:** (a) once T23's `evaluation.acf_reach` is on main, add a test that it equals
-  `coverage.searchable_range(t, f)["reach"]` (T16c tests against an independent brute-force reference meanwhile);
+- **Ideas:** (a) **done 2026-11-09:** `test_reach_matches_frozen_evaluation_reference` checks that `evaluation.acf_reach`
+  equals `coverage.searchable_range(t, f)["reach"]`. It found the missing 0.7-baseline cap in `searchable_range`, now fixed;
   (b) record `EnsembleResult.beyond_reach_candidates` in the scorecard's `per_candidate.csv` (`beyond_reach`
   column), e.g. in T23's scorecard bump; (c) for T16d: skip `pairwise_histogram` when R < ~30 d (it returns no
   candidates for ~2/3 of 1–2-sector stars); investigate single-sector LS top-1 errors (sector/ramp systematics,
