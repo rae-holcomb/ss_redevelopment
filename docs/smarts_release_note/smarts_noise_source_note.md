@@ -53,19 +53,24 @@ simulation number (`SIM_ID`). The injection is multiplicative: (file flux) f = (
 
 # 2. Corrupted Segments
 
-Some noise light curves contain **corrupted segments**: stretches, typically a few
-weeks long, in which the normalized flux swings violently and takes unphysical values,
-well outside the ±1% or so typical of the rest of the light curve (Fig. 1). We do not
-know their origin. Because the noise is multiplied into the simulation, the corruption
-appears in every file that uses that noise light curve, whatever the simulated star.
+Some noise light curves contain **corrupted segments**: extended stretches, typically
+about one TESS sector (roughly 27 d) long, in which the flux is extremely noisy and
+takes unphysical values, far outside the ±1% or so typical of the rest of the light
+curve (Fig. 1). We do not know their origin. Because the noise is multiplied into the
+simulation, the corruption appears in every file that uses that noise light curve,
+whatever the simulated star.
 
-- 203 of the 1,719 noise light curves (12%; 130,545 files) depart from 1 by more than
-  0.1 somewhere in the year. Of these, 134 (85,745 files) exceed 1, and the largest
-  departure is 357. The flux goes negative in 125 noise light curves.
-- A few of the 203 are brief spikes or very strong real signals, not weeks-long
-  segments, so 0.1 is an inclusive threshold.
-- The files do not carry a quality flag for these segments. Sources affected are
-  identified in the per-source table by `frac_corrupt` > 0.5 (Section 8).
+We count a stretch as a corrupted segment if it lasts at least 5 d and at least 30% of
+its cadences depart from a normalized flux of 1 by more than 0.1.
+
+- **10% of the noise light curves contain at least one corrupted segment:** 168 of
+  the 1,719, used by 106,066 files (10.6%). The median segment lasts 28 d. Most of
+  these noise light curves (139) have a single segment; the other 29 have two to four.
+- The flux departs from 1 by more than 1 in 133 of the 168, and by as much as 357. It
+  goes negative in 125.
+- The files do not carry a quality flag for these segments. All 168 have
+  `frac_corrupt` > 0.5 in the per-source table (Section 8). That cut also selects 35
+  sources without an extended segment, so treat it as a starting point.
 
 **Any analysis of the raw flux should remove these segments first.** Mask each whole
 segment rather than only the cadences beyond a threshold, because the flux repeatedly
