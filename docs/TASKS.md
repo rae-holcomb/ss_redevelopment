@@ -394,7 +394,7 @@ for confirmation (ask Rae first).
   to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
   ACF pair-coverage edge (ACF long-period report, open issue 14a).
 - **Agent:** `method-improver`
-- **Status:** ready (T16b done; D4 decided 2026-10-22)
+- **Status:** done, accepted 2026-11-09 (`reports/2026-10-22_t16c-searchable-range/`). Rae kept every recommendation: a single R/2 for all classes, `min_valid_frac` 0.3, P_min = 4 cadences, and the draft goals (to add once v4 is on main). T16h unblocked (`searchable_range`).
 - **Do:** define the maximum searchable / reportable period as a function of
   coverage (longest contiguous span, total baseline, ACF valid-pair coverage).
   Measure reliability (success vs wrong) as P approaches each candidate limit, and
@@ -479,7 +479,7 @@ for confirmation (ask Rae first).
 
 #### T16h. Batch-wise search and combination across sector clusters (from D4, 2026-10-22)
 - **Agent:** `method-improver`
-- **Status:** blocked on T16c (`searchable_range`). Phase 1 can use SMARTS now; multi-year tests need T16g.
+- **Status:** ready (T16c merged-pending: `coverage.searchable_range` on branch `claude/t16c-searchable-range-6f41b7`). Phase 1 can use SMARTS now; multi-year tests need T16g.
 - **Idea (Rae):** split the whole-mission light curve into **batches** of adjacent or near-adjacent sectors. Search each
   batch separately, then compare the batches. This generalizes D2's season-by-season approach to clusters within a year.
 - **Do:**
@@ -1143,3 +1143,13 @@ for confirmation (ask Rae first).
   unaffected (`wavelet` isn't pooled), but `tools/compare_runs.py` then reports `DIFFERENT` for identical results.
   Find the source (a threshold at a float tie? worker-dependent state?) and fix it, or have `compare_runs` report
   non-pooled methods separately. See `reports/2026-10-21_t21-loader-no-usable-sectors/`.
+
+### P22. Searchable-range follow-ups from T16c
+- **Proposed by:** T16c (2026-10-22), `reports/2026-10-22_t16c-searchable-range/`.
+- **Ideas:** (a) once T23's `evaluation.acf_reach` is on main, add a test that it equals
+  `coverage.searchable_range(t, f)["reach"]` (T16c tests against an independent brute-force reference meanwhile);
+  (b) record `EnsembleResult.beyond_reach_candidates` in the scorecard's `per_candidate.csv` (`beyond_reach`
+  column), e.g. in T23's scorecard bump; (c) for T16d: skip `pairwise_histogram` when R < ~30 d (it returns no
+  candidates for ~2/3 of 1–2-sector stars); investigate single-sector LS top-1 errors (sector/ramp systematics,
+  not window aliasing); (d) a synthetic suite with log-uniform P/R in 0.2–0.8 per coverage class to tighten the R/2
+  validation near the edge; (e) a short-period synthetic suite to measure a "reliable from" P floor (T16d or D1; Rae's call).

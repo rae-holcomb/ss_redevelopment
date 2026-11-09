@@ -1110,6 +1110,28 @@ Description  : How close the candidate sits to the TESS orbit period, the
                Uses fitted_P only; independent of the light curve.
 Stage        : 5 (feature extraction).
 
+--------------------------------------------------------------------------
+P_over_reach   (added 2026-10-22, task T16c)
+--------------------------------------------------------------------------
+Definition   : fitted_P / R, where R is the ACF reach from
+               coverage.searchable_range(time, flux): the last lag before the
+               valid-pair count of the finite-cadence mask first drops below
+               0.3 x its lag-0 value (the number of finite cadences). Time
+               sampling only. ml_features._reach_features. NaN if undefined.
+Description  : Decision D4's searchable-range coordinate. R is ~0.69x the
+               longest contiguous segment and does not bridge sector gaps;
+               the comb fit skips candidates with P > R/2 (tagged
+               beyond_reach), so fitted candidates normally have
+               P_over_reach <= ~0.5 (the fit can move P a few percent past
+               it). On T16b's data success was flat up to 0.5 and ~0 beyond,
+               and T16c measured how wrong answers grow toward 0.5 per
+               coverage class (reports/2026-10-22_t16c-searchable-range).
+               Close cousin of P_over_longest_segment (R ~ 0.69 x longest
+               segment for one segment), but it uses the exact pair-coverage
+               rule the fit and scoring use, so it stays consistent if
+               several segments overlap at lag P.
+Stage        : 5 (feature extraction).
+
 
 ================================================================================
 LABEL (TRAINING ONLY)

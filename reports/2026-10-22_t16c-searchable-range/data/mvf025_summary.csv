@@ -1,0 +1,6 @@
+run,n,success_30,success_25,wrong_30,wrong_25,alias_30,alias_25,n_changed,gained_success,lost_success,new_wrong,fixed_wrong
+dm_assigned,1000,0.148,0.148,0.054,0.059,0.009,0.01,14,2,2,8,3
+syn_single,200,0.325,0.325,0.01,0.01,0.005,0.005,0,0,0,0,0
+syn_consecutive-2,200,0.42,0.425,0.02,0.02,0.015,0.015,1,1,0,0,0
+syn_gapped-2,200,0.345,0.345,0.01,0.005,0.005,0.005,4,2,2,0,1
+dm_full,1000,0.248,0.251,0.088,0.092,0.014,0.015,23,8,5,5,1

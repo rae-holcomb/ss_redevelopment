@@ -1,0 +1,7 @@
+case,star_id,coverage_class,true_period,R,truth_over_R,final_period,final_outcome
+success near the limit (P/R 0.4-0.5),smarts-tess-v1.0-044671,gapped-2,8.1172,17.687499999983913,0.4265807005218312,7.682319214337696,correct
+declined inside reach (P/R 0.3-0.5),smarts-tess-v1.0-026485,single,4.8331,15.104166666673535,0.3199845517239924,,none
+wrong on an unsearchable star (P/R > 0.5),smarts-tess-v1.0-108023,consecutive-2,19.53,36.08333333334974,0.5412471131637262,0.1729136558774221,wrong
+"unsearchable, correctly declined",smarts-tess-v1.0-082507,gapped-2,14.9045,16.374999999996277,1.0115319002732042,,none
+pairwise_histogram: no candidates,smarts-tess-v1.0-000011,gapped-2,0.103,20.04166666666211,0.0051392931392943075,,none
+gapped-2: reach = one sector,smarts-tess-v1.0-048739,gapped-2,8.8347,18.750000000008527,0.5817478895957084,,none

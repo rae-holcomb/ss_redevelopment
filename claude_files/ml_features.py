@@ -45,7 +45,7 @@ from alias_metrics import (  # shared with comb_fit (T18); moved verbatim from h
     fold_half_cycle_corr as _fold_half_cycle_corr,
 )
 from comb_fit import EnsembleResult
-from coverage import GAP_SPLIT_DAYS, sampling_descriptors
+from coverage import GAP_SPLIT_DAYS, sampling_descriptors, searchable_range
 from guesses import _peak_coverage_fraction
 
 
@@ -848,6 +848,23 @@ def _candidate_coverage_features(P: float, star_cov: dict, segment_days: np.ndar
     )
 
 
+def _reach_features(P: float, reach: float) -> dict:
+    """Per-candidate searchable-range feature (T16c, D4).
+
+    Parameters
+    ----------
+    P : the candidate's fitted period (days).
+    reach : the light curve's ACF reach R (coverage.searchable_range).
+
+    Returns
+    -------
+    dict with P_over_reach = P / R (NaN if either is undefined). D4: the
+    searchable limit is P/R = 0.5; success was flat below it and ~0 above.
+    """
+    ok = np.isfinite(P) and P > 0 and np.isfinite(reach) and reach > 0
+    return dict(P_over_reach=(P / reach) if ok else np.nan)
+
+
 # ==========================================================================
 # Top-level extraction function
 # ==========================================================================
@@ -925,6 +942,7 @@ def extract_candidate_features(
     method_reps = _group_guesses_by_method(guesses)
     lc_features = _lightcurve_level_features(time, flux, sectors=sectors)
     star_cov, segment_days = _star_coverage_features(time, flux)
+    reach = searchable_range(time, flux)["reach"]
 
     # --- per-candidate (intrinsic) features ---
     rows = []
@@ -1010,6 +1028,7 @@ def extract_candidate_features(
         row.update(lc_features)
         row.update(star_cov)
         row.update(_candidate_coverage_features(fit.P, star_cov, segment_days))
+        row.update(_reach_features(fit.P, reach))
         rows.append(row)
 
     df = pd.DataFrame(rows)

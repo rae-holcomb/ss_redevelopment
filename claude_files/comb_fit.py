@@ -43,13 +43,14 @@ of this same design discussion.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Callable, Optional, Union
 
 import numpy as np
 from scipy.optimize import least_squares as scipy_least_squares
 
 from alias_metrics import acf_window_max, half_lag_contrast_terms
+from coverage import PMIN_CADENCES, REACH_PERIOD_FRAC, reach_from_pair_counts
 from guesses import InitialGuess
 
 
@@ -1257,6 +1258,11 @@ class CandidateResult:
     # before and does not read this dict. None for candidates that errored
     # during fitting.
     gate_results: Optional[dict] = None
+    # T16c (2026-10-22, D4): True if the candidate's period is beyond the
+    # searchable range (P0 > p_max = R/2, R = ACF reach). Such candidates
+    # are recorded in EnsembleResult.beyond_reach_candidates with fit=None
+    # but are never fit (the comb fit skips them at entry).
+    beyond_reach: bool = False
 
     @property
     def failed_gates(self) -> list:
@@ -1278,12 +1284,62 @@ class EnsembleResult:
     failed_candidates: list  # list[CandidateResult] that errored during fitting
     few_peaks: bool = False  # the selected candidate passed a relaxed (< min_peaks_required) peak gate
     # T16b (2026-10-21): None on success. On a decline, a dict saying why:
-    # kind ('no_guesses' | 'none_sane' | 'none_fit' | 'gates'); for 'gates',
+    # kind ('no_guesses' | 'none_sane' | 'all_beyond_reach' | 'none_fit' | 'gates'); for 'gates',
     # also gates (union of the gates that rejected the DECLINE_TOP_N
     # best-fitting candidates, GATE_NAMES order), best_candidates (their P,
     # redchi and failed gates), gate_fail_counts / sole_gate_counts over all
     # fitted candidates (how many failed each gate / failed only that gate).
     decline_reason: Optional[dict] = None
+    # T16c (2026-10-22, D4): the searchable period range used to skip
+    # candidates, dict(p_min, reach, p_max, source) (see
+    # _resolve_searchable_range), or None if no range was applied.
+    searchable_range: Optional[dict] = None
+    # Deduplicated candidates with P0 > searchable_range['p_max'], kept for
+    # the record (CandidateResult with beyond_reach=True, fit=None) but
+    # never fit. Not counted in n_candidates_tried.
+    beyond_reach_candidates: list = field(default_factory=list)
+
+
+def _resolve_searchable_range(max_period, acf_lags: np.ndarray,
+                              acf_counts: Optional[np.ndarray]) -> Optional[dict]:
+    """The searchable range fit_rotation_period applies (T16c, D4).
+
+    Parameters
+    ----------
+    max_period : "auto" | None | float | dict.
+        "auto": if acf_counts is given, R = coverage.reach_from_pair_counts(
+        acf_lags, acf_counts) and p_max = R/2 (source "acf_counts"); without
+        counts, no range (None). With compute_acf's default truncation
+        (min_valid_frac 0.3) this R equals coverage.searchable_range's
+        except when the max_lag_frac cap binds first (contiguous data: R
+        then differs by < 1 cadence).
+        None: no range; every candidate is fit (pre-T16c behavior).
+        float: p_max directly (source "explicit").
+        dict: a coverage.searchable_range(time, flux) result (source
+        "searchable_range"); its p_max is used.
+    acf_lags, acf_counts : as passed to fit_rotation_period.
+
+    Returns
+    -------
+    dict(p_min, reach, p_max, source) or None.
+    """
+    if max_period is None:
+        return None
+    if isinstance(max_period, dict):
+        return dict(p_min=float(max_period.get("p_min", np.nan)),
+                    reach=float(max_period.get("reach", np.nan)),
+                    p_max=float(max_period["p_max"]), source="searchable_range")
+    dt = float(np.median(np.diff(acf_lags)))
+    if isinstance(max_period, str):
+        if max_period != "auto":
+            raise ValueError(f"max_period must be 'auto', None, a float or a dict, not {max_period!r}")
+        if acf_counts is None:
+            return None
+        reach = reach_from_pair_counts(acf_lags, acf_counts)
+        return dict(p_min=PMIN_CADENCES * dt, reach=reach, p_max=REACH_PERIOD_FRAC * reach,
+                    source="acf_counts")
+    return dict(p_min=PMIN_CADENCES * dt, reach=float("nan"), p_max=float(max_period),
+                source="explicit")
 
 
 # Gate names, in the order fit_rotation_period documents them (steps 4, 4b).
@@ -1543,6 +1599,7 @@ def fit_rotation_period(
     half_lag_strong_contrast: float = 0.1,
     half_lag_fallback_min: Optional[float] = None,
     few_peaks_min_acf_height: Optional[float] = 0.4,
+    max_period: Union[str, float, dict, None] = "auto",
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -1579,6 +1636,13 @@ def fit_rotation_period(
        recorded on the resulting CandidateResult (contributing_methods,
        n_duplicate_guesses) even though only the representative gets
        fit -- that provenance is exactly what would otherwise be lost.
+
+    2b. Searchable range (T16c, D4 2026-10-22): a deduplicated candidate
+       whose representative P0 exceeds p_max = R/2 (R = ACF reach, see
+       max_period) is tagged beyond_reach and recorded in
+       EnsembleResult.beyond_reach_candidates without being fit. Stage 1
+       is not capped; the skip happens after dedup, so every in-reach
+       candidate is grouped and fit exactly as before.
 
     3. For each surviving candidate:
          a. If it doesn't already have a t0 (candidate generation doesn't
@@ -1722,6 +1786,10 @@ def fit_rotation_period(
         mean contrast > this value); 0.0 is the T18 report's option D.
     few_peaks_min_acf_height : minimum raw ACF height near lag P for
         few_peaks candidates (step 4b); None disables the guard.
+    max_period : searchable range for step 2b: "auto" (default; p_max = R/2
+        from acf_counts, no range without counts), None (fit everything,
+        the pre-T16c behavior), a float p_max, or a
+        coverage.searchable_range() dict. See _resolve_searchable_range.
     alias_guard, alias_ratio_threshold, alias_rel_tol : factor-of-2 guard
         (step 5). Pairs are ~2x related if their fitted-period ratio is
         within alias_rel_tol (relative) of 2; the long period wins if the
@@ -1802,6 +1870,36 @@ def fit_rotation_period(
 
     deduped = [max(group, key=_strength_key) for group in merged_groups]
 
+    # --- step 2b: searchable range (T16c). Skip after dedup so in-reach
+    # groups (and their representatives) are unchanged. ---
+    srange = _resolve_searchable_range(max_period, acf_lags, acf_counts)
+    beyond = []
+    if srange is not None and np.isfinite(srange["p_max"]):
+        keep = [i for i, g in enumerate(deduped) if not g.P0 > srange["p_max"]]
+        for i in sorted(set(range(len(deduped))) - set(keep)):
+            g, group = deduped[i], merged_groups[i]
+            beyond.append(CandidateResult(
+                period=g.P0, t0=g.t0 if g.t0 is not None else float("nan"), source_guess=g,
+                fit=None, diagnostics=None, passed_gates=False, beyond_reach=True,
+                n_duplicate_guesses=len(group) - 1,
+                contributing_methods=tuple(sorted(set(gg.method for gg in group))),
+            ))
+        deduped = [deduped[i] for i in keep]
+        merged_groups = [merged_groups[i] for i in keep]
+
+    if len(deduped) == 0 and beyond:
+        return EnsembleResult(
+            success=False,
+            message=(
+                f"All {len(beyond)} candidate period(s) are beyond the searchable "
+                f"range (P > {srange['p_max']:.4g} d = R/2, ACF reach R = "
+                f"{srange['reach']:.4g} d); none were fit."
+            ),
+            best_fit=None, best_guess=None, candidates=[],
+            n_candidates_tried=0, failed_candidates=[],
+            decline_reason=dict(kind="all_beyond_reach", n_beyond_reach=len(beyond)),
+            searchable_range=srange, beyond_reach_candidates=beyond,
+        )
     if len(deduped) == 0:
         return EnsembleResult(
             success=False,
@@ -1812,6 +1910,7 @@ def fit_rotation_period(
             ),
             best_fit=None, best_guess=None, candidates=[],
             n_candidates_tried=0, failed_candidates=[], decline_reason=dict(kind="none_sane"),
+            searchable_range=srange,
         )
 
     # --- fit every surviving candidate ---
@@ -1910,6 +2009,7 @@ def fit_rotation_period(
             best_fit=None, best_guess=None, candidates=[],
             n_candidates_tried=len(deduped), failed_candidates=failed,
             decline_reason=dict(kind="none_fit", n_failed=len(failed)),
+            searchable_range=srange, beyond_reach_candidates=beyond,
         )
 
     # Optional fallback tier (step 4b): nothing passed the T18 gates, so
@@ -1958,6 +2058,7 @@ def fit_rotation_period(
             best_guess=InitialGuess(P0=best.period, t0=best.t0, method="ensemble_best_unreliable"),
             candidates=fit_ok, n_candidates_tried=len(deduped),
             failed_candidates=failed, decline_reason=reason,
+            searchable_range=srange, beyond_reach_candidates=beyond,
         )
 
     best = passing[0]
@@ -1979,4 +2080,5 @@ def fit_rotation_period(
         best_guess=InitialGuess(P0=best.period, t0=best.t0, method="ensemble_best"),
         candidates=fit_ok, n_candidates_tried=len(deduped),
         failed_candidates=failed, few_peaks=bool(best.few_peaks),
+        searchable_range=srange, beyond_reach_candidates=beyond,
     )

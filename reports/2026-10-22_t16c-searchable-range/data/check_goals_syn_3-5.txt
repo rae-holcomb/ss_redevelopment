@@ -1,0 +1,20 @@
+Run: runs/t16c/after/syn_3-5/metrics.json  (dataset synthetic:n=200,seed=0,coverage=3-5,coverage_weighting=frequency,coverage_seed=0,coverage_library=all_cycles, commit 736b16f)
+Baseline: runs/t16c/before/syn_3-5/metrics.json  (commit 9133239)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.480   0.480  +0.000  0.020  final.overall.success
+  0.578   0.578  +0.000  0.060  final.by_bin.1-3d.success
+  0.279   0.279  +0.000  0.060  final.by_bin.10-30d.success
+  0.583   0.583  +0.000  0.060  final.by_bin.3-10d.success
+  0.529   0.529  +0.000  0.060  final.by_bin.<1d.success
+  0.125   0.125  +0.000  0.060  final.by_bin.>30d.success
+  0.822   0.822  +0.000  0.060  union_recall.by_bin.1-3d
+  0.953   0.953  +0.000  0.060  union_recall.by_bin.10-30d
+  0.944   0.944  +0.000  0.060  union_recall.by_bin.3-10d
+  0.779   0.779  +0.000  0.060  union_recall.by_bin.<1d
+  1.000   1.000  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS

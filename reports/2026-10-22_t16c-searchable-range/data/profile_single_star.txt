@@ -1,0 +1,16 @@
+         707695 function calls in 2.637 seconds
+
+   Ordered by: cumulative time
+   List reduced from 317 to 8 due to restriction <8>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.002    0.002    2.637    2.637 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:1575(fit_rotation_period)
+       27    0.011    0.000    2.295    0.085 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:623(_fit_single_candidate)
+       48    0.006    0.000    2.264    0.047 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:487(_fit_comb_core)
+       48    0.001    0.000    2.231    0.046 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/_lib/_util.py:677(inner)
+       48    0.004    0.000    2.229    0.046 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:266(least_squares)
+       48    0.001    0.000    2.191    0.046 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:113(trf)
+       48    0.162    0.003    2.190    0.046 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:206(trf_bounds)
+     1473    0.024    0.000    0.398    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/_lib/_util.py:1196(wrapper)
+
+
