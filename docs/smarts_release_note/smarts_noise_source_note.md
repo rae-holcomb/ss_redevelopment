@@ -45,12 +45,15 @@ are 1,719 distinct noise light curves in total, each reused in 210–1,082 files
 The noise source of each file is listed in `galaxy_files.csv`, keyed by the
 simulation number (`SIM_ID`).
 
-**The injection is multiplicative:** file flux = noise flux × simulated stellar flux.
-We verified this using the noise light curves that contain corrupted orbits, where
-the noise flux departs from 1 by factors of 3 to 100. There the residual
-file − noise grows with the noise flux (by 6.2× where |noise − 1| > 3), while
-file / noise − 1 stays flat (1.17×). A consequence is that a contaminant's
-*relative* amplitude is the same in every file that uses that noise light curve.
+**The injection is multiplicative:** file flux f = noise flux g × simulated stellar
+flux s. Normally g ≈ 1, so multiplicative and additive injection are nearly
+indistinguishable. They separate in the roughly 12% of noise light curves that contain
+corrupted segments: orbit-length stretches where the normalized flux is unphysical
+(|g − 1| up to about 100, sometimes negative), and which appear in every file using
+that noise source. Where |g − 1| > 3, the residual f − g is 6.2× larger than in clean
+cadences, while f/g − 1 is unchanged (1.17×), as expected for f = g × s. This means
+that the median of many files sharing a noise light curve recovers g up to a constant,
+which is the basis of the stacking in Section 2.
 
 # 2. How we tested the noise light curves
 
@@ -325,7 +328,7 @@ light curve:
 | `n_gaia_nb_bright` | of those, sources with G < Tmag + 1 |
 | `n_gaia_nb_var` | of those, sources with Gaia `VarFlag` = VARIABLE |
 | `gaia_nb_var_classes` | Gaia DR3 variability classes of those variables (`;`-separated; from `vari_classifier_result`) |
-| `frac_corrupt` | fraction of the source's files with corrupted orbits (|flux − 1| > 0.1; these affect every file using the source) |
+| `frac_corrupt` | fraction of the source's files with at least one cadence deviating from a normalized flux of 1 by more than 0.1. High values mark corrupted segments, but a very strong real signal can also trigger it |
 | `ffi_lc_authors` | HLSP(s) used for the FFI check (QLP, TASOC, GSFC-ELEANOR-LITE) |
 | `ffi_sectors` | TESS sectors checked (`;`-separated) |
 | `ffi_match` | for confirmed sources, which multiple matched: `P`, `P/2` or `2P` |
