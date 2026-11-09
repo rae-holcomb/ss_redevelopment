@@ -26,7 +26,7 @@ Inputs:
 Usage::
 
     PY=/opt/anaconda3/envs/ss_openblas/bin/python
-    $PY tools/audit/smarts_release_products.py sources     # per-source table (no drive needed)
+    $PY tools/audit/smarts_release_products.py sources     # per-source table (needs the drive)
     $PY tools/audit/smarts_release_products.py files       # per-file table -> drive (~1 min)
     $PY tools/audit/smarts_release_products.py figures     # note figures (no drive needed)
     $PY tools/audit/smarts_release_products.py figure-corrupted   # corrupted-segment example (needs the drive)
@@ -50,6 +50,10 @@ NOTE_DIR = REPO / "docs" / "smarts_release_note"
 SOURCES_OUT = NOTE_DIR / "smarts_noise_sources.csv"
 FILES_OUT_NAME = "smarts_noise_source_flags.csv.gz"
 LMC_RA, LMC_DEC, LMC_NEAR_DEG = 80.89, -69.76, 4.0   # as in galaxy_phase2_analysis.py
+# Corrupted segment: |flux - 1| > CORRUPT_DEV cadences, joined across gaps of up to CORRUPT_MERGE_D,
+# lasting at least CORRUPT_MIN_D with at least CORRUPT_MIN_FRAC of its cadences beyond CORRUPT_DEV.
+CORRUPT_DEV, CORRUPT_MERGE_D, CORRUPT_MIN_D, CORRUPT_MIN_FRAC = 0.1, 2.0, 10.0, 0.2
+CADENCES_PER_DAY = 48
 
 CLASS_ORDER = ["contamination_known_variable", "contamination_candidate_crowded",
                "source_specific_unexplained", "systematic_common_mode", "misclassified_star", "quiet"]
@@ -83,7 +87,6 @@ SOURCE_EXTRA = {   # per-source table only
     "n_nb_brighter": "n_gaia_nb_bright",
     "n_nb_var": "n_gaia_nb_var",
     "nb_var_classes": "gaia_nb_var_classes",
-    "frac_corrupt": "frac_corrupt",
 }
 FFI_COLUMNS = ["ffi_check", "ffi_lc_authors", "ffi_sectors", "ffi_match", "ffi_n_sectors_matching",
                "ffi_n_sectors"]
@@ -108,8 +111,32 @@ def ffi_results() -> pd.DataFrame:
     return f.set_index("noise_tic")[FFI_COLUMNS]
 
 
-def public_sources() -> pd.DataFrame:
-    """The 1,719-row public per-source table (all columns documented in the note)."""
+def corrupted_segments(g: np.ndarray) -> list[tuple[int, int]]:
+    """(first, last) cadence of each corrupted segment in noise light curve ``g``."""
+    dev = np.abs(g - 1) > CORRUPT_DEV
+    i = np.flatnonzero(dev)
+    if not len(i):
+        return []
+    br = np.flatnonzero(np.diff(i) > CORRUPT_MERGE_D * CADENCES_PER_DAY)
+    runs = zip(np.r_[i[0], i[br + 1]], np.r_[i[br], i[-1]])
+    return [(int(a), int(b)) for a, b in runs
+            if (b - a + 1) / CADENCES_PER_DAY >= CORRUPT_MIN_D and dev[a:b + 1].mean() >= CORRUPT_MIN_FRAC]
+
+
+def corrupted_flags(root: Path) -> pd.Series:
+    """Per noise TIC: does its stacked noise light curve contain a corrupted segment?"""
+    sdir = sd.extract_dir(root, "galaxy_stack")
+    S = np.load(sdir / "stacks.npy", mmap_mode="r")[:, 2]
+    tics = pd.read_csv(sdir / "stack_index.csv").tic
+    return pd.Series([bool(corrupted_segments(np.asarray(g, float))) for g in S], index=tics.values,
+                     name="has_corrupted_segment")
+
+
+def public_sources(root: Path | None = None) -> pd.DataFrame:
+    """The 1,719-row public per-source table (all columns documented in the note).
+
+    With ``root`` (the drive), includes ``has_corrupted_segment``; figures don't need it.
+    """
     src = pd.read_csv(T20 / "sources.csv")
     assert len(src) == 1719 and src.tic.is_unique
     out = src[list(SOURCE_COLUMNS) + list(SOURCE_EXTRA)].rename(columns={**SOURCE_COLUMNS, **SOURCE_EXTRA})
@@ -121,6 +148,9 @@ def public_sources() -> pd.DataFrame:
     out["ffi_check"] = out.ffi_check.fillna("not_tested")
     for c in ("ffi_n_sectors_matching", "ffi_n_sectors", "n_gaia_nb", "n_gaia_nb_bright", "n_gaia_nb_var"):
         out[c] = out[c].astype("Int64")
+    if root is not None:
+        out.insert(out.columns.get_loc("near_lmc") + 1, "has_corrupted_segment",
+                   out.noise_tic.map(corrupted_flags(root)).astype(bool))
     out.insert(1, "noise_lc_file", "TIC" + out.noise_tic.astype(str) + "_full.lc.fits")
     return out
 
@@ -138,7 +168,7 @@ def public_files(root: Path, src: pd.DataFrame) -> pd.DataFrame:
     pm = chk.periodic_y
     assert np.allclose(chk.P_ref[pm], chk.P_ref_d[pm])
     per_file = src[["noise_tic"] + [c for c in src.columns if c in SOURCE_COLUMNS.values()
-                                   and c != "noise_tic"] + ["ffi_check"]]
+                                   and c != "noise_tic"] + ["has_corrupted_segment", "ffi_check"]]
     out = pd.DataFrame({"file_number": flags.row,
                         "filename": [f"smarts-tess-v1.0-{r:06d}.fits" for r in flags.row],
                         "sim_id": flags.sim_id, "noise_tic": flags.tic})
@@ -302,12 +332,13 @@ def main(argv=None):
     ap.add_argument("what", choices=["sources", "files", "figures", "figure-corrupted"])
     ap.add_argument("--data-root", default=None, help="SMARTS data root (default $SMARTS_DATA_ROOT or the drive)")
     args = ap.parse_args(argv)
-    if args.what in ("files", "figure-corrupted"):
+    root = None
+    if args.what in ("sources", "files", "figure-corrupted"):
         root = sd.require_drive(sd.data_root(args.data_root))
     if args.what == "figure-corrupted":
         fig_corrupted(NOTE_DIR / "figures", root)
         return
-    src = public_sources()
+    src = public_sources(root)
     if args.what == "sources":
         NOTE_DIR.mkdir(parents=True, exist_ok=True)
         with sd.atomic_path(SOURCES_OUT) as tmp:
