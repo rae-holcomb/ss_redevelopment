@@ -1,0 +1,179 @@
+--- a/docs/smarts_release_note/smarts_noise_source_note.md
++++ b/docs/smarts_release_note/smarts_noise_source_note.md
+@@ -19,17 +19,27 @@
+ dataset and searched each for periodic signals. Our findings:
+ 
+ - **Many (about 10%) light curves contain corrupted segments with artificially large noise.** These segments should be filtered out before use.
+-- **206 of the 1,719 noise light curves (12%) carry a persistent periodic signal.**
+-  They underlie **121,502 of the 1,000,000 SMARTS files (12.2%)**. Periods range from
+-  0.15 to 32 d (median 3.4 d), with amplitudes from about 100 ppm to 5.5%.
+-- **Most of these are contamination by neighbouring stars.**
+-  - 90 sources have a Gaia DR3 variable within 63″, including eclipsing binaries,
+-    Cepheids, RR Lyrae and δ Scuti stars.
++- **At least 206 of the 1,719 noise light curves (12%) carry a periodic signal that
++  meets our detection criteria.** They underlie **121,502 of the 1,000,000 SMARTS files
++  (12.2%)**. Periods range from 0.15 to 32 d (median 3.4 d), with amplitudes from about
++  100 ppm to 5.5%. This is a lower bound: at least 34 sources we class as `quiet` show
++  weaker short-period signals (Appendix C).
++- **Most of these signals are associated with neighbouring stars, and many can be traced
++  to a specific neighbour.**
++  - 90 sources have a Gaia DR3 variable within 3–63″. For 24 of them, a neighbour's own
++    catalogued Gaia period matches the signal (about 5 expected by chance), mostly
++    eclipsing binaries, Cepheids and RR Lyrae.
++  - Several groups of nearby noise sources share one period (21 sources in 7 groups,
++    against about 3 expected by chance), as expected if one star leaks into several
++    apertures.
+   - 63 more sit in crowded fields.
+-  - Only 8 look like spacecraft-wide systematics.
+-- **The signals can be confirmed independently.** In TESS FFI light curves from three
+-  other reductions (QLP, TASOC, GSFC-ELEANOR-LITE), the known-variable contaminants are
+-  recovered at the same period 63% of the time, against a chance rate of 15%.
++  - Only 8 lose their signal when spacecraft-wide common modes are removed.
++- **Short-period signals can be checked against other reductions.** For the 124
++  sources with P < 5 d, we searched TESS FFI light curves from three independent
++  reductions (QLP, TASOC, GSFC-ELEANOR-LITE). The same period appears for 38 of 60
++  known-variable sources and 13 of 34 crowded-field sources, against a chance rate of
++  about 15%. The 25 testable unexplained sources are recovered only at the chance rate,
++  and periods ≥ 5 d could not be tested.
+ - **The contaminating signal is often recovered instead of the injected rotation
+   period.** In a test sample of 1,000 SMARTS files, 51 of the 88 wrong periods
+   recovered by a rotation-period search equal the period of the file's noise light
+@@ -48,8 +58,7 @@
+ reasoning was that galaxies are intrinsically constant, so they carry only
+ systematics and noise. One noise light curve is drawn at random per simulation. There
+ are 1,719 distinct noise light curves in total, each reused in 210–1,082 files.
+-The noise source of each file is listed in `galaxy_files.csv`, keyed by the
+-simulation number (`SIM_ID`). The injection is multiplicative: (file flux) f = (noise flux) g × (simulated stellar flux) s.
++Our per-file table (Section 4) gives the noise source (`noise_tic`) of every file. The injection is multiplicative: (file flux) f = (noise flux) g × (simulated stellar flux) s.
+ 
+ # 2. Corrupted Segments
+ 
+@@ -84,7 +93,7 @@
+ 
+ We recovered each noise light curve by stacking the SMARTS files that share it, and classified each one by whether it carries a persistent periodic signal and what its surroundings look like. Appendix A gives the method and defines the classes. `P_ref` is the reference period of a periodic noise light curve.
+ 
+-Many contaminated sources are located near known variable stars. For example, all five of the largest signals (1.5–5.5% amplitude, P = 0.2–1.6 d) sit next to Gaia eclipsing binaries or Cepheids. Several contaminants
++Periodic sources are about four times as likely as quiet ones to have a Gaia variable neighbour, after allowing for the crowding near the LMC. For example, all five of the largest signals (1.5–5.5% amplitude, P = 0.2–1.6 d) sit next to Gaia eclipsing binaries or Cepheids. Several contaminants
+ change amplitude from sector to sector, which is expected when a neighbour's light
+ leaks into an aperture that is redefined each sector.
+ 
+@@ -130,16 +139,16 @@
+ |------|--------------|
+ | `file_number` | 0-based file number, equal to the row index of the DR1 catalog (rows are sorted by period) |
+ | `filename` | `smarts-tess-v1.0-NNNNNN.fits`, with NNNNNN = `file_number` |
+-| `sim_id` | the catalog's `Simulation Number` (the original simulation index; the key of `galaxy_files.csv`) |
++| `sim_id` | the catalog's `Simulation Number` (the original simulation index) |
+ 
+ **Noise-source identity and classification (both tables)**
+ 
+ | column | description |
+ |------|--------------|
+ | `noise_tic` | TIC ID of the noise source |
+-| `noise_lc_file` | its noise light-curve filename as given in `galaxy_files.csv` (per-source table) |
++| `noise_lc_file` | its noise light-curve filename as used by the SMARTS authors (per-source table) |
+ | `classification` | one of the six classes in Appendix A |
+-| `periodic` | True if `search_detected`, or if `ls_periodic` |
++| `periodic` | True if `search_detected`, or if `ls_periodic`. False means "not detected by these criteria", not "verified constant" (Appendix C) |
+ | `P_ref_d` | reference period of the noise light curve (d): `search_P_d` if detected, else `ls_P1_d`. Empty for quiet sources |
+ | `near_lmc` | True if within 4° of the LMC centre (RA, Dec = 80.89°, −69.76°) |
+ | `has_corrupted_segment` | True if the noise light curve contains a corrupted segment (at least 10 d long, with at least 20% of its cadences more than 0.1 from a normalized flux of 1; Section 2) |
+@@ -175,8 +184,8 @@
+ | `ffi_match`                               | for confirmed sources, which multiple matched: `P`, `P/2` or `2P`                                                                                                                                       |
+ | `ffi_n_sectors_matching`, `ffi_n_sectors` | sectors whose own periodogram matched, out of sectors checked (testable sources)                                                                                                                        |
+ 
+-**Joining.** To join to the DR1 files, use `filename` or `file_number`. To join to
+-`galaxy_files.csv`, use `sim_id`. To join the two tables, use `noise_tic`.
++**Joining.** To join to the DR1 files, use `filename` or `file_number`; to join to the
++DR1 catalog, use `sim_id`. To join the two tables, use `noise_tic`.
+ 
+ ## How to use the flags
+ 
+@@ -193,11 +202,14 @@
+    them. `systematic_common_mode` sources (8) resemble systematics in real TESS data
+    and can reasonably be kept.
+ 3. **Reporting performance.** Report metrics on the `quiet` subset (`periodic` =
+-   False) alongside the full set. Treat a recovered period that matches the noise
++   False) alongside the full set. The `quiet` subset is cleaner than the full set, but
++   not free of noise-source signals: some quiet sources carry low-amplitude periodic
++   signals below our threshold (Appendix C). Treat a recovered period that matches the noise
+    source's `P_ref` (within your tolerance, and at its P/2 and 2P aliases) as its own
+    outcome, distinct from a genuine method error.
+-4. **Choosing your own threshold.** The `periodic` flag is a fairly inclusive
+-   threshold. The per-source signal-strength columns (`ls_P1_power`, `ls_P1_amp_ppm`,
++4. **Choosing your own threshold.** The `periodic` flag is a detection threshold, not
++   a significance test. It is inclusive at long periods, where red noise is strong, and
++   misses weak signals at short periods. The per-source signal-strength columns (`ls_P1_power`, `ls_P1_amp_ppm`,
+    `ab_persistent`, `search_detected`) let you apply a stricter or looser cut without
+    repeating the analysis.
+ 5. **Sky position.** If your science case is sensitive to crowding, consider using
+@@ -241,8 +253,21 @@
+   shows only that they agree with one another.
+ 
+ **Periodicity and persistence.** We computed a Lomb–Scargle (LS) periodogram from 0.1
+-to 60 d for stacks A, B and A+B. We also ran a general-purpose rotation-period search
+-(ACF and periodogram based) on the A+B stack, treating it exactly like a SMARTS star.
++to 60 d for stacks A, B and A+B. We also ran the rotation-period pipeline described
++below on the A+B stack, treating it exactly like a SMARTS star.
++
++*The period search.* The pipeline is an in-development rewrite of SpinSpotter (Holcomb
++et al. 2022). It pools candidate periods from three methods (a histogram of
++autocorrelation-peak separations, a Lomb–Scargle periodogram and an FFT-based
++autocorrelation function (ACF), 10 candidates each). It then fits a comb model, peaks at
++integer multiples of the period, to the light curve's ACF for every candidate. A period is
++returned only if the best fit passes quality gates: at least 4 fitted ACF peaks, at least
++80% of them with positive height and inside their fitting windows, a mean peak-height S/N
++of at least 1, and checks against half- and double-period aliases. Otherwise it declines.
++It was developed on synthetic light curves and earlier SMARTS subsets; the 1,000-file
++test sample of Appendix B was not used to tune it. We have not measured its
++false-positive rate on pure red noise.
++
+ A source is **periodic** if:
+ 
+ - the period search returns a period, *or*
+@@ -331,7 +356,7 @@
+ 
+ We measured the effect on a test sample of 1,000 SMARTS files, stratified in period
+ from 0.1 to 180 d, using their
+-full-year light curves and a general-purpose rotation-period search:
++full-year light curves and the same period search (Appendix A):
+ 
+ - **51 of the 88 wrong periods (58%) equal, within 10%, the period the same search
+   finds in the file's noise light curve alone.** If noise sources are shuffled among
+@@ -360,14 +385,25 @@
+   - Our `periodic` flag requires either a period-search detection or LS power ≥ 0.1.
+     A different threshold would move some sources between `quiet` and the periodic
+     classes.
++- **The `quiet` class contains weak periodic signals.** `ls_P1_power` is the fraction
++  of the light curve's variance at the peak, so a low-amplitude sinusoid on top of red
++  noise can be coherent yet have low power. At least 34 `quiet` sources (19,554 files)
++  have periods of 0.10–2.2 d and amplitudes of 110–680 ppm. In each, the LS peak at that
++  period exceeds 20 times the local periodogram level in both halves of the year,
++  independently. Three of them share the 0.83-d period of a family of known-variable
++  contaminants. These sources are flagged `quiet` in our tables.
+ - **Thresholds are choices.** These include the LS power cut, the 2% A/B agreement,
+   `cm_retained` < 0.5, the 63″ neighbour radius, the 4° LMC radius, the magnitude
+   offsets, and the 3% FFI match tolerance. The classes are diagnostic, not
+   definitive.
+-  - A Gaia variable within 63″ is weaker evidence near the LMC, where 67% of *quiet*
+-    sources also have one (against 8.6% elsewhere).
+-  - `contamination_known_variable` does not establish that the specific listed
+-    variable is the source of the signal.
++  - **Proximity labels, not identifications.** Applying the quiet sources' rates (67%
++    near the LMC, 8.6% elsewhere), about 51 of the 90 `contamination_known_variable`
++    sources would have a variable neighbour even if it played no part. For 18 of the 90,
++    the only variable neighbours are long-period variables, which cannot produce a
++    few-day signal. The specific neighbour is identified only where its Gaia period
++    matches (24 sources).
++  - The crowded criterion is weak on its own: 41% of quiet sources away from the LMC
++    also have a neighbour brighter than G = Tmag + 1.
+ - **Weak signals are only partly separated.** The stacks are built from the members
+   with the smallest expected injected amplitude. A residual stellar contribution could
+   remain at a level below the A/B persistence test. The member-minus-stack residuals
+@@ -391,5 +427,7 @@
+ - Gaia Collaboration 2023, A&A, 674, A1 (Gaia DR3); Eyer, L., et al. 2023, A&A, 674,
+   A13 (DR3 variability).
+ - Stassun, K. G., et al. 2019, AJ, 158, 138 (TIC v8).
++- Holcomb, R. J., et al. 2022, ApJ, 936, 138. *SpinSpotter: An Automated Algorithm for
++  Identifying Stellar Rotation Periods with Autocorrelation Analysis.*
+ - Huang, C. X., et al. 2020, RNAAS, 4, 204 (QLP); Handberg, R., et al. 2021, AJ, 162,
+   170 (TASOC); Powell, B. P., et al. 2022, RNAAS, 6, 111 (GSFC-ELEANOR-LITE).
