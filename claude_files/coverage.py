@@ -493,6 +493,12 @@ def coverage_descriptors(time: np.ndarray, flux: np.ndarray, sectors: Sequence[i
 # frozen value (T23). Kept separate from compute_acf's argument on purpose:
 # changing the pipeline's ACF truncation must not move the searchable range.
 REACH_MIN_VALID_FRAC = 0.3
+# R is also capped at REACH_MAX_LAG_FRAC x baseline, as compute_acf (default
+# max_lag_frac=0.7) and evaluation.acf_reach both do. On contiguous data the
+# 0.3 pair-fraction breach lands one cadence past this cap, so without it the
+# ranker's P_over_reach used a slightly larger R than the comb fit and scoring
+# (P22a cross-check, 2026-11-09). Fixed here, like the fraction above.
+REACH_MAX_LAG_FRAC = 0.7
 # P_max = REACH_PERIOD_FRAC * R (D4: success is flat to P/R = 0.5, ~0 beyond).
 REACH_PERIOD_FRAC = 0.5
 # P_min = PMIN_CADENCES * cadence: the floor the periodogram/wavelet guesses
@@ -608,6 +614,13 @@ def searchable_range(time: np.ndarray, flux: np.ndarray,
     """
     lags, counts, cadence = sampling_pair_counts(time, flux)
     reach = reach_from_pair_counts(lags, counts, min_valid_frac) if len(lags) else float("nan")
+    if len(lags) and np.isfinite(reach):
+        # The cap's baseline is the full input array, NaN padding included, as in
+        # compute_acf and evaluation.acf_reach (sampling_pair_counts trims to the
+        # finite span, which would put the cap lower than theirs).
+        t_all = np.asarray(time, dtype=float)
+        cap = REACH_MAX_LAG_FRAC * (t_all.size - 1) * np.median(np.diff(t_all))
+        reach = min(reach, np.floor(cap / cadence + 1e-9) * cadence)
     return dict(p_min=PMIN_CADENCES * cadence, reach=reach, p_max=reach_period_frac * reach,
                 cadence=cadence, min_valid_frac=float(min_valid_frac),
                 reach_period_frac=float(reach_period_frac))

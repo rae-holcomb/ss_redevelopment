@@ -23,21 +23,24 @@ def _grid(days: float, gaps=()) -> tuple:
     return t, f
 
 
-def _reference_reach(time: np.ndarray, flux: np.ndarray, frac: float = 0.3) -> float:
+def _reference_reach(time: np.ndarray, flux: np.ndarray, frac: float = 0.3,
+                     max_lag_frac: float = 0.7) -> float:
     """Independent brute-force reference for the D4 / T23 reach definition.
 
     R = the last lag k * dt before the number of finite (i, i+k) pairs first
-    drops below frac x the number of finite cadences. Direct pair counting
-    (no FFT), on the light curve's own regular grid. Stands in for
-    evaluation.acf_reach (T23, another branch) until both merge.
+    drops below frac x the number of finite cadences, capped at the last grid
+    lag <= max_lag_frac x the full array's baseline (as compute_acf and
+    evaluation.acf_reach do). Direct pair counting (no FFT), on the light
+    curve's own regular grid.
     """
     m = np.isfinite(flux)
     dt = np.median(np.diff(time))
     n0 = m.sum()
+    k_cap = int(np.floor(max_lag_frac * (len(m) - 1) + 1e-9))
     for k in range(1, len(m)):
         if np.count_nonzero(m[:-k] & m[k:]) < frac * n0:
-            return (k - 1) * dt
-    return (len(m) - 1) * dt
+            return min(k - 1, k_cap) * dt
+    return min(len(m) - 1, k_cap) * dt
 
 
 SAMPLINGS = {
@@ -149,3 +152,14 @@ def test_reach_feature():
     assert _reach_features(5.0, 20.0)["P_over_reach"] == pytest.approx(0.25)
     assert np.isnan(_reach_features(5.0, np.nan)["P_over_reach"])
     assert np.isnan(_reach_features(np.nan, 20.0)["P_over_reach"])
+
+
+@pytest.mark.parametrize("name", sorted(SAMPLINGS))
+def test_reach_matches_frozen_evaluation_reference(name):
+    """The pipeline's searchable_range R equals the scorecard's frozen
+    evaluation.acf_reach on the same sampling (P22a; both define R by a 0.3
+    valid-pair fraction, D4). If this fails, the pipeline and the scoring
+    disagree about which stars are searchable."""
+    from evaluation import acf_reach
+    t, f = SAMPLINGS[name]
+    assert searchable_range(t, f)["reach"] == pytest.approx(acf_reach(t, f), abs=1e-9)
