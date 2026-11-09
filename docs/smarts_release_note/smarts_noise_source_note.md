@@ -65,7 +65,7 @@ appears in every file that uses that noise light curve, whatever the simulated s
 - A few of the 203 are brief spikes or very strong real signals, not weeks-long
   segments, so 0.1 is an inclusive threshold.
 - The files do not carry a quality flag for these segments. Sources affected are
-  identified in the per-source table by `frac_corrupt` > 0.5 (Section 7).
+  identified in the per-source table by `frac_corrupt` > 0.5 (Section 8).
 
 **Any analysis of the raw flux should remove these segments first.** Mask each whole
 segment rather than only the cadences beyond a threshold, because the flux repeatedly
@@ -199,7 +199,7 @@ one-sided Fisher exact test against the controls.
   candidates are confirmed at a lower but elevated rate.
 - **The `source_specific_unexplained` class is confirmed only at the chance rate.**
   These signals are real in the SMARTS light curves: they persist in both disjoint
-  halves, are specific to one source, and change the recovered period (Section 4). But
+  halves, are specific to one source, and change the recovered period (Section 5). But
   independent reductions of the same targets show no excess at those periods.
   - The signals may therefore be specific to the reduction used to build the SMARTS
     noise light curves, through the aperture or background treatment.
@@ -298,7 +298,7 @@ We suggest the following practice.
   they are periodic about 2.6 times as often. Whether these targets fit the intended
   "constant galaxy" selection is a question for the dataset authors. We flag them
   (`near_lmc`) without making a recommendation.
-- **The unexplained class.** Section 3 explains why we cannot say whether these
+- **The unexplained class.** Section 4 explains why we cannot say whether these
   signals are astrophysical or arise in the reduction. If they arise in the
   reduction, a similar effect at lower amplitude may be present in other noise light
   curves, below our detection threshold.
@@ -328,7 +328,7 @@ Booleans are `True`/`False`; missing values are empty.
 |------|--------------|
 | `noise_tic` | TIC ID of the noise source |
 | `noise_lc_file` | its noise light-curve filename as given in `galaxy_files.csv` (per-source table) |
-| `classification` | one of the six classes in Section 2 |
+| `classification` | one of the six classes in Section 3 |
 | `periodic` | True if `search_detected`, or if `ls_periodic` |
 | `P_ref_d` | reference period of the noise light curve (d): `search_P_d` if detected, else `ls_P1_d`. Empty for quiet sources |
 | `near_lmc` | True if within 4° of the LMC centre (RA, Dec = 80.89°, −69.76°) |
