@@ -495,9 +495,13 @@ def coverage_descriptors(time: np.ndarray, flux: np.ndarray, sectors: Sequence[i
 REACH_MIN_VALID_FRAC = 0.3
 # P_max = REACH_PERIOD_FRAC * R (D4: success is flat to P/R = 0.5, ~0 beyond).
 REACH_PERIOD_FRAC = 0.5
-# P_min = PMIN_CADENCES * cadence (Nyquist; the comb fit's sanity filter
-# also requires P0 > 2 * dt).
-PMIN_CADENCES = 2.0
+# P_min = PMIN_CADENCES * cadence: the floor the periodogram/wavelet guesses
+# actually search (min_period = 4 * dt in guesses.py). Rae, 2026-11-09: use
+# this instead of the 2-cadence Nyquist limit, which overstated the range.
+# ACF peak-finding starts slightly lower (min_lag = 3 * dt), and the comb fit's
+# own sanity filter (P0 > 2 * dt) is separate. p_min is recorded only; no
+# candidate is filtered on it, so results don't depend on this value.
+PMIN_CADENCES = 4.0
 
 
 def reach_from_pair_counts(lags: np.ndarray, counts: np.ndarray,

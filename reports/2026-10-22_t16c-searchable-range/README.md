@@ -1,9 +1,9 @@
 # T16c: searchable range P_max = R/2
 
-**Date:** 2026-10-22 · **Author:** Claude (method-improver, T16c session) · **Branch:** `claude/t16c-searchable-range-6f41b7` · **Status:** draft
+**Date:** 2026-10-22 · **Author:** Claude (method-improver, T16c session) · **Branch:** `claude/t16c-searchable-range-6f41b7` · **Status:** final, accepted by Rae 2026-11-09
 
 ## TL;DR
-- **Implemented D4.** `coverage.searchable_range(time, flux)` returns P_min (2 × cadence), the ACF reach R (valid-pair fraction ≥ 0.3) and P_max = R/2, from the time sampling only. It works on any batch. The comb fit now skips deduplicated candidates with P0 > R/2. It keeps them as `beyond_reach` records, and `EnsembleResult` stores the range. There is also a new ranker feature, `P_over_reach`.
+- **Implemented D4.** `coverage.searchable_range(time, flux)` returns P_min (4 × cadence; 2 in the original draft, changed per Rae 2026-11-09), the ACF reach R (valid-pair fraction ≥ 0.3) and P_max = R/2, from the time sampling only. It works on any batch. The comb fit now skips deduplicated candidates with P0 > R/2. It keeps them as `beyond_reach` records, and `EnsembleResult` stores the range. There is also a new ranker feature, `P_over_reach`.
 - **Results are bit-identical everywhere tested.** Seven before/after scorecard pairs (dev_medium full-year, dev_medium assigned, and 5 synthetic coverage classes × 200 stars) gave **0 changed stars**, and the in-reach candidate rows (P0, P_fit, redchi, gates) were identical. The fit skips 5% of candidates (1,247–1,261 per 1,000 dev_medium stars). The uncapped fit had already never picked a beyond-reach answer: the largest reported P/R was 0.51 on any dataset, so the existing gates were rejecting them.
 - **The runtime gain is small.** Measured paired on identical inputs, total fit time was −3% (−17% on gapped-2, roughly 0 on single sectors). Beyond-reach candidates have only 2–3 teeth, so they were cheap to fit. The scorecard's own timings were confounded by the other agent's runs on the same 4 cores.
 - **R/2 is confirmed for every coverage class.** Success is 0 for true P/R > 0.5 in every class and dataset. On synthetic draws it stays at about 0.42 up to 0.5 (0.4–0.5 bin: 0.419, n = 43; 0.5–0.6 bin: 0.000, n = 23). Precision of answers reported at P/R 0.4–0.5 is 21/21 on synthetic and 0.6 (n = 10) on dev_medium. I found no evidence to move the limit for any class.
@@ -155,6 +155,14 @@ Six dev_medium stars at assigned coverage, chosen by rule (`examples.py`, `data/
 - **The first version of the truth-curve figure overplotted identical before/after curves.** It now draws one set and states that the outcomes are identical.
 
 ## Open questions for Rae
+**Answered 2026-11-09:** Rae accepted all recommendations:
+- a single R/2 for every coverage class;
+- `min_valid_frac` stays 0.3;
+- the goals below are accepted as drafts, to go into `goals.json` once scorecard v4 (T23) is on main;
+- **P_min = 4 cadences** (the periodogram/wavelet floor) replaces the 2-cadence Nyquist limit. It's recorded only, so results are unchanged.
+
+A short-period "reliable from" suite stays open (P22).
+
 1. **Confirm R/2 for all coverage classes.** The data supports a single R/2 for every class. My recommendation is to keep it, with no per-class adjustment. Caveats: dev_medium bins past 0.3 hold 3–10 stars per class, and synthetic make_suite periods cluster below P/R 0.1, so the 0.3–0.5 region has 93 synthetic stars in total. A targeted synthetic suite with log-uniform P/R in 0.2–0.8 per class would tighten this if you want more certainty.
 2. **`min_valid_frac`: keep 0.3** (recommended). 0.25 adds a few wrong answers on real data, has no net success gain, and can't help the B/3 case under a frozen R. If you want to revisit it, it belongs to T16d together with the well-sampled-lags SNR change.
 3. **Proposed goals** (for T23's metrics, once that lands), all draft:

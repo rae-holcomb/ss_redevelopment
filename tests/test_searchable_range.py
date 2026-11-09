@@ -58,7 +58,7 @@ def test_reach_matches_reference_definition(name):
     r = searchable_range(t, f)
     assert r["reach"] == pytest.approx(_reference_reach(t, f), abs=1e-9)
     assert r["p_max"] == pytest.approx(0.5 * r["reach"])
-    assert r["p_min"] == pytest.approx(2 * CADENCE)
+    assert r["p_min"] == pytest.approx(4 * CADENCE)  # PMIN_CADENCES = 4 (Rae, 2026-11-09)
 
 
 def test_contiguous_reach_is_07_baseline_and_does_not_bridge_gaps():

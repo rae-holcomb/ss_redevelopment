@@ -391,7 +391,7 @@ for confirmation (ask Rae first).
   to ~0.25. At P = B/3 on 2 sectors only 6/12 are correct, because P sits on the
   ACF pair-coverage edge (ACF long-period report, open issue 14a).
 - **Agent:** `method-improver`
-- **Status:** done 2026-10-22, draft report awaiting Rae (`reports/2026-10-22_t16c-searchable-range/`); T16h unblocked (`searchable_range`).
+- **Status:** done, accepted 2026-11-09 (`reports/2026-10-22_t16c-searchable-range/`). Rae kept every recommendation: a single R/2 for all classes, `min_valid_frac` 0.3, P_min = 4 cadences, and the draft goals (to add once v4 is on main). T16h unblocked (`searchable_range`).
 - **Do:** define the maximum searchable / reportable period as a function of
   coverage (longest contiguous span, total baseline, ACF valid-pair coverage).
   Measure reliability (success vs wrong) as P approaches each candidate limit, and
@@ -1106,4 +1106,4 @@ for confirmation (ask Rae first).
   column), e.g. in T23's scorecard bump; (c) for T16d: skip `pairwise_histogram` when R < ~30 d (it returns no
   candidates for ~2/3 of 1–2-sector stars); investigate single-sector LS top-1 errors (sector/ramp systematics,
   not window aliasing); (d) a synthetic suite with log-uniform P/R in 0.2–0.8 per coverage class to tighten the R/2
-  validation near the edge.
+  validation near the edge; (e) a short-period synthetic suite to measure a "reliable from" P floor (T16d or D1; Rae's call).
