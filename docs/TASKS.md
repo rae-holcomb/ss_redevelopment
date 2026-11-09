@@ -13,6 +13,38 @@ report (`write-report` skill) and, if code changed, a before/after
 
 ---
 
+## Roadmap (agreed with Rae 2026-11-09; coordinators start here)
+
+**Goal:** a working, multi-mission (TESS + Roman required; Kepler/ground-based wishlist), efficient,
+beginner-friendly pipeline **ready to deploy on Roman GBTDS Season 1** and publish its rotators quickly.
+Critical path: **ranker → Roman training data → Roman validation**. TESS multi-year handling is
+off the critical path: one GBTDS season is essentially one contiguous ~70 d batch, so per-season P_max = R/2 ≈
+low-20s d. Check this against the current survey design (T28).
+
+**Sequence:**
+1. **Close the SMARTS detour cheaply:** T24 + T25 + **T26** (detectability ceiling). Gives one honest SMARTS
+   number. dev_medium full-year is at success 0.25 / wrong 0.09 / declined 0.65, and we can't yet tell how many
+   of those declines are correct (undetectable stars).
+2. **Ranker v0** (T10 → T11): rough and diagnostic, not production. dev_medium + a few-thousand-star training sample,
+   quiet noise sources only, star-grouped splits, graded labels (T10 decision), **every candidate including
+   gate-failed ones (gates become features)**, and non-rotator negatives from **T27**. Questions it answers: does it beat
+   hand arbitration (per period bin), which features and methods matter (feeds T12), and how much data is enough
+   (learning curve).
+3. **Roman track** (**T28**): WG6 training sets, a Roman loader, a first scorecard. Single-season, so current
+   machinery mostly applies. Adding a second data source once ranker v0 exists also gives the over-tuning test
+   (train on one source, test on the other).
+4. **Then:** **T29** (rotation-like / EB flags), T16h (batch combination), T12 (efficiency), D3 own butterpy
+   multi-year sims (T16g), **T30** (mission-agnostic API) → T19b (packaging).
+
+**Paused (the ranker should make most of it moot):** further hand-tuning of the gates: T16d, P1, P7, P21 (height-SNR).
+Bug fixes and instrumentation are still fine.
+
+**New training data, order:** (1) SMARTS noise-only non-rotators (T27, nearly free); (2) Roman WG6 sets (T28);
+(3) own butterpy multi-year (D3/T16g); (4) Kepler/ground-based (wishlist). Introduce each once there is a model to
+test it against, not before.
+
+---
+
 ## Phase 0: infrastructure
 
 ### T0. Test suite, synthetic generator, scorecard, report contract
@@ -692,6 +724,59 @@ for confirmation (ask Rae first).
   subset (`final.quiet_noise.*`) next to the full-set metrics, plus a `--noise-subset` option or equivalent. Existing
   metrics stay bit-identical. Propose quiet-subset goals; Rae edits `goals.json`.
 
+### T26. Detectability ceiling for SMARTS stars (roadmap step 1, 2026-11-09)
+- **Agent:** `data-auditor` (+ scorecard reporting; can share T24/T25's scorecard bump)
+- **Status:** ready
+- **Why:** dev_medium declines 65% of stars, and T16b found most declined stars' correct candidates look like noise.
+  Without a per-star "is the signal detectable at all" measure, we can't tell whether success 0.27 is poor or near the ceiling.
+- **Do:** per-star injected-signal strength. Multiplicative injection (T20) means signal ≈ SMARTS flux / recovered
+  noise light curve, or use the catalog's activity/amplitude. Compute e.g. signal amplitude / noise RMS on the same
+  coverage. Plot success / declined / wrong against it, and propose a `detectable` descriptor + metrics on the
+  detectable subset (as with `searchable`). Existing metrics stay bit-identical.
+- **Done when:** a report with outcome-vs-detectability plots and a proposed threshold (Rae decides).
+
+### T27. Non-rotator negatives from SMARTS noise light curves (roadmap step 2, 2026-11-09)
+- **Agent:** `data-auditor` or `ranking-model-builder`
+- **Status:** ready (needs the drive for the noise light curves; check the mount first)
+- **Why:** every SMARTS star is a rotator, so the ranker's decline threshold and false-positive rate would be calibrated
+  only against weak rotators. T20 already isolated the noise sources: ~1,500 quiet ones (real-noise **non-rotators**) and
+  206 periodic ones (mostly **real neighbouring variable stars**: contaminating-variable examples).
+- **Do:** a scorecard/feature-table mode for noise-only light curves (truth = "no rotation"). Run on the quiet set
+  plus synthetic red noise. Report the false-positive rate and which gates and features fire, and produce negative
+  rows for T10. Use the coverage libraries so the negatives see the same sampling patterns.
+- **Done when:** a negatives table T10 can join, plus false-positive metrics by coverage class.
+
+### T28. Roman GBTDS track: data, loader, first scorecard (roadmap step 3, 2026-11-09)
+- **Agent:** start with a scoping session with Rae, then `method-improver`
+- **Status:** ready for scoping. **Discuss with Rae first** (data access, which WG6 sets).
+- **Why:** Roman is a must-have mission and the Season 1 paper is the deadline. It differs from TESS in cadence (~15 min),
+  per-season baseline (~70 d, contiguous), crowding, faintness and stellar population.
+- **Do:** (a) confirm the current GBTDS design (season length/count, cadence, filters, off-season sampling) and record it
+  in a `docs/ROMAN_REFERENCE.md` like SMARTS_REFERENCE; (b) obtain the RGES PIT WG6 variable-star training sets, and check
+  whether they include non-rotating variables and EBs; (c) a Roman loader that returns the pipeline's `(time, flux)`
+  format; (d) a Roman dev set and scorecard dataset string; (e) a first scorecard run, with per-season `searchable_range`.
+  Also note what Roman-specific features (e.g. crowding/blending) the ranker will need.
+- **Done when:** a report with Roman baseline numbers and the gaps it exposes.
+
+### T29. Rotation-like vs. non-rotating-variable and EB flags (roadmap step 4, 2026-11-09)
+- **Agent:** `feature-researcher`
+- **Status:** blocked on T27/T28 (needs negatives and variable-star examples)
+- **Scope (Rae-approved):** two flags, not full variable classification: "rotation-like vs not" and "likely EB".
+  **Flag EBs, don't discard them**: spotted/synchronized EBs are real rotators.
+- **Candidate features:** coherence across batches (stable phase/amplitude = pulsator/EB; spots evolve; ties into
+  T16h), periodogram peak sharpness and harmonic structure, folded shape (narrow dips, alternating depths → check
+  P vs 2P; sawtooth for RR Lyrae/Cepheids), very short periods (δ Scuti), ACF decay.
+- **Labels:** TESS: Gaia DR3 variability classes, the TESS EB catalog (Prša+2022), and T20's 206 contaminating variables.
+  Roman: WG6 sets, since no prior catalogs exist there, so the internal flags must carry the load.
+
+### T30. Mission-agnostic core API (roadmap step 4, 2026-11-09)
+- **Agent:** `repo-curator` or a design session with Rae
+- **Status:** ready, low priority, but **every new code path should follow the rule now**
+- **Rule:** the core takes `(time, flux, flux_err)` + a **mission config** (cadence, P_min/P_max policy, batch-gap
+  threshold, ...). Loading lives in per-mission adapters (`load_smarts_fits` is one; TESS, Roman, Kepler later). There
+  is one obvious entry point (e.g. `spinspotter.measure(time, flux, mission=...)`). Then T19b's beginner-friendly
+  packaging is mostly docs and examples rather than a refactor.
+
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
 - **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
@@ -733,7 +818,8 @@ for confirmation (ask Rae first).
 
 ### T10. Feature-table generation at scale
 - **Agent:** `ranking-model-builder`
-- **Status:** blocked (on T2)
+- **Status:** ready (T2 done). **Roadmap step 2 (2026-11-09):** aim at a rough v0 first; see the Roadmap. Include
+  gate-failed candidates (gate results as features), quiet noise sources only, and T27's negatives.
 - **Goal:** resumable parallel script producing candidate feature tables for
   dev_medium plus a training sample. Rae runs it locally.
 - **Decision needed first:** `extract_candidate_features` labels a candidate 1
@@ -815,6 +901,11 @@ for confirmation (ask Rae first).
   (phase coherence across multi-year gaps is unlikely given spot evolution; per-season agreement is a
   reliability signal). Still to be *tested* on T16g's multi-season simulations before it's final.
   Now needed before T16c/T16d, since the pipeline will run on the whole extended mission.
+- **Architecture leaning (2026-11-09):** generate candidates per batch (plus T16h's stacked ACF), then **aggregate
+  into fixed-size star-level features** (n_batches_testable, n_batches_agree, n_batches_half, per-batch period
+  scatter) **before** the ranker. Not stitch-everything (spot evolution breaks phase coherence), not compare-only-at-the-end
+  (that throws away cross-batch agreement as a learnable signal), and no variable-length per-batch inputs to the model.
+  Off the Roman Season 1 critical path (one season = one batch).
 
 ### D3. Training data beyond SMARTS
 - **Raised:** 2026-10-15. Rae wants to eventually add other sources of training data, so the ranker and

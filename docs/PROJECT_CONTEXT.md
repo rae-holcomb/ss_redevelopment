@@ -42,6 +42,13 @@ signals, known true periods) to generate training data for a gradient-
 boosted ranking model that picks the best candidate period more robustly
 than the current hand-tuned reliability gates.
 
+**Broader goals (Rae, 2026-11-09).** SpinSpotter v2 must work on **TESS and the Roman GBTDS** (Kepler bonus light
+curves and ground-based surveys are a wishlist), stay efficient at ~millions of light curves, flag non-rotating
+periodic variables and eclipsing binaries, and be well documented with a low start-up cost for beginners.
+**Deadline: deployable by the end of Roman GBTDS Season 1**, for a quick Season 1 rotators paper. SMARTS is the
+first training set, not the only one: it has no non-rotators or false positives, and over-tuning to it is a standing
+risk. The agreed roadmap and sequence are at the top of `docs/TASKS.md`.
+
 ---
 
 ## 2. Code map
@@ -328,6 +335,11 @@ Roughly in priority order as of this writing — re-prioritize freely.
    disjoint galaxy pools, so train/holdout can be galaxy-disjoint (T2). Dev vs holdout separation
    needs per-file galaxy IDs (TASKS.md P15). ~12% of galaxies contain corrupt orbits (relative flux
    far from 1); `load_smarts_fits` drops nearly all of it, but raw-flux and WAVELET consumers don't.
+17. **No non-rotators, and no detectability ceiling (2026-11-09).** Every SMARTS star is a rotator, so the
+   false-positive rate on real non-rotators and variables is unmeasured (T27, then T29 for variable/EB flags). Also,
+   dev_medium declines 65% of stars, and we can't yet tell how many are undetectable (T26).
+18. **Single-mission so far (2026-11-09).** Everything is built and tuned on TESS/SMARTS. Roman (required) has no
+   loader, data or scorecard yet (T28), and the core should become mission-agnostic (T30).
 
 ---
 
@@ -586,3 +598,12 @@ chats should know:
 - **2026-11-09: T16c accepted and merged.** Rae kept every recommendation: a single R/2 for all coverage classes, `min_valid_frac` 0.3, and the draft goals (added once scorecard v4 is on main). `coverage.PMIN_CADENCES` changed 2 to 4 (the guesses' real floor; recorded only, no result change).
 - **2026-11-09: Scorecard v4 (T22+T23) merged.** `SCORECARD_VERSION` 4 adds the `final.by_band_width`, `final.by_coverage_class`, `final.searchable.*` and `final.unsearchable.*` breakdowns, per-star `acf_reach`/`P_over_reach`/`searchable`, and a completeness map. The new baselines are `benchmarks/baselines/*_v4.json`, and every v3 key is unchanged. On merged main, synth200 reproduces `synth200_s0_v4.json` exactly. The goal proposals (v4 report + T16c report) are not yet in `goals.json`.
   - The new cross-check test (P22a) found that `coverage.searchable_range` lacked the 0.7 × baseline lag cap that `compute_acf` and `evaluation.acf_reach` apply. This moved R by one cadence on contiguous data, and only for the `P_over_reach` ML feature. It is now fixed (`coverage.REACH_MAX_LAG_FRAC`, measured on the full array's baseline). The comb fit and scoring were unaffected.
+- **2026-11-09: Big-picture roadmap (Rae + Claude, outside the coordinator).** Rae restated the goals (Section 1:
+  TESS + Roman, efficiency, variables/EBs, beginner-friendly, deadline = Roman GBTDS Season 1). Agreed sequence, now at
+  the top of `docs/TASKS.md`: (1) close the SMARTS detour with T24/T25 + new T26 (detectability ceiling; dev_medium
+  full-year is 0.25 success / 0.09 wrong / 0.65 declined); (2) a rough **ranker v0** soon (T10/T11), with gate-failed
+  candidates and noise-only non-rotator negatives (new T27); (3) **Roman track** (new T28; one GBTDS season ≈ one
+  contiguous batch, so multi-year combination is off the Season 1 critical path); (4) then the rotation-like/EB flags
+  (new T29), T16h, T12, own butterpy sims, and the mission-agnostic API (new T30). Gate hand-tuning (T16d, P1, P7, P21)
+  is paused in favour of the ranker. D2 leaning: per-batch candidates aggregated into fixed-size features before the
+  ranker. New open issues 17–18.
