@@ -701,7 +701,7 @@ for confirmation (ask Rae first).
 
 ### T24. Scorecard/evaluation: `noise_period` outcome (from T20, 2026-10-22)
 - **Agent:** `method-improver` (evaluation + scorecard reporting; approved by Rae via T20's recommendations)
-- **Status:** done on branch claude/t24-t25-scorecard-v5-84eca3 (2026-11-10; `reports/2026-11-10_scorecard-v5-noise-period/`), implemented as a breakdown of `wrong`, awaiting merge.
+- **Status:** done, merged 2026-11-10 (`reports/2026-11-10_scorecard-v5-noise-period/`), implemented as a breakdown of `wrong`. Rae: merge as is, so `noise_period` matches the noise source's `P_ref` for every class, quiet included; halves and doubles stay a diagnostic (`noise_alias`). Revisit if the quiet-noise probe's shuffled null shows the 12 quiet-class matches are chance.
 - **Why:** 51 of dev_medium's 88 `wrong` answers equal the period the pipeline finds on the star's noise source alone
   (T20 phase 2). The pipeline is right about the data, but the label doesn't contain that signal.
 - **Do:**
@@ -716,7 +716,7 @@ for confirmation (ask Rae first).
 
 ### T25. dev_medium metrics on the quiet-noise subset (from T20, 2026-10-22)
 - **Agent:** `method-improver` (scorecard reporting only)
-- **Status:** done with T24 on branch claude/t24-t25-scorecard-v5-84eca3 (2026-11-10), awaiting merge; goals for Rae to set.
+- **Status:** done, merged with T24 2026-11-10; goals for Rae to set. **Follow-up:** once the quiet-noise reclassification (`periodic_low_amplitude`, branch prefix `quiet-noise-reclass`) regenerates the flags file, rebuild `benchmarks/noise_sources_dev.csv` from it (`tools/build_noise_table.py`) instead of the review's `noise_quiet_coherent.csv` list, and re-baseline if any v5 key moves.
 - **Why:** 128 of dev_medium's 1,000 stars sit on periodic noise sources, with a 43% wrong rate vs 3.8% on quiet
   sources. Method changes should be judged on both.
 - **Do:** a per-star descriptor column (`noise_class`, `noise_periodic`, `noise_exclude`) and metrics on the quiet
