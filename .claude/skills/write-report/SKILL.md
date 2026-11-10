@@ -30,8 +30,14 @@ This creates `reports/YYYY-MM-DD_<slug>/` with `README.md`, `notebook.ipynb`,
 - **Results**:
   - For any code change: paste the output of
     `benchmarks/check_goals.py <new>/metrics.json --baseline <old>/metrics.json`.
-  - For every figure: embed it, then add one sentence telling Rae what to
-    look at.
+  - **Figures are required, not optional** (Rae, re-emphasized 2026-11-10).
+    Back every headline number and every decision under "Open questions for
+    Rae" with a figure: before/after or method-vs-baseline comparisons,
+    distributions with thresholds marked, outcomes vs period bin / coverage
+    class, and so on. Most reports need at least 3–5. If something truly
+    can't be plotted, say why in one line.
+  - For every figure: embed it in the README next to the claim it supports,
+    then add one sentence telling Rae what to look at.
   - Show failure modes, not just aggregates: pick 3–6 representative stars
     that still fail and plot them (light curve, ACF with candidate periods
     marked, method spectra). `claude_files/plotting.py` has helpers.

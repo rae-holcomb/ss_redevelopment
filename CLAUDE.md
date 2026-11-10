@@ -97,10 +97,16 @@ with 10 workers.
 ## Working conventions
 
 - **Docstrings**: every function delivered needs a docstring.
-- **Plots**: display plots to demonstrate failure modes or changes
-  whenever possible. In this environment that typically means saving a
-  PNG and either opening it or embedding it in a notebook — confirm
-  Rae's preferred mechanism if unclear.
+- **Plots (Rae, re-emphasized 2026-11-10):** back up results and decisions
+  with plots wherever a plot makes sense. Rae relies on them to understand
+  what was done and whether to trust it.
+  - Every headline number and every decision put to Rae should have a figure
+    behind it: before/after comparisons, distributions with the threshold
+    marked, outcome vs period/coverage, and example light curves of failure
+    modes (light curve + ACF/periodogram with the candidate periods marked).
+  - Save PNGs under the report's `figures/` and **embed them in the README**
+    next to the claim they support, not only in the notebook.
+  - A report with no figures needs a stated reason.
 - **Calculations**: never do arithmetic by hand — always compute in
   Python and return the result, even for something that looks simple.
 - **CLI/shell requests**: when Rae asks for a command-line action or
@@ -191,7 +197,8 @@ task from `docs/TASKS.md`:
 
 - Read your role file in `.claude/agents/` if you were given one.
 - **Legibility is the point.** End every task with the `write-report`
-  skill. Make plots of failure modes, not just aggregate numbers. Put
+  skill. Make plots of failure modes, not just aggregate numbers (see
+  "Plots" above: figures are expected, not optional). Put
   decisions that belong to Rae under "Open questions for Rae" instead of
   making them silently.
 - **Don't move the goalposts.** Never edit `benchmarks/goals.json`,

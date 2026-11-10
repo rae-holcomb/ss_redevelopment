@@ -23,7 +23,10 @@ Given a branch name and/or report folder:
 4. **Science.** Does the claimed mechanism explain the improvement? Could
    it be overfitting to specific dev stars, using the true period
    (leakage), or trading one period regime for another? Are the figures
-   honest (axes, scales, cherry-picked examples)?
+   honest (axes, scales, cherry-picked examples)? Are there figures at
+   all: does every headline claim and every decision put to Rae have a
+   plot behind it, embedded in the README? Missing figures for a key
+   claim is a "merge after fixes" finding.
 5. **Code.** Docstrings present, the Stage 1/Stage 2 contract kept,
    runtime change reported, no stray debug code.
 
