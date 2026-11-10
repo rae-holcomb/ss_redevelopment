@@ -592,6 +592,7 @@ for confirmation (ask Rae first).
   oversized files, and the README gets a new user to a measured period in a few commands.
 
 ### T20. Are the SMARTS noise galaxies really quiet? (training-set flaws)
+- **2026-11-10:** coherent-quiet sources reclassified `periodic_low_amplitude` (excluded); quiet P_ref investigation in `reports/2026-11-10_quiet-noise-periods/` (no further exclusions recommended; awaiting Rae).
 - **Agent:** `data-auditor`
 - **Status:** done, merged 2026-10-22 (`reports/2026-10-21_t20-noise-sources-phase2/`; phase 1:
   `reports/2026-10-21_t20-galaxy-pass-phase1/`; branch `claude/t20-galaxy-quietness-c3bb9b`). 206/1,719 noise sources

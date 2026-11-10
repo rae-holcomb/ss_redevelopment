@@ -623,3 +623,10 @@ chats should know:
   All v4 keys bit-identical; `*_v5.json` baselines committed. Open for Rae: halves/doubles of the noise period, quiet-class
   P_ref matches, quiet-subset goals.
 - **2026-11-10: Scorecard v5 (T24+T25+P22b) merged.** Rae chose "merge as is": `noise_period` (a breakdown of `wrong`) matches the noise source's `P_ref` for every class, quiet included (65/88 dev_medium full-year wrongs; 12 of them on quiet-class sources); halves/doubles are a diagnostic only. The quiet subsets are `final.quiet_noise` and `final.quiet_noise_strict` (drops the 34 coherent-quiet sources, which Rae has since decided to reclassify as `periodic_low_amplitude` and exclude from training). All v4 keys are bit-identical. The `noise_sources_dev.csv` table must be rebuilt from the regenerated flags once the reclassification lands.
+- **2026-11-10 — T20 reclass + quiet-noise periods** (`reports/2026-11-10_quiet-noise-periods/`). Rae's decision applied:
+  new T20 class `periodic_low_amplitude` (quiet, P_ref < 5 d, time-split local LS S/N > 20 in both halves; reproduces
+  the note review's 34 sources), excluded from training. Now 240 periodic sources / 141,056 files; 27,828 of the
+  200,000 ≥800k-pool files excluded. `noise_source_flags.csv.gz` regenerated (new column `tsplit_min_snr`). Remaining
+  quiet P_ref values look like red-noise/common-mode peaks of the fixed noise realization: dev_medium's 10 remaining
+  quiet `noise_period` wrongs are 5× chance (null mean 2.0) but none of their sources is time-coherent or has a Gaia/FFI
+  match. Weak injected signals let the pipeline lock onto the noise peak. Recommended: no further exclusions.

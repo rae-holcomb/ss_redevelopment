@@ -55,7 +55,17 @@ LS_POWER_MIN = 0.1
 # Rae's decision (2026-10-22): exclude these classes from ranker training; keep systematic_common_mode.
 # (misclassified_star, 1 source, is not in Rae's list and is kept: flag only.)
 EXCLUDE_FROM_TRAINING = ("contamination_known_variable", "contamination_candidate_crowded",
-                         "source_specific_unexplained")
+                         "source_specific_unexplained", "periodic_low_amplitude")
+# Time-split coherence (ported from the 2026-11-09 note review, checks/c07_time_split.py): the A/B
+# file split cannot reject a red-noise peak, because every member file shares the same noise light
+# curve. Instead, split the A+B stack in time (t < 182.5 d vs >= 182.5 d) and measure, in each half,
+# the local S/N of LS power at P_ref (power / median power at 3-25% fractional frequency offset).
+# Rae (2026-11-10): a "quiet" source with P_ref < TSPLIT_P_MAX and S/N > TSPLIT_SNR_MIN in BOTH
+# halves is a real low-amplitude periodic signal -> class periodic_low_amplitude, excluded.
+# Above ~5 d a half-year holds too few independent frequencies for the local S/N to mean much.
+TSPLIT_T_SPLIT = 182.5
+TSPLIT_SNR_MIN = 20.0
+TSPLIT_P_MAX = 5.0
 N_PCS = 8
 
 
@@ -140,6 +150,44 @@ def ls_after_projection(X: np.ndarray, V: np.ndarray, t: np.ndarray, P_ref: np.n
         recs.append(dict(pow_ref_raw=r0, pow_ref_cm=r1, cm_retained=r1 / r0 if r0 > 0 else np.nan,
                          P_cm=float(1 / f[int(np.argmax(p))])))
     return pd.DataFrame(recs)
+
+
+def time_split_snr(g: np.ndarray, t: np.ndarray, P: float, t_split: float = TSPLIT_T_SPLIT) -> dict:
+    """Local LS S/N at period ``P`` in each time half of one stack, and whether each half's top peak agrees.
+
+    ``g`` is a stack on the common grid ``t`` (days); corrupt (|g - 1| > OUTLIER_THRESH)
+    and exact-linear-fill cadences are dropped. For each half (t < t_split, t >= t_split)
+    with >= 500 good cadences and P <= 60 d: S/N = LS power at 1/P divided by the median
+    power on a 0.1-60 d grid at 3-25% fractional frequency offset from 1/P; ``top_h*`` is
+    True when that half's LS top peak is within 5% of P, P/2 or 2P. Returns snr_h1,
+    snr_h2, top_h1, top_h2 and tsplit_min_snr (the smaller S/N).
+    """
+    from astropy.timeseries import LombScargle
+    g = np.asarray(g, np.float64)
+    bad = ~np.isfinite(g) | (np.abs(g - 1) > gp.OUTLIER_THRESH)
+    flat = np.zeros(len(g), bool)
+    flat[1:-1] = gp.collinear(np.where(bad, 1.0, g))
+    ok = ~(bad | flat)
+    r = {}
+    for h, m in (("h1", t < t_split), ("h2", t >= t_split)):
+        mm = m & ok
+        snr, hit = np.nan, False
+        if mm.sum() >= 500 and np.isfinite(P) and P <= 60:
+            tt, y = t[mm], g[mm] - np.median(g[mm])
+            fmax = 1 / 0.1
+            f = np.linspace(1 / 60, fmax, int((fmax - 1 / 60) * 182 * 5))
+            ls = LombScargle(tt, y)
+            p = ls.power(f, method="fast")
+            f0 = 1 / P
+            band = (np.abs(f / f0 - 1) < 0.25) & (np.abs(f / f0 - 1) > 0.03)
+            if band.sum() > 5:
+                snr = float(ls.power(f0) / np.median(p[band]))
+            top = 1 / f[np.argmax(p)]
+            hit = any(abs(top / q - 1) < 0.05 for q in (P, P / 2, 2 * P))
+        r[f"snr_{h}"], r[f"top_{h}"] = snr, hit
+    r["tsplit_min_snr"] = float(np.nanmin([r["snr_h1"], r["snr_h2"]])) if np.isfinite(
+        [r["snr_h1"], r["snr_h2"]]).all() else np.nan
+    return r
 
 
 def period_clusters(P: pd.Series, tol: float = 0.01, min_n: int = 10) -> pd.DataFrame:
@@ -266,6 +314,9 @@ def main():
     cm = ls_after_projection(X, V, t, src.P_ref.values)
     src = pd.concat([src, cm], axis=1)
     src["cm_survives"] = src.cm_retained >= 0.5
+    src = pd.concat([src, pd.DataFrame([time_split_snr(S[i], t, P) for i, P in
+                                        zip(idx.reset_index().set_index("galaxy").loc[src.galaxy, "index"],
+                                            src.P_ref)])], axis=1)
 
     clus = period_clusters(src.P1_all)
     clus.to_csv(out / "period_clusters.csv", index=False)
@@ -274,7 +325,10 @@ def main():
         in_cluster |= (np.abs(src.P1_all - pc) / pc < 0.02).values
 
     ls_periodic = src.persist.fillna(False).astype(bool) & (src.pow1_all >= LS_POWER_MIN)
-    periodic = ls_periodic | src.pipe_success.fillna(False).astype(bool)
+    periodic0 = ls_periodic | src.pipe_success.fillna(False).astype(bool)
+    low_amp = ~periodic0 & (src.P_ref < TSPLIT_P_MAX) & (src.tsplit_min_snr > TSPLIT_SNR_MIN)
+    src["time_coherent_low_amp"] = low_amp
+    periodic = periodic0 | low_amp
     src["ls_periodic"] = ls_periodic
     # A star-like Gaia source at the target position that carries most of the target's light
     # (G within 1.5 mag of Tmag). Parallax/proper motion can't be required: LMC stars have neither.
@@ -286,12 +340,13 @@ def main():
     src["star_like_center"] = star_like.fillna(False)
     src["tess_timescale"] = [any(abs(p - q) / q < 0.03 for q in (TESS_ORBIT_D, 2 * TESS_ORBIT_D, 1.0))
                              if pd.notna(p) else False for p in src.P_ref]
-    cond = [~periodic,
+    cond = [low_amp,
+            ~periodic,
             ~src.cm_survives.fillna(False).astype(bool),
             src.star_like_center,
             var_nb.fillna(False),
             crowded.fillna(False)]
-    names = ["quiet", "systematic_common_mode", "misclassified_star", "contamination_known_variable",
+    names = ["periodic_low_amplitude", "quiet", "systematic_common_mode", "misclassified_star", "contamination_known_variable",
              "contamination_candidate_crowded"]
     src["classification"] = np.select(cond, names, default="source_specific_unexplained")
     src["exclude_from_training"] = src.classification.isin(EXCLUDE_FROM_TRAINING)
@@ -301,7 +356,7 @@ def main():
     # A/B agreement (top peaks of the disjoint halves), the pipeline's own period, common-mode retention.
     flag_cols = ["galaxy", "tic", "classification", "periodic", "exclude_from_training", "P_ref",
                  "amp1_ppm_all", "pow1_all", "P1_all", "P1_A", "P1_B", "persist", "ls_periodic",
-                 "pipe_success", "pipe_P", "cm_retained", "near_lmc"]
+                 "pipe_success", "pipe_P", "cm_retained", "near_lmc", "tsplit_min_snr"]
     flags = gmap[["row", "sim_id", "galaxy", "pool"]].merge(src[flag_cols], on="galaxy")
     with sd.atomic_path(ex / "galaxy_ids" / "noise_source_flags.csv.gz") as tmp:
         flags.sort_values("row").to_csv(tmp, index=False, compression="gzip")
