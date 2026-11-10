@@ -2,6 +2,14 @@
 
 **Date:** 2026-10-21 · **Author:** data-auditor session (T20) · **Branch:** `claude/t20-galaxy-quietness-c3bb9b` · **Status:** draft
 
+> **Update 2026-11-10 (Rae's decision; see `reports/2026-11-10_quiet-noise-periods/`):** a new class
+> `periodic_low_amplitude` holds 34 formerly "quiet" sources whose LS top peak (P_ref < 5 d) has
+> local S/N > 20 in *both* time halves of the year (rule `galaxy_phase2_analysis.TSPLIT_*`, ported from
+> the 2026-11-09 note review, reproduces its 34-source list exactly). They are now `periodic` and
+> `exclude_from_training`. New totals: **240 periodic sources, 141,056 files** (27,828 of the 200,000
+> ≥800k-pool files are excluded, was 23,595); quiet = 1,479 sources. The data tables and figures in this
+> folder are regenerated; the numbers in the text below are the original 2026-10-21 ones.
+
 ## TL;DR
 - **Rae's suspicion is confirmed, and it explains most of the "confident wrong" answers.**
   - **206 of the 1,719 noise light curves (12%) carry a real periodic signal.** They underlie **121,502 SMARTS files (12.2%)**: 23,894 of the 199,728 files in the ≥800k dev/holdout pool, and the rest in the <800k pool.

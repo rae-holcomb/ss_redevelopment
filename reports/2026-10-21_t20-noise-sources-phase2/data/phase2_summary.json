@@ -1,15 +1,16 @@
 {
  "n_sources": 1719,
  "classification": {
-  "quiet": 1513,
+  "quiet": 1479,
   "contamination_known_variable": 90,
   "contamination_candidate_crowded": 63,
   "source_specific_unexplained": 44,
+  "periodic_low_amplitude": 34,
   "systematic_common_mode": 8,
   "misclassified_star": 1
  },
- "n_periodic": 206,
- "files_in_periodic_sources": 121502,
+ "n_periodic": 240,
+ "files_in_periodic_sources": 141056,
  "period_clusters": [
   {
    "P_center": 0.8268625225451991,
@@ -254,9 +255,9 @@
   "null_max": 3
  },
  "devmedium_wrong_rate": {
-  "periodic_source": 0.4296875,
-  "quiet_source": 0.03784403669724771,
-  "n_periodic": 128
+  "periodic_source": 0.38666666666666666,
+  "quiet_source": 0.03529411764705882,
+  "n_periodic": 150
  },
  "devmedium_by_class": {
   "contamination_candidate_crowded": {
@@ -283,13 +284,21 @@
    "none": 2,
    "wrong": 0
   },
+  "periodic_low_amplitude": {
+   "correct": 2,
+   "diffrot": 1,
+   "double": 0,
+   "half": 0,
+   "none": 16,
+   "wrong": 3
+  },
   "quiet": {
-   "correct": 177,
-   "diffrot": 42,
+   "correct": 175,
+   "diffrot": 41,
    "double": 1,
    "half": 6,
-   "none": 613,
-   "wrong": 33
+   "none": 597,
+   "wrong": 30
   },
   "source_specific_unexplained": {
    "correct": 7,
