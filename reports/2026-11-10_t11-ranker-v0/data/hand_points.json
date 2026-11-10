@@ -1,0 +1,17 @@
+{
+ "fullyear": {
+  "coverage": 0.35,
+  "precision": 0.7085714285714285,
+  "success": 0.248
+ },
+ "assigned": {
+  "coverage": 0.211,
+  "precision": 0.7014218009478673,
+  "success": 0.148
+ },
+ "train": {
+  "coverage": 0.2,
+  "precision": 0.89,
+  "success": 0.178
+ }
+}

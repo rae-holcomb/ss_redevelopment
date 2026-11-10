@@ -1,0 +1,15 @@
+key,n_train,variant,objective,dev,coverage,success,precision
+n1000_wideband_w05_ndcg,1000,wideband_w05,ndcg,fullyear,0.35,0.264,0.7542857142857143
+n1000_wideband_w05_ndcg,1000,wideband_w05,ndcg,assigned,0.211,0.154,0.7298578199052133
+n1000_base_ndcg,1000,base,ndcg,fullyear,0.35,0.263,0.7514285714285714
+n1000_base_ndcg,1000,base,ndcg,assigned,0.211,0.153,0.7251184834123223
+n1000_fiterr0_ndcg,1000,fiterr0,ndcg,fullyear,0.35,0.264,0.7542857142857143
+n1000_fiterr0_ndcg,1000,fiterr0,ndcg,assigned,0.211,0.155,0.7345971563981043
+n500_base_ndcg,500,base,ndcg,fullyear,0.35,0.263,0.7514285714285714
+n500_base_ndcg,500,base,ndcg,assigned,0.211,0.158,0.7488151658767772
+n250_base_ndcg,250,base,ndcg,fullyear,0.35,0.257,0.7342857142857143
+n250_base_ndcg,250,base,ndcg,assigned,0.211,0.153,0.7251184834123223
+n1000_base_pairwise,1000,base,pairwise,fullyear,0.35,0.269,0.7685714285714286
+n1000_base_pairwise,1000,base,pairwise,assigned,0.211,0.154,0.7298578199052133
+n1000_wideband_rel0_ndcg,1000,wideband_rel0,ndcg,fullyear,0.35,0.263,0.7514285714285714
+n1000_wideband_rel0_ndcg,1000,wideband_rel0,ndcg,assigned,0.211,0.154,0.7298578199052133

@@ -836,7 +836,11 @@ for confirmation (ask Rae first).
 
 ### T11. Train and evaluate the ranker
 - **Agent:** `ranking-model-builder`
-- **Status:** blocked (on T10)
+- **Status:** v0 done 2026-11-10 (`reports/2026-11-10_t11-ranker-v0/`, branch `claude/t11-ranker-v0-2d9aed`, draft):
+  `rank:ndcg` on train_1k beats hand arbitration modestly at matched training precision (dev_medium full-year
+  success 0.248 → 0.267, assigned 0.148 → 0.188; no-decline top-1 0.441 / 0.328), loses at 10–30 d / > 30 d full-year
+  because the global decline threshold over-declines right answers there (P24). 3k point pending Rae's table run
+  (`tools/train_ranker.py --train .../train_3k --sizes 3000 --outdir runs/t11_ranker --resume`).
 - **Goal:** XGBoost ranker, star-grouped splits, beats hand-tuned arbitration
   per period bin, with a calibrated "decline" threshold.
 - **Revisit the hard period limits (Rae, 2026-11-10; see P23):** don't let the ACF-based R/2 cap remove candidates
@@ -1264,3 +1268,12 @@ for confirmation (ask Rae first).
   - (c) Consider a non-ACF scoring path for P > R/2, e.g. wavelet/LS-based evidence, instead of skipping outright.
   - (d) Re-check the other hard limits the same way (P_min, gate cutoffs) once the ranker exists.
 - **Note:** T10's feature tables already include `beyond_reach` candidates as rows (brief, 2026-11-10).
+
+### P24. Ranker decline stage: period-aware accept model (from T11 v0, 2026-11-10)
+- **Proposed by:** T11 v0 report. The ranker's top-1 ordering is far ahead of hand arbitration (no-decline success
+  0.44 vs 0.25 full-year), but one global top-score threshold over-declines long periods: 34 of the 39 full-year stars
+  hand arbitration gets and the ranker misses had a *correct* top-1 below threshold (10–30 d, > 30 d), and OOF→dev
+  precision drops 0.89 → 0.67–0.75.
+- **Idea:** star-level accept classifier on OOF top-1 rows (top score, margin, top period, `P_over_reach`, coverage
+  descriptors), or per-candidate-period-bin thresholds set on OOF; add a full-year (or mixed-coverage) training
+  table so long-period full-year stars are represented; refit once T27 negatives exist.
