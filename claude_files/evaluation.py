@@ -316,3 +316,42 @@ def is_searchable(period_lo, reach) -> bool:
     if _is_missing(period_lo) or _is_missing(reach):
         return False
     return float(period_lo) <= SEARCHABLE_REACH_FACTOR * float(reach)
+
+
+# ---------------------------------------------------------------------------
+# Noise-source period diagnostics (T24, scorecard v5).
+#
+# The SMARTS noise light curves (the "galaxy" stacks) sometimes carry a real periodic
+# signal (T20: mostly neighbour-star contamination). A `wrong` answer that equals that
+# period is the pipeline being right about the data but not about the label. These helpers
+# only *break down* `wrong`; they never create a new top-level outcome, never change
+# classify_period/best_outcome, and a noise-period match is never a success.
+# ---------------------------------------------------------------------------
+
+def noise_period_match(measured, noise_period, rel_tol: float = REL_TOL) -> bool:
+    """True if `measured` is within rel_tol (relative) of the noise source's own period.
+
+    False if either value is missing or non-positive. Does not look at the star's truth: callers
+    apply it to `wrong` answers only.
+    """
+    if _is_missing(measured) or _is_missing(noise_period) or float(noise_period) <= 0:
+        return False
+    return _in_window(float(measured), float(noise_period), rel_tol)
+
+
+def noise_alias_kind(measured, noise_period, rel_tol: float = REL_TOL) -> Optional[str]:
+    """'half' / 'double' if `measured` is within rel_tol of noise_period/2 or 2*noise_period, else None.
+
+    A direct match (noise_period_match) takes precedence and returns None here. A diagnostic only:
+    whether such answers should count as noise-period answers is Rae's call (T24 open question).
+    """
+    if _is_missing(measured) or _is_missing(noise_period) or float(noise_period) <= 0:
+        return None
+    m, p = float(measured), float(noise_period)
+    if _in_window(m, p, rel_tol):
+        return None
+    if _in_window(m, p / 2, rel_tol):
+        return HALF
+    if _in_window(m, 2 * p, rel_tol):
+        return DOUBLE
+    return None
