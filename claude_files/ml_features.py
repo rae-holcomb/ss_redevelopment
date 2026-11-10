@@ -1046,3 +1046,89 @@ def extract_candidate_features(
         ).astype(int)
 
     return df
+
+# ==========================================================================
+# Candidates without a comb fit (T10, 2026-11-10)
+# ==========================================================================
+
+def extract_unfit_candidate_features(
+    result: EnsembleResult,
+    guesses: list,
+    time: np.ndarray,
+    flux: np.ndarray,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    *,
+    star_id: Optional[Union[str, int]] = None,
+    agreement_rel_tol: float = 0.03,
+) -> pd.DataFrame:
+    """One feature row per candidate that has no comb fit, evaluated at its pre-fit period P0.
+
+    Covers ``result.failed_candidates`` (the fit raised: ``fit_error`` = True) and
+    ``result.beyond_reach_candidates`` (P0 > the searchable range, never fit, T16c:
+    ``beyond_reach`` = True). The ranker table (T10) includes every candidate, so
+    these rows carry every feature that doesn't need a fit, under the same column
+    names as extract_candidate_features, computed at P0 instead of fitted_P:
+    provenance (method, rank, strength, n_duplicate_guesses, n_contributing_methods),
+    peak budget (n_teeth_available, n_peaks_required, few_peaks), s_ph, the Section G
+    alias features, the Section D method-spectrum features, the star-level Sections A
+    and H features, the per-candidate coverage features and P_over_reach.
+    Fit-derived columns (fitted_P, redchi, peak shapes, cross-candidate agreement)
+    are absent here and become NaN when the two tables are concatenated.
+
+    Parameters
+    ----------
+    result : the EnsembleResult from fit_rotation_period.
+    guesses : the guess pool whose methods' spectra are evaluated (same list as
+        passed to extract_candidate_features).
+    time, flux : the light curve.
+    acf_lags, acf : the ACF passed to fit_rotation_period.
+    star_id : identifier copied into every row.
+    agreement_rel_tol : as in extract_candidate_features.
+
+    Returns
+    -------
+    pd.DataFrame, one row per unfit candidate (empty if there are none).
+    """
+    unfit = [(c, False) for c in result.failed_candidates] + \
+            [(c, True) for c in getattr(result, "beyond_reach_candidates", [])]
+    if not unfit:
+        return pd.DataFrame()
+    baseline = float(acf_lags[-1] - acf_lags[0])
+    t_fin = np.asarray(time, dtype=float)[np.isfinite(np.asarray(flux, dtype=float))]
+    lc_baseline = float(t_fin[-1] - t_fin[0]) if len(t_fin) > 1 else np.nan
+    method_reps = _group_guesses_by_method(guesses)
+    lc_features = _lightcurve_level_features(time, flux)
+    star_cov, segment_days = _star_coverage_features(time, flux)
+    reach = searchable_range(time, flux)["reach"]
+    rows = []
+    for c, beyond in unfit:
+        P = float(c.period)
+        guess = c.source_guess
+        ok = np.isfinite(P) and P > 0
+        row = dict(
+            star_id=star_id, period=P,
+            log_period=np.log10(P) if ok else np.nan,
+            period_frac_of_baseline=P / baseline if baseline > 0 else np.nan,
+            t0=c.t0, method=guess.method, rank=guess.rank, strength=guess.strength,
+            coverage_at_generation=guess.info.get("coverage", np.nan),
+            n_teeth_available=c.n_teeth_available, n_peaks_required=c.n_peaks_required,
+            few_peaks=bool(c.few_peaks),
+            P_over_lc_baseline=(P / lc_baseline) if ok and lc_baseline > 0 else np.nan,
+            passed_gates=False,
+            acf_std=float(np.std(acf)), baseline_days=baseline, lc_baseline_days=lc_baseline,
+            n_acf_points=len(acf_lags),
+            s_ph=_s_ph(time, flux, P) if ok else np.nan,
+            n_duplicate_guesses=int(c.n_duplicate_guesses),
+            n_contributing_methods=len(c.contributing_methods),
+            fit_error=not beyond, beyond_reach=beyond,
+        )
+        if ok:
+            row.update(_alias_discrimination_features(time, flux, acf_lags, acf, P))
+            row.update(_method_spectrum_features(P, c.t0, method_reps, agreement_rel_tol))
+        row.update(lc_features)
+        row.update(star_cov)
+        row.update(_candidate_coverage_features(P, star_cov, segment_days))
+        row.update(_reach_features(P, reach))
+        rows.append(row)
+    return pd.DataFrame(rows)

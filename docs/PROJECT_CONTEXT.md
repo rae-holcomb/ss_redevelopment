@@ -607,6 +607,14 @@ chats should know:
   (new T29), T16h, T12, own butterpy sims, and the mission-agnostic API (new T30). Gate hand-tuning (T16d, P1, P7, P21)
   is paused in favour of the ranker. D2 leaning: per-batch candidates aggregated into fixed-size features before the
   ranker. New open issues 17–18.
+- **2026-11-10 — T10 ranker v0 feature tables** (`reports/2026-11-10_t10-ranker-feature-tables/`):
+  `tools/build_feature_tables.py` (every candidate incl. gate-failed / fit-error / beyond-reach,
+  gates as features, graded `relevance` 2/1/0, `star_id` + `noise_tic` per row; schema
+  `docs/FEATURE_TABLE_SCHEMA.md`; reproduces the scorecard's final answer bit-for-bit on dev_medium).
+  `datasets/train_v0.csv`: 3,000 SIM_ID < 800k **strict-quiet** stars (coherent-quiet sources
+  excluded, Rae 2026-11-10), nested `nested_1k`. Alias check: T9 features don't penalize diffrot
+  within a star, but the half-lag gate passes 32% of diffrot vs 52% of correct candidates.
+  Pitfall: spawned pool workers re-import modules, so module-global overrides don't reach them.
 - **2026-11-10, scorecard v5 (T24/T25/P22b; branch claude/t24-t25-scorecard-v5-84eca3, report
   `reports/2026-11-10_scorecard-v5-noise-period/`):** noise-source join (`benchmarks/noise_sources_dev.csv`, built by
   `tools/build_noise_table.py`) gives per-star `noise_*` columns and `final.noise.*` (wrong split into noise_period vs other:

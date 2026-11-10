@@ -5,6 +5,13 @@
 | `dev_small.csv` | 50 | `data/smarts_dev` | laptop: `data/smarts_dev/` (gitignored, ~8 MB) |
 | `dev_medium.csv` | 1,000 | `data/smarts_dev` | laptop: `data/smarts_dev/` (~156 MB together with dev_small) |
 | `holdout.csv` | 3,000 | the SMARTS data root (`$SMARTS_DATA_ROOT`, default `/Volumes/Data_Vault/smarts_data`) | drive: `extracted/holdout/` |
+| `train_v0.csv` (T10) | 3,000 | `$SMARTS_DATA_ROOT` | drive: `extracted/train_v0/` |
+
+`train_v0.csv` is the ranker v0 **training** sample (`tools/build_train_sample.py`, seed 20261110): SIM_ID < 800k,
+strict-quiet noise (T20 `quiet`, not `exclude_from_training`, not the 2026-11-09 coherent-quiet list, not the one
+noise TIC shared with the >= 800k pool), stratified and coverage-assigned like dev_medium. The first 1,000 rows
+(`nested_1k`, `train_order` 0-999) are a balanced nested subset. Extra columns: `subset`, `nested_1k`,
+`train_order`, `noise_tic`, `noise_classification`, `noise_coherent_quiet`. Summary: `train_v0_build_summary.json`.
 
 **Never score `holdout.csv` unless Rae says so.** These manifests are frozen once Rae
 approves them. A change means a new versioned file (`dev_medium_v2.csv`), never an edit.

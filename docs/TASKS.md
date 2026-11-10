@@ -817,7 +817,9 @@ for confirmation (ask Rae first).
 
 ### T10. Feature-table generation at scale
 - **Agent:** `ranking-model-builder`
-- **Status:** ready (T2 done). **Roadmap step 2 (2026-11-09):** aim at a rough v0 first; see the Roadmap. Include
+- **Status:** v0 done 2026-11-10 (`reports/2026-11-10_t10-ranker-feature-tables/`): builder, schema,
+  `datasets/train_v0.csv`, dev_medium + train_1k tables. Full 3k table is Rae's local run
+  (`tools/run_t10_train_tables.sh`); T27 negatives still to append. **Roadmap step 2 (2026-11-09):** aim at a rough v0 first; see the Roadmap. Include
   gate-failed candidates (gate results as features), quiet noise sources only, and T27's negatives.
 - **Goal:** resumable parallel script producing candidate feature tables for
   dev_medium plus a training sample. Rae runs it locally.
