@@ -607,3 +607,10 @@ chats should know:
   (new T29), T16h, T12, own butterpy sims, and the mission-agnostic API (new T30). Gate hand-tuning (T16d, P1, P7, P21)
   is paused in favour of the ranker. D2 leaning: per-batch candidates aggregated into fixed-size features before the
   ranker. New open issues 17–18.
+- **2026-11-10 — T20 reclass + quiet-noise periods** (`reports/2026-11-10_quiet-noise-periods/`). Rae's decision applied:
+  new T20 class `periodic_low_amplitude` (quiet, P_ref < 5 d, time-split local LS S/N > 20 in both halves; reproduces
+  the note review's 34 sources), excluded from training. Now 240 periodic sources / 141,056 files; 27,828 of the
+  200,000 ≥800k-pool files excluded. `noise_source_flags.csv.gz` regenerated (new column `tsplit_min_snr`). Remaining
+  quiet P_ref values look like red-noise/common-mode peaks of the fixed noise realization: dev_medium's 10 remaining
+  quiet `noise_period` wrongs are 5× chance (null mean 2.0) but none of their sources is time-coherent or has a Gaia/FFI
+  match. Weak injected signals let the pipeline lock onto the noise peak. Recommended: no further exclusions.
