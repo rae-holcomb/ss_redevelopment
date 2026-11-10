@@ -701,8 +701,7 @@ for confirmation (ask Rae first).
 
 ### T24. Scorecard/evaluation: `noise_period` outcome (from T20, 2026-10-22)
 - **Agent:** `method-improver` (evaluation + scorecard reporting; approved by Rae via T20's recommendations)
-- **Status:** ready once T20 is merged (needs the noise-source flags). Coordinate the scorecard version bump with
-  T22/T23.
+- **Status:** done, merged 2026-11-10 (`reports/2026-11-10_scorecard-v5-noise-period/`), implemented as a breakdown of `wrong`. Rae: merge as is, so `noise_period` matches the noise source's `P_ref` for every class, quiet included; halves and doubles stay a diagnostic (`noise_alias`). Revisit if the quiet-noise probe's shuffled null shows the 12 quiet-class matches are chance.
 - **Why:** 51 of dev_medium's 88 `wrong` answers equal the period the pipeline finds on the star's noise source alone
   (T20 phase 2). The pipeline is right about the data, but the label doesn't contain that signal.
 - **Do:**
@@ -717,7 +716,7 @@ for confirmation (ask Rae first).
 
 ### T25. dev_medium metrics on the quiet-noise subset (from T20, 2026-10-22)
 - **Agent:** `method-improver` (scorecard reporting only)
-- **Status:** ready once T20 is merged; can share T24's join.
+- **Status:** done, merged with T24 2026-11-10; goals for Rae to set. **Follow-up:** once the quiet-noise reclassification (`periodic_low_amplitude`, branch prefix `quiet-noise-reclass`) regenerates the flags file, rebuild `benchmarks/noise_sources_dev.csv` from it (`tools/build_noise_table.py`) instead of the review's `noise_quiet_coherent.csv` list, and re-baseline if any v5 key moves.
 - **Why:** 128 of dev_medium's 1,000 stars sit on periodic noise sources, with a 43% wrong rate vs 3.8% on quiet
   sources. Method changes should be judged on both.
 - **Do:** a per-star descriptor column (`noise_class`, `noise_periodic`, `noise_exclude`) and metrics on the quiet
@@ -840,6 +839,9 @@ for confirmation (ask Rae first).
 - **Status:** blocked (on T10)
 - **Goal:** XGBoost ranker, star-grouped splits, beats hand-tuned arbitration
   per period bin, with a calibrated "decline" threshold.
+- **Revisit the hard period limits (Rae, 2026-11-10; see P23):** don't let the ACF-based R/2 cap remove candidates
+  that another method (e.g. wavelet) can still support. Give the ranker `beyond_reach` candidates as rows, with
+  `P_over_reach` as a feature, rather than relying on the comb fit's skip.
 - **External benchmark (Rae, 2026-10-14, from T9):** where SMARTS CNN predictions
   are available (Claytor+2022 σ_P, the only published *learned* reliability score
   for SMARTS-like data), compare the ranker's decline threshold and
@@ -1246,3 +1248,19 @@ for confirmation (ask Rae first).
   candidates for ~2/3 of 1–2-sector stars); investigate single-sector LS top-1 errors (sector/ramp systematics,
   not window aliasing); (d) a synthetic suite with log-uniform P/R in 0.2–0.8 per coverage class to tighten the R/2
   validation near the edge; (e) a short-period synthetic suite to measure a "reliable from" P floor (T16d or D1; Rae's call).
+
+### P23. Don't discard beyond-reach candidates that some method can still recover (Rae, 2026-11-10)
+- **Proposed by:** Rae, from scorecard v5's P22(b) rows (`reports/2026-11-10_scorecard-v5-noise-period/`).
+- **Observation:** on dev_medium full-year, 108 of the 1,261 `beyond_reach` candidates (P0 > R/2, skipped by the comb
+  fit since T16c) score as success by their raw P0: 57 `correct`, 51 `diffrot`. So Stage 1 sometimes proposes the right
+  period above the ACF's reach. Not yet known: how many of those stars are searchable (truth can sit just under R/2
+  while P0 sits just over it, or the diffrot range can straddle R/2) and how many currently have no success.
+- **Principle:** R/2 is a limit of the *ACF* comb fit, not of every method. Wavelet or LS may still identify a period the
+  ACF can't confirm. A hard cap shouldn't stop such a candidate from reaching final selection.
+- **Ideas:**
+  - (a) Quantify first: count the 108 by star searchability and current outcome.
+  - (b) In the ranker (T10/T11), keep `beyond_reach` candidates as rows, with `P_over_reach` and per-method support as
+    features, and let the model learn when they're trustworthy.
+  - (c) Consider a non-ACF scoring path for P > R/2, e.g. wavelet/LS-based evidence, instead of skipping outright.
+  - (d) Re-check the other hard limits the same way (P_min, gate cutoffs) once the ranker exists.
+- **Note:** T10's feature tables already include `beyond_reach` candidates as rows (brief, 2026-11-10).

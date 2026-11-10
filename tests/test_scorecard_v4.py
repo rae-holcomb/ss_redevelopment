@@ -97,7 +97,7 @@ def test_v4_metric_groups():
 
 
 def test_scorecard_version_and_columns():
-    assert scorecard.SCORECARD_VERSION == 4
+    assert scorecard.SCORECARD_VERSION == 5
     t, f = _lc(gap=(1500, 2500))
     cols = scorecard._searchability_columns(t, f + 0.01 * np.sin(t), 3.0, (2.8, 3.6))
     assert set(cols) == {"acf_reach", "P_over_reach", "searchable", "band_width", "band_width_class", "flux_amp"}

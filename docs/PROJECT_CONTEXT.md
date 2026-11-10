@@ -615,3 +615,11 @@ chats should know:
   excluded, Rae 2026-11-10), nested `nested_1k`. Alias check: T9 features don't penalize diffrot
   within a star, but the half-lag gate passes 32% of diffrot vs 52% of correct candidates.
   Pitfall: spawned pool workers re-import modules, so module-global overrides don't reach them.
+- **2026-11-10, scorecard v5 (T24/T25/P22b; branch claude/t24-t25-scorecard-v5-84eca3, report
+  `reports/2026-11-10_scorecard-v5-noise-period/`):** noise-source join (`benchmarks/noise_sources_dev.csv`, built by
+  `tools/build_noise_table.py`) gives per-star `noise_*` columns and `final.noise.*` (wrong split into noise_period vs other:
+  65 of dev_medium full-year's 88 wrong match the noise source's P_ref), `final.quiet_noise` / `final.quiet_noise_strict`
+  (drops 22 coherent-quiet stars) / `final.periodic_noise`; `--noise-subset`; `per_candidate.csv` `beyond_reach` rows (P22b).
+  All v4 keys bit-identical; `*_v5.json` baselines committed. Open for Rae: halves/doubles of the noise period, quiet-class
+  P_ref matches, quiet-subset goals.
+- **2026-11-10: Scorecard v5 (T24+T25+P22b) merged.** Rae chose "merge as is": `noise_period` (a breakdown of `wrong`) matches the noise source's `P_ref` for every class, quiet included (65/88 dev_medium full-year wrongs; 12 of them on quiet-class sources); halves/doubles are a diagnostic only. The quiet subsets are `final.quiet_noise` and `final.quiet_noise_strict` (drops the 34 coherent-quiet sources, which Rae has since decided to reclassify as `periodic_low_amplitude` and exclude from training). All v4 keys are bit-identical. The `noise_sources_dev.csv` table must be rebuilt from the regenerated flags once the reclassification lands.
