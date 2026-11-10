@@ -20,9 +20,13 @@ Every row carries ``star_id`` and ``noise_tic`` (the TESS noise source) for grou
 splits, plus the T20 noise flags and ``noise_coherent_quiet`` (the 2026-11-09 review's
 list of quiet sources with coherent short-period signals).
 
-Non-rotator negatives (T27) append with the same schema: ``is_rotator`` = False,
-``label_source`` = their origin, ``true_period`` NaN, ``relevance`` 0. See
-``docs/FEATURE_TABLE_SCHEMA.md`` for every column.
+Non-rotator negatives (T27, ``--nonrotator``) append with the same schema:
+``is_rotator`` = False, ``label_source`` = their origin (``smarts_noise_stack``),
+``true_period`` NaN, ``relevance`` 0 for every candidate, ``outcome`` ``wrong`` for any
+period (``none`` when there is none) and ``period_bin`` ``nonrotator``. The manifest is
+``datasets/negatives_v0.csv`` (``tools/build_negatives_manifest.py``): T20's recovered
+noise stacks with real TESS sector patterns; noise flags are joined on ``noise_tic``.
+See ``docs/FEATURE_TABLE_SCHEMA.md`` for every column.
 
 Outputs (in --outdir)
 ---------------------
@@ -44,6 +48,8 @@ Usage
     ... --combine-only    # just rebuild candidates.csv.gz / stars.csv.gz from the shards
     ... --combine-only --refresh-noise   # same, re-joining noise_* from the current flags file
     ... --n-workers 1     # serial, for debugging
+    python tools/build_feature_tables.py --nonrotator --manifest datasets/negatives_v0.csv \
+        --only-set train --outdir /Volumes/Data_Vault/smarts_data/extracted/t27_negatives/train
 """
 from __future__ import annotations
 
@@ -86,12 +92,17 @@ FLAG_COLUMNS = {"tic": "noise_tic", "classification": "noise_classification",
 STAR_CONTEXT = ["row", "sim_id", "pbin", "eval_pbin", "amp_tier", "shear_class", "stratum",
                 "coverage_class", "sampling_weight", "coverage_weight", "combined_weight",
                 "train_order", "nested_1k"]
+# Negatives-manifest columns copied into the star table (T27, --nonrotator).
+NEG_CONTEXT = ["noise_tic", "galaxy", "source_class", "pool", "eval_set", "draw_id", "seed", "is_rotator",
+               "label_source"]
 # Per-row star context (every candidate row carries these).
 ROW_CONTEXT = ["noise_tic", "noise_classification", "noise_periodic",
                "noise_exclude_from_training", "noise_coherent_quiet"]
 RELEVANCE = {ev.CORRECT: 2, ev.DIFFROT: 1}
 ALIAS_OUTCOMES = (ev.HALF, ev.DOUBLE)
 LABEL_SOURCE = "smarts_injected"
+NONROTATOR_BIN = "nonrotator"  # period_bin of non-rotator negatives (no true period)
+_DUMMY_P = 1.0  # stand-in truth for scorecard gate records of a non-rotator (outcomes discarded)
 
 # Columns that are identifiers, truth or bookkeeping: never model inputs (T11 uses
 # feature_columns()). Everything else in candidates.csv.gz is a candidate feature.
@@ -109,6 +120,31 @@ def feature_columns(df: pd.DataFrame) -> list:
     String columns (``method``) are kept; T11 decides how to encode them.
     """
     return [c for c in df.columns if c not in NON_FEATURE_COLUMNS]
+
+
+def classify(p, true_p, rel_tol, prange) -> str:
+    """``evaluation.classify_period``, extended to non-rotators (``true_p`` None).
+
+    For a non-rotator any reported period is ``wrong`` and no period is ``none``.
+    """
+    if true_p is None:
+        return ev.NONE if sc._missing(p) else ev.WRONG
+    return ev.classify_period(p, true_p, rel_tol, prange)
+
+
+def best_outcome_any(periods, true_p, rel_tol, prange) -> str:
+    """``evaluation.best_outcome(...)[0]``, extended to non-rotators (``wrong`` if any period)."""
+    if true_p is None:
+        return ev.WRONG if any(not sc._missing(p) for p in periods) else ev.NONE
+    return ev.best_outcome(periods, true_p, rel_tol, prange)[0]
+
+
+def nonrotator_searchability(t, f) -> dict:
+    """Star-level v4 descriptor columns for a non-rotator: ACF reach and flux amplitude only."""
+    ok = np.isfinite(f)
+    amp = float(np.percentile(f[ok], 95) - np.percentile(f[ok], 5)) if ok.sum() > 10 else None
+    return dict(acf_reach=ev.acf_reach(t, f), P_over_reach=None, searchable=None, band_width=None,
+                band_width_class=NONROTATOR_BIN, flux_amp=amp)
 
 
 def relevance_label(outcome: str) -> int:
@@ -140,7 +176,8 @@ def candidate_table(res, pooled, all_guesses, t, f, lags, acf, counts, star_id, 
     pooled : the guesses passed to the fit (kept for the record; features use all_guesses).
     all_guesses : every Stage 1 method's guesses (so method-spectrum features cover all methods).
     t, f : light curve; lags, acf, counts : the Stage 2 ACF and its pair counts.
-    star_id, true_p, prange : identity and truth (prange = active-band (P_lo, P_hi) or None).
+    star_id, true_p, prange : identity and truth (prange = active-band (P_lo, P_hi) or None);
+        true_p None = non-rotator (every candidate ``wrong``, relevance 0).
     rel_tol : evaluation tolerance (REL_TOL).
 
     Returns
@@ -148,7 +185,9 @@ def candidate_table(res, pooled, all_guesses, t, f, lags, acf, counts, star_id, 
     DataFrame (possibly empty) with features, gate columns and label columns.
     """
     parts = []
-    recs = sc._candidate_rows(res, lags, counts, true_p, rel_tol, prange)
+    # gate records don't depend on the truth; a non-rotator passes a stand-in (outcomes unused)
+    recs = sc._candidate_rows(res, lags, counts, _DUMMY_P if true_p is None else true_p, rel_tol,
+                              None if true_p is None else prange)
     n_fit = len(res.candidates)
     if n_fit:
         fit_df = ml_features.extract_candidate_features(res, all_guesses, t, f, lags, acf, star_id=star_id)
@@ -181,7 +220,7 @@ def candidate_table(res, pooled, all_guesses, t, f, lags, acf, counts, star_id, 
         return pd.DataFrame()
     df = pd.concat(parts, ignore_index=True)
     df["cand_index"] = np.arange(len(df))
-    df["outcome"] = [ev.classify_period(p, true_p, rel_tol, prange) for p in df["P_eval"]]
+    df["outcome"] = [classify(p, true_p, rel_tol, prange) for p in df["P_eval"]]
     df["relevance"] = df["outcome"].map(relevance_label).astype(int)
     df["alias_class"] = df["outcome"].where(df["outcome"].isin(ALIAS_OUTCOMES), "")
     return df
@@ -208,16 +247,20 @@ def build_one_star(task: dict, shard_dir: str, pipeline_methods: tuple, rel_tol:
     warnings.simplefilter("ignore")
     ctx = dict(task.get("context", {}))
     star = dict(star_id=task["star_id"], is_rotator=True, label_source=LABEL_SOURCE)
-    star.update(ctx)  # T27 can override is_rotator / label_source via the context
+    star.update(ctx)  # T27 negatives override is_rotator / label_source via the context
+    rotator = bool(star["is_rotator"])
     cands = pd.DataFrame()
     t_start = time.perf_counter()
     try:
         star_id, t, f, true_p, prange, meta, sectors = sc._load(task)
-        star.update(true_period=true_p, period_bin=ev.period_bin(true_p),
+        if not rotator:  # noise stack: the header PERIOD is a dummy; there is no truth
+            true_p, prange = None, None
+        star.update(true_period=true_p, period_bin=ev.period_bin(true_p) if rotator else NONROTATOR_BIN,
                     period_lo=prange[0] if prange else None, period_hi=prange[1] if prange else None,
                     sectors_requested=meta.get("sectors_requested"))
         star.update(sc._coverage_columns(t, f, sectors))
-        star.update(sc._searchability_columns(t, f, true_p, prange))
+        star.update(sc._searchability_columns(t, f, true_p, prange) if rotator
+                    else nonrotator_searchability(t, f))
         lags, acf, counts = compute_acf(t, f, return_counts=True)
         lags1, acf1 = compute_acf(t, f, max_lag_frac=STAGE1_MAX_LAG_FRAC)
         pooled, all_guesses = [], []
@@ -226,7 +269,7 @@ def build_one_star(task: dict, shard_dir: str, pipeline_methods: tuple, rel_tol:
                 flux_in = sc._gap_filled(f) if name == "wavelet" else f
                 out = two_view_guesses(fn, t, flux_in, (lags1, acf1), (lags, acf),
                                        n_guesses=sc.N_GUESSES.get(name, sc.N_GUESSES_DEFAULT))
-                star[f"stage1_{name}_outcome"] = ev.best_outcome([g.P0 for g in out], true_p, rel_tol, prange)[0]
+                star[f"stage1_{name}_outcome"] = best_outcome_any([g.P0 for g in out], true_p, rel_tol, prange)
                 all_guesses.extend(out)
                 if name in pipeline_methods:
                     pooled.extend(out)
@@ -236,7 +279,7 @@ def build_one_star(task: dict, shard_dir: str, pipeline_methods: tuple, rel_tol:
         res = fit_rotation_period(lags, acf, pooled, acf_counts=counts)
         P = float(res.best_fit.P) if res.success else None
         reason = res.decline_reason or {}
-        star.update(final_period=P, final_outcome=ev.classify_period(P, true_p, rel_tol, prange),
+        star.update(final_period=P, final_outcome=classify(P, true_p, rel_tol, prange),
                     pipeline_success=bool(res.success), decline_kind=reason.get("kind", ""),
                     decline_gates=";".join(reason.get("gates", [])), n_pooled=len(pooled),
                     n_fit_candidates=len(res.candidates), n_fit_error=len(res.failed_candidates),
@@ -282,23 +325,54 @@ def load_noise_context(man: pd.DataFrame, flags_path, coherent_path) -> pd.DataF
     return out.drop(columns="row")
 
 
+def load_noise_context_by_tic(man: pd.DataFrame, flags_path, coherent_path) -> pd.DataFrame:
+    """ROW_CONTEXT columns for a negatives manifest: T20 flags joined on ``noise_tic``.
+
+    A noise source's flags are the same in every one of its files (the flags file is
+    per file), so the first row per TIC is used. Aligned with ``man``.
+    """
+    fl = pd.read_csv(flags_path, usecols=list(FLAG_COLUMNS)).rename(columns=FLAG_COLUMNS)
+    fl = fl.drop_duplicates("noise_tic")
+    out = man[["noise_tic"]].astype("int64").merge(fl, on="noise_tic", how="left", validate="m:1")
+    coherent = set(pd.read_csv(coherent_path)["tic"].astype("int64"))
+    out["noise_coherent_quiet"] = out["noise_tic"].isin(coherent)
+    return out
+
+
 def build_tasks(args) -> list:
-    """Scorecard task dicts for the manifest, each with a ``context`` of star metadata."""
+    """Scorecard task dicts for the manifest, each with a ``context`` of star metadata.
+
+    With ``args.nonrotator`` the manifest is a negatives manifest (``noise_tic``,
+    ``is_rotator`` False, ...): noise flags are joined on ``noise_tic`` instead of the
+    catalog row, the NEG_CONTEXT columns are kept, and ``args.only_set`` keeps one
+    ``eval_set`` ('train' or 'dev_medium').
+    """
     ns = argparse.Namespace(synthetic=None, manifest=args.manifest, data_root=args.data_root,
                             ignore_manifest_sectors=args.ignore_manifest_sectors)
     tasks = sc.build_tasks(ns)
     man = pd.read_csv(args.manifest)
-    if "row" not in man.columns:
-        man["row"] = [int(Path(p).stem.split("-")[-1]) for p in man["path"]]
-    noise = load_noise_context(man, args.flags, args.coherent_list) if args.flags else None
+    nonrot = getattr(args, "nonrotator", False)
+    if nonrot:
+        if "noise_tic" not in man.columns or man["is_rotator"].astype(bool).any():
+            raise SystemExit(f"{args.manifest} is not a negatives manifest (needs noise_tic, is_rotator False)")
+        noise = load_noise_context_by_tic(man, args.flags, args.coherent_list) if args.flags else None
+    else:
+        if "row" not in man.columns:
+            man["row"] = [int(Path(p).stem.split("-")[-1]) for p in man["path"]]
+        noise = load_noise_context(man, args.flags, args.coherent_list) if args.flags else None
     keep = np.ones(len(man), bool)
     if args.only:
         keep = man[args.only].astype(str).str.lower().isin(["true", "1"]).to_numpy()
+    if getattr(args, "only_set", None):
+        keep &= (man["eval_set"] == args.only_set).to_numpy()
+    context_cols = STAR_CONTEXT + (NEG_CONTEXT if nonrot else [])
     out = []
     for i, task in enumerate(tasks):
         if not keep[i]:
             continue
-        ctx = {c: man.at[i, c] for c in STAR_CONTEXT if c in man.columns}
+        ctx = {c: man.at[i, c] for c in context_cols if c in man.columns}
+        if nonrot:
+            ctx["assigned_coverage_class"] = man.at[i, "coverage_class"]
         if noise is not None:
             ctx.update(noise.iloc[i].to_dict())
         ctx = {k: (v.item() if hasattr(v, "item") else v) for k, v in ctx.items()}
@@ -359,7 +433,16 @@ def main(argv=None):
     ap.add_argument("--flags", default=None, help="noise_source_flags.csv.gz (default <smarts-root>/" + FLAGS_PATH + ")")
     ap.add_argument("--no-flags", action="store_true", help="skip the noise-flag join (noise_* columns empty)")
     ap.add_argument("--coherent-list", default=str(COHERENT_LIST))
+    ap.add_argument("--nonrotator", action="store_true",
+                    help="negatives manifest (T27, datasets/negatives_v0.csv): no truth, relevance 0, "
+                         "flags joined on noise_tic; --data-root defaults to the SMARTS root")
+    ap.add_argument("--only-set", default=None, choices=["train", "dev_medium"],
+                    help="with --nonrotator: keep one eval_set of the negatives manifest")
     args = ap.parse_args(argv)
+    if args.only_set and not args.nonrotator:
+        ap.error("--only-set needs --nonrotator")
+    if args.nonrotator and args.data_root is None and not args.combine_only:
+        args.data_root = str(sd.require_drive(sd.data_root(args.smarts_root)))
     outdir = args.outdir if args.outdir.is_absolute() else ROOT / args.outdir
     (outdir / "shards").mkdir(parents=True, exist_ok=True)
     if args.no_flags:
@@ -371,9 +454,12 @@ def main(argv=None):
         noise = None
         if args.refresh_noise:
             man = pd.read_csv(args.manifest)
-            if "row" not in man.columns:
-                man["row"] = [int(Path(p).stem.split("-")[-1]) for p in man["path"]]
-            noise = load_noise_context(man, args.flags, args.coherent_list)
+            if args.nonrotator:
+                noise = load_noise_context_by_tic(man, args.flags, args.coherent_list)
+            else:
+                if "row" not in man.columns:
+                    man["row"] = [int(Path(p).stem.split("-")[-1]) for p in man["path"]]
+                noise = load_noise_context(man, args.flags, args.coherent_list)
             noise.index = man["star_id"] if "star_id" in man.columns else [Path(p).stem for p in man["path"]]
         print("combined: %d stars, %d candidate rows" % combine(outdir, noise))
         return
@@ -387,6 +473,7 @@ def main(argv=None):
         tasks = [t for t in tasks if t["star_id"] not in done]
     cfg = dict(manifest=str(args.manifest), data_root=args.data_root,
                ignore_manifest_sectors=args.ignore_manifest_sectors, only=args.only, limit=args.limit,
+               nonrotator=args.nonrotator, only_set=args.only_set,
                flags=args.flags, coherent_list=args.coherent_list,
                dataset=sc.dataset_string(argparse.Namespace(
                    synthetic=None, manifest=args.manifest, data_root=args.data_root,
