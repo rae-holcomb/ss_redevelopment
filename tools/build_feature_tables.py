@@ -42,6 +42,7 @@ Usage
         --only nested_1k --outdir /Volumes/Data_Vault/smarts_data/extracted/t10_tables/train_1k
     ... --resume          # skip stars that already have a shard
     ... --combine-only    # just rebuild candidates.csv.gz / stars.csv.gz from the shards
+    ... --combine-only --refresh-noise   # same, re-joining noise_* from the current flags file
     ... --n-workers 1     # serial, for debugging
 """
 from __future__ import annotations
@@ -161,8 +162,12 @@ def candidate_table(res, pooled, all_guesses, t, f, lags, acf, counts, star_id, 
         parts.append(fit_df)
     unfit = ml_features.extract_unfit_candidate_features(res, all_guesses, t, f, lags, acf, star_id=star_id)
     if len(unfit):
-        failed_recs = recs[n_fit:]
         n_err = len(res.failed_candidates)
+        # scorecard records: fitted, then fit-error, then (v5, P22b) beyond-reach rows
+        failed_recs = recs[n_fit:n_fit + n_err]
+        p0 = [float(c.period) for c in list(res.failed_candidates) + list(res.beyond_reach_candidates)]
+        if len(recs) != n_fit + len(p0) or not np.allclose([r["P0"] for r in recs[n_fit:]], p0):
+            raise RuntimeError("unfit-candidate order mismatch with scorecard records (expects scorecard v5)")
         unfit["selected"] = False
         unfit["passed_base_gates"] = False
         unfit["failed_gates"] = ["fit_error"] * n_err + ["beyond_reach"] * (len(unfit) - n_err)
@@ -304,8 +309,12 @@ def build_tasks(args) -> list:
     return out
 
 
-def combine(outdir: Path) -> tuple:
+def combine(outdir: Path, noise: pd.DataFrame | None = None) -> tuple:
     """Concatenate every shard into candidates.csv.gz and stars.csv.gz (atomic writes).
+
+    noise : optional DataFrame indexed by star_id with the ROW_CONTEXT columns; when given
+        (``--refresh-noise``), those columns are overwritten in both tables from it, so a
+        flags-file update doesn't need a rebuild (the shards themselves are left as built).
 
     Returns (n_stars, n_candidate_rows).
     """
@@ -318,6 +327,11 @@ def combine(outdir: Path) -> tuple:
             cands.append(d["candidates"])
     st = pd.DataFrame(stars)
     ca = pd.concat(cands, ignore_index=True) if cands else pd.DataFrame()
+    if noise is not None:
+        for df in (st, ca):
+            if len(df):
+                for c in ROW_CONTEXT:
+                    df[c] = df["star_id"].map(noise[c])
     with sd.atomic_path(outdir / "stars.csv.gz") as tmp:
         st.to_csv(tmp, index=False)
     with sd.atomic_path(outdir / "candidates.csv.gz") as tmp:
@@ -337,6 +351,8 @@ def main(argv=None):
     ap.add_argument("--n-workers", type=int, default=sc.DEFAULT_N_WORKERS)
     ap.add_argument("--resume", action="store_true", help="skip stars that already have a shard")
     ap.add_argument("--combine-only", action="store_true")
+    ap.add_argument("--refresh-noise", action="store_true",
+                    help="with --combine-only: re-join the noise_* columns from the current flags file")
     ap.add_argument("--only", default=None, help="manifest boolean column selecting rows (e.g. nested_1k)")
     ap.add_argument("--limit", type=int, default=None, help="first N selected rows (quick checks)")
     ap.add_argument("--smarts-root", default=None, help="SMARTS data root for the noise flags (default $SMARTS_DATA_ROOT or the Data_Vault path)")
@@ -346,14 +362,21 @@ def main(argv=None):
     args = ap.parse_args(argv)
     outdir = args.outdir if args.outdir.is_absolute() else ROOT / args.outdir
     (outdir / "shards").mkdir(parents=True, exist_ok=True)
-    if args.combine_only:
-        print("combined: %d stars, %d candidate rows" % combine(outdir))
-        return
     if args.no_flags:
         args.flags = None
-    elif args.flags is None:
+    elif args.flags is None and (args.refresh_noise or not args.combine_only):
         root = sd.require_drive(sd.data_root(args.smarts_root))  # stops cleanly if unplugged
         args.flags = str(Path(root) / FLAGS_PATH)
+    if args.combine_only:
+        noise = None
+        if args.refresh_noise:
+            man = pd.read_csv(args.manifest)
+            if "row" not in man.columns:
+                man["row"] = [int(Path(p).stem.split("-")[-1]) for p in man["path"]]
+            noise = load_noise_context(man, args.flags, args.coherent_list)
+            noise.index = man["star_id"] if "star_id" in man.columns else [Path(p).stem for p in man["path"]]
+        print("combined: %d stars, %d candidate rows" % combine(outdir, noise))
+        return
     tasks = build_tasks(args)
     missing = [t["path"] for t in tasks if not Path(t["path"]).exists()]
     if missing:

@@ -17,6 +17,14 @@
 - **The re-ranking headroom is large.** On train_1k, 60% of stars have a relevance ≥ 1 candidate, while hand arbitration succeeds on 18% (full-year dev_medium: 76% vs 25%).
 - **Alias check: the T9 features don't penalize diffrot within a star.** Pooled, `acf_half_lag_contrast` places diffrot candidates 0.67 of the way toward aliases. Within stars that have both kinds of candidate, though, the paired difference is ≈ 0, so the pooled shift reflects which stars have diffrot candidates. **Flag:** the `half_lag_consistency` *gate* passes 32% of diffrot candidates vs 52% of correct ones, and a pooled model could carry the same star-level bias into its decline threshold.
 
+## Update after merging scorecard v5 (main `b54ecc2`)
+- **The builder broke on v5, and is now fixed.** v5's `_candidate_rows` appends `beyond_reach` records (P22b) after the fit-error ones, and the builder's slice for fit-error messages assumed they weren't there. It now takes fitted, then fit-error, then beyond-reach records, and checks the P0s against the candidates, so rows aren't counted twice.
+- **Parity vs a fresh v5 scorecard on dev_small** (`datasets/dev_small.csv,data_root=data/smarts_dev,sectors=manifest`):
+  - all 50 stars have the same success flag and outcome, and all 11 reported periods are bit-identical;
+  - the table has 1,028 candidate rows, equal to v5's `per_candidate.csv`.
+- **The dev_medium tables were not rebuilt; their pipeline rows are unchanged.** The first 50 dev_medium full-year stars, rebuilt with the merged code, are bit-identical in every column except the noise flags.
+- **The noise flags were refreshed instead.** The drive's flags file changed at 12:30 (quiet-noise-probe added `periodic_low_amplitude`, 19,554 rows), so I refreshed all three tables with `--combine-only --refresh-noise`. dev_medium's 22 coherent-quiet stars are now `periodic_low_amplitude` with `noise_exclude_from_training` True (148 excluded stars in all). train_v0 and train_1k still have 0 excluded stars under the new flags.
+
 ## Question / goal
 T10 in `docs/TASKS.md` (Roadmap step 2, ranker v0). It covers:
 - feature tables for dev_medium plus a training sample, with every candidate included, graded labels, star- and noise-grouped rows, and quiet noise only;

@@ -139,3 +139,23 @@ def test_unfit_features_empty_when_all_fit():
                          n_candidates_tried=0, failed_candidates=[])
     t = np.linspace(0, 27, 2000)
     assert ml_features.extract_unfit_candidate_features(res, [], t, np.sin(t), t[:100], np.ones(100)).empty
+
+
+def test_combine_refresh_noise(tmp_path):
+    """combine(noise=...) overwrites the noise_* columns in both tables and leaves the shards alone."""
+    (tmp_path / "shards").mkdir()
+    cands = pd.DataFrame(dict(star_id=["a", "a"], relevance=[0, 2], noise_tic=[1, 1],
+                              noise_classification=["quiet"] * 2, noise_periodic=[False] * 2,
+                              noise_exclude_from_training=[False] * 2, noise_coherent_quiet=[False] * 2))
+    star = dict(star_id="a", noise_tic=1, noise_classification="quiet", noise_periodic=False,
+                noise_exclude_from_training=False, noise_coherent_quiet=False)
+    with open(tmp_path / "shards" / "a.pkl", "wb") as fh:
+        pickle.dump({"star": star, "candidates": cands}, fh)
+    noise = pd.DataFrame(dict(noise_tic=[1], noise_classification=["periodic_low_amplitude"], noise_periodic=[False],
+                              noise_exclude_from_training=[True], noise_coherent_quiet=[True]), index=["a"])
+    bft.combine(tmp_path, noise)
+    ca, st = pd.read_csv(tmp_path / "candidates.csv.gz"), pd.read_csv(tmp_path / "stars.csv.gz")
+    assert ca.noise_exclude_from_training.all() and st.noise_classification.eq("periodic_low_amplitude").all()
+    assert list(ca.relevance) == [0, 2]
+    with open(tmp_path / "shards" / "a.pkl", "rb") as fh:
+        assert pickle.load(fh)["star"]["noise_classification"] == "quiet"
