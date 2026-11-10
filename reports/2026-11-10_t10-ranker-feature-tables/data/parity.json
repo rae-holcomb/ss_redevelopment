@@ -1,11 +1,47 @@
 {
-  "quick": {
-    "n_stars": 3,
-    "n_success": 0,
-    "n_success_with_one_selected_row": 0,
+  "dev_medium_assigned": {
+    "n_stars": 1000,
+    "n_success": 211,
+    "n_success_with_one_selected_row": 211,
     "n_declined_with_selected_row": 0,
-    "max_rel_diff_selected_vs_final": null,
-    "n_rows": 50,
+    "max_rel_diff_selected_vs_final": 0.0,
+    "scorecard_dir": "runs/ref_dev_medium_assigned_v5",
+    "n_joined": 1000,
+    "n_same_success_flag": 1000,
+    "n_both_success": 211,
+    "n_period_identical": 211,
+    "n_period_within_1e9": 211,
+    "max_rel_diff": 0.0,
+    "n_same_outcome": 1000,
+    "outcome_mismatches": {},
+    "n_rows": 21122,
+    "n_errors": 0
+  },
+  "dev_medium_fullyear": {
+    "n_stars": 1000,
+    "n_success": 350,
+    "n_success_with_one_selected_row": 350,
+    "n_declined_with_selected_row": 0,
+    "max_rel_diff_selected_vs_final": 0.0,
+    "scorecard_dir": "runs/ref_dev_medium_fullyear_v5",
+    "n_joined": 1000,
+    "n_same_success_flag": 1000,
+    "n_both_success": 350,
+    "n_period_identical": 350,
+    "n_period_within_1e9": 350,
+    "max_rel_diff": 0.0,
+    "n_same_outcome": 1000,
+    "outcome_mismatches": {},
+    "n_rows": 24129,
+    "n_errors": 0
+  },
+  "train_1k": {
+    "n_stars": 1000,
+    "n_success": 200,
+    "n_success_with_one_selected_row": 200,
+    "n_declined_with_selected_row": 0,
+    "max_rel_diff_selected_vs_final": 0.0,
+    "n_rows": 20940,
     "n_errors": 0
   }
 }

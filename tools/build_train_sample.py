@@ -11,8 +11,13 @@ Same stratified design as dev_medium (tools/build_dev_sets.py, T2) but drawn fro
 - minus any noise TIC that also appears in the SIM_ID >= 800k pool (the pool split is
   by SIM_ID, and one TIC turned out to sit on both sides).
 
-The 2026-11-09 review's quiet-but-coherent noise sources stay in, flagged
-``noise_coherent_quiet``, so T11 can test the strict version by dropping them.
+- **strict quiet** (Rae, 2026-11-10): minus the 2026-11-09 review's 34 "quiet" noise
+  sources with coherent short-period signals (``--coherent-list``). Ranks are drawn on
+  the pool *before* this cut and the coherent rows are then dropped, so the selection
+  is the non-strict one with each dropped row replaced by the next-ranked row of its
+  stratum. ``--keep-coherent`` restores the non-strict pool (rows flagged
+  ``noise_coherent_quiet``). Once the flags file's ``exclude_from_training`` covers
+  these sources (``periodic_low_amplitude`` class), the list becomes redundant.
 
 Two nested subsets, filled in rank order within every stratum, each balanced on its
 own (period bin x amplitude tercile x shear class, then coverage class per bin):
@@ -143,13 +148,18 @@ def main(argv=None):
     ap.add_argument("--out", type=Path, default=ROOT / "datasets" / "train_v0.csv")
     ap.add_argument("--coherent-list", type=Path,
                     default=ROOT / "reports" / "2026-11-10_t10-ranker-feature-tables" / "data" / "quiet_coherent.csv")
+    ap.add_argument("--keep-coherent", action="store_true",
+                    help="non-strict quiet pool: keep the coherent quiet sources (flagged)")
     ap.add_argument("--plan-only", action="store_true")
     args = ap.parse_args(argv)
     configure_bds()
     root = sd.require_drive(sd.data_root(args.data_root))
     t_start = time.time()
     pool, info = load_train_pool(root, args.coherent_list)
-    pool = bds.rank_pool(pool, args.seed)
+    pool = bds.rank_pool(pool, args.seed)  # ranks over the non-strict pool (stable selection)
+    if not args.keep_coherent:
+        info["n_pool_dropped_coherent"] = int(pool.noise_coherent_quiet.sum())
+        pool = pool[~pool.noise_coherent_quiet].reset_index(drop=True)
     print(f"training pool: {len(pool)} rows ({json.dumps({k: v for k, v in info.items() if k != 'amp_cuts'})})",
           flush=True)
     chosen, checks, quotas, drive_s = bds.select(pool, root, args.seed, args.n_workers, plan_only=args.plan_only)
@@ -180,7 +190,7 @@ def main(argv=None):
     print(f"{len(man)} rows -> {args.out} ({n_copied} files copied to {OUT_SUBDIR})", flush=True)
     excl = checks[~checks.passed]
     summary = dict(seed=args.seed, subsets=SUBSETS, pool_filter="SIM_ID < 800000 & quiet & ~exclude_from_training "
-                   "& noise TIC not in SIM_ID >= 800000", **info, n_pool=len(pool), n_checked=len(checks),
+                   "& noise TIC not in SIM_ID >= 800000" + ("" if args.keep_coherent else " & not coherent-quiet (strict)"), **info, n_pool=len(pool), n_checked=len(checks),
                    n_excluded=len(excl), exclusion_reasons=excl.reason.str.split(":").str[0].value_counts().to_dict(),
                    coverage_fallbacks=fallbacks, n_coherent_quiet_in_sample=int(man.noise_coherent_quiet.sum()),
                    n_noise_tics=int(man.noise_tic.nunique()), data_root="$SMARTS_DATA_ROOT", files=OUT_SUBDIR,

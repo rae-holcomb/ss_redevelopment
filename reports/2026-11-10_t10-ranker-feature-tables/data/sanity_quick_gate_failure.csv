@@ -1,9 +1,0 @@
-,gate,fail_all,fail_relevant,fail_irrelevant,n_relevant,sole_fail_relevant
-0,n_peaks,0.0,,0.0,0,0.0
-1,frac_positive_heights,0.32608695652173914,,0.32608695652173914,0,0.0
-2,mean_height_snr,0.9347826086956522,,0.9347826086956522,0,0.0
-3,frac_vertex_in_window,0.30434782608695654,,0.30434782608695654,0,0.0
-4,half_lag_consistency,0.8478260869565217,,0.8478260869565217,0,0.0
-5,few_peaks_height,1.0,,1.0,0,0.0
-6,(fit_error),0.06,1.0,0.0,3,
-7,(beyond_reach),0.02,0.0,0.02127659574468085,3,
