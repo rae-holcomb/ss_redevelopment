@@ -1,0 +1,36 @@
+{
+  "seed": 20261110,
+  "subsets": {
+    "train_1k": 1000,
+    "train_rest": 2000
+  },
+  "pool_filter": "SIM_ID < 800000 & quiet & ~exclude_from_training & noise TIC not in SIM_ID >= 800000",
+  "amp_cuts": [
+    0.2198647561701403,
+    1.027858092556113
+  ],
+  "n_corpus": 1000000,
+  "n_lt800k": 800000,
+  "n_quiet": 702392,
+  "shared_tics": [
+    10001390027
+  ],
+  "n_dropped_shared_tic": 810,
+  "n_pool_coherent_quiet": 15321,
+  "n_pool": 701582,
+  "n_checked": 3960,
+  "n_excluded": 583,
+  "exclusion_reasons": {
+    "corrupt_noise": 583
+  },
+  "coverage_fallbacks": {
+    "train_1k": 0,
+    "train_rest": 0
+  },
+  "n_coherent_quiet_in_sample": 67,
+  "n_noise_tics": 746,
+  "data_root": "$SMARTS_DATA_ROOT",
+  "files": "extracted/train_v0",
+  "drive_seconds_this_run": 65.6,
+  "wall_seconds_this_run": 128.6
+}

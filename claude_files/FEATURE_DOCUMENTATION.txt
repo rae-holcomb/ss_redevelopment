@@ -1134,8 +1134,70 @@ Stage        : 5 (feature extraction).
 
 
 ================================================================================
+SECTION I: RANKER-TABLE ADDITIONS (added 2026-11-10, task T10)
+================================================================================
+tools/build_feature_tables.py writes one row per candidate the comb fit saw,
+not only fitted ones. Full column list: docs/FEATURE_TABLE_SCHEMA.md.
+
+--------------------------------------------------------------------------
+fit_error, beyond_reach (unfit candidate rows)
+--------------------------------------------------------------------------
+Definition   : fit_error = the candidate's comb fit raised (it is in
+               EnsembleResult.failed_candidates); beyond_reach = its P0 is
+               above the searchable range R/2 and it was never fit (T16c,
+               EnsembleResult.beyond_reach_candidates). Both False for fitted
+               rows. Unfit rows come from
+               ml_features.extract_unfit_candidate_features, which evaluates
+               every feature that doesn't need a fit at P0 (provenance, peak
+               budget, s_ph, Section G alias features, Section D method
+               spectra, Sections A/H star-level and coverage features,
+               P_over_reach). Fit-derived columns are NaN.
+Description  : The ranker sees what the gates threw away. On SMARTS some
+               short-period success candidates only exist as fit-error rows.
+Stage        : 5 (feature extraction).
+
+--------------------------------------------------------------------------
+gate_<g>_value / _pass / _threshold / _enabled, passed_base_gates,
+n_failed_gates, acf_pair_frac_at_P
+--------------------------------------------------------------------------
+Definition   : Per-gate results from CandidateResult.gate_results (T16b) for
+               every gate in comb_fit.GATE_NAMES, copied from the scorecard's
+               per-candidate records (benchmarks/scorecard.py
+               _candidate_rows). passed_base_gates = the four original
+               comb-shape gates; n_failed_gates = enabled gates failed;
+               acf_pair_frac_at_P = ACF valid-pair count at lag P_fit over
+               the lag-0 count.
+Description  : Roadmap decision (2026-11-09): gates become features, so the
+               ranker can learn when to override them. Thresholds are
+               constant except n_peaks (per-candidate peak budget).
+Stage        : 4 (gates) recorded at 5.
+
+--------------------------------------------------------------------------
+Method-spectrum features over all Stage 1 methods
+--------------------------------------------------------------------------
+In the T10 tables, Section D features are evaluated against the spectra of
+all seven Stage 1 methods (the scorecard runs all of them), not only the three
+whose candidates feed the fit, so the *_short, fft_highpass and wavelet
+blocks are populated.
+
+================================================================================
 LABEL (TRAINING ONLY)
 ================================================================================
+
+--------------------------------------------------------------------------
+relevance, outcome, alias_class (T10 ranker tables; supersedes `label` there)
+--------------------------------------------------------------------------
+Definition   : outcome = evaluation.classify_period(P_eval, true_period,
+               REL_TOL, active-band range), P_eval = fitted_P (P0 for unfit
+               rows). relevance = 2 for correct (within REL_TOL of P_eq),
+               1 for diffrot (inside evaluation.active_band_period_range),
+               0 otherwise. alias_class = half / double / empty (aliases get
+               relevance 0; the class is a column, not a label).
+Description  : Graded label for XGBoost rank:ndcg / rank:pairwise (Rae,
+               2026-11-09). The 3% `label` below gave a correct spot-latitude
+               period label 0 under differential rotation. Built by
+               tools/build_feature_tables.py, not by extract_candidate_features.
+Stage        : 5 (feature-table build).
 
 --------------------------------------------------------------------------
 label

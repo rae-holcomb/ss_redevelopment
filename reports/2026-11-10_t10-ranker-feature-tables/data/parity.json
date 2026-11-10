@@ -1,0 +1,11 @@
+{
+  "quick": {
+    "n_stars": 3,
+    "n_success": 0,
+    "n_success_with_one_selected_row": 0,
+    "n_declined_with_selected_row": 0,
+    "max_rel_diff_selected_vs_final": null,
+    "n_rows": 50,
+    "n_errors": 0
+  }
+}
