@@ -615,6 +615,13 @@ chats should know:
   excluded, Rae 2026-11-10), nested `nested_1k`. Alias check: T9 features don't penalize diffrot
   within a star, but the half-lag gate passes 32% of diffrot vs 52% of correct candidates.
   Pitfall: spawned pool workers re-import modules, so module-global overrides don't reach them.
+- **2026-11-10 — T11 ranker v0** (`reports/2026-11-10_t11-ranker-v0/`): `claude_files/ranking_model.py`,
+  `tools/train_ranker.py` (resumable; noise-TIC-grouped 5-fold CV for all selection; decline threshold from OOF).
+  `rank:ndcg` (depth 3, eta 0.1, 150 rounds; pairwise tied) on train_1k: dev_medium full-year success 0.248 → 0.267
+  at matched precision (strict-quiet 0.254 → 0.275, wrong 0.035 → 0.016), assigned 0.148 → 0.188. Ordering is the
+  strength (no-decline top-1 0.441 vs oracle 0.764); the global decline threshold is the weakness (over-declines
+  correct long-period answers, P24). Alias features + wavelet/LS spectra matter most; gate flags and
+  `acf_fft_highpass`/`pairwise_histogram` spectra least (T12). Label ablations only move the threshold.
 - **2026-11-10, scorecard v5 (T24/T25/P22b; branch claude/t24-t25-scorecard-v5-84eca3, report
   `reports/2026-11-10_scorecard-v5-noise-period/`):** noise-source join (`benchmarks/noise_sources_dev.csv`, built by
   `tools/build_noise_table.py`) gives per-star `noise_*` columns and `final.noise.*` (wrong split into noise_period vs other:

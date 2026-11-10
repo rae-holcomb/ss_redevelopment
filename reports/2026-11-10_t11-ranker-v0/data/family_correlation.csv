@@ -1,0 +1,10 @@
+family,n_features,n_pairs_rho_gt_0p95,examples
+provenance,8,1,period~log_period (1.00)
+comb_fit,31,3,redchi~log_redchi (1.00); n_peaks_dropped~n_peaks_used_frac (0.97); mean_curvature~std_curvature (0.96)
+candidate_method,3,0,
+gates,22,2,passes_min_peaks~gate_n_peaks_pass (1.00); gate_n_peaks_threshold~gate_few_peaks_height_enabled (1.00)
+coverage_reach,13,6,baseline_days~n_acf_points (1.00); baseline_days~longest_contiguous_days (0.98); n_acf_points~longest_contiguous_days (0.98); P_over_longest_segment~n_cycles_observed_total (0.98)
+alias_sph,6,0,
+method_spectrum,34,1,fft_nearest_peak_snr~fft_short_nearest_peak_snr (0.96)
+agreement,10,1,redchi_ratio_to_best_competing~redchi_ratio_to_global_best (1.00)
+star_level,10,5,r_var~flicker_std (0.99); von_neumann_eta~fliper_band_1 (0.96); von_neumann_eta~fliper_band_2 (0.96); fliper_band_1~fliper_band_2 (0.99)

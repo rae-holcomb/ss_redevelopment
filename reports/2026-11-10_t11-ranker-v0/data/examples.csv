@@ -1,0 +1,7 @@
+star_id,case,true_period,period_lo,period_hi,hand_period,hand_outcome,ranker_period,ranker_outcome,top_outcome,top_kind,why,hand_choice_rank
+smarts-tess-v1.0-008908,hand wins,1.6922,1.7199273137246067,1.9631750120688247,1.75778799391889,correct,1.75778799391889,none,correct,fitted,declined (top was right),1.0
+smarts-tess-v1.0-029013,hand wins,5.2881,4.632899898650753,5.0617510896764175,4.760573144979403,correct,4.89930663403765,none,correct,fitted,declined (top was right),2.0
+smarts-tess-v1.0-072040,hand wins,13.0046,12.554215790217157,12.941489831048878,13.181507399966325,correct,13.181507399966325,none,correct,fitted,declined (top was right),1.0
+smarts-tess-v1.0-178661,hand wins,32.1968,43.42908611591236,101.49929024245483,55.92527322183719,diffrot,54.06600387737349,none,diffrot,fitted,declined (top was right),2.0
+smarts-tess-v1.0-002897,ranker wins,0.6187,0.401658535237217,0.5207913561089565,,none,0.480861712335414,diffrot,diffrot,fitted,,
+smarts-tess-v1.0-005855,ranker wins,1.1475,1.1857566982554837,1.284361527353732,,none,1.1721122952377725,correct,correct,fitted,,

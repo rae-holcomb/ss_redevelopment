@@ -1,0 +1,68 @@
+{
+ "head_key": "n1000_base_ndcg",
+ "objective": "ndcg",
+ "thresholds": {
+  "no_decline": -Infinity,
+  "match_hand_precision": 1.3571535348892212,
+  "match_hand_coverage": 1.8719358444213867,
+  "precision_0.80": 1.0061999559402466
+ },
+ "hand_train": {
+  "coverage": 0.2,
+  "precision": 0.89,
+  "success": 0.178
+ },
+ "params": {
+  "objective": "rank:ndcg",
+  "eval_metric": "ndcg@1",
+  "tree_method": "hist",
+  "max_depth": 3,
+  "eta": 0.1,
+  "min_child_weight": 1.0,
+  "subsample": 0.8,
+  "colsample_bytree": 0.8,
+  "reg_lambda": 1.0,
+  "seed": 0,
+  "nthread": 4,
+  "lambdarank_pair_method": "topk",
+  "lambdarank_num_pair_per_sample": 8
+ },
+ "n_rounds": 150,
+ "tune": {
+  "tune_n_stars": 1000,
+  "grid": {
+   "max_depth": [
+    3,
+    5
+   ],
+   "eta": [
+    0.03,
+    0.1
+   ],
+   "n_rounds": [
+    150,
+    400
+   ],
+   "min_child_weight": [
+    1.0,
+    5.0
+   ]
+  },
+  "best": {
+   "ndcg": {
+    "n_rounds": 150,
+    "max_depth": 3,
+    "eta": 0.1,
+    "min_child_weight": 1.0,
+    "oof_top1_success": 0.364
+   },
+   "pairwise": {
+    "n_rounds": 400,
+    "max_depth": 3,
+    "eta": 0.03,
+    "min_child_weight": 5.0,
+    "oof_top1_success": 0.363
+   }
+  }
+ }
+}
