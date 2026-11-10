@@ -142,7 +142,8 @@ def test_scorecard_gate_descriptors(red_noise_1s, clean_1s):
         res = _pipeline(lc)
         d = scorecard._gate_descriptors(res, lags, counts, P_true, REL_TOL, None)
         assert d["n_fit_candidates"] == len(res.candidates)
-        assert len(d["candidates"]) == len(res.candidates) + len(res.failed_candidates)
+        assert len(d["candidates"]) == (len(res.candidates) + len(res.failed_candidates)
+                                         + len(res.beyond_reach_candidates))  # v5: P22(b) rows
         assert sum(c["selected"] for c in d["candidates"]) == int(res.success)
         if res.success:
             assert d["decline_kind"] == "" and d["decline_gates"] == ""

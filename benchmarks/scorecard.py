@@ -71,10 +71,20 @@ Outputs (in --outdir)
                                  searchable (P_lo <= R/2), band_width
                                  ((P_hi - P_lo) / P_eq), band_width_class,
                                  flux_amp (95th - 5th percentile of the flux)
+                                 (v5, manifests with sim_id; join in
+                                 benchmarks/noise_sources_dev.csv, built by
+                                 tools/build_noise_table.py): noise_tic, noise_class,
+                                 noise_periodic, noise_exclude, noise_quiet_coherent,
+                                 noise_P_ref, noise_period_match (a `wrong` answer within
+                                 REL_TOL of the noise source's P_ref; never a success),
+                                 noise_alias ('half'/'double' of it; diagnostic)
     per_method.csv               one row per (star, method)
     per_candidate.csv            one row per (star, candidate tested by the comb
                                  fit): fitted period and its outcome, every
-                                 gate's value/threshold/pass, failed_gates (T16b)
+                                 gate's value/threshold/pass, failed_gates (T16b);
+                                 (v5) beyond_reach=True rows for candidates skipped as
+                                 beyond the searchable range (not fit: P_fit/outcome empty),
+                                 and P0_outcome (outcome of the raw P0) on every row
     metrics.json                 summary metrics (what check_goals reads)
     fig_final_outcomes_by_bin.png
     fig_method_recall_by_bin.png
@@ -87,6 +97,7 @@ Usage
     python benchmarks/scorecard.py --manifest datasets/dev_small.csv --data-root data/smarts_dev --outdir runs/dev_small
     python benchmarks/scorecard.py --manifest datasets/dev_small.csv --data-root data/smarts_dev \
         --ignore-manifest-sectors --outdir runs/dev_small_fullyear
+    python benchmarks/scorecard.py --manifest ... --noise-subset quiet_strict   # only stars on quiet noise sources (v5)
     python benchmarks/scorecard.py ... --resume       # skip stars already in rows.jsonl
     python benchmarks/scorecard.py ... --n-workers 1  # serial, for debugging
     python benchmarks/scorecard.py --synthetic 100 --coverage single --outdir runs/synth100_single
@@ -128,7 +139,7 @@ from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-SCORECARD_VERSION = 4  # v2 (2026-10-13): diffrot outcome; recall/union_recall count success
+SCORECARD_VERSION = 5  # v5 (2026-11-10): noise-source columns/breakdowns (T24, T25), beyond_reach candidate rows (P22b); v4: v2 (2026-10-13): diffrot outcome; recall/union_recall count success
 # v3 (2026-10-14, T16a): --coverage dataset option + per-star coverage descriptor
 # columns. Metric definitions and outcome logic are unchanged from v2, and
 # --coverage full (default) reproduces v2 per-star results exactly.
@@ -279,7 +290,8 @@ def _candidate_rows(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> list:
                    n_teeth_available=int(r.n_teeth_available), n_peaks_required=int(r.n_peaks_required),
                    few_peaks=bool(r.few_peaks), passed_base_gates=bool(r.passed_base_gates),
                    passed_gates=bool(r.passed_gates), selected=r is selected, error=r.error,
-                   failed_gates=";".join(r.failed_gates))
+                   failed_gates=";".join(r.failed_gates), beyond_reach=False,
+                   P0_outcome=ev.classify_period(float(r.period), true_p, rel_tol, prange))
         if r.fit is not None:
             Pf = float(r.fit.P)
             row.update(P_fit=Pf, redchi=float(r.fit.redchi),
@@ -295,6 +307,17 @@ def _candidate_rows(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> list:
         else:
             row.update(P_fit=None, redchi=None, outcome=None, acf_pair_frac_at_P=None)
         rows.append(row)
+    # P22(b), v5: candidates skipped as beyond the searchable range (never fit). Appended after
+    # every v4 row, so existing rows and their cand_rank are unchanged.
+    for r in getattr(res, "beyond_reach_candidates", None) or []:
+        rows.append(dict(P0=float(r.period), method=r.source_guess.method,
+                         contributing_methods="+".join(r.contributing_methods),
+                         n_duplicate_guesses=int(r.n_duplicate_guesses),
+                         n_teeth_available=None, n_peaks_required=None, few_peaks=None,
+                         passed_base_gates=False, passed_gates=False, selected=False, error=None,
+                         failed_gates="", beyond_reach=True,
+                         P0_outcome=ev.classify_period(float(r.period), true_p, rel_tol, prange),
+                         P_fit=None, redchi=None, outcome=None, acf_pair_frac_at_P=None))
     return rows
 
 
@@ -320,6 +343,49 @@ def _gate_descriptors(res, acf_lags, acf_counts, true_p, rel_tol, prange) -> dic
         best_success_failed_gates=best_succ["failed_gates"] if best_succ else None,
         candidates=cands,
     )
+
+
+NOISE_TABLE = ROOT / "benchmarks" / "noise_sources_dev.csv"
+NOISE_SUBSETS = ("all", "quiet", "quiet_strict")
+
+
+def load_noise_table(path=None) -> dict:
+    """{sim_id: noise row dict} from the committed table (tools/build_noise_table.py); {} if absent."""
+    path = Path(path or NOISE_TABLE)
+    if not path.exists():
+        return {}
+    t = pd.read_csv(path)
+    return {int(r["sim_id"]): r for r in t.to_dict("records")}
+
+
+def in_noise_subset(noise: dict | None, subset: str) -> bool:
+    """Is a star (its `noise` task dict) in the named subset: 'quiet' = noise_class quiet, not periodic,
+    not excluded; 'quiet_strict' = quiet and not a coherent-quiet source (T25 / review of T20)."""
+    if subset == "all":
+        return True
+    if not noise:
+        return False
+    quiet = noise["noise_class"] == "quiet" and not noise["noise_periodic"] and not noise["noise_exclude"]
+    return quiet and (subset == "quiet" or not noise["noise_quiet_coherent"])
+
+
+def _noise_columns(noise: dict | None, P, outcome: str, rel_tol: float) -> dict:
+    """Per-star v5 noise descriptor columns (T24, T25). {} if the star has no noise row.
+
+    noise_period_match: the star's final answer is `wrong` AND within rel_tol of the noise source's P_ref.
+    noise_alias: `wrong`, not a match, but within rel_tol of P_ref/2 or 2*P_ref ('half'/'double'; diagnostic).
+    Neither changes final_outcome, and neither is ever a success.
+    """
+    if not noise:
+        return {}
+    pref = noise["noise_P_ref"]
+    wrong = outcome == ev.WRONG
+    return dict(noise_tic=int(noise["tic"]), noise_class=noise["noise_class"],
+                noise_periodic=bool(noise["noise_periodic"]), noise_exclude=bool(noise["noise_exclude"]),
+                noise_quiet_coherent=bool(noise["noise_quiet_coherent"]),
+                noise_P_ref=None if _missing(pref) else float(pref),
+                noise_period_match=bool(wrong and ev.noise_period_match(P, pref, rel_tol)),
+                noise_alias=(ev.noise_alias_kind(P, pref, rel_tol) or "") if wrong else "")
 
 
 def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
@@ -379,6 +445,7 @@ def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
                    pipeline_success=bool(res.success), pipeline_message=res.message[:300],
                    n_pooled=len(pooled), fit_seconds=fit_seconds, error=None)
         rec.update(_gate_descriptors(res, lags, counts, true_p, rel_tol, prange))
+        rec.update(_noise_columns(task.get("noise"), P, rec["final_outcome"], rel_tol))
     except Exception as exc:  # noqa: BLE001
         rec.update(final_period=None, final_outcome=ev.NONE, pipeline_success=False,
                    error=f"{type(exc).__name__}: {exc}", traceback=traceback.format_exc()[-2000:])
@@ -444,6 +511,8 @@ def dataset_string(args) -> str:
             base += f",data_root={given}"
         if _manifest_has_sectors(args.manifest):
             base += ",sectors=" + ("ignored" if getattr(args, "ignore_manifest_sectors", False) else "manifest")
+    if getattr(args, "noise_subset", "all") != "all":
+        base += f",noise_subset={args.noise_subset}"
     spec, seed, weighting, lib_path = _coverage_args(args)
     if spec == cov.FULL:
         return base
@@ -473,9 +542,17 @@ def build_tasks(args) -> list:
             raise SystemExit(f"{args.manifest} has a 'sectors' column; don't also pass --coverage")
         pats = [None if pd.isna(s) or str(s).strip() == "" else cov.parse_pattern(s) for s in man["sectors"]]
     _, root = manifest_data_root(args)
+    noise_tab = load_noise_table(getattr(args, "noise_table", None)) if "sim_id" in man.columns else {}
+    subset = getattr(args, "noise_subset", "all")
+    if subset != "all" and not noise_tab:
+        raise SystemExit("--noise-subset needs the noise table (benchmarks/noise_sources_dev.csv) and a manifest "
+                         "with a sim_id column; the holdout has none by design.")
     tasks = []
     for (_, r), pat in zip(man.iterrows(), pats):
-        tasks.append(dict(kind="fits", path=resolve_manifest_path(r["path"], root),
+        noise = noise_tab.get(int(r["sim_id"])) if noise_tab else None
+        if not in_noise_subset(noise, subset):
+            continue
+        tasks.append(dict(noise=noise, kind="fits", path=resolve_manifest_path(r["path"], root),
                           star_id=str(r["star_id"]) if "star_id" in man.columns else Path(r["path"]).stem,
                           true_period=float(r["true_period"]) if "true_period" in man.columns else None,
                           load_kwargs={} if pat is None else {"sectors": list(pat)}))
@@ -560,6 +637,7 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
         m["union_recall"]["overall"] = float(hit["hit"].mean())
         m["union_recall"]["by_bin"] = {b: float(g["hit"].mean()) for b, g in hit.groupby("period_bin")}
     m["final"].update(_v4_final_breakdowns(per_star))
+    m["final"].update(_v5_noise_breakdowns(per_star))
     m["runtime"] = {"median_seconds": float(per_star["seconds"].median()),
                     "p90_seconds": float(per_star["seconds"].quantile(0.9))}
     m["errors"]["n_star_errors"] = int(per_star["error"].notna().sum())
@@ -603,6 +681,44 @@ def _v4_final_breakdowns(per_star: pd.DataFrame) -> dict:
         flag = known["searchable"].astype(bool)
         out["searchable"] = _subset_block(known[flag])
         out["unsearchable"] = _subset_block(known[~flag])
+    return out
+
+
+def _noise_block(df: pd.DataFrame) -> dict:
+    """n, wrong split into wrong_noise_period / wrong_other (fractions of n) and noise_alias (count, a
+    diagnostic subset of wrong_other: half/double of the noise period) for a set of stars."""
+    n = len(df)
+    wrong = df["final_outcome"] == ev.WRONG
+    npm = df["noise_period_match"].fillna(False).astype(bool)
+    alias = df["noise_alias"].fillna("").astype(str) != ""
+    return {"n": n, "wrong": float(wrong.mean()) if n else 0.0,
+            "wrong_noise_period": float((wrong & npm).mean()) if n else 0.0,
+            "wrong_other": float((wrong & ~npm).mean()) if n else 0.0,
+            "n_wrong": int(wrong.sum()), "n_wrong_noise_period": int((wrong & npm).sum()),
+            "n_wrong_other": int((wrong & ~npm).sum()), "noise_alias": int((wrong & alias).sum())}
+
+
+def _v5_noise_breakdowns(per_star: pd.DataFrame) -> dict:
+    """The scorecard-v5 additions to `final` (T24, T25); {} if the per-star table has no noise columns.
+
+    final.noise.{overall,by_bin,by_noise_class}: _noise_block (the wrong split; `wrong` itself is
+        unchanged in final.overall).
+    final.quiet_noise / final.quiet_noise_strict / final.periodic_noise: _subset_block plus a `noise`
+        block, over stars on quiet noise sources / quiet minus coherent-quiet / non-quiet (noise_class
+        != quiet or periodic or excluded).
+    """
+    if "noise_class" not in per_star.columns:
+        return {}
+    known = per_star[per_star["noise_class"].notna()]
+    quiet = known["noise_class"].eq("quiet") & ~known["noise_periodic"].astype(bool) & ~known["noise_exclude"].astype(bool)
+    strict = quiet & ~known["noise_quiet_coherent"].astype(bool)
+    out = {"noise": {"overall": _noise_block(known),
+                     "by_bin": {str(b): _noise_block(g) for b, g in known.groupby("period_bin")},
+                     "by_noise_class": {str(c): _noise_block(g) for c, g in known.groupby("noise_class")}}}
+    for name, mask in (("quiet_noise", quiet), ("quiet_noise_strict", strict), ("periodic_noise", ~quiet)):
+        sub = known[mask]
+        if len(sub):
+            out[name] = _subset_block(sub) | {"noise": _noise_block(sub)}
     return out
 
 
@@ -761,6 +877,12 @@ def main(argv=None):
                         "the T2 dev sets need data/smarts_dev")
     p.add_argument("--ignore-manifest-sectors", action="store_true",
                    help="ignore the manifest's `sectors` column (score every native sector)")
+    p.add_argument("--noise-subset", choices=NOISE_SUBSETS, default="all",
+                   help="score only stars on quiet noise sources: 'quiet' (T20 class quiet) or 'quiet_strict' "
+                        "(also drops the ~34 coherent-quiet sources); default all. Metrics for both subsets "
+                        "are always reported (final.quiet_noise*, v5) whatever this is. Changes config.dataset.")
+    p.add_argument("--noise-table", type=Path, default=None,
+                   help="per-star noise table (default benchmarks/noise_sources_dev.csv)")
     args = p.parse_args(argv)
     if args.coverage not in cov.valid_coverage_specs() and not args.coverage.startswith("pattern:"):
         p.error(f"--coverage must be one of {cov.valid_coverage_specs()} or pattern:<sectors>")

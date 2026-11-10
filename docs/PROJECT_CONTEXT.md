@@ -607,3 +607,10 @@ chats should know:
   (new T29), T16h, T12, own butterpy sims, and the mission-agnostic API (new T30). Gate hand-tuning (T16d, P1, P7, P21)
   is paused in favour of the ranker. D2 leaning: per-batch candidates aggregated into fixed-size features before the
   ranker. New open issues 17–18.
+- **2026-11-10, scorecard v5 (T24/T25/P22b; branch claude/t24-t25-scorecard-v5-84eca3, report
+  `reports/2026-11-10_scorecard-v5-noise-period/`):** noise-source join (`benchmarks/noise_sources_dev.csv`, built by
+  `tools/build_noise_table.py`) gives per-star `noise_*` columns and `final.noise.*` (wrong split into noise_period vs other:
+  65 of dev_medium full-year's 88 wrong match the noise source's P_ref), `final.quiet_noise` / `final.quiet_noise_strict`
+  (drops 22 coherent-quiet stars) / `final.periodic_noise`; `--noise-subset`; `per_candidate.csv` `beyond_reach` rows (P22b).
+  All v4 keys bit-identical; `*_v5.json` baselines committed. Open for Rae: halves/doubles of the noise period, quiet-class
+  P_ref matches, quiet-subset goals.

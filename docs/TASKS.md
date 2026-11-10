@@ -701,8 +701,7 @@ for confirmation (ask Rae first).
 
 ### T24. Scorecard/evaluation: `noise_period` outcome (from T20, 2026-10-22)
 - **Agent:** `method-improver` (evaluation + scorecard reporting; approved by Rae via T20's recommendations)
-- **Status:** ready once T20 is merged (needs the noise-source flags). Coordinate the scorecard version bump with
-  T22/T23.
+- **Status:** done on branch claude/t24-t25-scorecard-v5-84eca3 (2026-11-10; `reports/2026-11-10_scorecard-v5-noise-period/`), implemented as a breakdown of `wrong`, awaiting merge.
 - **Why:** 51 of dev_medium's 88 `wrong` answers equal the period the pipeline finds on the star's noise source alone
   (T20 phase 2). The pipeline is right about the data, but the label doesn't contain that signal.
 - **Do:**
@@ -717,7 +716,7 @@ for confirmation (ask Rae first).
 
 ### T25. dev_medium metrics on the quiet-noise subset (from T20, 2026-10-22)
 - **Agent:** `method-improver` (scorecard reporting only)
-- **Status:** ready once T20 is merged; can share T24's join.
+- **Status:** done with T24 on branch claude/t24-t25-scorecard-v5-84eca3 (2026-11-10), awaiting merge; goals for Rae to set.
 - **Why:** 128 of dev_medium's 1,000 stars sit on periodic noise sources, with a 43% wrong rate vs 3.8% on quiet
   sources. Method changes should be judged on both.
 - **Do:** a per-star descriptor column (`noise_class`, `noise_periodic`, `noise_exclude`) and metrics on the quiet
