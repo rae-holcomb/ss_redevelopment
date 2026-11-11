@@ -1,0 +1,11 @@
+mode,bin,n_answered,obs_success_given_answer,null_mean,null_p95
+fullyear,<1d,47,0.6170,0.1605,0.2553
+fullyear,1-3d,54,0.7407,0.2261,0.3148
+fullyear,3-10d,58,0.8793,0.2658,0.3457
+fullyear,10-30d,77,0.8052,0.2392,0.3117
+fullyear,>30d,114,0.5789,0.2545,0.3070
+assigned,<1d,43,0.7209,0.1815,0.2791
+assigned,1-3d,46,0.8478,0.2780,0.3696
+assigned,3-10d,39,0.8462,0.2653,0.3859
+assigned,10-30d,44,0.6818,0.2053,0.2739
+assigned,>30d,39,0.3846,0.1956,0.2821
