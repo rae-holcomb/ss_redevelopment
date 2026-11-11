@@ -161,7 +161,11 @@ for confirmation (ask Rae first).
   are removed and the suite passes. A good first task for trying out the agent workflow.
 
 ### T5. Short-period recovery (<3 d) (open issue 1)
-- **Status:** ready
+- **Status:** phase 1 + 2 done on branch `claude/t5-short-period-8a550e`, awaiting Rae's review (report
+  `reports/2026-11-11_t5-short-period-recovery/`). Full-year <1 d deficit = top-10 crowding by red-noise peaks in
+  `lombscargle`/`acf_fft`; fixed with hybrid raw-power / local-SNR peak ranking (new default, no extra compute).
+  dev_medium full-year <1 d Stage-1 union 0.44 -> 0.70, fitted ceiling 0.33 -> 0.65; final success barely moves
+  (`half_lag_consistency` rejects the rescued candidates). No optional method recommended for the pool. G2/G3 still fail.
 - **Goal:** improve Stage 1 recall and final correctness in the `<1d` and `1-3d`
   bins. Separate the Nyquist/points-per-cycle wall (unfixable) from search
   failures (fixable).
@@ -1309,3 +1313,24 @@ for confirmation (ask Rae first).
      dominate. That's a method change, so it goes through the dev_medium scorecard with `check_goals.py --baseline`.
 - Step 1 can ride along with ranker v1; step 2 is its own task.
 
+
+### P31. Rebuild ranker feature tables after the T5 Stage-1 ranking change
+- **Proposed by:** T5 report (2026-11-11)
+- **Idea:** T5 changed which peaks `lombscargle`/`acf_fft` return (hybrid ranking) and the meaning of guess `rank`/`strength`.
+  The <1 d fitted-candidate ceiling doubled (0.33 -> 0.65 full-year) but hand arbitration declines most of the new
+  candidates, so the gain reaches answers only through the ranker. Rebuild the dev_medium T10 tables and train_3k on the
+  T5 code, re-run ranker v0/v1 CV, and report <1 d success at matched precision plus FP rate on the T27 negatives.
+
+### P32. `half_lag_consistency` vs sub-day (and 1-30 d) success candidates
+- **Proposed by:** T5 report (2026-11-11)
+- **Idea:** after T5, every <1 d star with a fitted success candidate but no success answer has all its success
+  candidates failing `half_lag_consistency` (79/79 full-year); the gate also rejects 55-68% of 1-30 d success candidates.
+  Measure the gate's recall-vs-FP curve on rotators and the T27 negatives (and whether 30-min cadence makes the P/2
+  lag test unreliable below ~1 d) before any threshold change.
+
+### P33. `pairwise_histogram` on long baselines (degenerate pair support)
+- **Proposed by:** T5 report (2026-11-11)
+- **Idea:** full-year it finds no <1 d candidate even at snr_rot ~140: with ~190-240 clean ACF peaks every multiple kP
+  has ~m-k supporting pairs, so the winner is set by bin merging, not the fundamental (re-binning to relative widths
+  doesn't fix it). Try nearest-neighbour spacings (j-i <= K) or a comb fold of the peak list. Low priority: the fixed
+  `acf_fft`/`lombscargle` now cover these stars.

@@ -98,6 +98,14 @@ method-specific `info` dict carrying the raw spectrum/histogram for later
 inspection or feature extraction) and **never computes a phase (`t0`) or
 does any curve fitting** — that's entirely Stage 2's job.
 
+**Peak ranking (T5, 2026-11-11):** `guess_lombscargle` and `guess_acf_fft` (and the
+`*_short`/`_highpass` wrappers) no longer keep the top-N peaks by raw power. They keep
+half by raw power and half by power over the local continuum (median peak power
+within ±0.5 dex; `guesses._select_peaks`, `rank_by="hybrid"`); `rank_by="power"` is the
+old behaviour. On full-year baselines raw-power ranking let red-noise peaks crowd every
+sub-day period out of the top 10. `rank` is therefore position in this list, not
+power order; `strength` is still the peak's power.
+
 ### `comb_fit.py` in more detail
 
 `fit_rotation_period(acf_lags, acf, initial_guesses)` is where the real
@@ -244,6 +252,10 @@ Roughly in priority order as of this writing — re-prioritize freely.
    of six methods tested, but not solved. One file in that batch
    (~5.6 points/cycle) appears to be a fundamental Nyquist/cadence
    resolution wall, not fixable by search strategy at all.
+   **Update (T5, 2026-11-11):** on dev_medium the full-year <1 d Stage-1 deficit was
+   top-10 crowding by red-noise peaks, now fixed (union recall 0.44 → 0.70). The
+   remaining bottleneck is arbitration: `half_lag_consistency` rejects the rescued
+   candidates (P32), so the gain reaches answers via the ranker (P31).
 2. **No batch run has been done at real scale yet.** Everything above has
    been validated on a small, hand-picked set of ~10-20 known-hard files.
    `batch_test_guesses.py` exists and works, but hasn't been pointed at
@@ -664,3 +676,10 @@ chats should know:
   0.267 → 0.273 full-year, 0.188 → 0.197 assigned; no-decline flat. The curve has plateaued: ranker v1 should train on
   train_3k, but gains must come from the decline stage, Stage 1 recall and new kinds of training data. `runs/t11_ranker`
   now lives in the main checkout.
+- **2026-11-11 — T5 short-period recovery** (`reports/2026-11-11_t5-short-period-recovery/`). Full-year <1 d deficit
+  = top-10 crowding (3–4× more spectral peaks, red-noise power rising to long P), not a grid/min-period limit.
+  Hybrid raw-power / local-SNR peak ranking in `lombscargle`/`acf_fft` (default; `rank_by="power"` = old): dev_medium
+  <1 d Stage-1 union 0.442 → 0.698 full-year, 0.634 → 0.779 assigned; fitted ceiling 0.33 → 0.65 / 0.59 → 0.69;
+  final success ~flat, wrong flat, all guards pass; synth200 success 0.730 → 0.755 (G1 passes). No extra compute
+  (paired 0.93×). Optional methods add no fitted <1 d / 1–3 d recall on top of the fixed pool (not pooled).
+  Follow-ups P31 (rebuild ranker tables), P32 (half-lag gate), P33 (pairwise on long baselines).
