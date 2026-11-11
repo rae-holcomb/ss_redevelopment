@@ -86,7 +86,7 @@ def main(argv=None):
     sdir = root / "extracted" / "galaxy_stack"
     src = pd.read_csv(args.sources)
     ls = pd.read_csv(sdir / "ls_peaks.csv")
-    ls = ls[ls.stack == "all"].set_index("galaxy")
+    ls = ls[ls["stack"] == "all"].set_index("galaxy")
     src["P1"] = src.galaxy.map(ls.P1)
     src["pow1"] = src.galaxy.map(ls.pow1)
     src["amp1_ppm"] = src.galaxy.map(ls.amp1_ppm)

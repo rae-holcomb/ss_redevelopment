@@ -737,7 +737,7 @@ for confirmation (ask Rae first).
 
 ### T27. Non-rotator negatives from SMARTS noise light curves (roadmap step 2, 2026-11-09)
 - **Agent:** `data-auditor` or `ranking-model-builder`
-- **Status:** ready (needs the drive for the noise light curves; check the mount first)
+- **Status:** done (draft report 2026-11-10, branch `claude/t27-nonrotator-negatives-008ccf`; `reports/2026-11-10_t27-nonrotator-negatives/`). Synthetic red noise not run.
 - **Why:** every SMARTS star is a rotator, so the ranker's decline threshold and false-positive rate would be calibrated
   only against weak rotators. T20 already isolated the noise sources: ~1,500 quiet ones (real-noise **non-rotators**) and
   206 periodic ones (mostly **real neighbouring variable stars**: contaminating-variable examples).
@@ -1278,3 +1278,7 @@ for confirmation (ask Rae first).
 - **Idea:** star-level accept classifier on OOF top-1 rows (top score, margin, top period, `P_over_reach`, coverage
   descriptors), or per-candidate-period-bin thresholds set on OOF; add a full-year (or mixed-coverage) training
   table so long-period full-year stars are represented; refit once T27 negatives exist.
+- **Update (T27, 2026-11-10):** negatives exist. A star-level `binary:logistic` head on the top-1 row (+ score, margin),
+  trained on OOF scores with T27 negatives, is prototyped in `tools/train_ranker_negatives.py` (`v0+neg_all+head`): at
+  prec 0.89 (negatives 1:1) it beats v0 at the same rule, and matches hand success with 40–60% fewer wrong answers; > 30 d
+  is still under-answered. Needs a ratio/precision decision from Rae, a learning curve and per-bin thresholds.

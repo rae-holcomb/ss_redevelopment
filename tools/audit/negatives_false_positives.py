@@ -113,9 +113,19 @@ def main(argv=None):
     ns["draw_kind"] = draw_kind(ns)
     ns["cov"] = np.where(ns.draw_kind == "fullyear", "fullyear", ns["assigned_coverage_class"])
     ns["answered"] = answered(ns)
+    ns["n_sectors"] = ns["n_sectors"]
     ns["reported_bin"] = [ev.period_bin(p) if a else "none" for p, a in zip(ns.final_period, ns.answered)]
     nc = nc.merge(ns[["star_id", "eval_set", "draw_kind", "cov"]], on="star_id", how="left")
     rot = {k: load(v) for k, v in DEV_ROT.items()}
+    # compact per-star tables for the report notebook
+    keep = ["star_id", "noise_tic", "source_class", "eval_set", "draw_id", "draw_kind", "cov", "n_sectors",
+            "final_period", "final_outcome", "decline_kind", "decline_gates"]
+    for es, g in ns.groupby("eval_set"):
+        g[keep].to_csv(out / f"neg_stars_{es}.csv.gz", index=False)
+    ra = rot["assigned"][1]
+    ra = ra[ra.final_outcome != ev.NONE]
+    ra.assign(success=np.isin(ra.final_outcome, ev.SUCCESS_OUTCOMES))[
+        ["star_id", "final_period", "final_outcome", "success"]].to_csv(out / "rot_dev_assigned_answers.csv", index=False)
 
     # --- FP rate by coverage, source class
     cov_t = rate_table(ns, ["eval_set", "cov"])
@@ -197,7 +207,8 @@ def main(argv=None):
         nsel = nc[(nc.selected.astype(str) == "True") & (nc.draw_kind == kind)]
         cols = [c for c in rsel.columns if c in nsel.columns and c not in (
             "star_id", "cand_index") and pd.api.types.is_numeric_dtype(rsel[c])
-            and c not in ("true_period", "period_lo", "period_hi", "relevance", "noise_tic")]
+            and c not in ("true_period", "period_lo", "period_hi", "relevance", "noise_tic", "is_rotator",
+                          "noise_periodic", "noise_exclude_from_training", "noise_coherent_quiet")]
         for c in cols:
             a = auc(nsel[c].to_numpy(float), rsel[c].to_numpy(float))
             frow.append(dict(kind=kind, feature=c, auc_neg_gt_rot=a, sep=abs(a - 0.5) if np.isfinite(a) else np.nan,
