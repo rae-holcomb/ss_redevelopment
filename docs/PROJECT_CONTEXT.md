@@ -140,7 +140,7 @@ fools redchi) and `acf_peak_prominence_diagnostics`
 Outside `claude_files/` (see `docs/AGENT_WORKFLOW.md`): `tests/` (pytest), `benchmarks/`
 (`scorecard.py`, the standard benchmark and the batch runner for any manifest; `check_goals.py`, `goals.json`,
 `baselines/`), `reports/` (one folder per task), `tools/` (`build_feature_tables.py` for ranker tables,
-`train_ranker.py`, dataset/side-table builders, `audit/` for data-audit scripts, `new_report.py`, `run_notebook.py`),
+`train_ranker.py`, `headline_card.py` (P28 fixed-definition headline card), dataset/side-table builders, `audit/` for data-audit scripts, `new_report.py`, `run_notebook.py`),
 `.claude/agents/` (agent roles), `.claude/skills/write-report/`, `docs/TASKS.md` (open tasks),
 `docs/TASKS_DONE.md` (finished tasks), `docs/CHANGELOG_ARCHIVE.md` (changelog before 2026-10-22).
 The old per-method batch runners (`batch_test_guesses.py`, `batch_test_acf_fft_highpass.py`,
@@ -495,3 +495,12 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   map (adds `ranking_model.py`, drops `example_usage.py`) and §4 issues 2–5, 9, 12 refreshed. Coordinator's merge step
   now includes the TASKS status + changelog update (`docs/AGENT_WORKFLOW.md`); report TL;DRs capped at ~150 words.
   dev_small scorecards (assigned and full-year) bit-identical before/after; pytest passes.
+- **2026-11-12 — P28 headline card + P29 Roman-season proxy** (`reports/2026-11-12_headline-card/`). New
+  `tools/headline_card.py` (+ `tests/test_headline_card.py`): fixed 6-row card (raw; TESS coverage mix P ≤ 30 d;
+  period-population-weighted success; correct-only; precision at prevalence 0.1/0.3/0.5; Claytor-style within 10%/20%
+  at the most credible half) from any `per_star.csv` / ranker top-1, re-scored via `classify_period`, bootstrap SEs.
+  dev_medium assigned hand T5 / ranker v0: 0.115 / 0.198 (cov. mix, P ≤ 30 d), 0.051 / 0.102 (`mcq14_like`); full-year
+  ranker R5 0.51 / 0.64 vs Claytor+2022 0.46 / 0.69. T5 moves no row > 1 SE. P29: `consecutive-3-5`, P ≤ 30 d =
+  0.205 hand / 0.284 ranker (unchanged by T5); a true 70 d window needs a per-star-sectors manifest + a
+  `--max-span-days` dataset option (~14 min to score, not run). Population default, prevalences and goals H1–H5
+  (proposed, `goals.json` untouched) await Rae.
