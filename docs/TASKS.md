@@ -81,7 +81,7 @@ All Phase 2 tasks use `method-improver`. Until T2 lands, judge on
 for confirmation (ask Rae first).
 
 ### T5. Short-period recovery (<3 d) (open issue 1)
-- **Status:** phase 1 + 2 done on branch `claude/t5-short-period-8a550e`, awaiting Rae's review (report
+- **Status:** done, merged to main 2026-11-11 (Rae OK). Optional methods: none pooled (Rae accepted). Report
   `reports/2026-11-11_t5-short-period-recovery/`). Full-year <1 d deficit = top-10 crowding by red-noise peaks in
   `lombscargle`/`acf_fft`; fixed with hybrid raw-power / local-SNR peak ranking (new default, no extra compute).
   dev_medium full-year <1 d Stage-1 union 0.44 -> 0.70, fitted ceiling 0.33 -> 0.65; final success barely moves
@@ -919,7 +919,7 @@ for confirmation (ask Rae first).
 
 ### P30. Repo and docs diet (from the midway review, 2026-11-11)
 - **Agent:** `repo-curator`.
-- **Status:** done, in review (`reports/2026-11-11_p30-repo-docs-diet/`, branch `claude/p30-repo-diet-f21062`); results bit-identical on dev_small.
+- **Status:** done, merged to main 2026-11-11 (Rae OK) (`reports/2026-11-11_p30-repo-docs-diet/`); results bit-identical on dev_small.
 - **Idea:** one session, results bit-identical:
   - **Code:**
     - delete `claude_files/old/`;

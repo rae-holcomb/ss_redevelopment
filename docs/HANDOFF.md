@@ -24,31 +24,36 @@ of everything merged.
 ## State of `main` (2026-11-11)
 - **Merged this stretch:** T20 (noise sources), T16c (searchable range), scorecard v4 and v5 (noise-period scoring),
   T10 feature tables, quiet-noise reclassification (`periodic_low_amplitude`, 34 sources), T11 ranker v0,
-  T27 non-rotator negatives (`857f6e1`), quiet-noise follow-ups (see below).
+  T27 non-rotator negatives (`857f6e1`), quiet-noise follow-ups, goals proposal, T26 detectability + scorecard v6,
+  midway review, T5 short-period ranking fix + P30 repo/docs diet (`d04a88f`).
 - **Plots requirement** strengthened in `CLAUDE.md`, the `write-report` skill and the reviewer checklist (`55bd504`).
 - **Env:** `ss_openblas` now has xgboost 3.4.1, scikit-learn 1.9.1, llvm-openmp (`environment.yml`).
 - **Main checkout's `runs/`** holds `t10_dev_medium_{assigned,fullyear}` (dev_medium rotator feature tables) and is
   the stable path ranker work reads from.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
-## Open sessions (2026-11-11 night)
-- **Short-period recovery** (T5, `local_26fb9ed8-…`, branch prefix `claude/t5-short-period`): diagnose the full-year <1 d
-  deficit, then pick optional method(s) to pool by recall / compute / non-rotator FP. Expect 2–4 h; needs v6 baselines.
-- **Midway review** (`local_d5a20966-…`, branch prefix `claude/midway-review`): read-only science/plan/wheel-spinning
-  review, report `reports/2026-11-11_midway-review/`.
+## Open sessions (2026-11-12)
+- **Midway review** (`local_d5a20966-…`): merged (`eca4926`). **Don't archive**: Rae is reading it.
+- **Short-period recovery** (`local_26fb9ed8-…`) and **repo cleanup** (`local_a3c86310-…`): merged, idle; archive on Rae's OK.
 - **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these. They were
   archived by accident on 2026-11-11 (side sessions of the old coordinator); worktrees intact; Rae to unarchive.
 
 ## Waiting on Rae
 - Thresholds/conflicts in the goals proposal (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
-- T5's choice of which optional method(s) to pool, when it reports.
+- The midway review's open questions (validation sources, Roman scoping now vs later, headline period population).
 
 ## Next up (decided)
-- **Ranker v1** after T5 settles the candidate pool: T27 decline model (all 3 draws per negative source), per-bin
-  thresholds, train on `train_3k` (drive `extracted/t10_tables/train_3k`; learning curve plateaued at 3k), `half_snr_min`,
-  drop persistent-weak-period "quiet" stacks from the negatives. `runs/t11_ranker`, `runs/t27_ranker` are in main's `runs/`.
-- **Efficiency pass** (performance-optimizer) alone on the machine, after T5 merges.
+- **New baselines on the T5 code** (`d04a88f`): T5 changed pipeline results, so the committed v5 baselines describe the old
+  code. Rescore dev_medium full-year + assigned and synth200 at scorecard v6 (~20 min each at 4 workers) and commit as the
+  new baselines; earlier baselines stay for history.
+- **Rebuild ranker tables on the T5 code (P31):** dev_medium T10 tables, `train_3k` and the T27 negatives tables. Needs the
+  drive; give Rae a time estimate first. T5's <1 d gain only reaches answers through the ranker.
+- **Ranker v1** on the rebuilt tables: T27 decline model (all 3 draws per negative source), per-bin
+  thresholds, `train_3k`, `half_snr_min`, drop persistent-weak-period "quiet" stacks from the negatives.
+  `runs/t11_ranker`, `runs/t27_ranker` are in main's `runs/`. Report <1 d success at matched precision + negatives FP rate.
+- **Efficiency pass** (performance-optimizer) alone on the machine; T5 and P30 are merged, so it's unblocked.
 - P25 noise-level features (step 1 with ranker v1 if cheap; step 2 per-sector weighting is its own task).
+- T5 follow-ups: P32 (`half_lag_consistency` gate vs sub-day success), P33 (`pairwise_histogram` on long baselines, low priority).
 
 ## Pending, no decision needed
 - FFI check of three line-like noise peaks (TIC 10001638723 at 2.95 d, 10001717113 at 5.52 d, 10001695140 at
