@@ -22,7 +22,10 @@ This creates `reports/YYYY-MM-DD_<slug>/` with `README.md`, `notebook.ipynb`,
 
 - **TL;DR**: the answer first, with the headline number. "acf_fft_highpass
   recall below 1 d went 0.62 → 0.81 on synthetic n=200 seed 0; no
-  regressions." Not "I investigated...".
+  regressions." Not "I investigated...". **At most ~150 words** (count them:
+  `wc -w`): the answer, the headline numbers, and what Rae needs to decide.
+  Everything else (per-bin tables, caveats, secondary findings, method
+  detail) goes under Results, which can be as long as it needs.
 - **Question / goal**: name the task in `docs/TASKS.md` and the goal IDs from
   `benchmarks/goals.json`.
 - **What I did**: datasets by their exact scorecard dataset string, and the

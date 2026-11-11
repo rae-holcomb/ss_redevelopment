@@ -25,15 +25,18 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 ## Repo layout
 
 - `claude_files/` — the flat pipeline package (all `.py` modules plus
-  `FEATURE_DOCUMENTATION.txt`). `claude_files/old/` holds superseded
-  versions; don't read from it unless comparing against history.
-- `docs/`: `PROJECT_CONTEXT.md`, `METHODOLOGY_NOTES.md`, `SMARTS_REFERENCE.md`, `TASKS.md`
-  (task board), `AGENT_WORKFLOW.md` (how Rae runs/reviews agents).
+  `FEATURE_DOCUMENTATION.txt`). Superseded versions live only in git history.
+- `docs/`: `PROJECT_CONTEXT.md` (changelog from 2026-10-22; older entries in
+  `CHANGELOG_ARCHIVE.md`), `METHODOLOGY_NOTES.md`, `SMARTS_REFERENCE.md`, `TASKS.md`
+  (open tasks; finished ones in `TASKS_DONE.md`), `AGENT_WORKFLOW.md` (how Rae
+  runs/reviews agents), `FEATURE_TABLE_SCHEMA.md` (ranker tables), `HANDOFF.md`.
+  Read `TASKS_DONE.md` and `CHANGELOG_ARCHIVE.md` only when you need the history.
 - `tests/`: pytest suite (`python -m pytest -q`, ~5 s, no data needed;
   `-m "not slow"` skips end-to-end tests). Must pass before any commit.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
-  figures), `check_goals.py` (grades against `goals.json` and a baseline),
-  `baselines/` (committed reference metrics).
+  figures; also the batch runner for any manifest, with per-method Stage-1
+  results in `per_method.csv`), `check_goals.py` (grades against `goals.json`
+  and a baseline), `baselines/` (committed reference metrics; use the `_v5` files).
 - `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
   `datasets/README.md`). Dev files are local in `data/smarts_dev/`; score them with
   `--data-root data/smarts_dev` (`--ignore-manifest-sectors` for full-year).
@@ -43,12 +46,14 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
   `claude_files/coverage.py` reads and samples them (scorecard `--coverage`).
 - `reports/`: one folder per agent task (README + figures + notebook).
 - `runs/`: scorecard outputs (gitignored, regenerable).
-- `tools/`: helper scripts (`new_report.py`, `run_notebook.py`, `compare_runs.py`,
-  `build_coverage_library.py`).
+- `tools/`: helper scripts (`build_feature_tables.py` and `train_ranker.py` for the
+  ranker, dataset/side-table builders `build_*.py`, `audit/` for data audits,
+  `new_report.py`, `run_notebook.py`, `compare_runs.py`).
 - `.claude/agents/`, `.claude/skills/`: agent role definitions and the
   `write-report` procedure.
-- `results_products/` — batch outputs and `run_full_analysis.py`. Result
-  CSVs are gitignored.
+- `results_products/` — old batch outputs and `run_full_analysis.py`, which reads
+  the `summary.csv` of the retired `batch_test_guesses.py` (existing outputs still
+  work; new ones can't be made). Result CSVs are gitignored.
 - `data/` — light curve inputs; **gitignored.** The SMARTS corpus is on an
   external drive; see "SMARTS data location" below.
 - Root-level notebooks (`ss_claude_sandbox.ipynb`, `smarts_sandbox.ipynb`,
@@ -119,8 +124,9 @@ with 10 workers.
 - **Resumability**: batch runners should be built resumable to support
   long local jobs. The established pattern is a module-level (picklable)
   per-file worker function plus a `--resume` flag that skips files
-  already present in the output — see `batch_test_acf_fft_highpass.py`
-  (`process_one_file`) and `run_debug_baseline_full_methods.py`.
+  already present in the output — see `benchmarks/scorecard.py`
+  (`score_one_star`, append-only `rows.jsonl` resume log) and
+  `tools/build_feature_tables.py` (`build_one_star`, one atomically written shard per star).
   `ProcessPoolExecutor` cannot pickle closures, so bind extra arguments
   with `functools.partial` around a module-level function rather than
   defining the worker inline.
@@ -179,7 +185,9 @@ One file (`smarts-tess-v1.0-000700.fits`, P=0.224d) contains a blended
 second periodic signal — keep that in mind if it behaves oddly.
 **These files are not currently in the repo working tree** (`data/` is
 gitignored and empty locally) — ask Rae where they live before running
-anything against them.
+anything against them. To run the full pipeline on them, use `benchmarks/scorecard.py
+--manifest <csv with a path column>` (the old `run_debug_baseline*.py` runners
+were retired 2026-11-11).
 
 - **Quick checks (~5 files): run without asking.**
 - **Full 29-file set or larger: ask Rae for confirmation first.** These

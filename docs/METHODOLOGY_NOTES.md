@@ -456,16 +456,25 @@ very different claims about the method's performance.
 
 ## 7. Not yet covered in this document
 
-- The gradient-boosted ranking model itself (architecture, training
-  procedure, feature set) — extensive design discussion has happened but
-  no training code exists yet as of this writing. Will need its own
-  section once implemented; `FEATURE_DOCUMENTATION.txt` is the current
-  reference for the feature set specifically.
-- Any large-scale (full-corpus) recovery-rate statistics — everything
-  above is characterized on small, hand-picked, deliberately-hard test
-  samples only (🔴 tags above), not a representative sample of the full
-  intended target population.
-- Formal completeness/reliability characterization (e.g. recovery rate as
-  a function of true period, amplitude, noise level, gap fraction) —
-  would be a natural, and probably necessary, figure/table for the
-  eventual paper, and hasn't been done systematically yet.
+*Refreshed 2026-11-11 (P30). The items below now exist in code and reports but don't yet have a methods-style
+write-up here.*
+
+- **The candidate ranker** 🟡. Ranker v0 exists (T10/T11, `claude_files/ranking_model.py`, `tools/train_ranker.py`):
+  XGBoost learning-to-rank (`rank:ndcg`), one query per star, every candidate as a document (gate-failed ones
+  included, with the gates as features), graded labels (2 correct, 1 diffrot, 0 other), and folds grouped by noise
+  source so no light curve or noise source is on both sides of a split. It declines when the top score is below a
+  threshold set on out-of-fold training predictions. On dev_medium full-year it beats hand arbitration at matched
+  precision (success 0.248 → 0.267; 0.273 on 3k training stars), and its weak point is the single global decline
+  threshold (reports `2026-11-10_t11-ranker-v0/`, `2026-11-11_ranker-3k-learning-curve/`). Ranker v1 adds a
+  star-level, period-aware decline model trained with non-rotator negatives (SMARTS noise-only light curves, T27).
+  `FEATURE_DOCUMENTATION.txt` remains the feature reference; this section needs its own write-up once v1 settles.
+- **Recovery statistics on representative samples** 🟡. The frozen SMARTS dev sets (`datasets/dev_small.csv`, 50
+  stars; `dev_medium.csv`, 1,000 stars; a locked 3,000-star holdout, T2) and `benchmarks/scorecard.py` now give
+  recovery rates per period bin, coverage class, active-band width, searchable/unsearchable range, noise-source
+  class and detectability. Everything is still on SMARTS (injected signals on real TESS noise), not on real stars
+  with known periods; a real-TESS validation set is proposed (P27). No corpus-scale (~1M) statistics exist.
+- **Completeness / reliability characterization** 🟡. Partly done: T26 defines a per-star detectability
+  D_band·√N_cyc (injected-signal strength against the noise on rotation timescales) and shows outcome against it,
+  and scorecard v4 has a completeness map in period and coverage. A paper-ready completeness/reliability figure
+  (recovery vs period, amplitude, noise and coverage, plus false-positive rate at a stated non-rotator prevalence)
+  hasn't been made; the "headline card" proposal (P28) would fix its definitions.
