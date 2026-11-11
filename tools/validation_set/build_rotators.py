@@ -59,17 +59,17 @@ def load_clusters() -> pd.DataFrame:
     gr = gr[gr["Class"].isin(["probable-member", "possible-member"]) & gr["GaiaDR2"].notna()]
     for cl in ["Pleiades", "NGC2516", "NGC2547", "NGC6811"]:
         sub = gr[gr["Cluster"] == cl]
-        rows.append(pd.DataFrame({"cluster": cl, "gaia_dr2": sub["GaiaDR2"].astype("int64"),
+        rows.append(pd.DataFrame({"cluster": cl, "gaia_dr2": sub["GaiaDR2"].astype("Int64"),
                                   "prot": sub["Period"], "member_class": sub["Class"]}))
     # Blanco 1 (adopted period; all are NGTS-selected members)
     b = vo.vizier_table("J/MNRAS/492/1008/table1")
     b = b[b["Padop"].notna() & b["GaiaDR2"].notna()]
-    rows.append(pd.DataFrame({"cluster": "Blanco1", "gaia_dr2": b["GaiaDR2"].astype("int64"),
+    rows.append(pd.DataFrame({"cluster": "Blanco1", "gaia_dr2": b["GaiaDR2"].astype("Int64"),
                               "prot": b["Padop"], "member_class": "member (Gillen+2020)"}))
     # NGC 3532
     n = vo.vizier_table("J/A+A/652/A60/table2")
     n = n[n["Prot"].notna() & n["GaiaDR2"].notna()]
-    rows.append(pd.DataFrame({"cluster": "NGC3532", "gaia_dr2": n["GaiaDR2"].astype("int64"),
+    rows.append(pd.DataFrame({"cluster": "NGC3532", "gaia_dr2": n["GaiaDR2"].astype("Int64"),
                               "prot": n["Prot"], "member_class": "member (" + n["Class"].astype(str) + ")"}))
     # Hyades (Douglas+2019 table3): column P says which catalogue's period was adopted (decoded from which
     # period column is populated for each code): 3 -> Prot1 (K2 C13, this work), 2 -> Prot4 (K2 C4, Douglas+2016),
@@ -82,23 +82,24 @@ def load_clusters() -> pd.DataFrame:
     h = h[h["Gaia"].notna() & h["P"].astype(str).isin(list(code_col))].copy()
     h["prot"] = [r[code_col[str(r["P"])]] for _, r in h.iterrows()]
     h = h[h["prot"].notna() & (h["Mm-Gaia"].astype(str).str.strip() == "True")]
-    rows.append(pd.DataFrame({"cluster": "Hyades", "gaia_dr2": h["Gaia"].astype("int64"), "prot": h["prot"],
+    rows.append(pd.DataFrame({"cluster": "Hyades", "gaia_dr2": h["Gaia"].astype("Int64"), "prot": h["prot"],
                               "member_class": "member (Douglas+2019 Gaia)",
                               "period_dataset_star": h["P"].astype(str).map(code_ds)}))
     # Praesepe (Douglas+2019 table4): adopted Prot; mostly K2 C5 (Douglas+2017) with PTF/SuperWASP/HATNet fill-in.
     pr = vo.vizier_table("J/ApJ/879/100/table4")
     pr = pr[pr["Gaia"].notna() & pr["Prot"].notna()]
-    rows.append(pd.DataFrame({"cluster": "Praesepe", "gaia_dr2": pr["Gaia"].astype("int64"), "prot": pr["Prot"],
+    rows.append(pd.DataFrame({"cluster": "Praesepe", "gaia_dr2": pr["Gaia"].astype("Int64"), "prot": pr["Prot"],
                               "member_class": "member (Douglas+2019)"}))
-    # Ruprecht 147 (Cl == 0 rows are R147; Cl == 1 rows are the comparison clusters)
+    # Ruprecht 147: Prot = 0 means no period, negative values are flagged (candidate) periods -> keep Prot > 0;
+    # Cl only marks stars used in the cluster-comparison figure, so it is not a filter.
     r = vo.vizier_table("J/ApJ/904/140/table1")
-    r = r[(r["Cl"] == 0) & r["Prot"].notna() & r["GaiaDR2"].notna()]
-    rows.append(pd.DataFrame({"cluster": "Rup147", "gaia_dr2": r["GaiaDR2"].astype("int64"), "prot": r["Prot"],
+    r = r[(r["Prot"] > 0) & (r["Member"].astype(str) == "Yes") & r["GaiaDR2"].notna()]
+    rows.append(pd.DataFrame({"cluster": "Rup147", "gaia_dr2": r["GaiaDR2"].astype("Int64"), "prot": r["Prot"],
                               "member_class": "member (" + r["Member"].astype(str) + ")"}))
     # Psc-Eri (TESS-derived; kept, but flagged as not TESS-independent)
     p = vo.vizier_table("J/AJ/158/77/table2")
     p = p[p["Prot"].notna()]
-    rows.append(pd.DataFrame({"cluster": "PscEri", "gaia_dr2": p["Source"].astype("int64"), "prot": p["Prot"],
+    rows.append(pd.DataFrame({"cluster": "PscEri", "gaia_dr2": p["Source"].astype("Int64"), "prot": p["Prot"],
                               "member_class": "member (Curtis+2019)"}))
     df = pd.concat(rows, ignore_index=True)
     df = df[df["prot"] > 0]  # Rup147 table uses negative values as flags
@@ -119,7 +120,7 @@ def load_kepler(n_sample: int, seed: int = 27) -> pd.DataFrame:
     per = max(1, n_sample // (len(bins) - 1))
     s = (m.groupby("pbin", observed=True, group_keys=False)
          .apply(lambda g: g.sample(min(len(g), per), random_state=seed)))
-    out = pd.DataFrame({"cluster": "Kepler-field", "kic": s["KIC"].astype("int64"), "prot": s["Prot"],
+    out = pd.DataFrame({"cluster": "Kepler-field", "kic": s["KIC"].astype("Int64"), "prot": s["Prot"],
                         "member_class": "field (McQuillan+2014 periodic)",
                         "period_ref": KEPLER["ref"], "period_method": KEPLER["method"],
                         "period_dataset": KEPLER["dataset"], "age": np.nan, "ebv": 0.0,

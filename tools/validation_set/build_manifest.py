@@ -60,7 +60,7 @@ def pick_rotators(rot: pd.DataFrame, rng: np.random.Generator) -> pd.DataFrame:
         picks.append(g.loc[chosen])
     out = pd.concat(picks)
     return pd.DataFrame({
-        "tic": out["tic"].astype("int64"), "label": "rotator", "source": out["cluster"],
+        "tic": out["tic"].astype("Int64"), "label": "rotator", "source": out["cluster"],
         "truth_period": out["prot"], "period_method": out["period_method"],
         "period_dataset": out["period_dataset"], "period_ref": out["period_ref"],
         "Tmag": out["Tmag"], "Teff": out["Teff"], "logg": out["logg"], "ra": out["ra"], "dec": out["dec"],
@@ -80,8 +80,8 @@ def pick_kepler_nonrot(rng: np.random.Generator) -> pd.DataFrame:
     dw = m2[m2["Prot"].isna() & m2["Teff"].between(4000, 6200) & (m2["log(g)"] > 4.2) & ~m2["KIC"].isin(santos)]
     dw = dw.sample(min(len(dw), 6 * N_NONROT["kepler_dwarf_nodetect"]), random_state=int(rng.integers(1e9)))
     cand = pd.concat([
-        pd.DataFrame({"kic": rc["KIC"].astype("int64"), "src": "kepler_rc_quiet"}),
-        pd.DataFrame({"kic": dw["KIC"].astype("int64"), "src": "kepler_dwarf_nodetect"})], ignore_index=True)
+        pd.DataFrame({"kic": rc["KIC"].astype("Int64"), "src": "kepler_rc_quiet"}),
+        pd.DataFrame({"kic": dw["KIC"].astype("Int64"), "src": "kepler_dwarf_nodetect"})], ignore_index=True)
     t = attach_tic(cand.assign(prot=np.nan))
     t = t[t["tic"].notna() & (t["Tmag"] <= TMAG_MAX)]
     t = t[(t["contratio"].isna()) | (t["contratio"] < 0.2)]
@@ -90,7 +90,7 @@ def pick_kepler_nonrot(rng: np.random.Generator) -> pd.DataFrame:
         g = g.sort_values("Tmag").head(N_NONROT[src])
         lab = ("Yu+2018 HeB (asteroseismic) & not in Ceillier+2017 rotating/polluted"
                if src == "kepler_rc_quiet" else "McQuillan+2014 no period (Kepler Q3-Q14 ACF)")
-        out.append(pd.DataFrame({"tic": g["tic"].astype("int64"), "label": "nonrotator", "source": src,
+        out.append(pd.DataFrame({"tic": g["tic"].astype("Int64"), "label": "nonrotator", "source": src,
                                  "truth_period": np.nan, "period_method": "none detected (" + lab + ")",
                                  "period_dataset": "Kepler", "period_ref": lab, "Tmag": g["Tmag"],
                                  "Teff": g["Teff"], "logg": g["logg"], "ra": g["ra"], "dec": g["dec"],
@@ -103,7 +103,7 @@ def pick_claytor(rng: np.random.Generator) -> pd.DataFrame:
     z = pd.read_csv(os.path.join(ROOT, "data", "p27_cache", "zach_tic.csv"))
     z = z[(z["Tmag"] <= TMAG_MAX) & ((z["contratio"].isna()) | (z["contratio"] < 0.2))]
     z = z.sample(N_NONROT["claytor_scvz_template"], random_state=int(rng.integers(1e9)))
-    return pd.DataFrame({"tic": z["ID"].astype("int64"), "label": "nonrotator_candidate",
+    return pd.DataFrame({"tic": z["ID"].astype("Int64"), "label": "nonrotator_candidate",
                          "source": "claytor_scvz_template", "truth_period": np.nan,
                          "period_method": "assumed quiet (hot star; Claytor+2024 noise template), unvetted",
                          "period_dataset": "TESS (SCVZ)", "period_ref": "Claytor+2024 (ApJ 962, 47) sec. III.1.2",
@@ -116,9 +116,9 @@ def pick_wd(rng: np.random.Generator) -> pd.DataFrame:
     wd = vo.vizier_table("J/MNRAS/508/3877/maincat", "GaiaEDR3,GaiaDR2,RA_ICRS,DE_ICRS,Plx,Pwd,Gmag,BPmag,RPmag",
                          extra="&Pwd=%3E0.9&Gmag=%3C14.5")
     wd = wd[wd["GaiaDR2"].notna()].sort_values("Gmag")
-    t = attach_tic(pd.DataFrame({"gaia_dr2": wd["GaiaDR2"].astype("int64"), "prot": np.nan, "cluster": "WD"}))
+    t = attach_tic(pd.DataFrame({"gaia_dr2": wd["GaiaDR2"].astype("Int64"), "prot": np.nan, "cluster": "WD"}))
     t = t[t["tic"].notna() & ((t["contratio"].isna()) | (t["contratio"] < 0.2))].head(N_NONROT["white_dwarf"])
-    return pd.DataFrame({"tic": t["tic"].astype("int64"), "label": "nonrotator_candidate", "source": "white_dwarf",
+    return pd.DataFrame({"tic": t["tic"].astype("Int64"), "label": "nonrotator_candidate", "source": "white_dwarf",
                          "truth_period": np.nan,
                          "period_method": "assumed no 0.1-180 d signal (WD; rotation is minutes-hours)",
                          "period_dataset": "Gaia EDR3 (selection only)", "period_ref": "Gentile Fusillo+2021",
@@ -140,7 +140,7 @@ def pick_ebs(rng: np.random.Generator) -> pd.DataFrame:
                         "pagesize": 5000, "page": 1})
     tt = pd.DataFrame(t["data"])[["ID", "Teff", "logg", "contratio"]].rename(columns={"ID": "TIC"})
     s = s.merge(tt, on="TIC", how="left")
-    return pd.DataFrame({"tic": s["TIC"].astype("int64"), "label": "contaminant_eb", "source": "prsa2022_eb",
+    return pd.DataFrame({"tic": s["TIC"].astype("Int64"), "label": "contaminant_eb", "source": "prsa2022_eb",
                          "truth_period": s["Per"], "period_method": "eclipse timing (orbital period)",
                          "period_dataset": "TESS 2-min (S1-26)", "period_ref": "Prsa+2022 (ApJS 258, 16)",
                          "Tmag": s["Tmag"], "Teff": s["Teff"], "logg": s["logg"], "ra": s["RAJ2000"],

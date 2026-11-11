@@ -80,7 +80,13 @@ def vizier_table(source: str, columns: str = "**", use_cache: bool = True, extra
     path = _cache_path(key)
     if use_cache and os.path.exists(path):
         cols = pd.read_csv(path, nrows=0).columns
-        return pd.read_csv(path, dtype=_id_dtypes(cols))
+        df = pd.read_csv(path, dtype={c: str for c in _id_dtypes(cols)}, keep_default_na=True)
+        for c in _id_dtypes(cols):
+            try:
+                df[c] = pd.array([int(x) if isinstance(x, str) and x != "" else pd.NA for x in df[c]], dtype="Int64")
+            except (ValueError, TypeError):
+                pass
+        return df
     q = f"/viz-bin/asu-tsv?-source={urllib.parse.quote(source)}&-out.max=unlimited&-out={urllib.parse.quote(columns)}{extra}"
     last = None
     for host in VIZIER_ASU_MIRRORS * 3:  # mirrors are flaky: three passes
@@ -102,7 +108,10 @@ def vizier_table(source: str, columns: str = "**", use_cache: bool = True, extra
             ids = _id_dtypes(df.columns)
             for c in df.columns:
                 if c in ids:
-                    df[c] = df[c].replace("", pd.NA).astype("Int64")
+                    try:  # exact integer parse; never via float64
+                        df[c] = pd.array([int(x) if x not in ("", None) else pd.NA for x in df[c]], dtype="Int64")
+                    except (ValueError, TypeError):
+                        pass  # non-numeric identifier (e.g. names): keep as string
                     continue
                 conv = pd.to_numeric(df[c], errors="coerce")
                 if conv.notna().sum() >= 0.9 * max(1, (df[c] != "").sum()):
