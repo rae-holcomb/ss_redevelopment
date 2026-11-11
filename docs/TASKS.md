@@ -915,6 +915,7 @@ for confirmation (ask Rae first).
 
 ### P30. Repo and docs diet (from the midway review, 2026-11-11)
 - **Agent:** `repo-curator`.
+- **Status:** done, in review (`reports/2026-11-11_p30-repo-docs-diet/`, branch `claude/p30-repo-diet-f21062`); results bit-identical on dev_small.
 - **Idea:** one session, results bit-identical:
   - **Code:**
     - delete `claude_files/old/`;
