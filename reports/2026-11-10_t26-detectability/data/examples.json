@@ -1,0 +1,62 @@
+{
+ "detectable_declined": {
+  "star_id": "smarts-tess-v1.0-001762",
+  "true_period": 0.4126,
+  "period_lo": 0.2890451770616332,
+  "period_hi": 0.3391084536557493,
+  "final_period": null,
+  "final_outcome": "none",
+  "snr_rot": 48.82064012402385,
+  "D_band": 1.7320296662837191,
+  "amp_proxy": 2.328565756439074,
+  "eval_pbin": "<1d",
+  "noise_classification": "quiet",
+  "n_cand": 26,
+  "n_cand_success": 0
+ },
+ "undetectable_wrong": {
+  "star_id": "smarts-tess-v1.0-140532",
+  "true_period": 25.3576,
+  "period_lo": 22.06276090985466,
+  "period_hi": 23.41244234749652,
+  "final_period": 2.944081966753269,
+  "final_outcome": "wrong",
+  "snr_rot": 3.540803210298411,
+  "D_band": 1.0580268612575188,
+  "amp_proxy": 0.3992627031072323,
+  "eval_pbin": "10-30d",
+  "noise_classification": "quiet",
+  "n_cand": 30,
+  "n_cand_success": 3
+ },
+ "undetectable_wrong_contaminated": {
+  "star_id": "smarts-tess-v1.0-007369",
+  "true_period": 1.4127,
+  "period_lo": 1.213965650530603,
+  "period_hi": 1.342850666465443,
+  "final_period": 22.797214655380063,
+  "final_outcome": "wrong",
+  "snr_rot": 0.7974625846017657,
+  "D_band": 0.0541163199141323,
+  "amp_proxy": 0.0454245483771721,
+  "eval_pbin": "1-3d",
+  "noise_classification": "contamination_candidate_crowded",
+  "n_cand": 21,
+  "n_cand_success": 0
+ },
+ "borderline": {
+  "star_id": "smarts-tess-v1.0-002913",
+  "true_period": 0.6209,
+  "period_lo": 0.6209,
+  "period_hi": 0.6209,
+  "final_period": null,
+  "final_outcome": "none",
+  "snr_rot": 7.032783540163373,
+  "D_band": 0.3046534519544312,
+  "amp_proxy": 0.7280825761700396,
+  "eval_pbin": "<1d",
+  "noise_classification": "quiet",
+  "n_cand": 29,
+  "n_cand_success": 0
+ }
+}

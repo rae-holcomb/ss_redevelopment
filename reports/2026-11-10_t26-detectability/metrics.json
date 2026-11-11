@@ -1,0 +1,727 @@
+{
+ "threshold": 5.0,
+ "statistic": "snr_rot",
+ "rel_tol": 0.1,
+ "fullyear": {
+  "all": {
+   "overall": {
+    "n": 1000,
+    "success": 0.248,
+    "wrong": 0.102,
+    "declined": 0.65,
+    "ceiling_any_candidate": 0.764,
+    "ceiling_chance": 0.6467999999999999
+   },
+   "<1d": {
+    "n": 172,
+    "success": 0.1686046511627907,
+    "wrong": 0.10465116279069768,
+    "declined": 0.7267441860465116,
+    "ceiling_any_candidate": 0.3372093023255814,
+    "ceiling_chance": 0.1825581395348837
+   },
+   "1-3d": {
+    "n": 172,
+    "success": 0.23255813953488372,
+    "wrong": 0.08139534883720931,
+    "declined": 0.686046511627907,
+    "ceiling_any_candidate": 0.8023255813953488,
+    "ceiling_chance": 0.5918604651162791
+   },
+   "3-10d": {
+    "n": 171,
+    "success": 0.2982456140350877,
+    "wrong": 0.04093567251461988,
+    "declined": 0.6608187134502924,
+    "ceiling_any_candidate": 0.9415204678362573,
+    "ceiling_chance": 0.8853801169590644
+   },
+   "10-30d": {
+    "n": 171,
+    "success": 0.36257309941520466,
+    "wrong": 0.08771929824561403,
+    "declined": 0.5497076023391813,
+    "ceiling_any_candidate": 0.9707602339181286,
+    "ceiling_chance": 0.9146198830409356
+   },
+   ">30d": {
+    "n": 314,
+    "success": 0.21019108280254778,
+    "wrong": 0.15286624203821655,
+    "declined": 0.6369426751592356,
+    "ceiling_any_candidate": 0.767515923566879,
+    "ceiling_chance": 0.6554140127388536
+   }
+  },
+  "detectable": {
+   "overall": {
+    "n": 560,
+    "success": 0.42857142857142855,
+    "wrong": 0.09821428571428571,
+    "declined": 0.4732142857142857,
+    "ceiling_any_candidate": 0.8446428571428571,
+    "ceiling_chance": 0.6717857142857143
+   },
+   "<1d": {
+    "n": 101,
+    "success": 0.27722772277227725,
+    "wrong": 0.07920792079207921,
+    "declined": 0.6435643564356436,
+    "ceiling_any_candidate": 0.49504950495049505,
+    "ceiling_chance": 0.23564356435643566
+   },
+   "1-3d": {
+    "n": 91,
+    "success": 0.43956043956043955,
+    "wrong": 0.04395604395604396,
+    "declined": 0.5164835164835165,
+    "ceiling_any_candidate": 0.9560439560439561,
+    "ceiling_chance": 0.5890109890109891
+   },
+   "3-10d": {
+    "n": 90,
+    "success": 0.5444444444444444,
+    "wrong": 0.022222222222222223,
+    "declined": 0.43333333333333335,
+    "ceiling_any_candidate": 0.9888888888888889,
+    "ceiling_chance": 0.8688888888888887
+   },
+   "10-30d": {
+    "n": 93,
+    "success": 0.6451612903225806,
+    "wrong": 0.06451612903225806,
+    "declined": 0.2903225806451613,
+    "ceiling_any_candidate": 0.978494623655914,
+    "ceiling_chance": 0.9268817204301074
+   },
+   ">30d": {
+    "n": 185,
+    "success": 0.34054054054054056,
+    "wrong": 0.1891891891891892,
+    "declined": 0.4702702702702703,
+    "ceiling_any_candidate": 0.8432432432432433,
+    "ceiling_chance": 0.7264864864864864
+   }
+  },
+  "undetectable": {
+   "overall": {
+    "n": 440,
+    "success": 0.01818181818181818,
+    "wrong": 0.10681818181818181,
+    "declined": 0.875,
+    "ceiling_any_candidate": 0.6613636363636364,
+    "ceiling_chance": 0.6150000000000001
+   },
+   "<1d": {
+    "n": 71,
+    "success": 0.014084507042253521,
+    "wrong": 0.14084507042253522,
+    "declined": 0.8450704225352113,
+    "ceiling_any_candidate": 0.11267605633802817,
+    "ceiling_chance": 0.10704225352112677
+   },
+   "1-3d": {
+    "n": 81,
+    "success": 0.0,
+    "wrong": 0.12345679012345678,
+    "declined": 0.8765432098765432,
+    "ceiling_any_candidate": 0.6296296296296297,
+    "ceiling_chance": 0.5950617283950618
+   },
+   "3-10d": {
+    "n": 81,
+    "success": 0.024691358024691357,
+    "wrong": 0.06172839506172839,
+    "declined": 0.9135802469135802,
+    "ceiling_any_candidate": 0.8888888888888888,
+    "ceiling_chance": 0.9037037037037036
+   },
+   "10-30d": {
+    "n": 78,
+    "success": 0.02564102564102564,
+    "wrong": 0.11538461538461539,
+    "declined": 0.8589743589743589,
+    "ceiling_any_candidate": 0.9615384615384616,
+    "ceiling_chance": 0.8999999999999998
+   },
+   ">30d": {
+    "n": 129,
+    "success": 0.023255813953488372,
+    "wrong": 0.10077519379844961,
+    "declined": 0.875968992248062,
+    "ceiling_any_candidate": 0.6589147286821705,
+    "ceiling_chance": 0.5534883720930233
+   }
+  },
+  "quiet": {
+   "overall": {
+    "n": 850,
+    "success": 0.2541176470588235,
+    "wrong": 0.04352941176470588,
+    "declined": 0.7023529411764706,
+    "ceiling_any_candidate": 0.768235294117647,
+    "ceiling_chance": 0.6536470588235295
+   },
+   "<1d": {
+    "n": 145,
+    "success": 0.1793103448275862,
+    "wrong": 0.020689655172413793,
+    "declined": 0.8,
+    "ceiling_any_candidate": 0.33793103448275863,
+    "ceiling_chance": 0.1668965517241379
+   },
+   "1-3d": {
+    "n": 145,
+    "success": 0.23448275862068965,
+    "wrong": 0.034482758620689655,
+    "declined": 0.7310344827586207,
+    "ceiling_any_candidate": 0.8137931034482758,
+    "ceiling_chance": 0.6013793103448276
+   },
+   "3-10d": {
+    "n": 147,
+    "success": 0.2925170068027211,
+    "wrong": 0.006802721088435374,
+    "declined": 0.7006802721088435,
+    "ceiling_any_candidate": 0.9387755102040817,
+    "ceiling_chance": 0.8802721088435375
+   },
+   "10-30d": {
+    "n": 149,
+    "success": 0.3691275167785235,
+    "wrong": 0.026845637583892617,
+    "declined": 0.6040268456375839,
+    "ceiling_any_candidate": 0.9664429530201343,
+    "ceiling_chance": 0.9248322147651006
+   },
+   ">30d": {
+    "n": 264,
+    "success": 0.2196969696969697,
+    "wrong": 0.09090909090909091,
+    "declined": 0.6893939393939394,
+    "ceiling_any_candidate": 0.7727272727272727,
+    "ceiling_chance": 0.6704545454545454
+   }
+  },
+  "detectable_quiet": {
+   "overall": {
+    "n": 476,
+    "success": 0.44537815126050423,
+    "wrong": 0.06512605042016807,
+    "declined": 0.4894957983193277,
+    "ceiling_any_candidate": 0.8613445378151261,
+    "ceiling_chance": 0.6836134453781514
+   },
+   "<1d": {
+    "n": 86,
+    "success": 0.3023255813953488,
+    "wrong": 0.03488372093023256,
+    "declined": 0.6627906976744186,
+    "ceiling_any_candidate": 0.5348837209302325,
+    "ceiling_chance": 0.23488372093023255
+   },
+   "1-3d": {
+    "n": 77,
+    "success": 0.44155844155844154,
+    "wrong": 0.025974025974025976,
+    "declined": 0.5324675324675324,
+    "ceiling_any_candidate": 0.961038961038961,
+    "ceiling_chance": 0.6051948051948053
+   },
+   "3-10d": {
+    "n": 79,
+    "success": 0.5443037974683544,
+    "wrong": 0.012658227848101266,
+    "declined": 0.4430379746835443,
+    "ceiling_any_candidate": 0.9873417721518988,
+    "ceiling_chance": 0.863291139240506
+   },
+   "10-30d": {
+    "n": 83,
+    "success": 0.6506024096385542,
+    "wrong": 0.03614457831325301,
+    "declined": 0.3132530120481928,
+    "ceiling_any_candidate": 0.9759036144578314,
+    "ceiling_chance": 0.9373493975903614
+   },
+   ">30d": {
+    "n": 151,
+    "success": 0.36423841059602646,
+    "wrong": 0.1456953642384106,
+    "declined": 0.4900662251655629,
+    "ceiling_any_candidate": 0.8675496688741722,
+    "ceiling_chance": 0.7456953642384105
+   }
+  },
+  "undetectable_quiet": {
+   "overall": {
+    "n": 374,
+    "success": 0.0106951871657754,
+    "wrong": 0.016042780748663103,
+    "declined": 0.9732620320855615,
+    "ceiling_any_candidate": 0.6497326203208557,
+    "ceiling_chance": 0.6155080213903743
+   },
+   "<1d": {
+    "n": 59,
+    "success": 0.0,
+    "wrong": 0.0,
+    "declined": 1.0,
+    "ceiling_any_candidate": 0.05084745762711865,
+    "ceiling_chance": 0.06779661016949154
+   },
+   "1-3d": {
+    "n": 68,
+    "success": 0.0,
+    "wrong": 0.04411764705882353,
+    "declined": 0.9558823529411765,
+    "ceiling_any_candidate": 0.6470588235294118,
+    "ceiling_chance": 0.5970588235294116
+   },
+   "3-10d": {
+    "n": 68,
+    "success": 0.0,
+    "wrong": 0.0,
+    "declined": 1.0,
+    "ceiling_any_candidate": 0.8823529411764706,
+    "ceiling_chance": 0.8999999999999999
+   },
+   "10-30d": {
+    "n": 66,
+    "success": 0.015151515151515152,
+    "wrong": 0.015151515151515152,
+    "declined": 0.9696969696969697,
+    "ceiling_any_candidate": 0.9545454545454546,
+    "ceiling_chance": 0.9090909090909091
+   },
+   ">30d": {
+    "n": 113,
+    "success": 0.02654867256637168,
+    "wrong": 0.017699115044247787,
+    "declined": 0.9557522123893806,
+    "ceiling_any_candidate": 0.6460176991150443,
+    "ceiling_chance": 0.5699115044247787
+   }
+  },
+  "detectable_quiet_searchable": {
+   "overall": {
+    "n": 451,
+    "success": 0.4700665188470067,
+    "wrong": 0.04656319290465632,
+    "declined": 0.48337028824833705,
+    "ceiling_any_candidate": 0.8669623059866962,
+    "ceiling_chance": 0.6767184035476718
+   },
+   "<1d": {
+    "n": 86,
+    "success": 0.3023255813953488,
+    "wrong": 0.03488372093023256,
+    "declined": 0.6627906976744186,
+    "ceiling_any_candidate": 0.5348837209302325,
+    "ceiling_chance": 0.23488372093023255
+   },
+   "1-3d": {
+    "n": 77,
+    "success": 0.44155844155844154,
+    "wrong": 0.025974025974025976,
+    "declined": 0.5324675324675324,
+    "ceiling_any_candidate": 0.961038961038961,
+    "ceiling_chance": 0.6051948051948053
+   },
+   "3-10d": {
+    "n": 79,
+    "success": 0.5443037974683544,
+    "wrong": 0.012658227848101266,
+    "declined": 0.4430379746835443,
+    "ceiling_any_candidate": 0.9873417721518988,
+    "ceiling_chance": 0.863291139240506
+   },
+   "10-30d": {
+    "n": 83,
+    "success": 0.6506024096385542,
+    "wrong": 0.03614457831325301,
+    "declined": 0.3132530120481928,
+    "ceiling_any_candidate": 0.9759036144578314,
+    "ceiling_chance": 0.9373493975903614
+   },
+   ">30d": {
+    "n": 126,
+    "success": 0.4365079365079365,
+    "wrong": 0.09523809523809523,
+    "declined": 0.46825396825396826,
+    "ceiling_any_candidate": 0.8888888888888888,
+    "ceiling_chance": 0.7333333333333332
+   }
+  }
+ },
+ "assigned": {
+  "all": {
+   "overall": {
+    "n": 1000,
+    "success": 0.148,
+    "wrong": 0.063,
+    "declined": 0.789,
+    "ceiling_any_candidate": 0.601,
+    "ceiling_chance": 0.508
+   },
+   "<1d": {
+    "n": 172,
+    "success": 0.18023255813953487,
+    "wrong": 0.06976744186046512,
+    "declined": 0.75,
+    "ceiling_any_candidate": 0.6104651162790697,
+    "ceiling_chance": 0.4616279069767442
+   },
+   "1-3d": {
+    "n": 172,
+    "success": 0.22674418604651161,
+    "wrong": 0.040697674418604654,
+    "declined": 0.7325581395348837,
+    "ceiling_any_candidate": 0.877906976744186,
+    "ceiling_chance": 0.7616279069767442
+   },
+   "3-10d": {
+    "n": 171,
+    "success": 0.19298245614035087,
+    "wrong": 0.03508771929824561,
+    "declined": 0.7719298245614035,
+    "ceiling_any_candidate": 0.8888888888888888,
+    "ceiling_chance": 0.7789473684210526
+   },
+   "10-30d": {
+    "n": 171,
+    "success": 0.17543859649122806,
+    "wrong": 0.08187134502923976,
+    "declined": 0.7426900584795322,
+    "ceiling_any_candidate": 0.6432748538011696,
+    "ceiling_chance": 0.5649122807017544
+   },
+   ">30d": {
+    "n": 314,
+    "success": 0.04777070063694268,
+    "wrong": 0.07643312101910828,
+    "declined": 0.8757961783439491,
+    "ceiling_any_candidate": 0.2643312101910828,
+    "ceiling_chance": 0.21592356687898087
+   }
+  },
+  "detectable": {
+   "overall": {
+    "n": 444,
+    "success": 0.32207207207207206,
+    "wrong": 0.04954954954954955,
+    "declined": 0.6283783783783784,
+    "ceiling_any_candidate": 0.6936936936936937,
+    "ceiling_chance": 0.5414414414414415
+   },
+   "<1d": {
+    "n": 79,
+    "success": 0.3924050632911392,
+    "wrong": 0.0379746835443038,
+    "declined": 0.569620253164557,
+    "ceiling_any_candidate": 0.7721518987341772,
+    "ceiling_chance": 0.45569620253164556
+   },
+   "1-3d": {
+    "n": 74,
+    "success": 0.5135135135135135,
+    "wrong": 0.013513513513513514,
+    "declined": 0.47297297297297297,
+    "ceiling_any_candidate": 0.9864864864864865,
+    "ceiling_chance": 0.7810810810810811
+   },
+   "3-10d": {
+    "n": 71,
+    "success": 0.43661971830985913,
+    "wrong": 0.028169014084507043,
+    "declined": 0.5352112676056338,
+    "ceiling_any_candidate": 0.971830985915493,
+    "ceiling_chance": 0.808450704225352
+   },
+   "10-30d": {
+    "n": 70,
+    "success": 0.4,
+    "wrong": 0.04285714285714286,
+    "declined": 0.5571428571428572,
+    "ceiling_any_candidate": 0.7571428571428571,
+    "ceiling_chance": 0.6742857142857143
+   },
+   ">30d": {
+    "n": 150,
+    "success": 0.1,
+    "wrong": 0.08666666666666667,
+    "declined": 0.8133333333333334,
+    "ceiling_any_candidate": 0.3466666666666667,
+    "ceiling_chance": 0.28
+   }
+  },
+  "undetectable": {
+   "overall": {
+    "n": 556,
+    "success": 0.008992805755395683,
+    "wrong": 0.0737410071942446,
+    "declined": 0.9172661870503597,
+    "ceiling_any_candidate": 0.5269784172661871,
+    "ceiling_chance": 0.48129496402877703
+   },
+   "<1d": {
+    "n": 93,
+    "success": 0.0,
+    "wrong": 0.0967741935483871,
+    "declined": 0.9032258064516129,
+    "ceiling_any_candidate": 0.4731182795698925,
+    "ceiling_chance": 0.4666666666666667
+   },
+   "1-3d": {
+    "n": 98,
+    "success": 0.01020408163265306,
+    "wrong": 0.061224489795918366,
+    "declined": 0.9285714285714286,
+    "ceiling_any_candidate": 0.7959183673469388,
+    "ceiling_chance": 0.7469387755102039
+   },
+   "3-10d": {
+    "n": 100,
+    "success": 0.02,
+    "wrong": 0.04,
+    "declined": 0.94,
+    "ceiling_any_candidate": 0.83,
+    "ceiling_chance": 0.758
+   },
+   "10-30d": {
+    "n": 101,
+    "success": 0.019801980198019802,
+    "wrong": 0.10891089108910891,
+    "declined": 0.8712871287128713,
+    "ceiling_any_candidate": 0.5643564356435643,
+    "ceiling_chance": 0.48910891089108915
+   },
+   ">30d": {
+    "n": 164,
+    "success": 0.0,
+    "wrong": 0.06707317073170732,
+    "declined": 0.9329268292682927,
+    "ceiling_any_candidate": 0.18902439024390244,
+    "ceiling_chance": 0.1573170731707317
+   }
+  },
+  "quiet": {
+   "overall": {
+    "n": 850,
+    "success": 0.14941176470588236,
+    "wrong": 0.027058823529411764,
+    "declined": 0.8235294117647058,
+    "ceiling_any_candidate": 0.6023529411764705,
+    "ceiling_chance": 0.5061176470588236
+   },
+   "<1d": {
+    "n": 145,
+    "success": 0.19310344827586207,
+    "wrong": 0.020689655172413793,
+    "declined": 0.7862068965517242,
+    "ceiling_any_candidate": 0.6206896551724138,
+    "ceiling_chance": 0.4579310344827587
+   },
+   "1-3d": {
+    "n": 145,
+    "success": 0.21379310344827587,
+    "wrong": 0.006896551724137931,
+    "declined": 0.7793103448275862,
+    "ceiling_any_candidate": 0.8620689655172413,
+    "ceiling_chance": 0.746206896551724
+   },
+   "3-10d": {
+    "n": 147,
+    "success": 0.19047619047619047,
+    "wrong": 0.006802721088435374,
+    "declined": 0.8027210884353742,
+    "ceiling_any_candidate": 0.891156462585034,
+    "ceiling_chance": 0.7741496598639455
+   },
+   "10-30d": {
+    "n": 149,
+    "success": 0.18120805369127516,
+    "wrong": 0.03355704697986577,
+    "declined": 0.785234899328859,
+    "ceiling_any_candidate": 0.6308724832214765,
+    "ceiling_chance": 0.5624161073825504
+   },
+   ">30d": {
+    "n": 264,
+    "success": 0.04924242424242424,
+    "wrong": 0.04924242424242424,
+    "declined": 0.9015151515151515,
+    "ceiling_any_candidate": 0.2727272727272727,
+    "ceiling_chance": 0.2196969696969697
+   }
+  },
+  "detectable_quiet": {
+   "overall": {
+    "n": 379,
+    "success": 0.32717678100263853,
+    "wrong": 0.0316622691292876,
+    "declined": 0.6411609498680739,
+    "ceiling_any_candidate": 0.6992084432717678,
+    "ceiling_chance": 0.5451187335092348
+   },
+   "<1d": {
+    "n": 68,
+    "success": 0.4117647058823529,
+    "wrong": 0.014705882352941176,
+    "declined": 0.5735294117647058,
+    "ceiling_any_candidate": 0.8088235294117647,
+    "ceiling_chance": 0.45294117647058824
+   },
+   "1-3d": {
+    "n": 62,
+    "success": 0.5,
+    "wrong": 0.0,
+    "declined": 0.5,
+    "ceiling_any_candidate": 0.9838709677419355,
+    "ceiling_chance": 0.7709677419354838
+   },
+   "3-10d": {
+    "n": 62,
+    "success": 0.43548387096774194,
+    "wrong": 0.016129032258064516,
+    "declined": 0.5483870967741935,
+    "ceiling_any_candidate": 0.967741935483871,
+    "ceiling_chance": 0.8096774193548385
+   },
+   "10-30d": {
+    "n": 62,
+    "success": 0.4032258064516129,
+    "wrong": 0.03225806451612903,
+    "declined": 0.5645161290322581,
+    "ceiling_any_candidate": 0.7419354838709677,
+    "ceiling_chance": 0.6870967741935483
+   },
+   ">30d": {
+    "n": 125,
+    "success": 0.104,
+    "wrong": 0.064,
+    "declined": 0.832,
+    "ceiling_any_candidate": 0.344,
+    "ceiling_chance": 0.2816000000000001
+   }
+  },
+  "undetectable_quiet": {
+   "overall": {
+    "n": 471,
+    "success": 0.006369426751592357,
+    "wrong": 0.02335456475583864,
+    "declined": 0.970276008492569,
+    "ceiling_any_candidate": 0.524416135881104,
+    "ceiling_chance": 0.4747346072186836
+   },
+   "<1d": {
+    "n": 77,
+    "success": 0.0,
+    "wrong": 0.025974025974025976,
+    "declined": 0.974025974025974,
+    "ceiling_any_candidate": 0.45454545454545453,
+    "ceiling_chance": 0.46233766233766227
+   },
+   "1-3d": {
+    "n": 83,
+    "success": 0.0,
+    "wrong": 0.012048192771084338,
+    "declined": 0.9879518072289156,
+    "ceiling_any_candidate": 0.7710843373493976,
+    "ceiling_chance": 0.727710843373494
+   },
+   "3-10d": {
+    "n": 85,
+    "success": 0.011764705882352941,
+    "wrong": 0.0,
+    "declined": 0.9882352941176471,
+    "ceiling_any_candidate": 0.8352941176470589,
+    "ceiling_chance": 0.7482352941176469
+   },
+   "10-30d": {
+    "n": 87,
+    "success": 0.022988505747126436,
+    "wrong": 0.034482758620689655,
+    "declined": 0.9425287356321839,
+    "ceiling_any_candidate": 0.5517241379310345,
+    "ceiling_chance": 0.47356321839080456
+   },
+   ">30d": {
+    "n": 139,
+    "success": 0.0,
+    "wrong": 0.03597122302158273,
+    "declined": 0.9640287769784173,
+    "ceiling_any_candidate": 0.20863309352517986,
+    "ceiling_chance": 0.16402877697841728
+   }
+  },
+  "detectable_quiet_searchable": {
+   "overall": {
+    "n": 276,
+    "success": 0.4492753623188406,
+    "wrong": 0.028985507246376812,
+    "declined": 0.5217391304347826,
+    "ceiling_any_candidate": 0.9166666666666666,
+    "ceiling_chance": 0.6768115942028986
+   },
+   "<1d": {
+    "n": 68,
+    "success": 0.4117647058823529,
+    "wrong": 0.014705882352941176,
+    "declined": 0.5735294117647058,
+    "ceiling_any_candidate": 0.8088235294117647,
+    "ceiling_chance": 0.45294117647058824
+   },
+   "1-3d": {
+    "n": 62,
+    "success": 0.5,
+    "wrong": 0.0,
+    "declined": 0.5,
+    "ceiling_any_candidate": 0.9838709677419355,
+    "ceiling_chance": 0.7709677419354838
+   },
+   "3-10d": {
+    "n": 61,
+    "success": 0.4426229508196721,
+    "wrong": 0.01639344262295082,
+    "declined": 0.5409836065573771,
+    "ceiling_any_candidate": 0.9672131147540983,
+    "ceiling_chance": 0.8098360655737703
+   },
+   "10-30d": {
+    "n": 44,
+    "success": 0.5681818181818182,
+    "wrong": 0.022727272727272728,
+    "declined": 0.4090909090909091,
+    "ceiling_any_candidate": 0.9318181818181818,
+    "ceiling_chance": 0.8181818181818182
+   },
+   ">30d": {
+    "n": 41,
+    "success": 0.3170731707317073,
+    "wrong": 0.12195121951219512,
+    "declined": 0.5609756097560976,
+    "ceiling_any_candidate": 0.9024390243902439,
+    "ceiling_chance": 0.5560975609756098
+   }
+  }
+ },
+ "auc_success": {
+  "fullyear": {
+   "D_band\u00b7\u221aN_cyc (chosen)": 0.8649,
+   "D_peak (LS peak S/N)": 0.8738,
+   "D_band": 0.8235,
+   "injected RMS only": 0.8377,
+   "catalog amp proxy (T1)": 0.8124,
+   "noise RMS only": 0.4411
+  },
+  "assigned": {
+   "D_band\u00b7\u221aN_cyc (chosen)": 0.8787,
+   "D_peak (LS peak S/N)": 0.8375,
+   "D_band": 0.7548,
+   "injected RMS only": 0.7863,
+   "catalog amp proxy (T1)": 0.7947,
+   "noise RMS only": 0.3956
+  }
+ }
+}

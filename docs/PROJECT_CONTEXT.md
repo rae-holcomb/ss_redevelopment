@@ -657,3 +657,10 @@ chats should know:
   Candidate recall by method (`reports/2026-11-11_candidate-recall-by-method/`): <1 d is limited by Stage 1 itself (all 7
   methods: 44% full-year, 63% assigned), and every method loses <1 d stars on full-year baselines; `acf_fft_highpass` is
   the best short-period addition (+0.10 full-year), `wavelet` the best long-period one (+0.12–0.19 at > 30 d).
+- **2026-11-10 — T26 detectability ceiling** (`reports/2026-11-10_t26-detectability/`, branch `claude/t26-detectability-7f7523`).
+  Per-star D_band·√N_cyc from the injected signal (SMARTS flux / T20 stack) vs the noise on rotation timescales, on the
+  pipeline's cadences; AUC for success 0.86 FY / 0.88 assigned vs 0.81 / 0.79 for the T1 amp proxy. Proposed `detectable` ≥ 5:
+  56% (FY) / 44% (assigned) of dev_medium; detectable FY success 0.43, wrong 0.10, declined 0.47. Undetectable quiet-noise stars
+  are declined 97% of the time (correct); wrong answers on undetectable stars are mostly contaminated noise sources (41/47).
+  The "correct P in any candidate" ceiling is mostly chance (0.76 vs 0.65 shuffled); only <1 d is informative, and there half of
+  detectable stars have no correct candidate (agrees with the candidate-recall report). Scorecard flag proposed as P26.
