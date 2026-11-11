@@ -664,3 +664,9 @@ chats should know:
   are declined 97% of the time (correct); wrong answers on undetectable stars are mostly contaminated noise sources (41/47).
   The "correct P in any candidate" ceiling is mostly chance (0.76 vs 0.65 shuffled); only <1 d is informative, and there half of
   detectable stars have no correct candidate (agrees with the candidate-recall report). Scorecard flag proposed as P26.
+- **2026-11-10 — Scorecard v6: `detectable` flag (T26/P26, Rae's request).** Committed side table
+  `benchmarks/detectability_dev.csv` (`tools/build_detectability_table.py`; T20 stacks on the drive, read-only) keyed by
+  (star_id, loaded sectors) for dev_small + dev_medium in both coverage modes. The scorecard joins it into per-star
+  `detectability`/`detectable` (`--detectable-threshold`, default 5) and reports `final.detectable`, `final.undetectable`,
+  `final.detectable_searchable`; all earlier metric keys are bit-identical (dev_small v5 vs v6). Rae: undetectable stars are
+  **not** ranker negatives; noise-only stack light curves (T27) are the negatives.

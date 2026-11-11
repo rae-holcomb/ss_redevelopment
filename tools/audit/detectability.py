@@ -26,9 +26,12 @@ convention. The script also stores the ingredients (signal and noise RMS, observ
 span, number of cycles) so alternative statistics can be built later
 (e.g. D_band * sqrt(n_cycles)).
 
-Outputs (one CSV per coverage mode, written atomically):
-``reports/<t26 folder>/data/detectability_<mode>.csv``. Resumable: checkpoints every
-``--chunk`` stars to ``<root>/extracted/t26_detectability/parts/``.
+Outputs (one CSV per manifest and coverage mode, written atomically; default
+``reports/<t26 folder>/data/detectability_<mode>.csv``, or ``--out``). Each row records the
+loader's ``sectors`` pattern, the key the scorecard joins on. Resumable: checkpoints every
+``--chunk`` stars to ``<root>/extracted/t26_detectability/parts_v2/<manifest>/<mode>/``.
+``tools/build_detectability_table.py`` runs this for the dev sets and writes the committed
+``benchmarks/detectability_dev.csv`` (scorecard v6).
 
 Usage::
 
@@ -67,8 +70,7 @@ REPORT = REPO / "reports" / "2026-11-10_t26-detectability"
 STACK_SUBDIR = ("extracted", "galaxy_stack")
 BAND_FACTOR = 1.5
 NYQ = 0.5 / (1800 / 86400.0)  # c/d at 30-min cadence
-# star -> noise TIC map lives in the scorecard runs (gitignored, main checkout only)
-MAIN_T10 = Path("/Users/raeholcomb/Documents/GitHub/ss_redevelopment/runs")
+NOISE_TABLE = REPO / "benchmarks" / "noise_sources_dev.csv"  # sim_id -> noise TIC for the dev sets
 HALF = {"A": 1, "B": 0}  # star in half A -> use stack B (index 1), and vice versa; else A+B (2)
 
 
@@ -137,8 +139,12 @@ def detectability_one(t: np.ndarray, sig: np.ndarray, noise: np.ndarray,
     )
 
 
-def star_series(path: Path, g: np.ndarray, sectors) -> tuple:
-    """Return (t, s-1, g-1, f-1) on exactly the cadences the pipeline sees for this star."""
+def star_series(path: Path, g: np.ndarray, sectors, return_sectors: bool = False) -> tuple:
+    """Return (t, s-1, g-1, f-1) on exactly the cadences the pipeline sees for this star.
+
+    With return_sectors=True, also return the loader's sectors_used (the pattern the
+    scorecard records in its `sectors` column), as a 5th element.
+    """
     with fits.open(path) as h:
         t_raw = np.asarray(h["LIGHTCURVE"].data["time"], float)
         f_raw = np.asarray(h["LIGHTCURVE"].data["flux"], float)
@@ -149,7 +155,8 @@ def star_series(path: Path, g: np.ndarray, sectors) -> tuple:
     j = np.where(np.abs(t_raw[j - 1] - te) < np.abs(t_raw[j] - te), j - 1, j)
     good = (np.abs(t_raw[j] - te) < 0.25 * 1800 / 86400.0) & np.isfinite(g[j]) & (g[j] > 0)
     j = j[good]
-    return t_raw[j], f_raw[j] / g[j] - 1.0, g[j] - 1.0, f_raw[j] - 1.0
+    out = (t_raw[j], f_raw[j] / g[j] - 1.0, g[j] - 1.0, f_raw[j] - 1.0)
+    return out + (list(pre.sectors_used),) if return_sectors else out
 
 
 def process_one(rec: dict, data_dir: str, stacks_path: str) -> dict:
@@ -159,11 +166,67 @@ def process_one(rec: dict, data_dir: str, stacks_path: str) -> dict:
     try:
         g = np.asarray(stacks[int(rec["stack_row"]), int(rec["stack_which"])], float)
         sectors = None if rec["sectors_use"] is None else list(rec["sectors_use"])
-        t, s, n, _ = star_series(Path(data_dir) / rec["path"], g, sectors)
+        t, s, n, _, used = star_series(Path(data_dir) / rec["path"], g, sectors, return_sectors=True)
+        out["sectors"] = cov.format_pattern(used)
         out.update(detectability_one(t, s, n, rec["true_period"], rec["P_lo"], rec["P_hi"]))
         out["error"] = ""
     except Exception as exc:  # recorded, not raised: one bad star must not kill the run
         out["error"] = f"{type(exc).__name__}: {exc}"
+    return out
+
+
+def join_stack_rows(man: pd.DataFrame, root: Path, galaxy_map: str | None = None) -> pd.DataFrame:
+    """Manifest rows + noise TIC (committed benchmarks/noise_sources_dev.csv by sim_id, or a
+    star_id,noise_tic CSV) + stacks.npy row and which estimate to use."""
+    if galaxy_map:
+        stars = man.merge(pd.read_csv(galaxy_map, usecols=["star_id", "noise_tic"]), on="star_id", how="left")
+    else:
+        noise = pd.read_csv(NOISE_TABLE, usecols=["sim_id", "tic"]).rename(columns={"tic": "noise_tic"})
+        stars = man.merge(noise, on="sim_id", how="left")
+    idx = pd.read_csv(stack_paths(root)["index"])
+    stars = stars.merge(idx[["tic", "galaxy"]].rename(columns={"tic": "noise_tic"}), on="noise_tic", how="left")
+    return stack_row_for_stars(stars, root)
+
+
+def run(manifest: str, mode: str, out_csv: Path, data_dir: str, root: Path, n_workers: int = 2,
+        chunk: int = 100, resume: bool = True, galaxy_map: str | None = None) -> pd.DataFrame:
+    """Compute detectability for one manifest and coverage mode; resumable, atomic output CSV.
+
+    mode 'fullyear' loads every native sector; 'assigned' the manifest's `sectors` column
+    (exactly what the scorecard does with / without --ignore-manifest-sectors).
+    """
+    man = pd.read_csv(manifest)
+    stars = join_stack_rows(man, root, galaxy_map)
+    if stars.stack_row.isna().any():
+        raise SystemExit(f"{int(stars.stack_row.isna().sum())} stars have no noise stack (TIC not mapped)")
+    stars["sectors_use"] = ([None] * len(stars) if mode == "fullyear"
+                            else stars.sectors.map(cov.parse_pattern))
+    parts = sd.extract_dir(root, "t26_detectability", "parts_v2", Path(manifest).stem, mode)
+    done = set()
+    if resume:
+        for f in parts.glob("part_*.csv"):
+            done |= set(pd.read_csv(f).star_id)
+    todo = stars[~stars.star_id.isin(done)]
+    print(f"{Path(manifest).stem} {mode}: {len(stars)} stars, {len(done)} done, {len(todo)} to do", flush=True)
+    worker = partial(process_one, data_dir=data_dir, stacks_path=str(stack_paths(root)["stacks"]))
+    recs = todo[["star_id", "path", "true_period", "P_lo", "P_hi", "stack_row", "stack_which",
+                 "sectors_use"]].to_dict("records")
+    t0 = _time.time()
+    if recs:
+        with ProcessPoolExecutor(max_workers=n_workers, initializer=determinism.init_worker) as ex:
+            for k in range(0, len(recs), chunk):
+                res = list(ex.map(worker, recs[k:k + chunk]))
+                with sd.atomic_path(parts / f"part_{int(_time.time() * 1e3)}_{k:05d}.csv") as tmp:
+                    pd.DataFrame(res).to_csv(tmp, index=False)
+                print(f"  {k + len(res)}/{len(recs)}  {_time.time() - t0:.0f}s", flush=True)
+    allp = pd.concat([pd.read_csv(f, dtype={"sectors": str}) for f in sorted(parts.glob("part_*.csv"))])
+    allp = allp.drop_duplicates("star_id", keep="last")
+    keep = ["star_id", "sim_id", "noise_tic", "galaxy", "stack_row", "role", "stack_which", "amp_proxy", "amp_tier"]
+    out = stars[[c for c in keep if c in stars.columns]].merge(allp, on="star_id", how="left")
+    out.insert(1, "mode", mode)
+    with sd.atomic_path(Path(out_csv)) as tmp:
+        out.to_csv(tmp, index=False)
+    print(f"wrote {out_csv}; errors: {(out.error.fillna('') != '').sum()}")
     return out
 
 
@@ -175,54 +238,16 @@ def main():
     ap.add_argument("--data-dir", default=str(REPO / "data" / "smarts_dev"))
     ap.add_argument("--data-root", default=None, help="SMARTS data root on the drive ($SMARTS_DATA_ROOT)")
     ap.add_argument("--galaxy-map", default=None,
-                    help="CSV with star_id,noise_tic (default: main checkout t10 stars.csv.gz)")
-    ap.add_argument("--outdir", default=str(REPORT / "data"))
-    ap.add_argument("--n-workers", type=int, default=4)
+                    help="CSV with star_id,noise_tic (default: benchmarks/noise_sources_dev.csv by sim_id)")
+    ap.add_argument("--out", default=None, help="output CSV (default: report data/detectability_<mode>.csv)")
+    ap.add_argument("--n-workers", type=int, default=2)
     ap.add_argument("--chunk", type=int, default=100)
     ap.add_argument("--resume", action="store_true")
     a = ap.parse_args()
-
     root = sd.data_root(a.data_root)
     check_stacks_readable(root)
-    man = pd.read_csv(a.manifest)
-    neg = pd.read_csv(REPO / "datasets" / "negatives_v0_sources.csv", usecols=["tic", "galaxy"])
-    gmap = pd.read_csv(a.galaxy_map or MAIN_T10 / "t10_dev_medium_fullyear" / "stars.csv.gz",
-                       usecols=["star_id", "noise_tic"])
-    stars = man.merge(gmap, on="star_id", how="left")
-    # galaxy index for each TIC: from the full stack index (covers every TIC, unlike the negatives list)
-    idx = pd.read_csv(stack_paths(root)["index"])
-    if "tic" in idx.columns:
-        stars = stars.merge(idx[["tic", "galaxy"]].rename(columns={"tic": "noise_tic"}), on="noise_tic", how="left")
-    else:
-        stars = stars.merge(neg.rename(columns={"tic": "noise_tic"}), on="noise_tic", how="left")
-    stars = stack_row_for_stars(stars, root)
-    stars["sectors_use"] = ([None] * len(stars) if a.mode == "fullyear"
-                            else stars.sectors.map(cov.parse_pattern))
-
-    parts = sd.extract_dir(root, "t26_detectability", "parts", a.mode)
-    done = set()
-    if a.resume:
-        for f in parts.glob("part_*.csv"):
-            done |= set(pd.read_csv(f).star_id)
-    todo = stars[~stars.star_id.isin(done)]
-    print(f"{a.mode}: {len(stars)} stars, {len(done)} done, {len(todo)} to do", flush=True)
-    worker = partial(process_one, data_dir=a.data_dir, stacks_path=str(stack_paths(root)["stacks"]))
-    recs = todo[["star_id", "path", "true_period", "P_lo", "P_hi", "stack_row", "stack_which",
-                 "sectors_use"]].to_dict("records")
-    t0 = _time.time()
-    with ProcessPoolExecutor(max_workers=a.n_workers, initializer=determinism.init_worker) as ex:
-        for k in range(0, len(recs), a.chunk):
-            res = list(ex.map(worker, recs[k:k + a.chunk]))
-            with sd.atomic_path(parts / f"part_{int(_time.time() * 1e3)}_{k:05d}.csv") as tmp:
-                pd.DataFrame(res).to_csv(tmp, index=False)
-            print(f"  {k + len(res)}/{len(recs)}  {_time.time() - t0:.0f}s", flush=True)
-
-    allp = pd.concat([pd.read_csv(f) for f in sorted(parts.glob("part_*.csv"))]).drop_duplicates("star_id", keep="last")
-    keep = ["star_id", "noise_tic", "galaxy", "stack_row", "role", "stack_which", "amp_proxy", "amp_tier"]
-    out = stars[keep].merge(allp, on="star_id", how="left")
-    with sd.atomic_path(Path(a.outdir) / f"detectability_{a.mode}.csv") as tmp:
-        out.to_csv(tmp, index=False)
-    print(f"wrote {a.outdir}/detectability_{a.mode}.csv; errors: {(out.error.fillna('') != '').sum()}")
+    run(a.manifest, a.mode, Path(a.out or REPORT / "data" / f"detectability_{a.mode}.csv"), a.data_dir, root,
+        a.n_workers, a.chunk, a.resume, a.galaxy_map)
 
 
 if __name__ == "__main__":

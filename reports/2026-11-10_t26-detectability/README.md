@@ -231,6 +231,43 @@ source of long-period candidates.
 - **Ceiling restricted to gate-passing candidates** equals the final success rate (only ~2% of candidates pass the
   gates), so it adds nothing.
 
+## Follow-up: scorecard v6 `detectable` flag (Rae, 2026-11-10)
+**Rae's decisions:**
+- **Yes to a `detectable` flag in the scorecard** for development use.
+- **No to undetectable stars as ranker negatives.** Noise-only light curves (the galaxy ID → the T20 stack with no
+  injected signal, as in T27) capture that case better.
+
+**What I built:**
+- **`benchmarks/detectability_dev.csv`:** 1,971 rows covering all 1,050 dev_small + dev_medium stars, in both
+  full-year and assigned coverage.
+  - It is built by `tools/build_detectability_table.py`, which runs `tools/audit/detectability.py` per manifest and
+    mode. That needs the drive (read-only) and takes ~7 min at 2 workers.
+  - It is keyed by `(star_id, sectors)`, where `sectors` is the pattern the loader actually used, in the scorecard's
+    format.
+  - The dev_medium values are identical to this report's (max relative difference 0).
+  - It joins every dev_medium star in both t10 runs.
+- **Scorecard v6:**
+  - **Per-star columns:** `detectability` (= snr_rot) and `detectable` (≥ `--detectable-threshold`, default **5**),
+    joined after scoring.
+  - **New metric groups:** `final.detectable.*`, `final.undetectable.*` and `final.detectable_searchable.*`, each
+    with overall / by_bin / by_coverage_class.
+  - **Stars with no table row are left out of these subsets:** synthetic stars and other coverage draws get empty
+    columns.
+  - **New options:** `--detectability-table` and `--detectable-threshold`. Both are recorded in `config`, and
+    `config.dataset` is unchanged.
+- **Existing metrics are unchanged:**
+  - dev_small full-year ran with v5 and with v6. All **1,054 existing metric keys are identical**, the old
+    per-star columns are identical, and `check_goals --baseline` gives PASS.
+  - dev_small with assigned coverage matched all 50 stars.
+  - dev_small full-year detectable: success 0.44 (n=27); undetectable: 0.04 (n=23).
+- **Tests:** new `tests/test_scorecard_v6.py` (7 tests). The only edits to existing assertions are the two
+  scorecard-version pins (5 → 6), the same edit every earlier version bump made.
+
+**Still open:**
+- The threshold default of 5 is the T26 proposal. Changing it is a one-flag rerun, or a re-threshold of the
+  per-star `detectability` column; no rerun of the pipeline is needed.
+- The table covers only the dev sets. The holdout and any new coverage draws would need a table build first.
+
 ## Open questions for Rae
 1. **Threshold.** Is `detectable = D_band·√N_cyc ≥ 5` the cut you want?
    - The trade-off figure and table above show the alternatives. 4–6 behave alike; ≥8 starts discarding real
@@ -239,29 +276,19 @@ source of long-period candidates.
      "detectable by methods like ours".
    - Mitigating that, the chance-corrected candidate ceiling is also ~0 below the cut, and the injected signal is
      visibly buried in the examples.
-2. **Scorecard `detectable` flag (proposal, not implemented).**
-   - **What it would be:** a v6 descriptor like `searchable`, plus detectable-subset metrics, with existing metrics
-     unchanged.
-   - **Data:** the scorecard can't compute it on its own, because it needs the per-star noise stack from the drive.
-     Proposal: commit a per-star side table (`star_id, mode, snr_rot`) for dev_small/dev_medium (and later the
-     holdout, with your OK), and give the scorecard a `--detectability <csv>` option that joins it.
-   - **The table key has to include coverage:** detectability depends on coverage, so each coverage pattern needs its
-     own value.
-   - Should I (or a scorecard task) do that?
+2. ~~**Scorecard `detectable` flag.**~~ **Answered (Rae, 2026-11-10): yes.** Implemented as scorecard v6; see
+   "Follow-up" above.
 3. **Should goals target the detectable subset?** Full-year detectable success is 0.43 (quiet + searchable 0.47).
    That's a fairer denominator than "all stars" for SMARTS, but goals are yours.
-4. **Should undetectable stars be training negatives for the ranker?**
-   - On quiet sources they are declined 97% of the time.
-   - As ranker training rows they're effectively "no recoverable rotation". Labelling them as negatives or giving them
-     low weight could help calibrate the decline head.
-   - Your call, alongside T27's negatives.
+4. ~~**Should undetectable stars be training negatives for the ranker?**~~ **Answered (Rae, 2026-11-10): no.**
+   Use the galaxy ID's noise-only light curve (the T20 stack, as T27 does) instead.
 5. **Follow-ups this surfaced.**
    - **<1 d candidate generation:** half of the detectable short-P stars have no correct candidate, even when the
      ACF/LS shows the peak (examples 001762, 002913). This agrees with
      `reports/2026-11-11_candidate-recall-by-method/` (Stage 1 limits <1 d), so I filed no new task. The detectable
      subset is the fair denominator for that work.
    - **Wrong answers on undetectable stars are mostly contaminated noise sources.** That evidence belongs in T29.
-   - **The scorecard flag** is filed as P26.
+   - **The scorecard flag** was filed as P26 and is now implemented (v6).
 
 ## Reproduce
 ```bash
@@ -272,4 +299,7 @@ $P tools/audit/detectability.py --mode assigned --n-workers 4 --resume
 $P tools/audit/detectability_analysis.py prepare --threshold 5     # joins main-checkout runs/t10_dev_medium_*
 $P tools/audit/detectability_analysis.py figures --threshold 5     # data/ only
 $P tools/run_notebook.py reports/2026-11-10_t26-detectability/notebook.ipynb
+# scorecard v6 side table (drive, read-only; ~7 min at 2 workers) and the bit-identical check
+$P tools/build_detectability_table.py --n-workers 2
+$P benchmarks/scorecard.py --manifest datasets/dev_small.csv --data-root data/smarts_dev --ignore-manifest-sectors --n-workers 2 --outdir runs/dev_small_fullyear_v6
 ```
