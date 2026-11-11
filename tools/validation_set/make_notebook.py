@@ -125,6 +125,26 @@ ax.set_title("HLSP availability at MAST")
 fig.savefig(FIG / "sectors_and_products.png"); plt.show()
 print(man.groupby("label")[["n_sectors"] + prods].median())
 print(man.groupby("label")[prods].apply(lambda d: (d > 0).mean()).round(2))''')
+md("## 5b. SAP vs PDCSAP comparison: how many rotators get a pair?\n\nRae (2026-11-12) wants PDCSAP's long-period suppression measured on the same stars. "
+   "PDCSAP is in the TESS-SPOC files, so the paired sample is the rotators with at least one SPOC sector. Bars: rotators per truth-period bin, split by SPOC sector depth.")
+code('''pw = pd.read_csv(DATA / "pdcsap_comparison_power.csv", index_col=0)
+order_b = ["(0.1, 1.0]", "(1.0, 3.0]", "(3.0, 10.0]", "(10.0, 20.0]", "(20.0, 40.0]", "(40.0, 71.0]"]
+order_d = [c for c in ["6+", "3-5", "1-2", "none"] if c in pw.columns]
+pw = pw.reindex(order_b).fillna(0)[order_d]
+fig, ax = plt.subplots(figsize=(8, 4))
+bottom = np.zeros(len(pw))
+cols = {"6+": "C2", "3-5": "C0", "1-2": "C1", "none": "0.8"}
+for c in order_d:
+    ax.bar(range(len(pw)), pw[c], bottom=bottom, color=cols[c], label=f"SPOC sectors: {c}")
+    bottom += pw[c].values
+paired = pw.drop(columns="none", errors="ignore").sum(axis=1)
+for i, (n, t) in enumerate(zip(paired, bottom)):
+    ax.text(i, t + 0.5, f"{int(n)} paired", ha="center", fontsize=8)
+ax.set_xticks(range(len(pw))); ax.set_xticklabels([b.replace("(", "").replace("]", "") + " d" for b in order_b])
+ax.set_ylabel("rotators in draft manifest"); ax.legend(fontsize=8)
+ax.set_title("SAP vs PDCSAP comparison sample (same stars, same TESS-SPOC files)")
+fig.savefig(FIG / "pdcsap_comparison_power.png"); plt.show()
+print(pw)''')
 md("## 6. Non-rotator source pools and counts\n\nPool sizes (log scale) per candidate non-rotator source at TESS-usable brightness, from `data/nonrotator_pools.csv`.")
 code('''pools = pd.read_csv(DATA / "nonrotator_pools.csv")
 pick = [("Zach list (Claytor+2024 SCVZ templates)", 13), ("Zach list (Claytor+2024 SCVZ templates)", 14),

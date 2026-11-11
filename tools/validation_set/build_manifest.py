@@ -102,9 +102,11 @@ def pick_claytor(rng: np.random.Generator) -> pd.DataFrame:
     z = pd.read_csv(os.path.join(ROOT, "data", "p27_cache", "zach_tic.csv"))
     z = z[(z["Tmag"] <= TMAG_MAX) & ((z["contratio"].isna()) | (z["contratio"] < 0.2))]
     z = z.sample(N_NONROT["claytor_scvz_template"], random_state=int(rng.integers(1e9)))
-    return pd.DataFrame({"tic": z["ID"].astype("Int64"), "label": "nonrotator_candidate",
+    # Rae, 2026-11-12: label "expected undetectable" ("use them, but remain appropriately wary"); scored by
+    # detection rate, not as false positives.
+    return pd.DataFrame({"tic": z["ID"].astype("Int64"), "label": "expected_undetectable",
                          "source": "claytor_scvz_template", "truth_period": np.nan,
-                         "period_method": "assumed quiet (hot star; Claytor+2024 noise template), unvetted",
+                         "period_method": "expected undetectable (5800-6000 K dwarf; Claytor+2024 noise template), unvetted",
                          "period_dataset": "TESS (SCVZ)", "period_ref": "Claytor+2024 (ApJ 962, 47) sec. III.1.2",
                          "Tmag": z["Tmag"], "Teff": z["Teff"], "logg": z["logg"], "ra": z["ra"], "dec": z["dec"],
                          "contratio": z["contratio"], "gyro_flag": "n/a"})

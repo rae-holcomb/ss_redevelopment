@@ -61,6 +61,11 @@ def main(n_sample: int = 40, seed: int = 27):
         mb = float(np.nanmean(med.loc[prod].values)) if prod in med.index else np.nan
         plan.append(dict(product=prod, stars_with_any=int((m[col] > 0).sum()), files=n_files,
                          median_mb_per_file=round(mb, 2), est_gb=round(n_files * mb / 1e3, 2)))
+    # PDCSAP_FLUX lives in the same TESS-SPOC files as SAP_FLUX (LIGHTCURVE HDU), so the SAP-vs-PDCSAP comparison
+    # (Rae, 2026-11-12) costs no extra download.
+    spoc = m["n_tess_spoc"] > 0
+    plan.append(dict(product="PDCSAP_FLUX (inside the TESS-SPOC files)", stars_with_any=int(spoc.sum()), files=0,
+                     median_mb_per_file=0.0, est_gb=0.0))
     # TESScut: 10x10 px cutout per sector, ~4 float32 arrays (flux, flux_err, bkg, ...) per cadence + overhead
     secs = [int(s) for ss in m["sectors"].dropna() for s in str(ss).split()]
     ncad = {"S1-26 (30 min)": 1300, "S27-55 (10 min)": 3900, "S56+ (200 s)": 11700}
@@ -68,6 +73,13 @@ def main(n_sample: int = 40, seed: int = 27):
     plan.append(dict(product="TESScut 10x10 cutouts", stars_with_any=int((m["n_sectors"] > 0).sum()), files=len(secs),
                      median_mb_per_file=round(cut_mb / len(secs), 2), est_gb=round(cut_mb / 1e3, 1)))
     out = pd.DataFrame(plan)
+    # Statistical power of the SAP-vs-PDCSAP comparison: rotators with >= 1 SPOC sector per period bin and SPOC depth.
+    r = m[m["label"] == "rotator"].copy()
+    r["pbin"] = pd.cut(r["truth_period"], [0.1, 1, 3, 10, 20, 40, 71]).astype(str)
+    r["spoc_depth"] = pd.cut(r["n_tess_spoc"], [-1, 0, 2, 5, 1000], labels=["none", "1-2", "3-5", "6+"]).astype(str)
+    power = r.groupby(["pbin", "spoc_depth"]).size().unstack(fill_value=0)
+    power.to_csv(os.path.join(D, "pdcsap_comparison_power.csv"))
+    print(power)
     out.to_csv(os.path.join(D, "download_plan.csv"), index=False)
     print(out.to_string())
     print(pd.Series([era(s) for s in secs]).value_counts())

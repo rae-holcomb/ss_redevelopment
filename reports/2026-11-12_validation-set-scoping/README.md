@@ -3,19 +3,18 @@
 **Date:** 2026-11-12 · **Author:** P27 scoping session · **Branch:** `claude/p27-validation-scoping-4c1c1b` · **Status:** draft
 
 ## TL;DR
-- **Zach's 23,332 TIC IDs are not vetted non-rotators.** They match exactly the Claytor+2024 southern-CVZ noise-template
-  cut: TIC Teff 5800–6000 K dwarfs, Tmag 6–15. In Kepler, 14% of such stars show rotation. Use them as
-  "expected undetectable", not as truth negatives.
+- **Zach's 23,332 TIC IDs are not vetted non-rotators.** They are exactly the Claytor+2024 SCVZ noise-template cut
+  (5800–6000 K dwarfs, Tmag 6–15), and 14% of such Kepler stars rotate. Rae's decision: label them
+  `expected_undetectable` and score them by detection rate.
 - **Literature verdict:**
-  - **Red clump:** usable only if asteroseismically classified and Kepler-quiet. A CMD-only selection carries 2–15%
-    rotators and ~0.3 d oscillations.
-  - **White dwarfs:** a clean but faint control. Only 157 have G < 14.
-  - Kepler dwarfs with no detected period are the best large negative pool.
-- **Draft manifest:** `datasets/proposed/p27_validation_draft.csv`, 480 stars. 268 rotators stratified 0.1–71 d with
-  method and data-set provenance, 100 Kepler-quiet negatives, 62 candidate negatives and 50 Prša EBs.
-- **Recommended light curves:** TESS-SPOC `SAP_FLUX` as primary, QLP `SAP_FLUX` as fallback; about 2.3 GB. The cluster
-  stars have a median of only 6 sectors.
-- **Rae decides:** how to label Zach's list, product choice, and the mix.
+  - Red clump: usable only if seismically classified and Kepler-quiet; a CMD-only cut carries 2–15% rotators.
+  - White dwarfs: a clean but faint control (157 at G < 14).
+  - Kepler non-detections are the best negative pool.
+- **Draft manifest** (`datasets/proposed/p27_validation_draft.csv`, 480 stars): 268 rotators 0.1–71 d with
+  method/data-set provenance, 122 negatives, 40 expected-undetectable, 50 Prša EBs.
+- **Decided:** TESS-SPOC SAP primary, QLP SAP fallback (≈ 2.3 GB). PDCSAP comes free in the SPOC files; 161 rotators
+  get a pair, but only 6 at 40–71 d.
+- **Open:** mix, and a long-period block for the PDCSAP result.
 
 ## Question / goal
 Scope P27 in `docs/TASKS.md`: a small (≤ 500) real-TESS set of known rotators and known non-rotators. It follows Rae's
@@ -62,8 +61,9 @@ That is exactly the Claytor+2024 §III.1.2 cut for TASOC "quiescent" noise templ
 left after a ≥ 4-sector light-curve cut, so this list is plausibly the parent sample. The stars are not red-clump stars
 (red clump was the *Kepler* paper, Claytor & Tayar 2025), and nobody vetted them as non-rotating. They were chosen
 because hotter-than-solar stars are *less often* detected (right panel). Even so, 14.4% of Kepler stars at
-5800–6000 K have a McQuillan period, with a median of 11 d. Only 33% are brighter than Tmag 13.5. **Treat them as a
-"should mostly be undetectable" population.** A detection there is not automatically a false positive.
+5800–6000 K have a McQuillan period, with a median of 11 d. Only 33% are brighter than Tmag 13.5. **Decided (Rae,
+2026-11-12): label them `expected_undetectable`** ("This will allow us to use them, but remain appropriately wary"). The
+scorecard reports their *detection rate* in its own row and never counts their detections as false positives.
 
 ### 2. Literature check: are white dwarfs and red-clump stars good "non-rotators"?
 
@@ -185,7 +185,7 @@ P/sin i or are statistical, so they don't belong in a ±10% scorer.
 |---|---|---|---|
 | `kepler_rc_quiet` | 50 | nonrotator | Yu+2018 He-burning (seismic), not in Ceillier+2017 rotating/polluted tables; Kp < 12.5 |
 | `kepler_dwarf_nodetect` | 50 | nonrotator | McQuillan+2014 non-periodic, 4000–6200 K, log g > 4.2, minus Santos+2019/2021 detections (cleaning removes 3,158 of 61,793) |
-| `claytor_scvz_template` | 40 | nonrotator_candidate | Zach's list (assumed quiet, unvetted) |
+| `claytor_scvz_template` | 40 | **expected_undetectable** | Zach's list (Claytor+2024 SCVZ noise templates, unvetted); scored by detection rate only |
 | `white_dwarf` | 22 | nonrotator_candidate | Gentile Fusillo+2021, P_WD > 0.9, G < 14.5 |
 | `prsa2022_eb` | 50 | contaminant_eb | Prša+2022 TESS EBs, orbital period stratified 0.1–71 d |
 
@@ -234,6 +234,7 @@ correctors, closer to SAP than to PDCSAP (`SMARTS_REFERENCE.md` §5). A fair rea
 TFA) would turn every star beyond a few days into a "non-rotator". Those columns must not be used.
 
 **Recommendation.**
+- **Decided (Rae, 2026-11-12): accepted as below, and PDCSAP is scored too (§7b).**
 - **Primary: TESS-SPOC FFI, read as `SAP_FLUX` (keep `PDCSAP_FLUX` for comparison).** It is the most standard format
   (one small adapter beside `load_smarts_fits`) and covers most Tmag ≤ 13.5 stars from S14 on. Running both fluxes gives
   the PDC long-period-attenuation measurement for free.
@@ -297,7 +298,8 @@ times the per-star file counts.
 
 | Product | Stars | Files | MB/file | Total |
 |---|---|---|---|---|
-| TESS-SPOC (primary) | 284 | 1,785 | 0.58 | **1.0 GB** |
+| TESS-SPOC (primary; SAP_FLUX) | 284 | 1,785 | 0.58 | **1.0 GB** |
+| PDCSAP_FLUX (same TESS-SPOC files) | 284 | 0 extra | 0 | **0 GB extra** |
 | QLP (fallback) | 409 | 3,890 | 0.32 | **1.3 GB** |
 | CDIPS (cluster cross-check) | 156 | 486 | 0.67 | 0.3 GB |
 | TGLC (HLSP, S1–26 only) | 110 | 546 | 0.05 | 0.03 GB |
@@ -305,8 +307,35 @@ times the per-star file counts.
 
 SPOC + QLP comes to ≈ 2.3 GB and 5,675 files. That is small enough for the laptop, roughly 1–2 h with resumable
 `astroquery.mast` / curl scripts at typical MAST throughput (a guess; I timed nothing). TESScut cutouts are a
-many-hour, drive-only job, needed only if SAP proves too lossy at P > 13 d. A download script isn't written yet; it
-needs astroquery or a curl manifest (Rae's call on installing).
+many-hour, drive-only job, needed only if SAP proves too lossy at P > 13 d. A download script isn't written yet.
+astroquery 0.4.11 is now installed in `ss_openblas` (pinned in `environment.yml` on main), so it can be a resumable
+`astroquery.mast.Observations.download_products` loop over this manifest's TIC IDs, writing to the drive. Light-curve
+downloads stay Rae's local job.
+
+### 7b. SAP vs PDCSAP on the same stars (Rae, 2026-11-12: a paper result)
+PDCSAP is in the TESS-SPOC files, so every star with SPOC data gets both fluxes from one download.
+
+![PDCSAP comparison power](figures/pdcsap_comparison_power.png)
+
+**The paired sample is 161 of the 268 rotators** (stars with ≥ 1 SPOC sector). That is 29–38 stars per bin up to
+20 d, then **18 at 20–40 d and only 6 at 40–71 d**: thin exactly where PDCSAP suppression should bite. Most paired stars
+have only 3–5 SPOC sectors.
+
+**Comparison design (sketch):**
+1. Same stars, same sectors, same pipeline settings. Load each SPOC file twice (`flux_column="SAP_FLUX"` /
+   `"PDCSAP_FLUX"`), stitch with the same per-sector median normalisation, and run the scorecard.
+2. Metric: success (`correct` + `diffrot`, via `evaluation.classify_period`) per truth-period bin
+   (0.1–1, 1–3, 3–10, 10–20, 20–40, 40–71 d) for SAP and PDCSAP, with paired-bootstrap SEs over stars. Also record the
+   *difference* per star (SAP ✔ / PDCSAP ✘ etc.), which is the paired test (McNemar).
+3. Secondary: the alias split (`half`/`double`), the recovered amplitude ratio PDCSAP/SAP vs period (the attenuation
+   curve itself, needing no period-finding success), and the FP rate on the Kepler-quiet negatives for each flux.
+   SAP's systematics may produce more FPs, and that is the other side of the trade-off.
+4. Stratify by number of contiguous SPOC sectors: one sector cannot hold a 20 d period twice, whichever flux is used.
+
+**To make it a paper-grade result, enlarge the long-period paired block** (a mix change, so Rae's call; folded into
+open question 3). For example, add ~100 McQuillan+2014 Kepler-field rotators at 15–70 d that have ≥ 3 SPOC sectors.
+The Kepler field has repeated northern coverage, and the McQuillan pool has thousands of such stars before the SPOC
+cut.
 
 ## What didn't work
 - **CDS VizieR (TAP and ASU) was unavailable all session** ("Page unavailable", then 404s). Everything went through the
@@ -320,23 +349,21 @@ needs astroquery or a curl manifest (Rae's call on installing).
 - The red-clump count uses a CMD box with no extinction correction. Take it as an order of magnitude.
 
 ## Open questions for Rae
-1. **Zach's list:** it is the Claytor+2024 SCVZ TASOC noise-template parent sample (5800–6000 K dwarfs), not
-   non-rotators. Options:
-   - **(a)** label it `nonrotator_candidate` and report its detection rate separately (draft default);
-   - **(b)** ask Zach whether a vetted subset exists;
-   - **(c)** drop it.
-
-   Was "non-rotators" his word or a shorthand?
-2. **Primary product:** TESS-SPOC `SAP_FLUX` with QLP `SAP_FLUX` as fallback (recommended), or TGLC raw flux for
-   everything, which needs the `tglc` package run locally because MAST has S1–26 only for most stars? Should PDCSAP be
-   scored too, to measure its long-period attenuation?
-3. **Size and mix:** 268 rotators / 162 negatives / 50 EBs. Change the balance? Add a Gaia DR3 `vari_rotation_modulation`
+1. ~~Zach's list~~ **Decided (Rae, 2026-11-12):** label `expected_undetectable`; report its detection rate, not an
+   FP rate. Applied in the manifest, this README and `datasets/external/README.md`. It's still worth asking Zach
+   whether a vetted subset exists.
+2. ~~Primary product~~ **Decided (Rae, 2026-11-12):** TESS-SPOC `SAP_FLUX` is primary and QLP `SAP_FLUX` the fallback.
+   PDCSAP is scored on the same stars as a paper result (§7b; no extra download).
+3. **Size and mix:** 268 rotators / 122 negatives / 40 expected-undetectable / 50 EBs. Change the balance? Add a
+   long-period block for the SAP-vs-PDCSAP result (§7b: only 6 paired stars at 40–71 d)? Add a Gaia DR3 `vari_rotation_modulation`
    rotator block (independent periods, all-sky, more sectors) to offset the clusters' low sector counts?
 4. **Seismic outcome:** should a 0.2–0.5 d detection on a clump giant be scored as a separate `seismic` outcome rather
    than an FP? It is a real signal, just not rotation.
 5. **Long periods:** nothing in the real set tests 70–180 d, and few cluster stars have enough sectors for > 13 d.
    Is that acceptable for v1, with stratification by contiguous baseline?
-6. **Installing astroquery** (or tess-point) for the download step: OK?
+6. ~~Installing astroquery~~ **Decided (Rae, 2026-11-12):** astroquery 0.4.11 is installed in `ss_openblas` (pins held;
+   pyvo 1.10.0, requests 2.34.2) and pinned in `environment.yml` on main. It wasn't needed for the plan (sizes came
+   from MAST product metadata through the stdlib client).
 7. Freeze as is, or iterate first? The manifest is in `datasets/proposed/`, not frozen.
 
 ## Reproduce
