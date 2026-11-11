@@ -1335,6 +1335,11 @@ for confirmation (ask Rae first).
   McQuillan+2014, cluster members with K2 periods, an independent TESS CVZ catalogue), plus known non-rotators/variables
   (Prša+2022 EBs, Gaia DR3 classes). Add a scorecard dataset string, with correct-within-10%/20%, alias and FP rates
   per period bin. Rae picks the sources (review open question 1). The downloads are Rae's local job.
+- **Rae's initial direction (2026-11-11; fuller answer to come):**
+  - **Known rotators:** start with members of young open clusters. Their light curves are well studied, and each period can
+    be sanity-checked against the gyrochronology expected for the cluster's age (isochrone).
+  - **Known non-rotators** are harder. Options: white dwarfs, or follow Claytor+2025 and use red clump stars (slow rotators).
+    Zach Claytor shared the TIC IDs of the 2025 paper's training stars; retrieve them and check that they are quiet.
 
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
 - **Proposed by:** midway review (rec. 5).
