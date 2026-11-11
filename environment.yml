@@ -72,3 +72,4 @@ dependencies:
       - nbconvert==7.17.2
       - xgboost==3.4.1          # T11 ranker
       - scikit-learn==1.9.1     # T11 ranker
+      - astroquery==0.4.11      # P27 validation-set downloads (Rae OK 2026-11-12); installed with -c numpy/scipy/astropy pins; pulls pyvo 1.10.0, requests 2.34.2
