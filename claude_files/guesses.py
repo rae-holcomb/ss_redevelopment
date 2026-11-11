@@ -129,6 +129,72 @@ def _valid_period_window(min_period: float, max_period: float) -> bool:
     )
 
 
+CONTINUUM_GRID_DEX = 0.05  # grid step of the local-continuum median in _select_peaks
+
+
+def _select_peaks(freq: np.ndarray, power: np.ndarray, idx: np.ndarray, n_guesses: int,
+                  rank_by: str = "hybrid", raw_frac: float = 0.5,
+                  continuum_dex: float = 0.5) -> np.ndarray:
+    """Choose which spectral peaks (indices `idx` into freq/power) become guesses, in rank order.
+
+    rank_by="power": the n_guesses highest-power peaks (pre-T5 behavior).
+
+    rank_by="hybrid" (default since T5, 2026-11-11): the ceil(raw_frac * n_guesses)
+    highest-power peaks first, then the remaining slots filled by "local SNR" =
+    peak power / median power of all peaks within +/- continuum_dex in
+    log10(frequency), skipping peaks already chosen.
+
+    Why: on a long (full-year TESS) baseline the periodogram / ACF spectrum has
+    ~3-7x more local maxima than on 1-2 sectors, and red (galaxy/instrument)
+    noise makes power rise toward long periods. Raw-power ranking then fills the
+    whole top-N with long-period noise peaks and drops a real sub-day signal:
+    on dev_medium full-year the true <1 d peak sat at rank ~15-90. Dividing by
+    the local continuum measures each peak against its own neighbourhood, so a
+    short-period peak no longer competes with the red-noise hump; keeping the
+    strongest raw peaks protects long-period stars, whose true peak is often the
+    hump itself (pure local-SNR ranking lost 3-30 d recall). Measured on
+    dev_medium (3-method pool, detectable stars): <1 d Stage-1 recall
+    0.52 -> 0.88 full-year, 0.76 -> 0.92 assigned; see
+    reports/2026-11-11_t5-short-period-recovery/. The continuum uses only the
+    peaks already found, so it costs O(n_peaks log n_peaks), not another spectrum.
+    The candidate count is unchanged, so Stage-2 (comb fit) cost is unchanged.
+    """
+    idx = np.asarray(idx)
+    if len(idx) == 0 or n_guesses <= 0:
+        return idx[:0]
+    by_power = idx[np.argsort(power[idx])[::-1]]
+    if rank_by == "power" or len(idx) <= n_guesses:
+        return by_power[:n_guesses]
+    if rank_by != "hybrid":
+        raise ValueError(f"rank_by must be 'power' or 'hybrid', not {rank_by!r}")
+    n_raw = min(n_guesses, int(np.ceil(raw_frac * n_guesses)))
+    lf = np.log10(freq[idx])
+    order = np.argsort(lf)
+    lf_s, pw_s = lf[order], power[idx][order]
+    # Continuum = running median of peak power over +/- continuum_dex, evaluated
+    # on a grid of step CONTINUUM_GRID_DEX and interpolated to each peak. An exact
+    # per-peak median over ~1,400 Lomb-Scargle peaks cost ~0.05-0.1 s per star
+    # (T5 timing, i5); the grid needs ~60 medians and moves each window edge by
+    # at most half a grid step.
+    grid = np.arange(lf_s[0], lf_s[-1] + CONTINUUM_GRID_DEX, CONTINUUM_GRID_DEX)
+    lo = np.searchsorted(lf_s, grid - continuum_dex, side="left")
+    hi = np.searchsorted(lf_s, grid + continuum_dex, side="right")
+    cont_grid = np.array([np.median(pw_s[a:b]) for a, b in zip(lo, hi)])
+    cont_s = np.interp(lf_s, grid, cont_grid)
+    snr = np.empty_like(cont_s)
+    snr[order] = pw_s / np.where(cont_s > 0, cont_s, np.inf)
+    chosen = list(by_power[:n_raw])
+    taken = set(int(i) for i in chosen)
+    for j in np.argsort(snr)[::-1]:
+        if len(chosen) >= n_guesses:
+            break
+        i = int(idx[j])
+        if i not in taken:
+            chosen.append(i)
+            taken.add(i)
+    return np.asarray(chosen, dtype=idx.dtype)
+
+
 @dataclass
 class InitialGuess:
     """One candidate period proposed by a guess_* function.
@@ -354,6 +420,7 @@ def guess_lombscargle(
     max_period: Optional[float] = None,
     n_guesses: int = 5,
     samples_per_peak: int = 1,
+    rank_by: str = "hybrid",
 ) -> list:
     """Propose candidate periods from peaks in the Lomb-Scargle periodogram
     of the light curve itself.
@@ -383,10 +450,15 @@ def guess_lombscargle(
         remaining period error is well within what the joint fit corrects
         for). Raise this if you need this function's own candidates to be
         precise without relying on the joint fit at all.
+    rank_by : which peaks fill the n_guesses slots: "hybrid" (default, T5:
+        half by raw power, half by power over the local continuum) or
+        "power" (pre-T5: top n_guesses by raw power). See _select_peaks.
 
     Returns
     -------
-    list[InitialGuess], sorted strongest-first (by LS power), method="lombscargle".
+    list[InitialGuess] in rank order (see rank_by; with rank_by="power",
+    strongest-first by LS power), method="lombscargle". `strength` is always
+    the peak's LS power.
     Returns an empty list (never raises) when there is nothing to propose:
     fewer than 10 finite (time, flux) points, constant flux, an unusable
     period window (min_period <= 0 or NaN, or max_period <= min_period --
@@ -446,8 +518,8 @@ def guess_lombscargle(
     if len(idx) == 0:
         idx = np.array([int(np.argmax(power_sorted))])
 
-    # rank by power, keep top n_guesses
-    idx = idx[np.argsort(power_sorted[idx])[::-1][:n_guesses]]
+    # choose n_guesses peaks (T5: hybrid raw-power / local-SNR ranking)
+    idx = _select_peaks(1.0 / periods_sorted, power_sorted, idx, n_guesses, rank_by=rank_by)
 
     guesses = []
     for rank, i in enumerate(idx, start=1):
@@ -482,6 +554,7 @@ def guess_acf_fft(
     n_guesses: int = 5,
     window: Optional[Callable[[int], np.ndarray]] = np.hanning,
     oversample: int = 4,
+    rank_by: str = "hybrid",
 ) -> list:
     """Propose candidate periods from peaks in the FFT power spectrum of
     the ACF itself (treating the ACF's own quasi-periodicity as a signal).
@@ -512,10 +585,17 @@ def guess_acf_fft(
     oversample : zero-padding factor for the FFT (see above). 1 disables
         padding (native resolution); 4 (default) quadruples the number of
         frequency samples.
+    rank_by : "hybrid" (default, T5) or "power" (pre-T5); see _select_peaks.
+        (T5 also tried a one-sided taper instead of the Hann window, on the
+        theory that Hann suppresses the short lags where a decaying signal
+        lives: it made the true <1 d peak's rank worse on 5/5 dev_medium
+        stars, because those lags are dominated by slow red-noise structure.)
 
     Returns
     -------
-    list[InitialGuess], sorted strongest-first (by FFT power), method="acf_fft".
+    list[InitialGuess] in rank order (see rank_by; with rank_by="power",
+    strongest-first by FFT power), method="acf_fft". `strength` is always
+    the peak's power relative to the strongest in the window.
     Returns an empty list (never raises) when there is nothing to propose:
     fewer than 3 ACF lags, an unusable period window (min_period <= 0 or
     NaN, or max_period <= min_period), fewer than 3 FFT frequency bins
@@ -573,7 +653,7 @@ def guess_acf_fft(
     idx, _ = find_peaks(power_sub)
     if len(idx) == 0:
         idx = np.array([int(np.argmax(power_sub))])
-    idx = idx[np.argsort(power_sub[idx])[::-1][:n_guesses]]
+    idx = _select_peaks(freq_sub, power_sub, idx, n_guesses, rank_by=rank_by)
 
     guesses = []
     for rank, i in enumerate(idx, start=1):
