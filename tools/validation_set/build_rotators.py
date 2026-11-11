@@ -108,6 +108,8 @@ def load_clusters() -> pd.DataFrame:
             {c: v[k] for c, v in CLUSTERS.items()})
     star_ds = df.pop("period_dataset_star")
     df["period_dataset"] = star_ds.fillna(df["period_dataset"])
+    ground = star_ds.notna() & star_ds.str.contains("ground", na=False)
+    df.loc[ground, "period_method"] = "spot modulation; per compiled source (periodogram)"
     return df
 
 

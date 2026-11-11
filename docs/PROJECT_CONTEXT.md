@@ -504,3 +504,10 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   0.205 hand / 0.284 ranker (unchanged by T5); a true 70 d window needs a per-star-sectors manifest + a
   `--max-span-days` dataset option (~14 min to score, not run). Population default, prevalences and goals H1–H5
   (proposed, `goals.json` untouched) await Rae.
+- **2026-11-12 — P27 real-TESS validation set scoped** (`reports/2026-11-12_validation-set-scoping/`). Zach's 23,332 TIC IDs
+  (`datasets/external/`) are exactly the Claytor+2024 SCVZ TASOC noise-template cut (TIC 5800–6000 K dwarfs, Tmag 6–15),
+  not red clump and not vetted non-rotators (14% of such Kepler stars rotate). Literature: CMD-only red clump has 2–15%
+  rotators + ~0.3 d oscillations; use seismic HeB + Kepler-quiet; WDs are a faint (157 at G < 14) control; Kepler
+  non-detections are the best negative pool. Draft manifest `datasets/proposed/p27_validation_draft.csv` (480 stars) and
+  catalogue tools in `tools/validation_set/` (stdlib VizieR/MAST clients; Gaia IDs parsed as exact Int64, since float64
+  silently corrupted 19-digit IDs). TGLC `cal_*` and QLP `KSPSAP` fluxes are 1-d detrended: read raw SAP/PSF flux only.

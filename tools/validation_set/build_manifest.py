@@ -1,4 +1,4 @@
-"""Draft the P27 real-TESS validation manifest (<= 500 stars) and its download plan.
+"""Draft the P27 real-TESS validation manifest (<= 500 stars) (download plan: download_plan.py).
 
 Inputs (all built by the other scripts in this folder, cached under data/p27_cache/):
   * reports/2026-11-12_validation-set-scoping/data/rotators_all.csv   (build_rotators.py)
@@ -10,8 +10,7 @@ For every selected star it records TIC, source, truth label/period, period metho
 the TESScut FFI sectors (through the latest sector MAST knows), and which HLSP light-curve products exist
 at MAST (TESS-SPOC, QLP, TGLC, CDIPS sector counts).
 
-Output: datasets/proposed/p27_validation_draft.csv (+ a per-product size estimate printed and saved
-as reports/.../data/download_plan.csv). Draft only: Rae freezes it.
+Output: datasets/proposed/p27_validation_draft.csv. Draft only: Rae freezes it.
 
 Usage: python tools/validation_set/build_manifest.py [--seed 27]
 """
@@ -167,16 +166,6 @@ def products(tics) -> pd.DataFrame:
     return c.reset_index()
 
 
-# Per-sector light-curve file size (MB) by FFI cadence era: rows x ~100 B/row + headers/aperture HDU.
-# S1-26: 30-min (~1.3k cadences); S27-55: 10-min (~3.9k); S56+: 200-s (~11.7k). Rough; verify on one file.
-SIZE_MB = {"30min": 0.3, "10min": 0.6, "200s": 1.6}
-
-
-def era(s: int) -> str:
-    """Return the FFI cadence era of a TESS sector."""
-    return "30min" if s <= 26 else ("10min" if s <= 55 else "200s")
-
-
 def main():
     """Assemble the draft manifest, attach sectors/products, and write the CSV + download plan."""
     ap = argparse.ArgumentParser(description=__doc__)
@@ -194,21 +183,11 @@ def main():
     m["n_sectors"] = [len(s) for s in sectors]
     m = m.merge(products(m["tic"]), on="tic", how="left").fillna({f"n_{p.lower().replace('-', '_')}": 0
                                                                    for p in PRODUCTS})
-    m["est_mb_per_product"] = [sum(SIZE_MB[era(s)] for s in ss) for ss in sectors]
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     m.to_csv(a.out + ".tmp", index=False)
     os.replace(a.out + ".tmp", a.out)
     print(m.groupby(["label", "source"]).size())
-    plan = []
-    for p in PRODUCTS:
-        col = "n_" + p.lower().replace("-", "_")
-        n_files = int(m[col].sum())
-        plan.append(dict(product=p, stars_with_any=int((m[col] > 0).sum()), files=n_files,
-                         est_gb=round(n_files * np.mean(list(SIZE_MB.values())) / 1024, 2)))
-    plan.append(dict(product="TESScut 10x10 px cutouts (all FFI sectors)", stars_with_any=int((m["n_sectors"] > 0).sum()),
-                     files=int(m["n_sectors"].sum()), est_gb=None))
-    pd.DataFrame(plan).to_csv(os.path.join(REPORT, "data", "download_plan.csv"), index=False)
-    print(pd.DataFrame(plan))
+    # The download plan (real file sizes) is made by download_plan.py from this manifest.
 
 
 if __name__ == "__main__":

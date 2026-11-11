@@ -32,7 +32,7 @@ md("## 1. Period-colour diagrams per cluster, with the gyrochronology expectatio
    "Red crosses: `too_slow` (P >= 1.6 P_gyro: likely 2P alias, blend or non-member). Orange: `fast` (unconverged, expected in young clusters). "
    "Hollow: outside the gyro calibration range.")
 code('''order = ["NGC2547", "Blanco1", "Pleiades", "PscEri", "NGC2516", "NGC3532", "Hyades", "Praesepe", "NGC6811", "Rup147"]
-fig, axes = plt.subplots(2, 5, figsize=(19, 7.5), sharey=True)
+fig, axes = plt.subplots(2, 5, figsize=(19, 8.5), sharey=True, gridspec_kw={"hspace": 0.45})
 colors = {"slow_seq": "C0", "fast": "C1", "too_slow": "red", "out_of_range": "0.6"}
 for ax, cl in zip(axes.flat, order):
     d = rot[rot.cluster == cl]
@@ -59,7 +59,7 @@ print(rot[rot.cluster != "Kepler-field"].groupby(["cluster", "gyro_flag"]).size(
 md("## 2. Provenance: literature periods by method and data set\n\nCounts over all literature rotators with a TIC match (left) and over the draft manifest's rotators (right).")
 code('''def short_method(s):
     s = str(s)
-    for k in ["ACF", "GP", "Lomb-Scargle", "least-squares", "periodogram"]:
+    for k in ["GP", "ACF", "Lomb-Scargle", "least-squares", "periodogram"]:
         if k in s:
             return {"GP": "GP / LS / G-ACF", "least-squares": "sine fit"}.get(k, k)
     return s
@@ -69,29 +69,32 @@ def ds_group(s):
     if "K2" in s: return "K2"
     if "Kepler" in s: return "Kepler"
     return "ground-based"
-fig, axes = plt.subplots(1, 2, figsize=(13, 4.2))
+fig, axes = plt.subplots(1, 2, figsize=(14, 4.2), gridspec_kw={"wspace": 0.35})
 for ax, d, ttl in [(axes[0], rot[rot.tic.notna()], "all literature rotators (TIC-matched)"),
                    (axes[1], man[man.label == "rotator"], "draft-manifest rotators")]:
     t = pd.crosstab(d.period_dataset.map(ds_group), d.period_method.map(short_method))
     t.plot.barh(stacked=True, ax=ax, width=0.7)
     ax.set_title(f"{ttl} (n={len(d)})"); ax.set_xlabel("stars"); ax.set_ylabel("data set")
-    ax.legend(title="period-finder (all spot modulation)", fontsize=8)
+    ax.legend(title="period-finder (all spot modulation)", fontsize=8, title_fontsize=8, loc="lower right")
 fig.savefig(FIG / "provenance_method_dataset.png"); plt.show()
 print(pd.crosstab(rot.cluster, rot.period_dataset))''')
 md("## 3. Proposed rotators' period distribution vs dev_medium\n\ndev_medium is log-uniform 0.1-180 d by construction. The real-star rotators stop at ~70 d (McQuillan's ceiling); nothing in the literature gives trustworthy truth beyond that.")
 code('''bins = np.logspace(np.log10(0.1), np.log10(180), 25)
 fig, ax = plt.subplots(figsize=(8, 4))
-ax.hist(dev.true_period, bins=bins, histtype="step", lw=2, color="k", label=f"dev_medium truth (n={len(dev)})", density=True)
+frac = lambda x, n: np.full(len(x), 1.0 / n)
+ax.hist(dev.true_period, bins=bins, histtype="step", lw=2, color="k", weights=frac(dev, len(dev)),
+        label=f"dev_medium truth (n={len(dev)})")
 r = man[man.label == "rotator"]
-ax.hist([r[r.source == "Kepler-field"].truth_period, r[r.source != "Kepler-field"].truth_period], bins=bins, stacked=True,
-        density=True, label=[f"manifest: Kepler field (n={(r.source=='Kepler-field').sum()})",
-                              f"manifest: clusters (n={(r.source!='Kepler-field').sum()})"], alpha=0.7)
+kf, cl = r[r.source == "Kepler-field"].truth_period, r[r.source != "Kepler-field"].truth_period
+ax.hist([kf, cl], bins=bins, stacked=True, weights=[frac(kf, len(r)), frac(cl, len(r))], alpha=0.7,
+        label=[f"manifest: Kepler field (n={len(kf)})", f"manifest: clusters (n={len(cl)})"])
 eb = man[man.label == "contaminant_eb"]
-ax.hist(eb.truth_period, bins=bins, histtype="step", ls="--", color="C3", density=True, label=f"manifest: EB orbital P (n={len(eb)})")
+ax.hist(eb.truth_period, bins=bins, histtype="step", ls="--", color="C3", weights=frac(eb, len(eb)),
+        label=f"manifest: EB orbital P (n={len(eb)})")
 for p in (13.7, 27.4):
     ax.axvline(p, color="0.5", ls=":", lw=1)
 ax.text(13.7, ax.get_ylim()[1]*0.9, " 1 orbit", fontsize=8, color="0.4"); ax.text(27.4, ax.get_ylim()[1]*0.8, " 1 sector", fontsize=8, color="0.4")
-ax.set_xscale("log"); ax.set_xlabel("period [d]"); ax.set_ylabel("density per log bin (normalised)"); ax.legend(fontsize=8)
+ax.set_xscale("log"); ax.set_xlabel("period [d]"); ax.set_ylabel("fraction of sample per log bin"); ax.legend(fontsize=8)
 ax.set_title("Truth-period distribution: draft validation manifest vs dev_medium")
 fig.savefig(FIG / "period_distribution_vs_dev_medium.png"); plt.show()
 print(pd.cut(r.truth_period, [0.1,1,3,10,20,40,71]).value_counts().sort_index())''')
@@ -140,7 +143,7 @@ for i, r in enumerate(rows):
 ax.set_xscale("log"); ax.set_xlim(10, 1e7); ax.invert_yaxis(); ax.set_xlabel("stars")
 ax.set_title("Candidate non-rotator pools (before vetting)")
 used = man[man.label.str.startswith("nonrot")].source.value_counts()
-ax.text(0.98, 0.02, "draft manifest uses:\\n" + "\\n".join(f"{k}: {v}" for k, v in used.items()), transform=ax.transAxes,
+ax.text(0.98, 0.35, "draft manifest uses:\\n" + "\\n".join(f"{k}: {v}" for k, v in used.items()), transform=ax.transAxes,
         ha="right", va="bottom", fontsize=8, bbox=dict(fc="w", ec="0.7"))
 fig.savefig(FIG / "nonrotator_pools.png"); plt.show()''')
 md("## 7. Zach's list: what the stars are\n\nTIC v8.2 properties of all 23,332 TIC IDs, compared with the Claytor+2024 noise-template cuts (Teff 5800-6000 K, Tmag 6-15, ecliptic latitude <= -78 deg). "

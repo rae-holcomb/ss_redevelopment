@@ -909,7 +909,11 @@ for confirmation (ask Rae first).
   - Zach's TIC list is committed at `datasets/external/claytor2025_nonrotator_ticids.txt` (23,332 IDs; provenance and
     caveat in `datasets/external/README.md`).
   - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
-- **Status:** scoping session started 2026-11-12.
+- **Status:** scoped 2026-11-12 (`reports/2026-11-12_validation-set-scoping/`, branch `claude/p27-validation-scoping-4c1c1b`).
+  Draft manifest `datasets/proposed/p27_validation_draft.csv` (480: 268 rotators 0.1–71 d with method/data-set provenance,
+  100 Kepler-quiet negatives, 62 candidate negatives, 50 Prša EBs); download plan ≈ 2.3 GB (TESS-SPOC + QLP SAP).
+  Zach's list = Claytor+2024 SCVZ 5800–6000 K noise templates, not vetted non-rotators. Awaiting Rae: list labelling,
+  product, mix, astroquery install; then downloads (Rae, local) and a loader + scorecard dataset string.
 
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
 - **Status:** done, merged 2026-11-12 (`facc568`); Rae still to pick the period population, the prevalences and which goals H1–H5 to activate.
