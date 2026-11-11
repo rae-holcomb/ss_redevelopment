@@ -1325,3 +1325,45 @@ for confirmation (ask Rae first).
   `--detectability <csv>` option that joins it. Keyed by coverage pattern, since detectability depends on it.
 - **Not done yet:** a table for the holdout or other coverage draws (build with `tools/build_detectability_table.py`).
 
+
+### P27. Real-TESS validation set: known rotators and known non-rotators (from the midway review, 2026-11-11)
+- **Proposed by:** midway review (`reports/2026-11-11_midway-review/`, rec. 1).
+- **Why:** nothing has been scored on real TESS light curves yet. SMARTS noise comes from faint "galaxies" reduced closer to
+  SAP, while real rotation work uses PDCSAP/QLP/TESS-SPOC (long-period attenuation, real stellar noise). The non-rotator
+  false-positive rate on real stars (pulsators, EBs, blends) is the number a Roman/TESS catalogue depends on.
+- **Idea:** a small (≤ 500 stars), frozen manifest of FFI light curves: known rotators (Kepler-field overlap with
+  McQuillan+2014, cluster members with K2 periods, an independent TESS CVZ catalogue), plus known non-rotators/variables
+  (Prša+2022 EBs, Gaia DR3 classes). Add a scorecard dataset string, with correct-within-10%/20%, alias and FP rates
+  per period bin. Rae picks the sources (review open question 1). The downloads are Rae's local job.
+
+### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
+- **Proposed by:** midway review (rec. 5).
+- **Idea:** one small, fixed table that every method/ranker report quotes, computed from the existing scorecard per-star
+  CSVs. It needs no new scorecard subsets. Rows:
+  - assigned coverage at the real coverage mix (`coverage_weight`);
+  - success re-weighted to a named period population;
+  - correct-only beside success;
+  - precision at a stated non-rotator prevalence;
+  - a Claytor+2022-comparable "fraction within 10% / 20% at the most-credible half".
+- Activate 3–5 goals in `goals.json` on these numbers (Rae's call).
+
+### P29. Roman-season proxy on SMARTS (from the midway review, 2026-11-11)
+- **Proposed by:** midway review (rec. 2).
+- **Idea:** until the WG6 sets exist (T28), report SMARTS performance on one contiguous ~70 d window: 5 consecutive
+  sectors trimmed to 70 d, or the `consecutive-3-5` class as a first cut. Today `consecutive-3-5` at P ≤ 30 d
+  gives 0.20 hand / 0.28 ranker v0 on dev_medium assigned. Cheap, and it says what Season 1 should expect from the TESS-trained model.
+
+### P30. Repo and docs diet (from the midway review, 2026-11-11)
+- **Agent:** `repo-curator`.
+- **Idea:** one session, results bit-identical:
+  - **Code:**
+    - delete `claude_files/old/`;
+    - settle open issue 9 (`batch_test_acf_fft_highpass.py`);
+    - retire `batch_test_guesses.py` and `run_debug_baseline*.py` (the scorecard and `build_feature_tables.py` cover them);
+    - prune superseded `benchmarks/baselines/`.
+  - **Docs:**
+    - refresh `PROJECT_CONTEXT.md` §4 (issues 2–5 and 12 are stale) and `METHODOLOGY_NOTES.md` §7 (both still say there is no ranker);
+    - fix the code map (lists a missing `example_usage.py`);
+    - fix the stale TASKS statuses (T1, T16e, T21, T26);
+    - move done tasks to `TASKS_DONE.md` and old changelog entries to an archive file;
+    - cap report TL;DRs at ~150 words in the write-report skill.

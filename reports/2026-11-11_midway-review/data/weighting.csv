@@ -1,0 +1,9 @@
+mode,weighting,hand_success,ranker_v0_at_threshold,ranker_v0_top1_no_decline
+fullyear,dev_medium as stratified,0.2480,0.2670,0.4410
+fullyear,SMARTS corpus (uniform in P),0.2307,0.1980,0.3904
+fullyear,"log-uniform P, 0.1-180 d",0.2372,0.2656,0.4204
+fullyear,"P <= 30 d only, log-uniform",0.2456,0.2950,0.4404
+assigned,dev_medium as stratified,0.1480,0.1880,0.3280
+assigned,SMARTS corpus (uniform in P),0.0704,0.0791,0.1846
+assigned,"log-uniform P, 0.1-180 d",0.1567,0.2013,0.3336
+assigned,"P <= 30 d only, log-uniform",0.1910,0.2475,0.3934

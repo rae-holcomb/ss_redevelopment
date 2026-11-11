@@ -1,0 +1,17 @@
+coverage_class,P_le_30,success,ranker_answer_ok,n,coverage_weight
+consecutive-2,False,0.0000,0.0000,40,1.4677
+consecutive-2,True,0.1176,0.1765,85,1.4677
+consecutive-3-5,False,0.0513,0.0513,39,0.3656
+consecutive-3-5,True,0.2045,0.2841,88,0.3656
+consecutive-6-12,False,0.0263,0.0789,38,0.0633
+consecutive-6-12,True,0.3333,0.3448,87,0.0633
+full,False,0.2564,0.2051,39,0.0339
+full,True,0.2706,0.2824,85,0.0339
+gapped-2,False,0.0000,0.0000,40,0.1926
+gapped-2,True,0.1163,0.1860,86,0.1926
+gapped-3-5,False,0.0256,0.0256,39,0.3853
+gapped-3-5,True,0.2209,0.2558,86,0.3853
+gapped-6-12,False,0.0250,0.0750,40,0.2232
+gapped-6-12,True,0.1905,0.2738,84,0.2232
+single,False,0.0000,0.0000,39,5.3056
+single,True,0.0941,0.1882,85,5.3056
