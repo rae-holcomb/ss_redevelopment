@@ -49,7 +49,7 @@ GUESS_METHODS = discover_guess_methods()
 def prep_flux_for(method: str, flux: np.ndarray) -> np.ndarray:
     """Return flux suitable for `method` (wavelet needs gap-free input).
 
-    Mirrors batch_test_guesses._prep_wavelet_flux: linear interpolation
+    Mirrors benchmarks/scorecard._gap_filled: linear interpolation
     across gaps.
     """
     if method != "wavelet":
