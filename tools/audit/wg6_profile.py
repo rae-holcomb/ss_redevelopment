@@ -27,7 +27,7 @@ import numpy as np
 from astropy.io import fits
 from astropy.timeseries import LombScargle
 
-DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data"
+DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data_raw"
 
 
 def resolve_root(cli_root):

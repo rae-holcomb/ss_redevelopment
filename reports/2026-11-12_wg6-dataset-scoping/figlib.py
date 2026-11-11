@@ -199,3 +199,151 @@ def fig_coverage(cls="ROT", path=FIG / "time_coverage_one_star.png"):
     ax2.set_ylim(-0.7, 1.7); ax2.set_yticks([]); ax2.set_xlabel("days from start of densest 70-d window")
     ax2.legend(fontsize=8, loc="upper right"); ax2.set_title("one season: archival sampling vs a Roman-like season", fontsize=9)
     fig.tight_layout(); fig.savefig(path, dpi=120); return fig
+
+
+# ---------------------------------------------------------------- resampled (Roman-cadence) set, added 2026-11-12
+RD = DATA / "resampled"
+VAR_COLORS = {"simple": "#4c72b0", "simple_shifted": "#8172b2", "improved": "#dd8452",
+              "improved_folder_nonfinal": "#55a868"}
+VAR_LABEL = {"simple": "simple (original brightness)", "simple_shifted": "simple, shifted +8 mag",
+             "improved": "improved (_final)", "improved_folder_nonfinal": "FL non-final (simple-style, in improved folder)"}
+
+
+def fig_r_same_star(path=FIG / "r_same_star_variants.png"):
+    """One star: raw OGLE I (whole archive, phase-folded) vs F146 season 1 in simple, shifted and improved."""
+    z = np.load(RD / "examples/same_star.npz", allow_pickle=True)
+    P = float(z["P_true"])
+    fig, axes = plt.subplots(2, 2, figsize=(12, 6.4))
+    ax = axes[0, 0]
+    ph = (z["raw_t"] / P) % 1
+    ax.plot(ph, z["raw_y"], ".", ms=1.5, color="k", alpha=0.4); ax.invert_yaxis()
+    ax.set_title(f"{z['star_id']} raw OGLE I, folded at P = {P:.4f} d ({len(ph):,} pts, 2010–2024)", fontsize=9)
+    ax.set_xlabel("phase"); ax.set_ylabel("I [mag]")
+    for ax, v in zip([axes[0, 1], axes[1, 0], axes[1, 1]], ["simple", "simple_shifted", "improved"]):
+        t, y, e = z[f"{v}_t"], z[f"{v}_y"], z[f"{v}_e"]
+        ax.plot(t - t[0], y, ".", ms=1, color=VAR_COLORS[v]); ax.invert_yaxis()
+        ax.set_title(f"F146 season 1, {VAR_LABEL[v]}: median {np.nanmedian(y):.2f} mag, "
+                     f"σ_quoted {np.nanmedian(e)*1e3:.1f} mmag", fontsize=9)
+        ax.set_xlabel("days from season start"); ax.set_ylabel("F146 [mag]")
+        ins = ax.inset_axes([0.62, 0.62, 0.36, 0.34])
+        m = (t - t[0]) < 2
+        ins.plot(t[m] - t[0], y[m], ".", ms=1.5, color=VAR_COLORS[v]); ins.invert_yaxis()
+        ins.set_title("first 2 d", fontsize=7); ins.tick_params(labelsize=6)
+    fig.tight_layout(); fig.savefig(path, dpi=120); return fig
+
+
+def fig_r_noise(path=FIG / "r_noise_vs_mag.png"):
+    """Quoted F146 error (and measured p2p) vs median magnitude per noise variant; FL objects drawn as tracks across
+    their magnitude copies; SMARTS-TESS 30-min p2p band for scale."""
+    p = pd.read_csv(RD / "profile.csv")
+    f = p[p.band == "F146"].dropna(subset=["med_mag"])
+    smarts = np.load(DATA / "smarts_p2p_mmag.npy")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(13, 5), sharey=True)
+    for v, c in VAR_COLORS.items():
+        x = f[f.variant == v]
+        ogle, fl = x[x.cls != "FL"], x[x.cls == "FL"]
+        a1.scatter(ogle.med_mag, ogle.med_err * 1e3, s=12, color=c, label=f"{VAR_LABEL[v]} (OGLE classes)" if len(ogle) else None)
+        for _, g in fl.groupby("star_id"):
+            g = g.sort_values("wfmag")
+            a1.plot(g.med_mag, g.med_err * 1e3, "-", color=c, lw=0.5, alpha=0.5)
+        if len(fl):
+            a1.scatter(fl.med_mag, fl.med_err * 1e3, s=6, marker="x", color=c, label=f"{VAR_LABEL[v]} (FL)")
+        a2.scatter(x.med_mag, x.p2p * 1e3, s=8, color=c, alpha=0.7)
+    lo, hi = np.percentile(smarts, [5, 95])
+    for a in (a1, a2):
+        a.axhspan(lo, hi, color="0.5", alpha=0.15)
+        a.set_yscale("log"); a.set_xlabel("median F146 magnitude")
+        a.text(9.9, hi * 1.1, "SMARTS-TESS 30-min p2p (5–95%)", fontsize=7, color="0.3")
+    a1.set_ylabel("quoted error per 12.1-min point [mmag]"); a2.set_ylabel("measured point-to-point scatter [mmag]")
+    a1.set_title("Quoted F146 error vs magnitude (lines: one FL object at each magnitude copy)", fontsize=9)
+    a2.set_title("Measured p2p (includes intrinsic variability of fast variables)", fontsize=9)
+    a1.legend(fontsize=7, loc="upper left")
+    fig.tight_layout(); fig.savefig(path, dpi=120); return fig
+
+
+def fig_r_coverage(path=FIG / "r_cadence_coverage.png"):
+    """F146/F087/F213 time stamps for one star: all 6 seasons, then a 1-day zoom."""
+    z = np.load(RD / "examples/same_star.npz", allow_pickle=True)
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(12, 4.8))
+    col = {"F146": "#4c72b0", "F087": "#55a868", "F213": "#c44e52"}
+    t0 = z["times_F146"][0]
+    for i, b in enumerate(["F146", "F087", "F213"]):
+        t = z[f"times_{b}"]
+        a1.plot(t - t0, np.full(len(t), i), "|", ms=10, color=col[b])
+        m = (t - t0) < 1.0
+        a2.plot((t[m] - t0) * 24, np.full(m.sum(), i), "|", ms=16, color=col[b])
+    for a in (a1, a2):
+        a.set_yticks([0, 1, 2]); a.set_yticklabels(["F146 (12.1 min)", "F087 (6 h)", "F213 (6 h, +3 h)"])
+    cut = np.where(np.diff(z["times_F146"]) > 1)[0]
+    a1.set_xlabel(f"days from JD {t0:.1f} (2027-08-14)"); a1.set_title(
+        f"6 seasons × 71.0 d, gaps {', '.join(f'{g:.0f}' for g in np.diff(z['times_F146'])[cut])} d; "
+        f"{len(z['times_F146']):,} F146 + {len(z['times_F087'])} + {len(z['times_F213'])} points", fontsize=9)
+    a2.set_xlabel("hours from season start"); a2.set_title("first day", fontsize=9)
+    fig.tight_layout(); fig.savefig(path, dpi=120); return fig
+
+
+def fig_r_examples(path=FIG / "r_class_examples.png"):
+    """Improved-noise F146 season 1 per class + all-season LS periodogram with the catalog P, P/2 and 2P marked."""
+    classes = [c for c in ["FL", "ECL", "ELL", "T2CEP", "RRLYR", "DSCT", "HB", "LPV", "CV"] if (RD / f"examples/class__{c}.npz").exists()]
+    fig, axes = plt.subplots(len(classes), 2, figsize=(12, 1.8 * len(classes)), gridspec_kw={"width_ratios": [2, 1.3]})
+    for (a, b), c in zip(axes, classes):
+        z = np.load(RD / f"examples/class__{c}.npz", allow_pickle=True)
+        t, y = z["t"], z["y"]
+        a.plot(t - t[0], y, ".", ms=0.8, color="k"); a.invert_yaxis()
+        lab = f"{z['star_id']}" + (f" (TIC {z['template']})" if c == "FL" else "")
+        a.text(0.01, 0.88, lab, transform=a.transAxes, fontsize=7); a.set_ylabel(c, rotation=0, ha="right")
+        b.plot(1 / z["freq"], z["power"], color="0.3", lw=0.6); b.set_xscale("log"); b.set_yticks([])
+        P = float(z["P_true"])
+        if np.isfinite(P):
+            for k, ls in ((1, "-"), (0.5, "--"), (2, "--")):
+                b.axvline(P * k, color="#c44e52", ls=ls, lw=0.9)
+            b.text(0.02, 0.85, f"catalog P = {P:.4g} d", transform=b.transAxes, fontsize=7, color="#c44e52")
+        else:
+            b.text(0.02, 0.85, "no catalog period", transform=b.transAxes, fontsize=7)
+    axes[0, 0].set_title("improved noise, F146, season 1 (71 d)", fontsize=9)
+    axes[0, 1].set_title("LS over all 6 seasons (red: catalog P solid, P/2 & 2P dashed)", fontsize=9)
+    axes[-1, 0].set_xlabel("days"); axes[-1, 1].set_xlabel("period [d]")
+    fig.tight_layout(); fig.savefig(path, dpi=110); return fig
+
+
+def fig_r_period_check(path=FIG / "r_stored_vs_measured.png"):
+    """Catalog period vs top LS peak (all 6 seasons, F146) for the improved variant."""
+    f = pd.read_csv(RD / "period_check.csv")
+    f = f[(f.variant == "improved")].dropna(subset=["P_true", "P1"])
+    fig, ax = plt.subplots(figsize=(5.8, 5.4))
+    cm = plt.get_cmap("tab10")
+    for i, c in enumerate(["FL", "ECL", "ELL", "T2CEP", "RRLYR", "DSCT", "HB", "LPV"]):
+        x = f[f.cls == c]
+        if len(x):
+            ax.scatter(x.P_true, x.P1, s=16, color=cm(i), label=f"{c} (n={len(x)})")
+    lim = [0.02, 600]
+    for k, ls in ((1, "-"), (0.5, "--"), (2, "--")):
+        ax.plot(lim, np.multiply(lim, k), color="k", ls=ls, lw=0.7)
+    ax.axhline(300, color="0.6", ls=":", lw=0.8); ax.text(0.03, 330, "LS grid limit 300 d", fontsize=7, color="0.4")
+    ax.set_xscale("log"); ax.set_yscale("log"); ax.set_xlim(lim); ax.set_ylim(lim)
+    ax.set_xlabel("catalog period [d] (FL: template literature P)"); ax.set_ylabel("top LS peak [d]")
+    ax.legend(fontsize=7); ax.set_title("Resampled (improved): stored vs measured", fontsize=10)
+    fig.tight_layout(); fig.savefig(path, dpi=130); return fig
+
+
+def fig_r_pipeline(path=FIG / "r_pipeline_test.png"):
+    """Pipeline answer vs truth on the 20 test stars (one season, improved noise), and wall time per star."""
+    d = pd.read_csv(RD / "pipeline_test.csv")
+    fig, (a1, a2) = plt.subplots(1, 2, figsize=(11.5, 4.6), gridspec_kw={"width_ratios": [1.3, 1]})
+    cm = plt.get_cmap("tab10")
+    lim = [0.1, 200]
+    for i, c in enumerate(["FL", "ECL", "ELL", "T2CEP", "RRLYR"]):
+        x = d[d.cls == c]
+        ok = x.P_found.notna()
+        a1.scatter(x.P_true[ok], x.P_found[ok], s=30, color=cm(i), label=c)
+        a1.scatter(x.P_true[~ok], np.full((~ok).sum(), lim[0] * 1.15), marker="v", s=40, color=cm(i))
+        a2.bar(np.arange(len(x)) + 5 * i, x.seconds, color=cm(i))
+    for k, ls in ((1, "-"), (0.5, "--"), (2, "--")):
+        a1.plot(lim, np.multiply(lim, k), color="k", ls=ls, lw=0.7)
+    a1.axvline(35.5, color="0.5", ls=":", lw=0.8); a1.text(37, 0.2, "R/2 of one season", fontsize=7, color="0.4")
+    a1.set_xscale("log"); a1.set_yscale("log"); a1.set_xlim(lim); a1.set_ylim(lim)
+    a1.set_xlabel("catalog period [d] (ECL/ELL: P_orb)"); a1.set_ylabel("pipeline answer [d] (▼ = declined)")
+    a1.legend(fontsize=8); a1.set_title("Pipeline on 20 resampled stars (F146, season 1, improved)", fontsize=9)
+    a2.set_xticks([1.5 + 5 * i for i in range(5)]); a2.set_xticklabels(["FL", "ECL", "ELL", "T2CEP", "RRLYR"])
+    a2.set_ylabel("seconds per star (i5, 1 process)"); a2.set_title(f"mean {d.seconds.mean():.2f} s / star-season", fontsize=9)
+    fig.tight_layout(); fig.savefig(path, dpi=120); return fig

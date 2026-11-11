@@ -1,7 +1,7 @@
 """Unpack the RGES PIT WG6 variable-star light-curve archives onto the external drive.
 
 Layout produced (all under ``$WG6_DATA_ROOT``, default
-``/Volumes/Data_Vault/wg6_roman_data``)::
+``/Volumes/Data_Vault/wg6_roman_data_raw``)::
 
     extracted/_tgz/<NAME>.tgz        inner tarballs pulled out of the Google Drive zips
     extracted/<NAME>/...             contents of each tarball (one folder per tarball)
@@ -36,7 +36,7 @@ import tarfile
 import zipfile
 from pathlib import Path
 
-DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data"
+DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data_raw"
 
 
 def resolve_root(cli_root: str | None) -> Path:

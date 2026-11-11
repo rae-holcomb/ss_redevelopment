@@ -32,7 +32,7 @@ FILES = {
 def main(argv=None):
     """CLI: fetch every table in FILES that isn't already on the drive."""
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data"))
+    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data_raw"))
     args = ap.parse_args(argv)
     root = Path(args.root)
     if not root.is_dir():

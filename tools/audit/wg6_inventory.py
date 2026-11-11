@@ -19,7 +19,7 @@ from pathlib import Path
 
 from astropy.io import fits
 
-DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data"
+DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data_raw"
 STANDARD_KEYS = {"SIMPLE", "BITPIX", "NAXIS", "EXTEND", "NAME", "RA", "DEC", "VARTYPE",
                  "VSOURCE", "ISOURCE", "HSOURCE", "KSOURCE", "TSOURCE"}
 

@@ -1,19 +1,18 @@
 # WG6 Roman variable-star light curves: scoping
 
-**Date:** 2026-11-12 · **Author:** T28 scoping session (Claude) · **Branch:** `claude/t28-wg6-scoping-43bfaa` · **Status:** draft
+**Date:** 2026-11-12 · **Author:** T28 scoping session (Claude) · **Branch:** `claude/t28-wg6-scoping-43bfaa` · **Status:** draft (Part 2 added 2026-11-12)
 
 ## TL;DR
-- **The WG6 download is not Roman-simulated photometry.** The README promises GP resampling to Roman cadence plus a
-  Roman noise model, but the files and the code have neither. What's on the drive is **68,824 archival light curves**:
-  OGLE I (plus V and UKIRT H/K) from 2001–2024, and TESS 20-s data for 390 flare stars. The files store **no truth
-  parameters**.
-- I joined OGLE catalog periods (Rae's OK): **99–100% of stars match** in every OGLE class. That includes
-  **3,172 OGLE spotted rotators (ROT)**: periods 1–75 d (5–95%), 58% at 1–35 d. ROT agrees with our quick
-  Lomb–Scargle on 88 of 89 measurable stars.
-- Usable rotators: ROT, FLARE. Contaminants: ECL, ELL, T2CEP, CEP, RRLYR, HB, DSCT. Stress tests: LPV, DN, TR, BLAP.
-  Not useful: VVV.
-- **For Rae to decide:** how to make the light curves Roman-like (none of it can go through the pipeline as-is), and
-  whether EBs are negatives or a flagged class.
+- **The noise variants:** both add **white Gaussian noise** at a quoted σ(mag) to the **same** GP-resampled light curve.
+  **simple** keeps stars bright (F146 ~10–18) on one fixed σ(mag) curve (1.0 mmag floor); its "shifted" copies are
+  +8.000 mag fainter. **improved** shifts stars to F146 ~14–21 and adds star-to-star σ scatter (×1.5; per the README,
+  blending). Neither has red noise or systematics. **Use improved:** realistic magnitudes, times in the files, the only
+  rotators.
+- **Roman grid:** 6 consecutive 71-d seasons (2027–2030), F146 every 12.1 min (8,450 points per season), F087/F213 every 6 h.
+- **No ROT set.** The only Roman-cadence rotators are **FL**: 2,000 objects on 65 TESS M-dwarf templates, 1,600 with
+  literature P (0.2–5 d), amplitudes not evolving. LS recovers 23/25.
+- **Pipeline (20 stars, 1.1 s each):** FL 3/4 correct; 14/16 contaminants get a confident period.
+- **For Rae:** resample OGLE ROT ourselves, or ask WG6?
 
 ## Question / goal
 T28 (Roman GBTDS track), scoping step: where the RGES PIT WG6 variable-star set comes from, what it contains, which
@@ -38,9 +37,217 @@ Deliverables: `docs/WG6_REFERENCE.md` (the reference, including the full README-
    examples and timed the pipeline on 3 ROT stars with `tools/audit/wg6_examples.py`. The notebook regenerates every
    figure from `data/`.
 
+6. **Resampled set (Part 2, added 2026-11-12):**
+   - I read both READMEs (`README_Roman_filters.docx` and `README_Roman_filters_improved_noise.docx`).
+   - I **did not extract** the 42 GB of zips (that would be ~1.5–2 h of drive I/O). `tools/audit/wg6r_profile.py` reads
+     FITS members in place: it inventories all 38,657 members by name, then profiles 138 objects (12 per OGLE class,
+     the same stars in every variant, plus 30 FL objects at every magnitude copy).
+   - It compares each variant with simple on the same star (offset, correlation, whiteness of the difference).
+   - Truth comes from `tools/audit/wg6_truth.py --resampled` (full OCVS + FL templates).
+   - Pipeline test: `tools/audit/wg6r_pipeline.py`, 20 stars, one process. Figure inputs come from
+     `tools/audit/wg6r_examples.py`.
+   - The raw set's folder was renamed to `wg6_roman_data_raw/`, and the tool defaults follow it.
+
 ## Results
 
-### Where the data came from: plain-language summary
+## Part 2: the resampled (Roman-cadence) set
+
+### What arrived
+| Class | simple | simple_shifted | improved (`_final`) | truth joined |
+|---|---|---|---|---|
+| CEP | 24 | 24 | — | 24 OCVS |
+| DSCT / ECL / ELL | 1,000 each | 1,000 each | 1,000 each | 100% OCVS |
+| RRLYR / LPV | 991 / 991 | 990 / 976 | 991 / 991 | 100% OCVS |
+| HB / T2CEP | 93 / 100 | 93 / 100 | 93 / 100 | 100% OCVS |
+| CV (dwarf novae) | — | — | 1,100 files (110 stars × 10 `_ind` copies) | none (no period table) |
+| FL (M-dwarf rotation + flares) | — | — | 12,000 files = 2,000 objects × F146 16–21 | 1,600 objects (54 of 65 TIC templates) via Günther/Medina; 79 "flat" objects |
+| ROT, BLAP, TR | **absent** | **absent** | **absent** | |
+
+Also in the improved folder: 10,000 FL "non-final" files (the same 2,000 objects at F146 16/18/20/22/24, simple-style).
+
+- **Same stars as the raw set?** The OGLE IDs are identical across all three variants: the 5,175 stars common to
+  simple and improved.
+- **Against the raw WG6 set** they match 97–100%, except **ECL: none of the 1,000 resampled ECL stars are in the raw
+  WG6 ECL files**. All are in OCVS, so the truth join still works (now against the full OCVS tables).
+- **The files carry no truth parameters**: the header has only `NAME` and `VARTYPE`.
+- **No ROT here, and no evidence that one exists yet.** The WG6 repo's unmerged branch `add_rotators` (`4130e4e`)
+  only adds the OGLE ROT/BLAP/transit catalogs to the archival extraction, where the raw `Rotators_lightcurves`
+  came from. None of the READMEs lists rotators among the resampled types.
+
+### Same star, raw vs the three variants
+![same star](figures/r_same_star_variants.png)
+
+The figure shows OGLE-BLG-T2CEP-0234 (P = 1.40 d): the raw OGLE I folded light curve, then F146 season 1 in simple,
+shifted and improved. The variability is identical in all three; only the brightness and the noise change.
+- **simple:** F146 12.2, σ 1.0 mmag.
+- **shifted:** 20.2, σ 5.9 mmag.
+- **improved:** 16.6, σ 1.3 mmag.
+
+Across the sample, the correlation with simple is 0.998–1.000. The exception is LPV, where the GP was re-drawn per variant.
+
+### What "simple" and "improved" noise are (measured)
+![noise](figures/r_noise_vs_mag.png)
+
+**Left:** quoted σ per 12.1-min point. Simple, shifted and the FL non-final files all sit on one tight curve (0.002–0.006
+dex scatter). Improved scatters around a slightly lower curve, by 0.05 dex (up to ×1.5) at fixed magnitude, and each FL
+object traces its own line across its magnitude copies. **Right:** measured p2p; for slow variables it equals σ.
+
+| F146 mag | 14 | 16 | 17 | 18 | 19 | 20 | 22 | 24 |
+|---|---|---|---|---|---|---|---|---|
+| simple / shifted σ [mmag] | 1.06 | 1.31 | 1.65 | 2.15–2.33 | 3.78 | 5.87 | 18.0 | 68.7 |
+| improved σ [mmag] (OGLE classes) | 1.00 | 1.15 | 1.27 | 1.62 | 2.72 | 4.27 | — | — |
+| FL, same objects, improved vs non-final [mmag] | | 1.13 vs 1.29 | 1.32 | 1.70 vs 2.30 | 2.86 | 5.19 vs 5.44 | (21: 12.5) vs 15.7 | – vs 64.3 |
+
+- **Both are white.** The difference of two noise draws on the same star (variant − simple − offset) has a lag-1–5
+  autocorrelation of ≈0.00, and the RMS of 4/16/64-point bins equals σ/√N (ratio 1.00). Its std equals
+  √(σ₁² + σ₂²). So there is no red noise, no blending-induced correlated noise and no amplitude dilution (the 5–95% range
+  matches simple within ~1%).
+- **Magnitude shifts:**
+  - shifted = +8.000 mag exactly. It is the README's "dimmer, more pronounced uncertainties" copy, and its σ re-scales
+    along the same curve.
+  - improved = +0 (stars already fainter than ~15.4), ~4.45 or ~6.68 mag. That is a step rule into F146 ~14–20; the exact
+    rule isn't documented.
+- **Which to use: improved.**
+  - Bulge-like magnitudes (simple is mostly brighter than any GBTDS target).
+  - Per-star σ scatter that mimics crowding.
+  - JD in each file.
+  - The FL rotators exist only there (`_final`).
+  - Caveat: both variants are optimistic. They are white noise only, with a 1.0 mmag floor and no systematics or
+    season-to-season offsets.
+- **Couldn't settle:**
+  - why improved σ is *lower* than simple at 17–20 mag;
+  - the source of either σ(mag) curve (ETC? simulation?);
+  - what the CV `_ind<k>_<j>` copies and the FL `k` field are;
+  - whether "FL non-final" counts as "simple noise".
+
+### Cadence and seasons
+![coverage](figures/r_cadence_coverage.png)
+
+There are 6 seasons of exactly 71.00 d, contiguous at 12.1 min (8,450 F146 points each):
+- Aug 14–Oct 23 and Feb 10–Apr 21, in consecutive years 2027–2030;
+- separated by 109–115 d;
+- F087 and F213 every 6 h, offset by 3 h, with 284 points per season each;
+- nothing off-season.
+
+`docs/ROMAN_REFERENCE.md` is corrected. Its earlier "3 early + 3 late seasons" and "colours every ≤12 h" are now marked
+as differing from the WG6 grid. For us, one season is R = 71 d, so R/2 = 35.5 d.
+
+### Per-class examples (improved)
+![examples](figures/r_class_examples.png)
+
+F146 season 1 with the 6-season LS, with the catalog P marked. What to look at:
+- **FL** shows a clean 1.78 d rotation sinusoid plus flare spikes;
+- **ECL/ELL/HB** peak at P_orb/2;
+- **T2CEP/RRLYR/DSCT** sit on their period;
+- **LPV** is a monotonic trend within one season;
+- **CV** in quiescence looks like noise.
+
+**The signals are strictly periodic.** Folded-profile correlation between seasons is 1.000 for ECL/T2CEP. FL amplitudes
+are constant across seasons (e.g. 0.0600–0.0603 mag), with no spot evolution. Many FL templates have tiny amplitudes
+(0.2–2 mmag).
+
+### Stored vs measured periods
+![check](figures/r_stored_vs_measured.png)
+
+LS on all 6 seasons of F146 (improved, n = 12 per class):
+
+| Class | Result |
+|---|---|
+| ECL | 11/12 at P_orb/2 |
+| ELL | 12/12 at P_orb/2 |
+| HB | 9/12 at P/2 (2 at P/3) |
+| RRLYR, DSCT, T2CEP | 12/12 each |
+| CEP (simple) | 12/12 |
+| **FL** | **23/25 objects match the literature rotation P at every magnitude copy** (138/150 files) |
+
+The simple and shifted variants give identical tables. LPV can't be checked here: the LS grid stops at 300 d.
+
+### Pipeline on 20 resampled stars
+![pipeline](figures/r_pipeline_test.png)
+
+F146 season 1, improved noise, standard pipeline, one process on the i5:
+
+| Class | Result |
+|---|---|
+| **FL** (rotators) | 3/4 correct, 1 at 2P (TIC 294754396, P = 4.05 d → 7.90) |
+| T2CEP | 4/4 confident at the pulsation period |
+| RRLYR | 4/4 confident at the pulsation period |
+| ECL | 3 at P_orb/2, 1 at P_orb |
+| ELL | 1 at P_orb/2, 1 at P_orb, 2 declined (P_orb 57 and 135 d, beyond R/2) |
+
+**So 14 of 16 contaminants come back as confident "rotation periods".** The current pipeline has no defence against
+astrophysical false positives, which is exactly what P36 and T29 are for.
+
+**Time:** 0.62–1.79 s per star-season (mean 1.10 s, 8,450 points). That is ~1.6 CPU-h for every improved OGLE star
+(one season each), or ~37 CPU-min for the 2,000 FL objects at one magnitude.
+
+### Revised class classification (for the resampled set)
+
+| Class | Use | Why |
+|---|---|---|
+| **FL** (rotating templates) | **(a) Roman-cadence rotator truth, v0** | 1,600 objects / 54 templates with literature P (0.2–5 d). Caveats: M dwarfs only, short periods, **no spot evolution**, only 54 independent stars (split by template) |
+| **FL "flat"** | **(b) negative**: flaring, non-rotating | 79 objects |
+| **ECL** | (b) contaminant, flagged class (T29) | P_orb/2 mimics rotation. 1,000 stars, none in the raw set |
+| **ELL** | (b) contaminant, strongest mimic | smooth double-humped sinusoid at P_orb/2 |
+| **T2CEP** | (b) contaminant | 1–37 d, confident pipeline answers (4/4) |
+| **RRLYR** | (b) contaminant, sub-day | confident pipeline answers (4/4) |
+| **CEP** | (b) contaminant | only 24, simple variant only |
+| **HB** | (c) stress test | harmonics of long P_orb |
+| **DSCT** | (c) stress test | < 0.1 d edge |
+| **LPV** | (c) stress test | long trends within a season |
+| **CV / DN** | (c) stress test | outbursts; 10 copies per star |
+| **ROT** | **(a), but only in the raw set** | the bulk Roman-like rotator truth needs resampling (game plan step 1) |
+| raw VVV, BLAP, TR | (d) / (c) as before | not resampled |
+
+### Revised game plan
+1. **Roman-like input.** Use the WG6 resampled product, **improved** variant, F146, cut into 71-d seasons. This retires the
+   old option C, and option A (our own template resampling of the periodic classes) is no longer needed.
+   **One gap remains: ROT.** Two ways to fill it:
+   - (i) Ask WG6 to run their GP resampling on the 3,172 OGLE ROT stars they already extracted.
+   - (ii) Resample ROT ourselves (old option B): a quasi-periodic GP per OGLE season (`celerite2`/`tinygp`: Rae's OK
+     to install), evaluated on the WG6 Roman grid (`roman_times_shortcadence.npy`) with noise drawn from WG6's improved
+     σ(mag) relation.
+
+     A cheaper fallback is to inject ROT periods and amplitudes into `synthetic.spot_signal` on the same grid.
+
+     Both versions of (ii) should also add **spot evolution**, which none of the WG6 light curves have.
+2. **Loader** `claude_files/wg6.py` (design only):
+   - `load_wg6_roman(zip_or_path, member=None, band="F146", season=None, times_dir=None)` returns the
+     `load_smarts_fits`-style `(time, flux)` container;
+   - it reads in place from the zip or an extracted file, takes the JD column, or the `.npy` grid for simple;
+   - it converts mag to relative flux with a NaN-safe median and NaN-masks FL dropouts;
+   - `season=k` cuts the k-th 71-d season;
+   - it returns σ too, converted to relative flux.
+
+   The raw-set loader (`load_wg6_raw`, OGLE I with the HJD fix) stays for ROT work.
+3. **Manifest:** a new `datasets/wg6_roman_v0.csv`. Columns:
+   - `star_id`, `zip` and `member`, relative to `WG6_RESAMPLED_ROOT`;
+   - `variant`, `cls`, `subtype`;
+   - `P_true`, `p_convention`, `P_phot_expected` (P_orb/2 for ECL/ELL);
+   - `fl_template`, `wfmag`, `season`;
+   - `is_rotator`, `is_eb`, `in_raw`, `eval_set`.
+
+   **Split by FL template and by OGLE star.** No template may appear in both train and eval.
+4. **How the classes enter:**
+   - (i) **Ranker negatives:** ECL, ELL, T2CEP, RRLYR, CEP and FL-flat as star-level declines, every candidate at
+     relevance 0. ECL/ELL candidates near P_orb or P_orb/2 are tagged `eb_period` for T29.
+   - (ii) **Roman scorecard dataset strings:**
+     - `wg6r_fl_v0_improved_s<k>`: FL rotators, scored with `classify_period` against the template P; correct and
+       alias outcomes only, since there is no diffrot.
+     - `wg6r_contam_v0_improved_s<k>`: the FP rate.
+     - Later, `wg6r_rot_v0` once ROT is resampled.
+5. **Compute** (measured 1.10 s per star-season):
+   - every improved OGLE star, one season: ~1.6 CPU-h;
+   - a v0 of 300 per contaminant class plus all 1,600 FL rotators at 2 magnitudes, one season: ~1.4 CPU-h at 1 process,
+     ~25 min at 4 workers;
+   - all 18,275 improved files × 6 seasons: ~34 CPU-h, so Rae's local job.
+
+Follow-ups P34–P37 in `docs/TASKS.md` are revised to match.
+
+## Part 1: the raw archival set (2026-11-11)
+
+
+### Where the raw data came from: plain-language summary
 - **Selection.** WG6 took every known variable from the OGLE-IV bulge catalogs (plus VVV, plus Gaia alerts) inside a
   4°-radius circle at l = 359.7°, b = −1.6°.
   - That circle is about 50 deg², roughly 30× the real GBTDS footprint of ~1.7 deg².
@@ -166,7 +373,7 @@ Conventions this confirms:
 - **Contamination flags:** OCVS remarks flag 52 of them as flaring and 4 as RS CVn (with EB IDs).
 - **Period bins** (0–1 / 1–3 / 3–10 / 10–23 / 23–35 / 35–70 / >70 d): 159 / 111 / 545 / 649 / 540 / 959 / 209.
 
-### Class classification for our use
+### Class classification (raw set; for Roman work see Part 2's revised table)
 
 | Class | Use | Why |
 |---|---|---|
@@ -186,7 +393,7 @@ Conventions this confirms:
 The SMARTS negatives so far are noise-only stacks (T27). The (b) classes would be the **first astrophysical false
 positives** the ranker sees.
 
-### Game plan
+### Game plan (raw set, 2026-11-11; superseded by Part 2's revised plan)
 1. **Make it Roman-like first.** This decides everything else, so Rae picks the approach (Q1 below).
    - **A. Model resampling** for the strictly periodic classes (ECL, ELL, T2CEP, CEP, RRLYR, DSCT, HB, LPV): fit a
      multi-harmonic Fourier/phase-binned template at the catalog period to the OGLE I data, then evaluate it on a
@@ -237,26 +444,38 @@ Follow-ups are proposed in `docs/TASKS.md` as P34–P37.
 - **Raw Lomb–Scargle on ground-based data.** 19 of 100 ROT stars have the 1-d window peak on top, so I added the mask.
   It stays a diagnostic only: Roman won't have the daily alias.
 - **The first timing run** picked ROT stars with P > 35 d, which can't be found in 70 d. I re-ran it on P = 2–20 d.
+- **Part 2:**
+  - The first resampled period check matched truth only for stars in the raw inventory, which drops every ECL star
+    (none are in the raw set). I fixed this by joining against the full OCVS tables.
+  - FL files carry NaN cadences, which broke plain `np.median`. Switched to NaN-safe medians.
 
 ## Open questions for Rae
-1. **Resampling approach** (game plan step 1): A, template resampling for periodic classes; B, GP or our own
-   spot-injection for ROT; C, ask WG6 for the Roman-resampled product their README describes. My suggestion: A plus
-   C now, and B once you decide on a GP package (`celerite2` or `tinygp`, which needs your OK to install).
-2. **EBs and ELLs:** star-level negatives for the ranker, or a separate flagged class (T29) kept out of the negatives?
-   Your earlier guidance was "flag EBs, don't discard them".
-3. **ROT is giant-dominated**, with large amplitudes. Is it acceptable as the Roman rotator truth for v0? Should
-   amplitudes be scaled down to dwarf-like levels when resampling?
-4. **The 37% of ROT with P > 35 d:** keep them as "undetectable in one season" truth (as with SMARTS), or drop them?
-5. **The F146 noise model:** which source should we use (Roman ETC/pandeia tables, or the Wilson+2023 simulations)?
-   The WG6 README mentions one, but it isn't in the repo or the files.
-6. **Flare stars as a real-TESS validation set** for the SMARTS-trained ranker: 273 M dwarfs with literature P, a cheap
-   over-tuning test (roadmap step 3). Worth a task?
-7. **GBTDS design numbers** in `docs/ROMAN_REFERENCE.md` come from NASA/STScI web pages, not the final APT definition
-   (12.1 vs 15 min cadence, season dates, off-season sampling). Who should confirm them?
-8. Suspicious items:
-   - zips `-002` and `-003` are absent, with `.tgz` files of those numbers in their place, which is consistent;
-   - the 390 flare files are fewer than the 1,228 Günther stars (WG6 only kept stars with FAST-LC 20-s data);
-   - 4 ROT stars are known RS CVn EBs.
+1. **ROT at Roman cadence:** ask WG6 to resample their 3,172 OGLE ROT stars (the archival set is already on their
+   `add_rotators` branch), or do it ourselves (a GP, which needs `celerite2`/`tinygp` installed with your OK, or spot
+   injection into `synthetic.py` on the WG6 Roman grid)? Without it, the Roman rotator truth is 54 TESS M-dwarf
+   templates with periods of 0.2–5 d.
+2. **Which noise variant to standardise on:** I recommend improved. Is the shifted-simple set worth keeping as a
+   fainter-magnitude stress test (F146 18–26)?
+3. **Questions to put to WG6** (things I couldn't settle from the files):
+   - the source of the two σ(mag) curves, and why improved σ is *below* simple at 17–20 mag;
+   - the improved magnitude-shift rule (0 / 4.45 / 6.68 mag);
+   - what the CV `_ind<k>_<j>` copies and the FL `k` field are;
+   - whether the FL non-final files are the "simple noise" FL;
+   - whether a resampled set with red noise or systematics is planned.
+4. **No spot evolution** in FL, and in any GP-resampled ROT unless we add it. Is that acceptable for ranker v1
+   training, or should the Roman rotator truth come from our own butterpy-style simulations (D3/T16g) on the WG6 grid?
+5. **EBs and ELLs:** star-level negatives, or a separate flagged class (T29)? This is still open from Part 1.
+   14/16 contaminants currently get confident periods.
+6. **FL as rotators:** 1,600 objects, but only 54 independent stars, each reused ~30× at 6 magnitudes. Splitting by
+   template is required. Is that enough for a Roman scorecard v0?
+7. **The 37% of ROT with P > 35.5 d:** keep them as one-season-undetectable truth or drop them? (Still open from Part 1.)
+8. **GBTDS design:** the WG6 grid (6 consecutive 71-d seasons, colours every 6 h) differs from the NASA web summary
+   (3 early + 3 late, colours every ≤12 h). Which should our Roman scorecard assume?
+
+Part 1 questions superseded by Part 2:
+- resampling A/B/C is now step 1 of the revised plan;
+- the F146 noise source is now a question for WG6 (Q3);
+- the flare stars as a real-TESS validation set is still P37.
 
 ## Reproduce
 ```bash
@@ -271,5 +490,10 @@ git clone https://github.com/rges-pit/variable_catalog_xmatch /path/to/scratch/w
 /opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6_truth.py --period-check
 /opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6_examples.py --time-pipeline 3
 # data/ls_spectra/ keeps only the 14 example stars (trimmed for git); the profile run regenerates the rest
+# Part 2 (resampled set; read in place from the zips, ~30-60 min of light drive reads in all)
+/opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6r_profile.py              # inventory + 138-object profile (spectra/ and per-variant examples/ are regenerated here; not committed)
+/opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6_truth.py --resampled     # resampled/truth.csv.gz + period_check.csv
+/opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6r_pipeline.py             # 20 stars, ~30 s
+/opt/anaconda3/envs/ss_openblas/bin/python tools/audit/wg6r_examples.py             # figure inputs
 /opt/anaconda3/envs/ss_openblas/bin/python tools/run_notebook.py reports/2026-11-12_wg6-dataset-scoping/notebook.ipynb
 ```

@@ -132,13 +132,59 @@ def period_check(data_dir: Path) -> pd.DataFrame:
     return s
 
 
+def resampled_truth(truth_dir: Path, data_dir: Path) -> pd.DataFrame:
+    """Truth for the WG6 *resampled* set: every star joined to the full OCVS tables (not only the raw WG6 stars,
+    since the resampled ECL stars are absent from the raw set), FL objects to their TESS template's literature
+    period, plus an ``in_raw`` flag. Writes ``resampled/truth.csv.gz`` (one row per star_id)."""
+    sys.path.insert(0, str(REPORT))
+    from figlib import load_inventory  # noqa: E402
+
+    inv = pd.read_csv(data_dir / "resampled/inventory.csv.gz", low_memory=False)
+    stars = inv.drop_duplicates("star_id")[["star_id", "cls", "fl_template"]].copy()
+    oc = read_ocvs(truth_dir).drop_duplicates("NAME").set_index("NAME")
+    fl = read_flares(data_dir).set_index("NAME")
+    raw = set(load_inventory().NAME.astype(str))
+    key = np.where(stars.cls == "FL", stars.fl_template.astype(str), stars.star_id)
+    src = pd.concat([oc, fl[~fl.index.isin(oc.index)]])
+    for c in ("P_true", "amp", "subtype", "truth_src", "p_convention"):
+        stars[c] = pd.Series(key, index=stars.index).map(src[c])
+    stars.loc[stars.fl_template.astype(str) == "flat", "p_convention"] = "flat template (no rotation)"
+    stars["in_raw"] = stars.star_id.isin(raw) | stars.fl_template.astype(str).isin(raw)
+    stars.to_csv(data_dir / "resampled/truth.csv.gz", index=False)
+    prof = data_dir / "resampled/profile.csv"
+    if prof.exists():  # stored-vs-measured check on the F146 top LS peak (all 6 seasons)
+        f = pd.read_csv(prof)
+        f = f[f.band == "F146"].copy()
+        f["P_true"] = f.star_id.map(dict(zip(stars.star_id, stars.P_true)))
+
+        def outcome(r):
+            if not (np.isfinite(r.P_true) and np.isfinite(r.P1)):
+                return "na"
+            x = r.P1 / r.P_true
+            for k, n in ((1, "match"), (0.5, "half"), (2, "double"), (1 / 3, "third")):
+                if abs(x / k - 1) < 0.1:
+                    return n
+            return "other"
+
+        f["outcome"] = f.apply(outcome, axis=1)
+        f.to_csv(data_dir / "resampled/period_check.csv", index=False)
+    return stars
+
+
 def main(argv=None):
     """CLI: write truth_joined.csv and truth_match_rates.csv (and, on request, the flare CSVs / period check)."""
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data"))
+    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data_raw"))
     ap.add_argument("--wg6-repo", default=None, help="clone of rges-pit/variable_catalog_xmatch: (re)parse flare catalogs")
+    ap.add_argument("--resampled", action="store_true", help="write the resampled-set truth table")
     ap.add_argument("--period-check", action="store_true", help="after profiling: write period_check.csv")
     args = ap.parse_args(argv)
+    ap_res = "--resampled" in (argv or sys.argv[1:])
+    if ap_res:
+        t = resampled_truth(Path(args.root) / "extracted" / "_truth", REPORT / "data")
+        print(t.groupby("cls").agg(stars=("star_id", "size"), with_P=("P_true", lambda x: x.notna().sum()),
+                                   in_raw=("in_raw", "mean")))
+        return
     if args.period_check:
         period_check(REPORT / "data")
         return

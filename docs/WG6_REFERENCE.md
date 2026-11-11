@@ -1,9 +1,16 @@
 # WG6 reference: the RGES PIT variable-star light-curve set
 
+**There are two WG6 products on the drive:**
+
+- the **raw** archival set, `wg6_roman_data_raw/` (§1–7);
+- the **resampled** Roman-cadence set, `wg6_roman_data_resampled/` (§8), received 2026-11-11.
+
+For Roman work, use the resampled set (improved noise).
+
 Local reference so future sessions don't have to re-derive it. Compiled 2026-11-12 (T28 scoping,
 `reports/2026-11-12_wg6-dataset-scoping/`) from three sources:
 
-1. **The files themselves** on the drive, `/Volumes/Data_Vault/wg6_roman_data/` (`$WG6_DATA_ROOT`): every primary header
+1. **The files themselves** on the drive, `/Volumes/Data_Vault/wg6_roman_data_raw/` (`$WG6_DATA_ROOT`): every primary header
    (inventory), plus a sample of tables per set. **This is the ground truth, and it wins wherever 2 and 3 disagree.**
 2. **The generating code** `github.com/rges-pit/variable_catalog_xmatch`, commit `5982d92` (2025-10-01), read in a
    scratch clone (not vendored).
@@ -28,7 +35,9 @@ Roman bands → apply the Roman noise model. **Neither the code nor the files re
   - columns are `HJD, mag, mag_error` (TESS: `BTJD, mag, mag_err, PDCSAP_FLUX, PDCSAP_FLUX_ERR`);
   - times are real calendar epochs (2001–2024), not Roman seasons.
 
-So, for our purposes, WG6 v-current is **a labelled library of real bulge variable stars (plus nearby TESS M dwarfs)
+*(§1–7 describe the raw set. WG6 has since shipped the Roman-resampled product: see §8.)*
+
+So, for our purposes, the raw set is **a labelled library of real bulge variable stars (plus nearby TESS M dwarfs)
 in ground-based I band**. It is not Roman-like photometry. Making it Roman-like is our job (or WG6's next release):
 cut it to ~70 d seasons, resample to 12.1–15 min, and scale the noise to F146 at bulge magnitudes. See §6.
 
@@ -185,3 +194,113 @@ with fits.open(path) as h:
     t = np.where(t > 3e6, t - 2450000, t)   # quirk 5.4
     flux = 10 ** (-0.4 * (d["mag"] - np.median(d["mag"])))   # relative flux, median 1
 ```
+
+---
+
+## 8. The resampled (Roman-cadence, Roman-filter) set: `wg6_roman_data_resampled/`
+
+Received 2026-11-11 (~30 GB of zips, **42 GB uncompressed**). **Not extracted:** our tools read each FITS member in place
+from the zips (`tools/audit/wg6r_profile.py`; root `$WG6_RESAMPLED_ROOT`). Profiled in
+`reports/2026-11-12_wg6-dataset-scoping/` ("Resampled set" section), from a sample of 138 objects: 12 per OGLE class and
+30 FL objects at every magnitude copy.
+
+### 8.1 What it is (READMEs and files agree, with the exceptions listed below)
+
+- The light curves are **GP models of the archival OGLE/UKIRT light curves** (§1–7), evaluated on the Roman time grid,
+  translated to Roman filters, and given noise. The one exception is **FL**: TESS M-dwarf templates (rotation + flares).
+- **Filters and cadence:**
+  - **F146**: 50,700 points at **12.1 min**;
+  - **F087**: 1,704 points every **6 h**;
+  - **F213**: 1,704 points every **6 h**, offset +3 h from F087.
+- **Seasons:** 6 seasons of exactly **71.00 d**: Aug 14–Oct 23 and Feb 10–Apr 21, in consecutive years 2027–2030
+  (JD 2461631.5–2462613.5).
+  - Each season is contiguous (no gap > 1 h).
+  - Seasons are separated by 109–115 d.
+  - No off-season points.
+- **File layout:** each FITS has a PRIMARY header with only `NAME` and `VARTYPE`, plus `F087`, `F146` and `F213`
+  binary tables.
+  - Columns `mag, mag_error` (simple), or `JD, mag, mag_error` (improved `_final`).
+  - Simple-noise times are in `simple_noise/drive-download-*/roman_times_{shortcadence,longcadence,longcadence2}.npy`
+    (F146, F087, F213).
+- **No truth parameters in any file.** Join by OGLE ID to the OCVS tables (§4) with `wg6_truth.py --resampled`
+  (writes `resampled/truth.csv.gz`). For FL, join the TIC in the file name to Günther/Medina.
+- **Truth matches:** all OGLE-class stars join to OCVS (100%).
+  - The 1,000 resampled **ECL stars are not in the raw WG6 ECL set**: none overlap, although all are in OCVS.
+  - The other classes are 97–100% in the raw set.
+  - CV (dwarf novae) is in the raw set, but has no period table.
+- **The underlying signal is strictly periodic.** For ECL and T2CEP, the season-to-season folded-profile correlation is
+  1.000 and the amplitude is constant. FL rotation amplitudes are also constant across seasons (e.g. 0.0600–0.0603 mag),
+  so **there is no spot evolution**.
+
+### 8.2 Contents (files / objects)
+
+| Class | simple | simple_shifted (+8 mag) | improved (`_final`) | FL non-final (improved folder) |
+|---|---|---|---|---|
+| CEP | 24 | 24 | — | |
+| DSCT | 1,000 | 1,000 | 1,000 | |
+| ECL | 1,000 | 1,000 | 1,000 | |
+| ELL | 1,000 | 1,000 | 1,000 | |
+| HB | 93 | 93 | 93 | |
+| LPV (Miras) | 991 | 976 | 991 | |
+| RRLYR | 991 | 990 | 991 | |
+| T2CEP | 100 | 100 | 100 | |
+| CV (dwarf novae) | — | — | 1,100 files = 110 stars × 10 (`_ind<k>_<j>`) | |
+| FL (M-dwarf rotation + flares) | — | — | 12,000 files = 2,000 objects × WFmag 16–21 | 10,000 = 2,000 × WFmag 16/18/20/22/24 |
+| **ROT (OGLE spotted rotators)** | **absent** | **absent** | **absent** | |
+
+**FL objects:** `FL_<idx>_<TIC or "flat">_<k>_WFmag_<m>`. There are 2,000 objects on **65 TESS templates plus "flat"**
+(79 objects). 54 templates (1,600 objects) have literature periods: mostly 0.2–5 d, plus one at 13.3 d and one at 89 d.
+Each template is reused 19–41 times with different `k`, which appears to be a flare draw. **Split by template, never by object.**
+
+**No ROT:** the WG6 repo's unmerged branch `add_rotators` (commit `4130e4e`) adds the OGLE ROT/BLAP/transit catalogs to the
+*archival* extraction (the raw `Rotators_lightcurves.tgz`), but no resampled ROT set was shipped. BLAP and TR are absent
+too, and so is the non-periodic kernel set the README mentions.
+
+### 8.3 The two noise variants (measured; READMEs are vague)
+
+Every variant carries **the same underlying light curve**: correlation with simple is 0.998–1.000 for all OGLE classes
+except LPV. They differ only in the magnitude offset and the noise draw.
+
+| | simple | simple_shifted | improved (`_final`) |
+|---|---|---|---|
+| Magnitude | original OGLE/UKIRT-based brightness (F146 ~10–18) | simple **+8.000 mag** exactly (F146 18–26) | simple + **0, ~4.45 or ~6.68 mag** (step shift; stars already fainter than ~15.4 are not shifted) → F146 ~14–20; FL at WFmag 16–21 |
+| Error model σ(mag) | **one deterministic curve**: 0.002–0.006 dex scatter across stars; floor **1.0 mmag** (bright), 2.2 mmag at 18, 5.9 at 20, 18 at 22, 69 at 24, ~300 at 26 | same curve as simple | **star-dependent**: 0.05 dex scatter (up to ×1.5) at fixed magnitude, as expected from the stated blending/crowding term. Median **below** the simple curve at 17–20 mag (1.27 vs 1.65 mmag at 17; 4.3 vs 5.9 at 20). Same 1.0 mmag floor |
+| Per-point error | tracks the instantaneous magnitude (within-star corr(mag, log σ) = 0.997) | 0.986 | 0.956 |
+| Noise draw | white Gaussian at the quoted σ: autocorrelation lags 1–5 ≈ 0, binned RMS/(σ/√N) = 1.00 at 4, 16, 64 points | same | same |
+| Times | in `.npy` side files | in `.npy` side files | `JD` column in each file |
+| NaN cadences | none seen | none seen | FL only: 0.04–0.3% of points |
+
+- **What "improved" adds:** per-star crowding/blending scatter in σ. I don't see added correlated noise or diluted
+  amplitudes: the 5–95% amplitude matches simple to within ~1%. So "blending" acts on the error budget only, as far as these
+  files show.
+- **What neither variant has:** red noise, systematics, flux dilution, saturation, or season-to-season zero-point offsets.
+  That makes both optimistic for real Roman data.
+- **LPV is different:** the LPV signal itself differs between variants (correlation 0.96–0.999; the difference series is
+  fully correlated, ac1 = 1.0), so the LPV GP was re-drawn per variant.
+- **Unresolved:** the exact improved magnitude-shift rule (why 4.45 vs 6.68); what the CV `_ind<k>_<j>` copies are;
+  what FL `k` is; why "improved" σ is *lower* than simple at 17–20 mag; and how the FL non-final files (WFmag up to 24,
+  σ on the simple curve) relate to the "simple noise" model.
+
+### 8.4 Period conventions (unchanged from the raw set)
+
+LS over 6 seasons on F146 (improved), sample of 12 per class:
+- ECL 11/12 and ELL 12/12 at **P_orb/2**;
+- HB at P_orb/2 or P_orb/3;
+- RRLYR, DSCT and T2CEP all 12/12 match;
+- CEP (simple) 12/12;
+- **FL: 23/25 objects match the template's literature rotation period at every magnitude copy** (138/150 files).
+
+LPV can't be checked with a 300 d LS cap.
+
+### 8.5 Loading (until `claude_files/wg6.py` exists)
+
+```python
+import io, zipfile, numpy as np
+from astropy.io import fits
+with zipfile.ZipFile(zip_path) as zf, fits.open(io.BytesIO(zf.read(member))) as h:
+    d = h["F146"].data
+    t = d["JD"] if "JD" in d.columns.names else np.load(".../roman_times_shortcadence.npy")
+    flux = 10 ** (-0.4 * (d["mag"] - np.nanmedian(d["mag"])))   # NaN-safe (FL has NaN cadences)
+# one season: split t at gaps > 1 d (6 × 71 d)
+```
+

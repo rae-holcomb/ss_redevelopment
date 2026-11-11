@@ -55,7 +55,7 @@ def roman_like_season(t, mag, cadence_min=15.0, length=70.0):
 def main(argv=None):
     """CLI: cache examples; optionally time the pipeline on N ROT seasons."""
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data"))
+    ap.add_argument("--root", default=os.environ.get("WG6_DATA_ROOT", "/Volumes/Data_Vault/wg6_roman_data_raw"))
     ap.add_argument("--time-pipeline", type=int, default=0)
     args = ap.parse_args(argv)
     root = Path(args.root)
