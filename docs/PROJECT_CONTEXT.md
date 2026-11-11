@@ -495,3 +495,17 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   map (adds `ranking_model.py`, drops `example_usage.py`) and §4 issues 2–5, 9, 12 refreshed. Coordinator's merge step
   now includes the TASKS status + changelog update (`docs/AGENT_WORKFLOW.md`); report TL;DRs capped at ~150 words.
   dev_small scorecards (assigned and full-year) bit-identical before/after; pytest passes.
+- **2026-11-12 — T28 scoping: WG6 variable-star set** (`reports/2026-11-12_wg6-dataset-scoping/`; new `docs/WG6_REFERENCE.md`,
+  draft `docs/ROMAN_REFERENCE.md`).
+  - The RGES PIT WG6 download is **archival, not Roman-simulated**: 68,824 OGLE I/V + UKIRT H/K light curves of known
+    bulge variables, plus 390 TESS 20-s flare M dwarfs. No GP resampling or Roman noise has been applied, despite the
+    README, and the files store no truth.
+  - Truth comes from the OGLE OCVS catalog tables (`tools/fetch_ogle_truth.py`, 106 MB on the drive, Rae OK), joined
+    for 99–100% of each OGLE class.
+  - 3,172 OGLE spotted rotators (ROT) with reliable photometric periods: 88/89 measurable stars agree with a quick LS
+    check. EB/ELL catalog periods are orbital, and their light curves show P_orb/2.
+  - The pipeline can't run on the raw OGLE sampling (the ACF coverage cut), so Roman-like resampling comes first (P34).
+  - A Roman-like 70 d × 12.1 min season costs ~0.7 s per star on the i5.
+  - Extraction (22 GB) lives on the drive under `wg6_roman_data/extracted/` (`tools/extract_wg6.py`).
+  - Follow-ups P34–P37.
+

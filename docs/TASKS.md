@@ -335,7 +335,7 @@ for confirmation (ask Rae first).
 
 ### T28. Roman GBTDS track: data, loader, first scorecard (roadmap step 3, 2026-11-09)
 - **Agent:** start with a scoping session with Rae, then `method-improver`
-- **Status:** ready for scoping. **Discuss with Rae first** (data access, which WG6 sets).
+- **Status:** scoping in review (`reports/2026-11-12_wg6-dataset-scoping/`). WG6 files are archival OGLE/TESS, not Roman-resampled; next step needs Rae's resampling decision (P34).
 - **Why:** Roman is a must-have mission and the Season 1 paper is the deadline. It differs from TESS in cadence (~15 min),
   per-season baseline (~70 d, contiguous), crowding, faintness and stellar population.
 - **Do:** (a) confirm the current GBTDS design (season length/count, cadence, filters, off-season sampling) and record it
@@ -953,3 +953,46 @@ for confirmation (ask Rae first).
   has ~m-k supporting pairs, so the winner is set by bin merging, not the fundamental (re-binning to relative widths
   doesn't fix it). Try nearest-neighbour spacings (j-i <= K) or a comb fold of the peak list. Low priority: the fixed
   `acf_fft`/`lombscargle` now cover these stars.
+
+### P34. Roman-like resampling of the WG6 light curves (from T28 scoping, 2026-11-12)
+- **Proposed by:** T28 scoping (`reports/2026-11-12_wg6-dataset-scoping/`).
+- **Idea:** the WG6 files are archival OGLE I (ground-based, nightly clumps, ~1,250 points per densest 70 d) and can't go
+  into the pipeline as-is: `compute_acf` truncates at 15-min cadence, and the fit fails at 60 min.
+  - Build `make_roman_season`: 70 d × 12.1 min (`docs/ROMAN_REFERENCE.md`) plus F146-like noise at a chosen magnitude.
+  - (A) Multi-harmonic template at the OCVS period for the strictly periodic classes (ECL, ELL, T2CEP, CEP, RRLYR, DSCT,
+    HB, LPV).
+  - (B) For ROT, a quasi-periodic GP per OGLE season (needs `celerite2`/`tinygp`: Rae's OK), or inject the ROT periods and
+    amplitudes into `synthetic.spot_signal`.
+  - (C) In parallel, ask WG6 for the GP-resampled product their README calls complete.
+- **Needs Rae:** A/B/C, the GP package, and the F146 noise-model source.
+
+### P35. `claude_files/wg6.py` loader + `datasets/wg6_v0.csv` manifest (from T28 scoping, 2026-11-12)
+- **Proposed by:** T28 scoping. Design in the report's "Game plan".
+- **Idea:**
+  - Loader: `load_wg6_fits(path, band="LC_I", window=None)` returns the `load_smarts_fits` container. It fixes the
+    doubled HJD offset on CEP/T2CEP, converts mag to relative flux, and optionally cuts a season or window.
+  - Manifest: paths relative to `WG6_DATA_ROOT`, with `cls`, `subtype`, `P_true`, `p_convention`, `P_phot_expected`
+    (P_orb/2 for ECL/ELL), `is_rotator`, `is_eb`, `resample_method`, `seed` and `eval_set`. Splits are by star.
+  - Proposed dataset strings: `wg6_rot_v0[_roman70]` (rotators) and `wg6_contam_v0[_roman70]` (contaminant FP rate).
+  - Test with a tiny synthetic FITS fixture (no drive).
+
+### P36. WG6 contaminants as the first astrophysical ranker negatives (from T28 scoping, 2026-11-12)
+- **Proposed by:** T28 scoping.
+- **Idea:**
+  - Once P34/P35 exist, add ~300 resampled stars per contaminant class (ELL, ECL, T2CEP, CEP, RRLYR; HB/DSCT/LPV as
+    stress tests) to the ranker's negatives next to T27's noise stacks. Use star-level decline labels, with every
+    candidate at relevance 0.
+  - Tag ECL/ELL candidates within REL_TOL of P_orb or P_orb/2 as `eb_period` for T29.
+  - Report the per-class FP rate at matched rotator precision.
+  - Compute: ~0.7 s per star-season on the i5, so ~2,000 stars take ~25 CPU-min.
+- **Needs Rae:** EBs/ELLs as plain negatives vs a flagged class.
+
+### P37. TESS flare stars as a real-star validation set (from T28 scoping, 2026-11-12)
+- **Proposed by:** T28 scoping.
+- **Idea:**
+  - The 390 WG6 flare files are real TESS 20-s PDCSAP M dwarfs. 273 of them have literature rotation periods
+    (Günther+2020, Medina+2020).
+  - Bin to 30 min and score the current pipeline and ranker per sector: the first real-star (non-SMARTS) TESS check,
+    i.e. the over-tuning test from roadmap step 3.
+  - Flares are a built-in stress test.
+  - Caveats: literature periods come from different methods, and Medina's MEarth periods run to 180 d.
