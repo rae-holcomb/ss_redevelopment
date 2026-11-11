@@ -220,7 +220,7 @@ task from `docs/TASKS.md`:
   **dev_medium full-year is the default judging set for method changes**
   (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
   ~20 min at 4 workers; Rae's standing OK, 2026-10-21; baseline
-  `benchmarks/baselines/dev_medium_fullyear.json`). Use assigned coverage (no
+  `benchmarks/baselines/dev_medium_fullyear_t5.json`; `_assigned_t5` for assigned). Use assigned coverage (no
   `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
   without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go under "Proposed" in `docs/TASKS.md`.

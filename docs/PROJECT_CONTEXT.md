@@ -484,6 +484,7 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   final success ~flat, wrong flat, all guards pass; synth200 success 0.730 → 0.755 (G1 passes). No extra compute
   (paired 0.93×). Optional methods add no fitted <1 d / 1–3 d recall on top of the fixed pool (not pooled).
   Follow-ups P31 (rebuild ranker tables), P32 (half-lag gate), P33 (pairwise on long baselines).
+- **2026-11-11 — Baselines refreshed for T5 (Rae OK).** `benchmarks/baselines/{dev_medium_fullyear,dev_medium_assigned,synth200_s0}_t5.json` (+ `_tables/`) are T5's after-fix scorecards (v5 keys), now the baselines for `check_goals.py --baseline`; `_v5` files stay as the pre-T5 reference. Reused rather than re-run: same pipeline code as main. v6 (`detectable`) baselines will come from the speed-up pass's "before" run.
 - **2026-11-11 — P30 repo and docs diet** (`reports/2026-11-11_p30-repo-docs-diet/`). Deleted `claude_files/old/`
   (11 files) and the retired runners `batch_test_guesses.py`, `batch_test_acf_fft_highpass.py` (open issue 9 resolved)
   and `run_debug_baseline*.py`; the scorecard (`per_method.csv` / `per_star.csv`) and `tools/build_feature_tables.py`

@@ -1,11 +1,16 @@
 # Benchmark baselines
 
-**Use the `_v5` files for new work.** Scorecard v6 (T26) adds only the `detectable` keys; no `_v6` baseline has been
-committed yet, so goals on those keys report n/a. The other files are kept because a goal, test or tool cites them.
+**Use the `_t5` files for new work** (current pipeline code, since T5's hybrid peak ranking merged 2026-11-11). The `_v5`
+files describe the pre-T5 pipeline and stay for before/after comparisons. Scorecard v6 (T26) adds only the `detectable`
+keys; no v6 baseline is committed yet (the speed-up pass's "before" run is meant to supply it), so goals on those keys
+report n/a. The other files are kept because a goal, test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_fullyear_v5.json` + `_v5_tables/` | **Current judging baseline** (T24/T25/P22b, 2026-11-10): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`. Every v4 key is bit-identical to v4; adds `final.noise.*` (wrong split into `wrong_noise_period`/`wrong_other`), `final.quiet_noise`, `final.quiet_noise_strict`, `final.periodic_noise`; per-star `noise_*` columns. `per_candidate.csv` (`beyond_reach` rows) isn't committed (10 MB). | `ss_openblas`, claude/t24-t25-scorecard-v5-84eca3 |
+| `dev_medium_fullyear_t5.json` + `_t5_tables/` | **Current judging baseline** (T5, 2026-11-11): same dataset string as `_v5`, on the T5 pipeline (hybrid peak ranking in `lombscargle`/`acf_fft`). Success 0.251, wrong 0.088, <1 d union recall 0.698. Scorecard v5 keys (no `detectable`). | `ss_openblas`, run as `99c46ef-dirty` = pipeline code of `15c88d8` (checked: runs postdate the last code edit) |
+| `dev_medium_assigned_t5.json` + `_t5_tables/` | Same, assigned coverage. Success 0.147, wrong 0.055, <1 d union recall 0.779. | same |
+| `synth200_s0_t5.json` + `_t5_tables/` | `synthetic:n=200,seed=0` on the T5 pipeline. Success 0.755, wrong 0. | same |
+| `dev_medium_fullyear_v5.json` + `_v5_tables/` | Pre-T5 judging baseline (T24/T25/P22b, 2026-11-10): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`. Every v4 key is bit-identical to v4; adds `final.noise.*` (wrong split into `wrong_noise_period`/`wrong_other`), `final.quiet_noise`, `final.quiet_noise_strict`, `final.periodic_noise`; per-star `noise_*` columns. `per_candidate.csv` (`beyond_reach` rows) isn't committed (10 MB). | `ss_openblas`, claude/t24-t25-scorecard-v5-84eca3 |
 | `dev_medium_assigned_v5.json` + `_v5_tables/` | Same, assigned coverage (`sectors=manifest`). | same |
 | `dev_small_assigned_v5.json`, `synth200_s0_v5.json` | v5 re-runs of the quick-check sets (synth200 has no noise columns, so only the v4 keys). | same |
 | `dev_small_fullyear.json` + `_tables/` | `...dev_small.csv,data_root=data/smarts_dev,sectors=ignored` (v3 keys only; no v4/v5 re-run exists). Success 0.260, wrong 0.040, declined 0.680. | `ss_openblas`, 4c2a994, 2026-10-15 (T2) |
