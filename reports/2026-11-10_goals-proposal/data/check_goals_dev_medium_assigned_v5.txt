@@ -1,0 +1,24 @@
+Run: benchmarks/baselines/dev_medium_assigned_v5.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest, commit 8a764eb-dirty)
+Baseline: benchmarks/baselines/dev_medium_assigned_v5.json  (commit 8a764eb-dirty)
+
+goal  status  result  value    target   base  metric
+G13   draft   FAIL    0.724 <= 0.65    0.724  final.searchable.overall.none
+                     G7 restated on searchable stars: fewer declines among stars the ACF can reach (current 0.724). Threshold is a placeholder: v4 report said 'pick X after T16c/T16d'. [source: scorecard-v4]
+G14   draft   PASS    0.928 >= 0.9     0.928  final.unsearchable.overall.none
+                     Correct-decline guard: decline when the ACF cannot reach the period (do not hallucinate where blind). [source: scorecard-v4]
+G15   draft   PASS    0.047 <= 0.05    0.047  final.searchable.overall.wrong
+                     Confident-wrong rate among searchable stars on assigned coverage (full-year is 0.076; see G10). [source: scorecard-v4]
+G17   draft   FAIL    0.069 <= 0.05    0.069  final.unsearchable.overall.wrong
+                     Wrong answers where the period is beyond ACF reach (T16d target; R/2 cannot move it). [source: t16c]
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.218   0.218  +0.000  0.000  final.searchable.overall.success
+  0.227   0.227  +0.000  0.060  final.searchable.by_bin.1-3d.success
+  0.306   0.306  +0.000  0.060  final.searchable.by_bin.10-30d.success
+  0.201   0.201  +0.000  0.060  final.searchable.by_bin.3-10d.success
+  0.180   0.180  +0.000  0.060  final.searchable.by_bin.<1d.success
+  0.203   0.203  +0.000  0.060  final.searchable.by_bin.>30d.success
+  0.111   0.111  +0.000  0.060  final.by_band_width.ge_0p5.success
+
+OVERALL: PASS

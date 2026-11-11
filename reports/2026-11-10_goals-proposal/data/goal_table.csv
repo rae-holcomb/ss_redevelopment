@@ -1,0 +1,12 @@
+id,dataset,metric,op,target,value,passes
+G13,sectors=manifest,final.searchable.overall.none,<=,0.65,0.7235294117647059,False
+G14,sectors=manifest,final.unsearchable.overall.none,>=,0.9,0.928125,True
+G15,sectors=manifest,final.searchable.overall.wrong,<=,0.05,0.047058823529411764,True
+G16,sectors=ignored,final.searchable.by_bin.1-3d.success,>=,0.3,0.23255813953488372,False
+G16,sectors=ignored,final.searchable.by_bin.10-30d.success,>=,0.3,0.36257309941520466,True
+G16,sectors=ignored,final.searchable.by_bin.3-10d.success,>=,0.3,0.2982456140350877,False
+G16,sectors=ignored,final.searchable.by_bin.<1d.success,>=,0.3,0.1686046511627907,False
+G16,sectors=ignored,final.searchable.by_bin.>30d.success,>=,0.3,0.2773109243697479,False
+G17,sectors=manifest,final.unsearchable.overall.wrong,<=,0.05,0.06875,False
+G18,sectors=ignored,final.quiet_noise_strict.overall.success,>=,0.254,0.2541176470588235,True
+G19,sectors=ignored,final.quiet_noise_strict.overall.wrong,<=,0.036,0.03529411764705882,True

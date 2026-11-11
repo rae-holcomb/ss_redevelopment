@@ -657,3 +657,5 @@ chats should know:
   Candidate recall by method (`reports/2026-11-11_candidate-recall-by-method/`): <1 d is limited by Stage 1 itself (all 7
   methods: 44% full-year, 63% assigned), and every method loses <1 d stars on full-year baselines; `acf_fft_highpass` is
   the best short-period addition (+0.10 full-year), `wavelet` the best long-period one (+0.12–0.19 at > 30 d).
+
+- **2026-11-11 — Collected goal proposal** (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`). G13–G19 + 3 guard additions from the v4, T16c and v5 drafts, graded on the v5 baselines (4 pass, 3 fail); `goals.json` untouched, awaiting Rae's thresholds.

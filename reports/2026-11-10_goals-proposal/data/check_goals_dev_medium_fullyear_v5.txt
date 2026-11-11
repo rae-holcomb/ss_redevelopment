@@ -1,0 +1,22 @@
+Run: benchmarks/baselines/dev_medium_fullyear_v5.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored, commit 8a764eb-dirty)
+Baseline: benchmarks/baselines/dev_medium_fullyear_v5.json  (commit 8a764eb-dirty)
+
+goal  status  result  value    target   base  metric
+G16   draft   FAIL    0.169 >= 0.3     0.169  final.searchable.by_bin.*.success
+                     Searchable success per period bin (every bin must meet it; shown value is the worst bin). 0.30 mirrors G11. Placeholder threshold: the v4 report gave none. [source: scorecard-v4] FAILING: final.searchable.by_bin.1-3d.success, final.searchable.by_bin.3-10d.success, final.searchable.by_bin.<1d.success, final.searchable.by_bin.>30d.success
+G18   draft   PASS    0.254 >= 0.254   0.254  final.quiet_noise_strict.overall.success
+                     Quiet-subset success guard at the v5 baseline. [source: scorecard-v5]
+G19   draft   PASS    0.035 <= 0.036   0.035  final.quiet_noise_strict.overall.wrong
+                     Quiet-subset wrong guard. The v5 report said 0.035, but the baseline is 0.0353 (30 of 850) so 0.035 fails today; 0.036 allows the baseline value. [source: scorecard-v5]
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.268   0.268  +0.000  0.000  final.searchable.overall.success
+  0.233   0.233  +0.000  0.060  final.searchable.by_bin.1-3d.success
+  0.363   0.363  +0.000  0.060  final.searchable.by_bin.10-30d.success
+  0.298   0.298  +0.000  0.060  final.searchable.by_bin.3-10d.success
+  0.169   0.169  +0.000  0.060  final.searchable.by_bin.<1d.success
+  0.277   0.277  +0.000  0.060  final.searchable.by_bin.>30d.success
+  0.139   0.139  +0.000  0.060  final.by_band_width.ge_0p5.success
+
+OVERALL: PASS
