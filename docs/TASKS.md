@@ -165,6 +165,12 @@ for confirmation (ask Rae first).
 - **Goal:** improve Stage 1 recall and final correctness in the `<1d` and `1-3d`
   bins. Separate the Nyquist/points-per-cycle wall (unfixable) from search
   failures (fixable).
+- **Update (coordinator, 2026-11-11; `reports/2026-11-11_candidate-recall-by-method/`):** Rae's priority is <1 d recall,
+  with minimal extra compute and no new false positives that survive the ranker. On dev_medium, all 7 methods together
+  put the true period in the raw guesses for only 44% of <1 d stars full-year (63% assigned); the 3 pooled methods 34% / 60%.
+  Best single addition is `acf_fft_highpass` (+0.099 full-year, +0.029 assigned). Every method is worse at <1 d full-year
+  than on the same stars' assigned coverage (`acf_fft` 0.60 → 0.34): diagnose that shared deficit first, then choose which
+  optional method(s) to pool by marginal recall, per-star compute, and FP rate on the T27 non-rotators.
 - **Done when:** goals G2/G3 in `benchmarks/goals.json` pass with no regression guard
   tripped.
 
@@ -737,7 +743,7 @@ for confirmation (ask Rae first).
 
 ### T27. Non-rotator negatives from SMARTS noise light curves (roadmap step 2, 2026-11-09)
 - **Agent:** `data-auditor` or `ranking-model-builder`
-- **Status:** done, **merged 2026-11-10** (branch `claude/t27-nonrotator-negatives-008ccf`; `reports/2026-11-10_t27-nonrotator-negatives/`). Synthetic red noise not run.
+- **Status:** done, **merged 2026-11-10** (branch `claude/t27-nonrotator-negatives-008ccf`; `reports/2026-11-10_t27-nonrotator-negatives/`). Synthetic red noise not run. **Rae accepted the coordinator's recommendations on open questions 4–7 (2026-11-11):** (4) drop from the negatives any source whose stack has a persistent weak LS peak (A/B halves agree, like T20's `persist`) and list them alongside `periodic_low_amplitude`; do this inside the ranker-v1 task; (5) no separate task: fold the 6 `systematic_common_mode` full-year FPs into T29; (6) keep the 125 spike stacks out, consistent with the rotator sets; revisit if the pipeline gains spike masking; (7) skip synthetic red noise for now; reconsider for Roman (T28).
 - **Why:** every SMARTS star is a rotator, so the ranker's decline threshold and false-positive rate would be calibrated
   only against weak rotators. T20 already isolated the noise sources: ~1,500 quiet ones (real-noise **non-rotators**) and
   206 periodic ones (mostly **real neighbouring variable stars**: contaminating-variable examples).
@@ -1287,3 +1293,19 @@ for confirmation (ask Rae first).
   trained on OOF scores with T27 negatives, is prototyped in `tools/train_ranker_negatives.py` (`v0+neg_all+head`): at
   prec 0.89 (negatives 1:1) it beats v0 at the same rule, and matches hand success with 40–60% fewer wrong answers; > 30 d
   is still under-answered. Needs a ratio/precision decision from Rae, a learning curve and per-bin thresholds.
+- **Decision (Rae, 2026-11-11):** adopt the star-level decline model for ranker v1. Use all three coverage draws per
+  negative source (~2.2 negatives per rotator); the ratio only needs to be good enough for now, since Roman and
+  variable-star negatives will be added later. **No full-year training table yet:** build v1 with the decline model and
+  per-bin thresholds first; if 10–30 d / > 30 d full-year still lag hand arbitration, build a full-year table for the
+  1k subset as a direct test.
+
+### P25. Use the light curves' noise level: empirical noise features, then per-sector weighting (Rae said yes, 2026-11-11)
+- **Proposed by:** coordinator (2026-11-10), after Rae asked whether the pipeline should use photometric uncertainty.
+- **Idea:** the pipeline ignores how noisy each light curve is. Two steps:
+  1. **Empirical noise features** in `ml_features.py`: per-sector and pooled point-to-point scatter, and white vs
+     red noise on rotation timescales, so the ranker and the decline model know how noisy a star is. Measured from
+     the flux, not from SMARTS' error column. Judge by ranker/decline OOF and dev_medium, with feature importances.
+  2. **Per-sector inverse-variance weighting** when sectors are pooled (ACF/periodograms), so one noisy sector doesn't
+     dominate. That's a method change, so it goes through the dev_medium scorecard with `check_goals.py --baseline`.
+- Step 1 can ride along with ranker v1; step 2 is its own task.
+

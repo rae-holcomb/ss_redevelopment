@@ -648,3 +648,12 @@ chats should know:
 - **2026-11-10 — Decline operating point deferred (Rae).** The precision target / non-rotator mix for the ranker's
   decline threshold stays open until more of the pipeline is in place. Working default: match hand arbitration's OOF
   training precision; reports plot the full purity–completeness curve instead of asking Rae to pick a point (T11).
+- **2026-11-11 — T27 open questions 4–7 settled (Rae took the coordinator's recommendations).** Persistent-weak-period
+  "quiet" stacks leave the negatives (done in ranker v1); common-mode full-year FPs go to T29; the 125 spike stacks stay
+  out; no synthetic red noise for now. Non-rotator:rotator ratio only needs to be good enough for now (Rae expects new
+  negative sources, e.g. Roman and variable-star false positives); use all three coverage draws per source.
+- **2026-11-11 — Ranker v1 direction (Rae).** Adopt T27's star-level decline model; no full-year training table until v1
+  shows whether long-period full-year stars still lag (then build one for the 1k subset). Noise-level proposal filed (P25).
+  Candidate recall by method (`reports/2026-11-11_candidate-recall-by-method/`): <1 d is limited by Stage 1 itself (all 7
+  methods: 44% full-year, 63% assigned), and every method loses <1 d stars on full-year baselines; `acf_fft_highpass` is
+  the best short-period addition (+0.10 full-year), `wavelet` the best long-period one (+0.12–0.19 at > 30 d).
