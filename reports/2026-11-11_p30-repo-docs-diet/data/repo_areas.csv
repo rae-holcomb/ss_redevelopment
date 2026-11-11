@@ -1,0 +1,9 @@
+area,when,files,bytes,text_lines,code_doc_lines
+claude_files,before,31,691040,15313,15313
+tools,before,46,397312,8248,8248
+benchmarks,before,48,12450252,75461,1450
+docs,before,8,230714,3029,3029
+claude_files,after,16,468538,9817,9817
+tools,after,46,397312,8248,8248
+benchmarks,after,27,6386680,39663,1447
+docs,after,10,236580,3103,3103

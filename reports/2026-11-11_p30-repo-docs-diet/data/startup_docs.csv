@@ -1,0 +1,7 @@
+file,when,lines,bytes
+CLAUDE.md,before,234,13142
+docs/PROJECT_CONTEXT.md,before,679,64701
+docs/TASKS.md,before,1374,103929
+CLAUDE.md,after,242,13934
+docs/PROJECT_CONTEXT.md,after,477,42192
+docs/TASKS.md,after,930,66520
