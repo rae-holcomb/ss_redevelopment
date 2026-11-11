@@ -33,8 +33,10 @@ of everything merged.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
 ## Open sessions (2026-11-12)
-- **WG6 Roman data scoping** (T28 scoping; `local_5b376121-…`, branch prefix `claude/t28-wg6-scoping`): docs/code read,
-  per-class profile of `/Volumes/Data_Vault/wg6_roman_data`, class triage, game plan. Needs the drive.
+- **WG6 Roman data scoping** (T28 scoping; `local_5b376121-…`, branch `claude/t28-wg6-scoping-43bfaa`, 7496dc0): first pass
+  done on what turned out to be the **raw archival OGLE/TESS light curves** (no Roman resampling). **Don't merge yet**
+  (Rae, 2026-11-12): she is downloading the Roman-resampled WG6 set; when it's on the drive, send this same session back
+  to analyze it, then verify and merge. Keep the session (not archived).
 - **Headline card** (P28/P29): merged `facc568`; session idle, archive on Rae's OK.
 - **Real-TESS validation-set scoping** (P27): running (started 2026-11-12). **Tonight:** speed-up pass alone on the machine (it makes the v6 baselines from its "before" run).
 - **Midway review** (`local_d5a20966-…`): merged (`eca4926`). **Don't archive**: Rae is reading it.
