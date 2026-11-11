@@ -659,3 +659,8 @@ chats should know:
   the best short-period addition (+0.10 full-year), `wavelet` the best long-period one (+0.12–0.19 at > 30 d).
 
 - **2026-11-11 — Collected goal proposal** (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`). G13–G19 + 3 guard additions from the v4, T16c and v5 drafts, graded on the v5 baselines (4 pass, 3 fail); `goals.json` untouched, awaiting Rae's thresholds.
+- **2026-11-11 — Ranker 3k learning-curve point** (`reports/2026-11-11_ranker-3k-learning-curve/`). `train_3k` built
+  (drive `extracted/t10_tables/train_3k`, superset of train_1k). 1k → 3k: dev_medium success at matched precision
+  0.267 → 0.273 full-year, 0.188 → 0.197 assigned; no-decline flat. The curve has plateaued: ranker v1 should train on
+  train_3k, but gains must come from the decline stage, Stage 1 recall and new kinds of training data. `runs/t11_ranker`
+  now lives in the main checkout.
