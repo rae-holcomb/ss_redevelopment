@@ -1,0 +1,258 @@
+{
+ "assigned": {
+  "hand (T5)": {
+   "values": {
+    "R0_success_raw": 0.147,
+    "R1_success_tess_cov_P30": 0.11500688764040924,
+    "R2_success_pop": 0.05093186187851946,
+    "R3_correct_pop": 0.028587567376942194,
+    "answer_rate_pop": 0.09977832065929958,
+    "R4_precision": {
+     "0.1": 0.14316724900565247,
+     "0.3": 0.306557034362183,
+     "0.5": 0.39722335535505254
+    },
+    "R5_within10_half": 0.218,
+    "R5_within20_half": 0.268
+   },
+   "se": {
+    "R0_success_raw": 0.011002374115658154,
+    "R1_success_tess_cov_P30": 0.02295453666142448,
+    "R2_success_pop": 0.012559581050301619,
+    "R3_correct_pop": 0.005985698286952042,
+    "answer_rate_pop": 0.017710382770464224,
+    "R4_precision": {
+     "0.1": 0.03082359672664846,
+     "0.3": 0.05873650168341299,
+     "0.5": 0.07354746345136887
+    },
+    "R5_within10_half": 0.019379290090767273,
+    "R5_within20_half": 0.0219487205016213
+   },
+   "n": 1000,
+   "n_answered": 211,
+   "population": "mcq14_like",
+   "mode": "assigned",
+   "fp_rate": 0.028441385437777043,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 1302,
+   "n_neg_answered": 32
+  },
+  "hand (pre-T5)": {
+   "values": {
+    "R0_success_raw": 0.148,
+    "R1_success_tess_cov_P30": 0.11556953433217086,
+    "R2_success_pop": 0.051012310339692,
+    "R3_correct_pop": 0.028668015838114732,
+    "answer_rate_pop": 0.09683864159515891,
+    "R4_precision": {
+     "0.1": 0.1445881629473497,
+     "0.3": 0.3125718412469867,
+     "0.5": 0.4071862973519389
+    },
+    "R5_within10_half": 0.22,
+    "R5_within20_half": 0.27
+   },
+   "se": {
+    "R0_success_raw": 0.009628891564651621,
+    "R1_success_tess_cov_P30": 0.02260847679155045,
+    "R2_success_pop": 0.012084770108335861,
+    "R3_correct_pop": 0.005626834134131412,
+    "answer_rate_pop": 0.019360943826906053,
+    "R4_precision": {
+     "0.1": 0.029383807335947462,
+     "0.3": 0.056005584679640376,
+     "0.5": 0.07102468437151933
+    },
+    "R5_within10_half": 0.018030136692375038,
+    "R5_within20_half": 0.0188754154002677
+   },
+   "n": 1000,
+   "n_answered": 211,
+   "population": "mcq14_like",
+   "mode": "assigned",
+   "fp_rate": 0.028441385437777043,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 1302,
+   "n_neg_answered": 32
+  },
+  "ranker v0": {
+   "values": {
+    "R0_success_raw": 0.188,
+    "R1_success_tess_cov_P30": 0.1978107589801228,
+    "R2_success_pop": 0.10191525972518092,
+    "R3_correct_pop": 0.044887005634774595,
+    "answer_rate_pop": 0.2284483036915772,
+    "R4_precision": {
+     "0.1": 0.1931460026552892,
+     "0.3": 0.33303301406979186,
+     "0.5": 0.3894444541807481
+    },
+    "R5_within10_half": 0.372,
+    "R5_within20_half": 0.494
+   },
+   "se": {
+    "R0_success_raw": 0.011564001498325153,
+    "R1_success_tess_cov_P30": 0.0280891254376568,
+    "R2_success_pop": 0.021820228168419106,
+    "R3_correct_pop": 0.008989615369566883,
+    "answer_rate_pop": 0.033143361047789435,
+    "R4_precision": {
+     "0.1": 0.03618820696450718,
+     "0.3": 0.059764340534258414,
+     "0.5": 0.07000509837785256
+    },
+    "R5_within10_half": 0.02250780769055876,
+    "R5_within20_half": 0.023348353863617537
+   },
+   "n": 1000,
+   "n_answered": 282,
+   "population": "mcq14_like",
+   "mode": "assigned",
+   "fp_rate": 0.03324565197040343,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 1302,
+   "n_neg_answered": 24
+  }
+ },
+ "fullyear": {
+  "hand (T5)": {
+   "values": {
+    "R0_success_raw": 0.251,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.3137568464803908,
+    "R3_correct_pop": 0.2450127906653871,
+    "answer_rate_pop": 0.3940112637992642,
+    "R4_precision": {
+     "0.1": 0.7963144085145738,
+     "0.3": 0.7963144085145739,
+     "0.5": 0.7963144085145739
+    },
+    "R5_within10_half": 0.396,
+    "R5_within20_half": 0.468
+   },
+   "se": {
+    "R0_success_raw": 0.013093938718192437,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.021893279015425544,
+    "R3_correct_pop": 0.0205144840261935,
+    "answer_rate_pop": 0.022026154270320116,
+    "R4_precision": {
+     "0.1": 0.028595760230548557,
+     "0.3": 0.02859576023054855,
+     "0.5": 0.02859576023054855
+    },
+    "R5_within10_half": 0.025502515394707374,
+    "R5_within20_half": 0.026206506921471345
+   },
+   "n": 1000,
+   "n_answered": 353,
+   "population": "mcq14_like",
+   "mode": "fullyear",
+   "fp_rate": 0.0,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 434,
+   "n_neg_answered": 0
+  },
+  "hand (pre-T5)": {
+   "values": {
+    "R0_success_raw": 0.248,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.3137422486922883,
+    "R3_correct_pop": 0.2452215730834828,
+    "answer_rate_pop": 0.39399666601116173,
+    "R4_precision": {
+     "0.1": 0.7963068618540038,
+     "0.3": 0.796306861854004,
+     "0.5": 0.7963068618540039
+    },
+    "R5_within10_half": 0.396,
+    "R5_within20_half": 0.464
+   },
+   "se": {
+    "R0_success_raw": 0.01427541021068807,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.021318383323046634,
+    "R3_correct_pop": 0.0212351254894072,
+    "answer_rate_pop": 0.02156270952037297,
+    "R4_precision": {
+     "0.1": 0.027527140626067564,
+     "0.3": 0.027527140626067564,
+     "0.5": 0.027527140626067575
+    },
+    "R5_within10_half": 0.028499336146724893,
+    "R5_within20_half": 0.028918723395303436
+   },
+   "n": 1000,
+   "n_answered": 350,
+   "population": "mcq14_like",
+   "mode": "fullyear",
+   "fp_rate": 0.0,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 434,
+   "n_neg_answered": 0
+  },
+  "ranker v0": {
+   "values": {
+    "R0_success_raw": 0.267,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.3132222602886502,
+    "R3_correct_pop": 0.2445739799475694,
+    "answer_rate_pop": 0.3895630772062769,
+    "R4_precision": {
+     "0.1": 0.585763954869228,
+     "0.3": 0.7332024899348579,
+     "0.5": 0.772068899003768
+    },
+    "R5_within10_half": 0.508,
+    "R5_within20_half": 0.642
+   },
+   "se": {
+    "R0_success_raw": 0.013943596898661469,
+    "R1_success_tess_cov_P30": null,
+    "R2_success_pop": 0.022213560942833856,
+    "R3_correct_pop": 0.021944393044447532,
+    "answer_rate_pop": 0.0225908351544798,
+    "R4_precision": {
+     "0.1": 0.02377716148438104,
+     "0.3": 0.02701467307924556,
+     "0.5": 0.02803445242880395
+    },
+    "R5_within10_half": 0.025672001446935492,
+    "R5_within20_half": 0.023063902924059774
+   },
+   "n": 1000,
+   "n_answered": 355,
+   "population": "mcq14_like",
+   "mode": "fullyear",
+   "fp_rate": 0.016129032258064516,
+   "prevalences": [
+    0.1,
+    0.3,
+    0.5
+   ],
+   "n_neg": 434,
+   "n_neg_answered": 7
+  }
+ }
+}

@@ -902,6 +902,9 @@ for confirmation (ask Rae first).
 
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
 - **Proposed by:** midway review (rec. 5).
+- **Status:** in review (2026-11-12), branch `claude/p28-p29-headline-card-dcb5aa`, `reports/2026-11-12_headline-card/`.
+  `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
+  Awaiting Rae: period population, prevalences, which goals to activate.
 - **Idea:** one small, fixed table that every method/ranker report quotes, computed from the existing scorecard per-star
   CSVs. It needs no new scorecard subsets. Rows:
   - assigned coverage at the real coverage mix (`coverage_weight`);
@@ -913,6 +916,9 @@ for confirmation (ask Rae first).
 
 ### P29. Roman-season proxy on SMARTS (from the midway review, 2026-11-11)
 - **Proposed by:** midway review (rec. 2).
+- **Status:** first cut done (2026-11-12, `reports/2026-11-12_headline-card/`): `consecutive-3-5`, P ≤ 30 d =
+  0.205 hand (T5) / 0.284 ranker v0 on dev_medium assigned. The true 70 d window (per-star-sectors manifest +
+  `--max-span-days 70` dataset option, ~14 min) is specified but not run; Rae decides.
 - **Idea:** until the WG6 sets exist (T28), report SMARTS performance on one contiguous ~70 d window: 5 consecutive
   sectors trimmed to 70 d, or the `consecutive-3-5` class as a first cut. Today `consecutive-3-5` at P ≤ 30 d
   gives 0.20 hand / 0.28 ranker v0 on dev_medium assigned. Cheap, and it says what Season 1 should expect from the TESS-trained model.

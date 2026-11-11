@@ -1,0 +1,47 @@
+{
+ "sec_per_star_consecutive2": 3.016898195773596,
+ "sec_per_star_consecutive35": 3.700801310086839,
+ "minutes_1000_stars_4_workers": 13.995207303875906,
+ "median_span_days": {
+  "consecutive-2": {
+   "total_baseline_days": 54.208333333333314,
+   "longest_contiguous_days": 54.208333333333314,
+   "acf_reach": 37.08333333333755
+  },
+  "consecutive-3-5": {
+   "total_baseline_days": 101.45833333333331,
+   "longest_contiguous_days": 101.45833333333331,
+   "acf_reach": 69.27083333336483
+  },
+  "consecutive-6-12": {
+   "total_baseline_days": 184.66666666666663,
+   "longest_contiguous_days": 184.66666666666663,
+   "acf_reach": 125.50000000005709
+  },
+  "full": {
+   "total_baseline_days": 356.3333333333333,
+   "longest_contiguous_days": 356.3333333333333,
+   "acf_reach": 245.4791666666632
+  },
+  "gapped-2": {
+   "total_baseline_days": 160.83333333333331,
+   "longest_contiguous_days": 27.822916666666657,
+   "acf_reach": 19.104166666662323
+  },
+  "gapped-3-5": {
+   "total_baseline_days": 239.9375,
+   "longest_contiguous_days": 56.75,
+   "acf_reach": 34.416666666666174
+  },
+  "gapped-6-12": {
+   "total_baseline_days": 298.59375,
+   "longest_contiguous_days": 107.71875000000001,
+   "acf_reach": 77.10416666667534
+  },
+  "single": {
+   "total_baseline_days": 27.1875,
+   "longest_contiguous_days": 27.1875,
+   "acf_reach": 19.020833333316038
+  }
+ }
+}
