@@ -75,7 +75,7 @@ def main():
                              n_neg=len(neg), k_neg=int(neg[col].sum()),
                              fp_upper95=1 - 0.05 ** (1 / len(neg)) if neg[col].sum() == 0 else np.nan))
             # population sensitivity (R2, R3)
-            for pop in ["mcq14_like", "loguniform", "smarts_uniform", "none"]:
+            for pop in ["dev_medium", "mcq14_like", "loguniform", "smarts_uniform", "none"]:
                 c = hc.compute_card(f, mode, manifest, pop, fp, n_boot=0)["values"]
                 sens.append(dict(mode=mode, system=label, population=pop, success=c["R2_success_pop"],
                                  correct=c["R3_correct_pop"], answer_rate=c["answer_rate_pop"]))

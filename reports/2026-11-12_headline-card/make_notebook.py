@@ -29,7 +29,7 @@ md("## Figure 1: the headline card\n\nEach row's fixed definition is in `tools/h
    "Error bars: bootstrap SE over stars (200 resamples). R4 SEs treat the non-rotator FP rate as fixed. "
    "Black ticks on R5: Claytor+2022's 46% / 69% (most credible half of their SMARTS-TESS test set)."),
 code("""ROWS = [('R0 success, raw', 'R0_success_raw', None), ('R1 success, TESS cov. mix, P≤30 d', 'R1_success_tess_cov_P30', None),
-        ('R2 success, mcq14-like pop.', 'R2_success_pop', None), ('R3 correct-only, mcq14-like', 'R3_correct_pop', None),
+        ('R2 success, dev_medium pop.', 'R2_success_pop', None), ('R3 correct-only, dev_medium pop.', 'R3_correct_pop', None),
         ('R4 precision, prevalence 0.1', 'R4_precision', '0.1'), ('R4 precision, prevalence 0.3', 'R4_precision', '0.3'),
         ('R5 within 10%, credible half', 'R5_within10_half', None), ('R5 within 20%, credible half', 'R5_within20_half', None)]
 fig, axes = plt.subplots(1, 2, figsize=(12, 5.2), sharey=True)
@@ -65,16 +65,16 @@ for s in ['hand (T5)', 'ranker v0']:
 a1.set_xticks(x, BINS); a1.set_ylabel('success'); a1.set_ylim(0, 0.45); a1.legend(fontsize=7); a1.grid(alpha=.3)
 a1.set_title('(a) success per period bin')
 w = 0.2
-for j, (k, lab, c) in enumerate([('dev_medium', 'dev_medium (unweighted)', '0.6'), ('mcq14_like', 'mcq14-like (default)', '#d94801'),
+for j, (k, lab, c) in enumerate([('dev_medium', 'dev_medium (default, Rae 2026-11-12)', '#d94801'), ('mcq14_like', 'mcq14-like (rejected: ~no P<1 d)', '0.6'),
                                  ('loguniform', 'log-uniform', '#6a51a3'), ('smarts_uniform', 'SMARTS uniform in P', '#41ab5d')]):
     a2.bar(x + (j - 1.5) * w, shares[k], w, color=c, label=lab)
 a2.set_xticks(x, BINS); a2.set_ylabel('share of stars'); a2.legend(fontsize=7); a2.set_title('(b) period-bin shares')
-pops = ['none', 'mcq14_like', 'loguniform', 'smarts_uniform']
+pops = ['dev_medium', 'mcq14_like', 'loguniform', 'smarts_uniform']
 for j, (mode, s) in enumerate([('fullyear', 'hand (T5)'), ('fullyear', 'ranker v0'), ('assigned', 'hand (T5)'), ('assigned', 'ranker v0')]):
     g = sens[(sens['mode'] == mode) & (sens.system == s)].set_index('population').loc[pops]
     a3.bar(np.arange(4) + (j - 1.5) * w, g.success, w, color=COL[s], alpha=1 if mode == 'fullyear' else 0.5,
            hatch=None if mode == 'fullyear' else '//', label=f'{s}, {mode}')
-a3.set_xticks(np.arange(4), ['dev_medium\\n(none)', 'mcq14-like\\n(default)', 'log-uniform', 'SMARTS\\nuniform']); a3.legend(fontsize=7)
+a3.set_xticks(np.arange(4), ['dev_medium\\n(default)', 'mcq14-like', 'log-uniform', 'SMARTS\\nuniform']); a3.legend(fontsize=7)
 a3.set_ylabel('R2 success'); a3.set_title('(c) headline success vs population choice')
 fig.tight_layout(); fig.savefig(F / 'fig2_population_weighting.png', bbox_inches='tight')
 print(sens.pivot_table(index=['mode', 'system'], columns='population', values='success').round(3))"""),

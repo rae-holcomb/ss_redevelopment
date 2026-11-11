@@ -6,13 +6,14 @@
 - **`tools/headline_card.py`** computes a fixed 6-row card from any scorecard `per_star.csv` (plus ranker top-1 files) and writes `headline.json` + `headline.md`.
 - **Current pipeline (dev_medium, hand T5 / ranker v0):**
   - TESS coverage mix, P ≤ 30 d: **0.115 / 0.198**;
-  - McQuillan-like population: **0.051 / 0.102** assigned, **0.314 / 0.313** full-year;
-  - correct-only: 0.029 / 0.045 assigned, 0.245 / 0.245 full-year;
-  - precision at 10% rotators: 0.14 / 0.19 assigned, 0.80 / 0.59 full-year;
+  - dev_medium period mix (default, Rae 2026-11-12): **0.080 / 0.137** assigned, **0.251 / 0.267** full-year;
+  - correct-only: 0.046 / 0.072 assigned, 0.198 / 0.207 full-year;
+  - precision at 10% rotators: 0.21 / 0.25 assigned, 0.71 / 0.53 full-year;
   - Claytor-style best half, within 10% / 20% (full-year): ranker **0.51 / 0.64** vs Claytor+2022's 0.46 / 0.69.
 - **T5 moved no row by more than 1 SE.**
 - **Roman proxy (P29):** `consecutive-3-5`, P ≤ 30 d: **0.20 hand / 0.28 ranker**, with 95% intervals of about ±0.09. A true 70 d window costs ≈14 min to score. Not run.
-- **Your call:** the period population, the prevalences, and which of the 5 proposed goals to activate.
+- **Population decided (Rae, 2026-11-12):** the dev_medium period mix, not McQuillan+2014, which has almost no P < 1 d stars.
+- **Your call:** the prevalences, and which of the 5 proposed goals to activate.
 
 ## Question / goal
 `docs/TASKS.md` **P28** (headline card) and **P29** (Roman-season proxy), from the midway review
@@ -41,7 +42,7 @@ the card are *proposed* below, not edited.
 |---|---|
 | R0 | success (correct + diffrot), unweighted: continuity with older reports |
 | R1 | success at the real TESS coverage mix (per-star `coverage_weight`), P ≤ 30 d; assigned only |
-| R2 | success re-weighted per period bin to a named population (default `mcq14_like`), × `coverage_weight` when assigned; 0.1–180 d |
+| R2 | success re-weighted per period bin to a named population (default `dev_medium`: dev_medium's own period-bin shares; Rae, 2026-11-12), × `coverage_weight` when assigned; 0.1–180 d |
 | R3 | correct-only (no diffrot credit), same weighting as R2 |
 | R4 | precision `f·S / (f·A + (1−f)·FP)` at rotator prevalence f = 0.1, 0.3, 0.5. S and A (success and answer rates) use the R2 weighting; FP is the answer rate on T27 negatives, coverage-weighted when assigned |
 | R5 | fraction of the most credible half of all rotators with a period within 10% / 20% of the injected P_eq (Claytor+2022's metric). "Credible" means ranker score; hand has no score, so its answered stars come first and declined stars fill the half as misses |
@@ -61,17 +62,17 @@ so T5's short-period fix doesn't show up at dev_medium scale. Black ticks are Cl
 full-year, ranker v0's most-credible half (0.51 / 0.64) is level with them. That comparison is fair: their test set
 was also ~1-year SMARTS-TESS, but its period mix differs, so read it as "same ballpark", not a win.
 
-**dev_medium assigned** (population `mcq14_like`, value ± bootstrap SE):
+**dev_medium assigned** (population `dev_medium`, value ± bootstrap SE):
 
 | Row | hand (T5) | hand (pre-T5) | ranker v0 |
 |---|---|---|---|
 | R0 success, raw (unweighted) | 0.147 ± 0.011 | 0.148 ± 0.010 | 0.188 ± 0.012 |
 | R1 success, TESS coverage mix, P ≤ 30 d | 0.115 ± 0.023 | 0.116 ± 0.023 | 0.198 ± 0.028 |
-| R2 success, population `mcq14_like` | 0.051 ± 0.013 | 0.051 ± 0.012 | 0.102 ± 0.022 |
-| R3 correct-only, population `mcq14_like` | 0.029 ± 0.006 | 0.029 ± 0.006 | 0.045 ± 0.009 |
-| R4 precision at rotator prevalence 0.1 | 0.143 ± 0.031 | 0.145 ± 0.029 | 0.193 ± 0.036 |
-| R4 precision at rotator prevalence 0.3 | 0.307 ± 0.059 | 0.313 ± 0.056 | 0.333 ± 0.060 |
-| R4 precision at rotator prevalence 0.5 | 0.397 ± 0.074 | 0.407 ± 0.071 | 0.389 ± 0.070 |
+| R2 success, population `dev_medium` | 0.080 ± 0.015 | 0.081 ± 0.015 | 0.137 ± 0.018 |
+| R3 correct-only, population `dev_medium` | 0.046 ± 0.010 | 0.046 ± 0.010 | 0.072 ± 0.013 |
+| R4 precision at rotator prevalence 0.1 | 0.206 ± 0.032 | 0.207 ± 0.032 | 0.251 ± 0.028 |
+| R4 precision at rotator prevalence 0.3 | 0.401 ± 0.053 | 0.405 ± 0.053 | 0.421 ± 0.043 |
+| R4 precision at rotator prevalence 0.5 | 0.494 ± 0.062 | 0.500 ± 0.063 | 0.487 ± 0.050 |
 | R5 within 10%, most credible half | 0.218 ± 0.019 | 0.220 ± 0.018 | 0.372 ± 0.023 |
 | R5 within 20%, most credible half | 0.268 ± 0.022 | 0.270 ± 0.019 | 0.494 ± 0.023 |
 | n rotators / answered | 1000 / 211 | 1000 / 211 | 1000 / 282 |
@@ -82,11 +83,11 @@ was also ~1-year SMARTS-TESS, but its period mix differs, so read it as "same ba
 | Row | hand (T5) | hand (pre-T5) | ranker v0 |
 |---|---|---|---|
 | R0 success, raw (unweighted) | 0.251 ± 0.013 | 0.248 ± 0.014 | 0.267 ± 0.014 |
-| R2 success, population `mcq14_like` | 0.314 ± 0.022 | 0.314 ± 0.021 | 0.313 ± 0.022 |
-| R3 correct-only, population `mcq14_like` | 0.245 ± 0.021 | 0.245 ± 0.021 | 0.245 ± 0.022 |
-| R4 precision at rotator prevalence 0.1 | 0.796 ± 0.029 | 0.796 ± 0.028 | 0.586 ± 0.024 |
-| R4 precision at rotator prevalence 0.3 | 0.796 ± 0.029 | 0.796 ± 0.028 | 0.733 ± 0.027 |
-| R4 precision at rotator prevalence 0.5 | 0.796 ± 0.029 | 0.796 ± 0.028 | 0.772 ± 0.028 |
+| R2 success, population `dev_medium` | 0.251 ± 0.013 | 0.248 ± 0.014 | 0.267 ± 0.014 |
+| R3 correct-only, population `dev_medium` | 0.198 ± 0.013 | 0.198 ± 0.014 | 0.207 ± 0.013 |
+| R4 precision at rotator prevalence 0.1 | 0.711 ± 0.022 | 0.709 ± 0.024 | 0.534 ± 0.016 |
+| R4 precision at rotator prevalence 0.3 | 0.711 ± 0.022 | 0.709 ± 0.024 | 0.680 ± 0.019 |
+| R4 precision at rotator prevalence 0.5 | 0.711 ± 0.022 | 0.709 ± 0.024 | 0.719 ± 0.020 |
 | R5 within 10%, most credible half | 0.396 ± 0.026 | 0.396 ± 0.028 | 0.508 ± 0.026 |
 | R5 within 20%, most credible half | 0.468 ± 0.026 | 0.464 ± 0.029 | 0.642 ± 0.023 |
 | n rotators / answered | 1000 / 353 | 1000 / 350 | 1000 / 355 |
@@ -96,40 +97,38 @@ was also ~1-year SMARTS-TESS, but its period mix differs, so read it as "same ba
 - **Ranker v0 uses pre-T5 Stage-1 candidates** (T10 tables). A post-T5 ranker column needs rebuilt feature tables
   (already a HANDOFF next step).
 - **Hand R4 uses pre-T5 negatives** for both hand columns: the T5 baselines didn't score the negatives.
-- **Hand full-year answered 0 of 434 negatives**, so its precision is flat at 0.80. At the 95% upper limit on its FP
-  rate (0.0069), precision at f = 0.1 / 0.3 / 0.5 would be 0.69 / 0.77 / 0.78 (shaded band in Fig. 3).
+- **Hand full-year answered 0 of 434 negatives**, so its precision is flat at 0.71. At the 95% upper limit on its FP
+  rate (0.0069), precision at f = 0.1 / 0.3 / 0.5 would be 0.60 / 0.68 / 0.70 (shaded band in Fig. 3).
 - **R4 SEs ignore the uncertainty in FP** (they resample rotators only). With 24–32 assigned FP events, the FP rate
   itself is uncertain by about ±20%.
 
-### Period-population weighting (row R2, an open question)
+### Period-population weighting (row R2; decided 2026-11-12: `dev_medium`)
 
 ![Population weighting](figures/fig2_population_weighting.png)
 
 *Look at panel (c):* the same per-star results give an assigned ranker headline anywhere from 0.02 (SMARTS
-uniform-in-P, 83% of stars at > 30 d) to 0.15 (log-uniform). The default `mcq14_like` puts 47% of stars in 10–30 d.
+uniform-in-P, 83% of stars at > 30 d) to 0.15 (log-uniform). `mcq14_like` would put 47% of stars in 10–30 d and 0.1% below 1 d.
 - **Assigned:** that bin is where single-sector coverage fails (panel a, dashed: 0.03 hand / 0.04 ranker at the
   coverage mix), so assigned R2 is low, 0.05 / 0.10.
 - **Full-year:** the same weight lands where full-year does best, so R2 (0.31) is *higher* than raw (0.25).
 
-The default population, `mcq14_like`, is log10 P ~ N(1.1, 0.35) truncated to 0.1–180 d (median ≈ 12.6 d). It is a
-**from-memory** stand-in for the McQuillan+2014 Kepler distribution, not a fit to the catalogue. Kepler's
-4-year baseline and older field stars make it long-period-heavy compared with what TESS or Roman will detect.
+**Decision (Rae, 2026-11-12): the default is `dev_medium`**, the period-bin shares of `datasets/dev_medium.csv` (17% in each bin below 30 d, 31% above). McQuillan+2014 is rejected: Kepler's selection is light on M dwarfs, so it has essentially no P < 1 d stars, and we must stay sensitive to fast rotators. dev_medium isn't a physical population, but it keeps real weight in every period range we care about. On full-year, R2 therefore equals R0. On assigned it differs from R0 only by the coverage weighting (period mix held at dev_medium's). The text above about `mcq14_like` describes the rejected option; `mcq14_like` stays in `tools/headline_card.py` for sensitivity checks only.
 
-| R2 success | none (dev_medium mix) | mcq14_like | loguniform | smarts_uniform |
+| R2 success | dev_medium (default) | mcq14_like | loguniform | smarts_uniform |
 |---|---|---|---|---|
-| assigned, hand (T5) | 0.081 | 0.051 | 0.096 | 0.014 |
-| assigned, ranker v0 | 0.138 | 0.102 | 0.150 | 0.023 |
+| assigned, hand (T5) | 0.080 | 0.051 | 0.096 | 0.014 |
+| assigned, ranker v0 | 0.137 | 0.102 | 0.150 | 0.023 |
 | full-year, hand (T5) | 0.251 | 0.314 | 0.243 | 0.231 |
 | full-year, ranker v0 | 0.267 | 0.313 | 0.266 | 0.198 |
 
-(For assigned, "none" still applies the coverage weighting; full table in `data/population_sensitivity.csv`.)
+(Full table, including "none", in `data/population_sensitivity.csv`.)
 
 ### Precision vs non-rotator prevalence (row R4)
 
 ![Precision vs prevalence](figures/fig3_precision_vs_prevalence.png)
 
 *Look at the dots on the f = 0.1 line:* at a sky-like 10% rotator fraction, assigned-coverage precision is
-0.14–0.19, whatever the system, and full-year is 0.59 (ranker) to ~0.7–0.8 (hand).
+0.21–0.25, whatever the system, and full-year is 0.53 (ranker) to ~0.6–0.7 (hand).
 - **Assigned precision is lower than the review's Fig. 5** (0.34 / 0.43 at f ≈ 0.1) because the card weights by the
   real coverage mix: single-sector stars answer worse, and single-sector negatives false-alarm more (ranker FP
   0.033 coverage-weighted vs 0.018 raw).
@@ -169,10 +168,10 @@ All goals are on dev_medium, evaluated with `tools/headline_card.py` and the def
 | # | Goal | Current | Proposed target | Why |
 |---|---|---|---|---|
 | H1 | **R1** assigned, TESS coverage mix, P ≤ 30 d, shipped system | ranker v0 0.198 ± 0.028 | ≥ 0.25 | The most common real case. This is the Roman/TESS deliverable. |
-| H2 | **R3** correct-only, full-year, `mcq14_like` | 0.245 ± 0.021 | no regression > 0.02 (≈1 SE) vs baseline | Guards against gains that come only from diffrot credit. |
-| H3 | **R4** precision at f = 0.1, full-year and assigned | ranker 0.586 / 0.193; hand 0.796 / 0.143 | ranker ≥ hand on each | The "match hand" default, not a numeric precision target. |
+| H2 | **R3** correct-only, full-year, `dev_medium` | hand 0.198 ± 0.013 / ranker 0.207 ± 0.013 | no regression > 0.02 (≈1 SE) vs baseline | Guards against gains that come only from diffrot credit. |
+| H3 | **R4** precision at f = 0.1, full-year and assigned | ranker 0.534 / 0.251; hand 0.711 / 0.206 | ranker ≥ hand on each | The "match hand" default, not a numeric precision target. |
 | H4 | **R5** within 20%, most credible half, full-year | ranker v0 0.642 ± 0.023 | ≥ 0.69 (Claytor+2022) | A paper-comparable number with an external benchmark. |
-| H5 | **R2** success, full-year, `mcq14_like` | 0.313–0.314 | no regression > 0.02 vs baseline | Guards the full-year headline while assigned work proceeds. |
+| H5 | **R2** success, full-year, `dev_medium` | hand 0.251 / ranker 0.267 | no regression > 0.02 vs baseline | Guards the full-year headline while assigned work proceeds. |
 
 ## What didn't work
 - **There is no post-T5 ranker column.** Ranker v0's top-1 files were built on pre-T5 candidate tables, and
@@ -184,11 +183,7 @@ All goals are on dev_medium, evaluated with `tools/headline_card.py` and the def
   transparent.
 
 ## Open questions for Rae
-1. **Period population for R2.**
-   - Keep `mcq14_like` (from-memory, long-period-heavy, 47% at 10–30 d)?
-   - Or switch to log-uniform, or histogram the real McQuillan+2014 (VizieR J/ApJS/211/24) or Claytor+2024 CVZ
-     periods into the 5 bins? A real histogram is a ~34k-row download: your local job.
-   - The choice moves assigned R2 by up to 7× (Fig. 2c).
+1. ~~Period population for R2.~~ **Decided 2026-11-12: `dev_medium`** (see above).
 2. **Prevalences for R4.** 0.1 / 0.3 / 0.5 are shown. 0.1 is SpinSpotter 2022's TESS detection rate. Should the
    card quote one canonical prevalence (I'd suggest 0.1), with the others in the JSON?
 3. **Which goals to activate.** H1–H5 above. My suggestion is H1, H3 and H4 (one deliverable, one precision guard,

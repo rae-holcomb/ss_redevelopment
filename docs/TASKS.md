@@ -912,7 +912,9 @@ for confirmation (ask Rae first).
 - **Status:** scoping session started 2026-11-12.
 
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
-- **Status:** done, merged 2026-11-12 (`facc568`); Rae still to pick the period population, the prevalences and which goals H1–H5 to activate.
+- **Status:** done, merged 2026-11-12 (`facc568`). **Period population decided (Rae, 2026-11-12): `dev_medium`'s own
+  period-bin mix is the default for R2–R4, not McQuillan+2014** (Kepler's selection has almost no P < 1 d stars, and we
+  must stay sensitive to fast rotators). Still open: the prevalences and which goals H1–H5 to activate.
 - **Proposed by:** midway review (rec. 5).
   `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
   Awaiting Rae: period population, prevalences, which goals to activate.

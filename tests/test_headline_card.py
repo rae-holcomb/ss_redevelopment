@@ -93,3 +93,15 @@ def test_negatives_fp_rate_reweights_to_real_coverage_mix():
     manifest = pd.DataFrame({"coverage_class": ["single", "full"], "coverage_weight": [3.0, 1.0]})
     assert hc.negatives_fp_rate(neg, "hand_answered", "assigned", manifest) == pytest.approx(0.5 * 0.75)
     assert hc.negatives_fp_rate(neg, "hand_answered", "fullyear", None) == pytest.approx(0.25)
+
+
+def test_dev_medium_population_is_default_and_matches_manifest():
+    """The default population is dev_medium's own period-bin mix (Rae, 2026-11-12), read from the manifest."""
+    assert hc.DEFAULT_POPULATION == "dev_medium"
+    s = hc.population_bin_shares("dev_medium")
+    assert sum(s.values()) == pytest.approx(1.0)
+    tp = pd.read_csv(hc.DEV_MEDIUM_MANIFEST, usecols=["true_period"])["true_period"]
+    expect = tp.map(hc.period_bin).value_counts(normalize=True)
+    for b, v in s.items():
+        assert v == pytest.approx(expect.get(b, 0.0))
+    assert s["<1d"] > 0.1  # fast rotators keep real weight, unlike mcq14_like

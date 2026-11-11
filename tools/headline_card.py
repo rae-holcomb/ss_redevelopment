@@ -15,7 +15,7 @@ Rows (fixed definitions; see ``ROW_DEFINITIONS``)
 R0  raw success: unweighted mean over the dataset's rotators (continuity with older reports).
 R1  success at the real TESS coverage mix, P <= 30 d: per-star ``coverage_weight`` from the
     manifest (assigned coverage only; n/a for full-year, whose coverage is fixed).
-R2  success re-weighted to a named period population (default ``mcq14_like``), times the coverage
+R2  success re-weighted to a named period population (default ``dev_medium``), times the coverage
     weight when the mode is assigned. All periods 0.1-180 d.
 R3  correct-only under the R2 weighting (success = correct + diffrot; this drops diffrot).
 R4  precision of reported periods at stated non-rotator prevalences, under the R2 weighting:
@@ -58,7 +58,10 @@ from evaluation import (CORRECT, DIFFROT, PERIOD_BIN_EDGES, PERIOD_BIN_LABELS,  
 P_MIN, P_MAX = 0.1, 180.0          # SMARTS period range (days)
 P_SHORT_MAX = 30.0                 # R1 restricts to P <= 30 d (beyond reach for most real coverage)
 DEFAULT_PREVALENCES = (0.1, 0.3, 0.5)
-DEFAULT_POPULATION = "mcq14_like"
+# Rae, 2026-11-12: default to the dev_medium period mix, NOT McQuillan+2014. Kepler's selection has almost no
+# P < 1 d stars (few M dwarfs), and we must stay sensitive to fast rotators; dev_medium has a good share in every bin.
+DEFAULT_POPULATION = "dev_medium"
+DEV_MEDIUM_MANIFEST = ROOT / "datasets" / "dev_medium.csv"
 RANKER_V0_THRESHOLD = 1.3571535348892212   # runs/t27_ranker/results.json, models.v0.thresholds.v0_original
 N_BOOT = 200
 
@@ -71,7 +74,12 @@ POPULATIONS = {
     "loguniform": lambda p: np.log(p),
     "smarts_uniform": lambda p: np.asarray(p, float),
 }
+# Empirical populations: fixed period-bin shares read from a manifest's true_period (not a CDF).
+EMPIRICAL_POPULATIONS = {"dev_medium": DEV_MEDIUM_MANIFEST}
+_EMPIRICAL_CACHE: dict = {}
+
 POPULATION_NOTES = {
+    "dev_medium": "period-bin shares of datasets/dev_medium.csv (true_period); default per Rae 2026-11-12",
     "mcq14_like": "log10 P ~ N(1.1, 0.35), truncated to 0.1-180 d; McQuillan+2014-like, from memory",
     "loguniform": "log-uniform in P over 0.1-180 d",
     "smarts_uniform": "uniform in P over 0.1-180 d (the SMARTS corpus)",
@@ -157,10 +165,21 @@ def add_outcomes(frame: pd.DataFrame) -> pd.DataFrame:
     return f
 
 
+def population_names() -> list:
+    """All valid population names: empirical, CDF-based, and 'none' (the dataset's own mix)."""
+    return sorted(EMPIRICAL_POPULATIONS) + sorted(POPULATIONS) + ["none"]
+
+
 def population_bin_shares(population: str) -> dict:
     """Return {period-bin label: share} for a named population over [P_MIN, P_MAX]."""
+    if population in EMPIRICAL_POPULATIONS:
+        if population not in _EMPIRICAL_CACHE:
+            tp = pd.read_csv(EMPIRICAL_POPULATIONS[population], usecols=["true_period"])["true_period"]
+            share = tp.map(period_bin).value_counts(normalize=True)
+            _EMPIRICAL_CACHE[population] = {b: float(share.get(b, 0.0)) for b in PERIOD_BIN_LABELS}
+        return dict(_EMPIRICAL_CACHE[population])
     if population not in POPULATIONS:
-        raise ValueError(f"unknown population {population!r}; choose from {sorted(POPULATIONS) + ['none']}")
+        raise ValueError(f"unknown population {population!r}; choose from {population_names()}")
     cdf = POPULATIONS[population]
     edges = np.clip(np.asarray(PERIOD_BIN_EDGES, float), P_MIN, P_MAX)
     mass = np.diff(cdf(edges))
@@ -377,7 +396,7 @@ def main(argv=None):
     ap.add_argument("--ranker", action="append", help="LABEL=top1.csv (repeatable)")
     ap.add_argument("--ranker-threshold", type=float, default=RANKER_V0_THRESHOLD)
     ap.add_argument("--negatives", help="top1.csv with non-rotator rows (is_rotator False) for R4 FP rates")
-    ap.add_argument("--population", default=DEFAULT_POPULATION, choices=sorted(POPULATIONS) + ["none"])
+    ap.add_argument("--population", default=DEFAULT_POPULATION, choices=population_names())
     ap.add_argument("--prevalences", default=",".join(f"{p:g}" for p in DEFAULT_PREVALENCES))
     ap.add_argument("--n-boot", type=int, default=N_BOOT)
     ap.add_argument("--out", required=True, help="output directory")
