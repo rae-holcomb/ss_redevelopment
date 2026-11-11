@@ -308,9 +308,8 @@ for confirmation (ask Rae first).
     Untrack them (and decide on history, see T19b).
   - `.DS_Store` is tracked; gitignore it.
   - Root-level `split_smarts_lc.py` (used by `preprocessing.py`) belongs in the package.
-  - `claude_files/old/` (11 superseded files).
-  - `batch_test_acf_fft_highpass.py` may be redundant (open issue 9), and so may the
-    older `run_debug_baseline*.py` runners now that the scorecard exists.
+  - ~~`claude_files/old/`; `batch_test_acf_fft_highpass.py` (open issue 9); `batch_test_guesses.py`;
+    `run_debug_baseline*.py`~~: deleted 2026-11-11 (P30).
   - `sector_configs.txt` is superseded by T16a's coverage library (once merged).
   - Root notebooks, `smarts_lc_gaps1.npz`, `target_df_shortform.csv`, `tic283722336/`:
     Rae's scratch/data. Propose keep / move / archive; Rae decides.
