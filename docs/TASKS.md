@@ -900,9 +900,20 @@ for confirmation (ask Rae first).
   - **Known non-rotators** are harder. Options: white dwarfs, or follow Claytor+2025 and use red clump stars (slow rotators).
     Zach Claytor shared the TIC IDs of the 2025 paper's training stars; retrieve them and check that they are quiet.
 
+- **Rae's additions (2026-11-12):**
+  - Check the white-dwarf / red-clump instinct against the literature, and note the problems other papers report with
+    each as a "non-rotator" sample.
+  - Keep a running list of useful papers and report it as a citation list.
+  - For every literature period, record the method (photometric spot modulation, v sin i / rotational broadening,
+    spectroscopic activity, …) and the data set (ground-based survey, K2, Kepler, TESS, …).
+  - Zach's TIC list is committed at `datasets/external/claytor2025_nonrotator_ticids.txt` (23,332 IDs; provenance and
+    caveat in `datasets/external/README.md`).
+  - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
+- **Status:** scoping session started 2026-11-12.
+
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
+- **Status:** done, merged 2026-11-12 (`facc568`); Rae still to pick the period population, the prevalences and which goals H1–H5 to activate.
 - **Proposed by:** midway review (rec. 5).
-- **Status:** in review (2026-11-12), branch `claude/p28-p29-headline-card-dcb5aa`, `reports/2026-11-12_headline-card/`.
   `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
   Awaiting Rae: period population, prevalences, which goals to activate.
 - **Idea:** one small, fixed table that every method/ranker report quotes, computed from the existing scorecard per-star
