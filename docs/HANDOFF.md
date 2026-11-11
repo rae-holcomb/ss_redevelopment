@@ -1,5 +1,7 @@
 # Handoff note (2026-10-22, end of day)
 
+> **Update 2026-11-10 (coordinator):** T27 non-rotator negatives **merged** (4,708 negatives, `datasets/negatives_v0.csv`; feature tables on the drive at `extracted/t27_negatives/`). Its exploratory star-level decline model cut wrong answers 40–60% at hand-level success; adopting it is open. The decline precision target is **deferred by Rae** (default: match hand precision, plot the purity–completeness curve; don't ask her for it). Still open: the quiet-noise follow-ups session (branch `quiet-noise-followups`).
+
 > **Update 2026-10-22 (new coordinator):** T20 is **merged** (`cd0e5ba`), with the full FFI check done and the flags file regenerated. Running now: scoring-v4 (T22+T23, Sonnet) and T16c (Opus). T24/T25 go to the scoring agent after it finishes; T16b's replay excluding flagged sources is unblocked.
 
 For a **fresh coordinator session** (and a fresh T20 session if needed). The previous coordinator

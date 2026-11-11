@@ -120,12 +120,37 @@ Cross-candidate agreement (Section E; fitted rows only): `n_agreeing_candidates`
 `final_*` columns reproduce `benchmarks/scorecard.py`'s `per_star.csv` for the same
 star and code (checked in the report and in `tests/test_build_feature_tables.py`).
 
-## Appending non-rotator negatives (T27)
+## Non-rotator negatives (T27, `--nonrotator`)
 
-Use the same builder on T27's noise-only light curves, with `true_period` NaN. Rows get
-`is_rotator` = False, `label_source` = e.g. `smarts_noise_only`, `relevance` = 0,
-`outcome` = `wrong` (or `none`). `period_lo`/`period_hi` NaN. Every feature column has
-the same meaning, so `pd.concat([rotators, negatives])` is a valid table. A star with
-`is_rotator` False and `max_relevance` 0 is a correct "decline" target for T11.
-(`build_one_star` takes `is_rotator` and `label_source` from the task `context` when
-present, default True / `smarts_injected`.)
+Built with the same builder and the same pipeline call:
+
+```
+python tools/build_feature_tables.py --nonrotator --manifest datasets/negatives_v0.csv \
+    --only-set train --outdir <SMARTS_DATA_ROOT>/extracted/t27_negatives/train
+python tools/build_feature_tables.py --nonrotator --manifest datasets/negatives_v0.csv \
+    --only-set dev_medium --outdir <SMARTS_DATA_ROOT>/extracted/t27_negatives/dev_medium
+```
+
+The manifest (`tools/build_negatives_manifest.py`) lists T20's recovered A+B noise stacks
+(`extracted/galaxy_stack/fits/NNNN_all.fits`, paths relative to `SMARTS_DATA_ROOT`) of
+`quiet` and `systematic_common_mode` sources, three seeded coverage draws each plus a
+full-year row. What differs from rotator rows:
+
+| column | negatives |
+|---|---|
+| `star_id` | `neg-<tic>-d<k>` (coverage draw k) or `neg-<tic>-full` (every native sector); unique, never a SMARTS id |
+| `is_rotator` | False (rotator tables: True) |
+| `label_source` | `smarts_noise_stack` |
+| `noise_tic` and the `noise_*` flags | set; flags joined on `noise_tic` (first file of the source) instead of the catalog row |
+| `true_period`, `period_lo`, `period_hi` | NaN (the stack FITS `PERIOD` = 1.0 is a dummy and is ignored) |
+| `period_bin` (and star `band_width_class`) | `nonrotator` |
+| `outcome` | `wrong` for any period, `none` when there is none (star `final_outcome` likewise) |
+| `relevance` | 0 on every row; `alias_class` empty |
+| star-level `P_over_reach`, `searchable`, `band_width` | NaN (truth-derived) |
+| star-level extras | `galaxy`, `source_class`, `pool`, `eval_set` (`train` / `dev_medium`), `draw_id` (`0`,`1`,`2`,`full`), `seed`, `assigned_coverage_class` (`fullyear` for the full-year row) |
+
+Every feature column has the same meaning, so `pd.concat([rotators, negatives])` is a
+valid table. **Caution for ranking objectives:** a query whose rows are all relevance 0
+gives `rank:ndcg` / `rank:pairwise` no gradient, so negatives can only change the decline
+side (threshold calibration, or a star-level decline model), not the ordering. See the
+T27 report (`reports/2026-11-10_t27-nonrotator-negatives/`).

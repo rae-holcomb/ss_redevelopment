@@ -1,0 +1,36 @@
+{
+  "n_negative_rows": 4708,
+  "n_sources": 1177,
+  "fp_rate": {
+    "dev_medium|assigned": 0.02457757296466974,
+    "dev_medium|fullyear": 0.0,
+    "train|assigned": 0.03095558546433378,
+    "train|fullyear": 0.008075370121130552
+  },
+  "fp_rate_by_class": {
+    "dev_medium|assigned|quiet": 0.03249475890985325,
+    "dev_medium|assigned|systematic_common_mode": 0.0028735632183908046,
+    "dev_medium|fullyear|quiet": 0.0,
+    "dev_medium|fullyear|systematic_common_mode": 0.0,
+    "train|assigned|quiet": 0.03420523138832998,
+    "train|assigned|systematic_common_mode": 0.024390243902439025,
+    "train|fullyear|quiet": 0.0,
+    "train|fullyear|systematic_common_mode": 0.024390243902439025
+  },
+  "rot_answer_rate": {
+    "assigned": 0.211,
+    "fullyear": 0.35
+  },
+  "rot_success_rate": {
+    "assigned": 0.148,
+    "fullyear": 0.248
+  },
+  "frac_sources_any_fp": 0.0713678844519966,
+  "frac_multi_fp_sources_consistent_period": 0.8421052631578947,
+  "n_multi_fp_sources": 19,
+  "fp_period_median": 3.3199474535871007,
+  "fp_frac_near_13p7d": 0.09345794392523364,
+  "fp_frac_near_27p4d": 0.009345794392523364,
+  "fp_frac_gt_10d": 0.17757009345794392,
+  "fp_frac_match_stack_LS_P1": 0.3364485981308411
+}

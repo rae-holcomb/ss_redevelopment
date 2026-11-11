@@ -1,0 +1,22 @@
+{
+  "n_sources": 1177,
+  "n_sources_with_P1": 1177,
+  "match_tol": 0.02,
+  "imprint_mean_match_frac": 0.0034352939540446934,
+  "imprint_null_mean": 0.003558108802547386,
+  "imprint_null_p95": 0.003893025609308424,
+  "imprint_null_p05": 0.0032445620596692234,
+  "imprint_obs_over_null": 0.9654831104617249,
+  "imprint_perm_p_value": 0.7512437810945274,
+  "imprint_by_set": {
+    "dev_medium": 0.0038441036495636045,
+    "train": 0.00319650067294751
+  },
+  "n_p2p_sources": 40,
+  "p2p_ratio_median": 0.9999362186628779,
+  "p2p_ratio_p05": 0.9992630328505506,
+  "p2p_ratio_p95": 1.0002049691155812,
+  "stack_p2p_ppm_median": 724.5982965157082,
+  "member_resid_p2p_ppm_median": 0.2187042116078802,
+  "member_resid_rms_ppm_median": 63.14025521278381
+}

@@ -1,0 +1,1178 @@
+tic,galaxy,source_class,pools,n_files,eval_set,native_sectors,native_whole_sectors,stack_check_passed,path
+10000241253,0,quiet,lt800k,813,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0000_all.fits
+10000241254,1,systematic_common_mode,lt800k,708,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0001_all.fits
+10000241266,2,systematic_common_mode,lt800k,780,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0002_all.fits
+10000241274,3,quiet,lt800k,858,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0003_all.fits
+10000241361,5,quiet,lt800k,769,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0005_all.fits
+10000241375,6,quiet,lt800k,766,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0006_all.fits
+10000241405,8,quiet,lt800k,855,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0008_all.fits
+10000241406,9,quiet,lt800k,703,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0009_all.fits
+10000241407,10,systematic_common_mode,lt800k,711,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0010_all.fits
+10000241446,11,systematic_common_mode,lt800k,816,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0011_all.fits
+10000241474,12,quiet,lt800k,806,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0012_all.fits
+10000241476,13,quiet,lt800k,825,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0013_all.fits
+10000241485,14,quiet,lt800k,755,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0014_all.fits
+10000241486,15,quiet,lt800k,795,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0015_all.fits
+10000241499,16,quiet,lt800k,792,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0016_all.fits
+10000241556,17,quiet,lt800k,772,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0017_all.fits
+10000241560,19,quiet,lt800k,835,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0019_all.fits
+10000241563,20,quiet,lt800k,725,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0020_all.fits
+10000241576,21,quiet,lt800k,826,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0021_all.fits
+10000241582,22,quiet,lt800k,765,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0022_all.fits
+10000241600,24,systematic_common_mode,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0024_all.fits
+10000241665,25,quiet,lt800k,717,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0025_all.fits
+10000241666,26,quiet,lt800k,828,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0026_all.fits
+10000252027,27,systematic_common_mode,lt800k,779,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0027_all.fits
+10000252028,28,quiet,lt800k,753,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0028_all.fits
+10000252032,29,quiet,lt800k,860,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0029_all.fits
+10000252047,30,quiet,lt800k,819,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0030_all.fits
+10000252048,31,quiet,lt800k,788,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0031_all.fits
+10000252058,32,quiet,lt800k,838,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0032_all.fits
+10000252071,33,systematic_common_mode,lt800k,835,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0033_all.fits
+10000252108,34,quiet,lt800k,813,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0034_all.fits
+10000252174,37,quiet,lt800k,806,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0037_all.fits
+10000252179,38,systematic_common_mode,lt800k,728,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0038_all.fits
+10000252201,39,quiet,lt800k,793,train,1 3 4 5 6 7 8 9 10 11 12 13,1 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0039_all.fits
+10000252251,40,quiet,lt800k,764,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0040_all.fits
+10000252894,41,quiet,lt800k,839,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0041_all.fits
+10000252898,42,quiet,lt800k,754,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0042_all.fits
+10000252917,43,quiet,lt800k,853,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0043_all.fits
+10000252930,44,quiet,lt800k,760,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0044_all.fits
+10000252934,45,quiet,lt800k,822,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0045_all.fits
+10000252957,49,quiet,lt800k,837,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0049_all.fits
+10000252971,51,quiet,lt800k,802,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0051_all.fits
+10000252977,52,systematic_common_mode,lt800k,778,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0052_all.fits
+10000252980,53,quiet,lt800k,845,train,1 2 3 4 5 6 7 9 11 12 13,1 2 3 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/0053_all.fits
+10000252992,56,quiet,lt800k,811,train,1 3 5 6 7 8 9 10 11 13,1 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0056_all.fits
+10000253035,59,quiet,lt800k,764,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0059_all.fits
+10000253082,61,quiet,lt800k,852,train,1 2 4 5 6 7 8 10 11 12 13,1 2 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0061_all.fits
+10000253097,63,quiet,lt800k,768,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0063_all.fits
+10000253115,64,quiet,lt800k,760,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0064_all.fits
+10000253131,65,quiet,lt800k,812,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0065_all.fits
+10000253141,69,quiet,lt800k,783,train,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0069_all.fits
+10000253158,71,quiet,lt800k,865,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0071_all.fits
+10000253167,72,quiet,lt800k,809,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0072_all.fits
+10000253187,73,systematic_common_mode,lt800k,851,train,1 2 3 4 6 9 10 11 12 13,1 2 3 4 6 9 10 11 12 13,True,extracted/galaxy_stack/fits/0073_all.fits
+10000253192,74,quiet,lt800k,781,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0074_all.fits
+10000253195,76,quiet,lt800k,859,train,1 2 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0076_all.fits
+10000253253,77,quiet,lt800k,716,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0077_all.fits
+10000253259,78,quiet,lt800k,781,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0078_all.fits
+10000253283,80,quiet,lt800k,751,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0080_all.fits
+10000253289,82,quiet,lt800k,778,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0082_all.fits
+10000253298,83,systematic_common_mode,lt800k,807,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0083_all.fits
+10000253312,84,quiet,lt800k,867,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0084_all.fits
+10000253313,85,systematic_common_mode,lt800k,823,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0085_all.fits
+10000253333,87,quiet,lt800k,889,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0087_all.fits
+10000253381,90,quiet,lt800k,756,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0090_all.fits
+10000253398,92,quiet,lt800k,795,train,1 2 4 5 7 8 9 10 11 12 13,1 2 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0092_all.fits
+10000253417,95,quiet,lt800k,764,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0095_all.fits
+10000253452,97,quiet,lt800k,836,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0097_all.fits
+10000253457,99,quiet,lt800k,839,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0099_all.fits
+10000253483,101,systematic_common_mode,lt800k,737,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0101_all.fits
+10000253484,102,systematic_common_mode,lt800k,801,train,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0102_all.fits
+10000253537,105,systematic_common_mode,lt800k,725,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0105_all.fits
+10000253542,106,quiet,lt800k,718,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0106_all.fits
+10000253543,107,quiet,lt800k,768,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0107_all.fits
+10000253544,108,systematic_common_mode,lt800k,757,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0108_all.fits
+10000253560,110,quiet,lt800k,782,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0110_all.fits
+10000255272,112,quiet,lt800k,811,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0112_all.fits
+10000255292,113,quiet,lt800k,742,train,2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0113_all.fits
+10000255312,116,quiet,lt800k,826,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0116_all.fits
+10000255330,117,systematic_common_mode,lt800k,791,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0117_all.fits
+10000255331,118,quiet,lt800k,834,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0118_all.fits
+10000255339,119,systematic_common_mode,lt800k,881,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0119_all.fits
+10000255349,120,quiet,lt800k,864,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0120_all.fits
+10000255363,121,quiet,lt800k,866,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0121_all.fits
+10000255387,123,systematic_common_mode,lt800k,799,train,1 2 3 6 7 8 9 10 11 12 13,1 2 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0123_all.fits
+10000255394,124,systematic_common_mode,lt800k,763,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0124_all.fits
+10000258941,125,quiet,lt800k,761,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0125_all.fits
+10000259125,126,quiet,lt800k,847,train,1 2 3 5 9 10 11 12 13,1 2 3 5 9 10 11 12 13,True,extracted/galaxy_stack/fits/0126_all.fits
+10000259128,127,quiet,lt800k,810,train,1 3 4 5 7 8 9 10 11 12,1 3 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0127_all.fits
+10000259132,128,quiet,lt800k,771,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 4 5 6 9 10 11 12 13,True,extracted/galaxy_stack/fits/0128_all.fits
+10000259180,130,quiet,lt800k,838,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 12 13,True,extracted/galaxy_stack/fits/0130_all.fits
+10000259201,131,quiet,lt800k,866,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0131_all.fits
+10000259241,132,quiet,lt800k,841,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0132_all.fits
+10000259265,133,systematic_common_mode,lt800k,747,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0133_all.fits
+10000259266,134,quiet,lt800k,861,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0134_all.fits
+10000259277,135,quiet,lt800k,782,train,2 3 5 6 7 8 9 10 11 12,2 3 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0135_all.fits
+10000259341,136,systematic_common_mode,lt800k,850,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0136_all.fits
+10000259353,137,systematic_common_mode,lt800k,801,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0137_all.fits
+10000259356,138,quiet,lt800k,860,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0138_all.fits
+10000259379,139,quiet,lt800k,775,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0139_all.fits
+10000259389,140,quiet,lt800k,781,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0140_all.fits
+10000259391,141,systematic_common_mode,lt800k,772,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0141_all.fits
+10000259420,143,quiet,lt800k,788,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0143_all.fits
+10000259424,144,quiet,lt800k,748,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0144_all.fits
+10000259435,146,quiet,lt800k,747,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0146_all.fits
+10000259448,147,systematic_common_mode,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0147_all.fits
+10000275519,149,quiet,lt800k,833,train,2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0149_all.fits
+10000275521,150,quiet,lt800k,722,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0150_all.fits
+10000275523,151,systematic_common_mode,lt800k,842,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0151_all.fits
+10000275527,152,quiet,lt800k,872,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0152_all.fits
+10000275532,153,quiet,lt800k,719,train,1 3 4 5 6 7 8 9 10 11 13,1 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0153_all.fits
+10000275572,155,systematic_common_mode,lt800k,733,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0155_all.fits
+10000275597,158,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0158_all.fits
+10000275646,160,quiet,lt800k,825,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0160_all.fits
+10000275658,161,quiet,lt800k,767,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0161_all.fits
+10000275825,168,quiet,lt800k,775,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0168_all.fits
+10000275880,169,systematic_common_mode,lt800k,724,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0169_all.fits
+10000275902,170,systematic_common_mode,lt800k,769,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0170_all.fits
+10000275910,171,systematic_common_mode,lt800k,793,train,1 2 3 4 5 6 7 8 10 11 13,1 2 3 4 5 6 7 10 11 13,True,extracted/galaxy_stack/fits/0171_all.fits
+10000275915,173,systematic_common_mode,lt800k,799,train,1 3 4 5 6 7 8 10 11 13,1 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/0173_all.fits
+10000275967,174,quiet,lt800k,728,train,1 2 4 5 6 7 8 10 11 12 13,1 2 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0174_all.fits
+10000276062,178,quiet,lt800k,764,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0178_all.fits
+10000276066,179,quiet,lt800k,826,train,1 3 4 5 6 7 8 9 10 11 13,1 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0179_all.fits
+10000276143,182,systematic_common_mode,lt800k,800,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0182_all.fits
+10000276152,183,systematic_common_mode,lt800k,824,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0183_all.fits
+10000276164,186,quiet,lt800k,767,train,1 2 4 6 7 9 10 11 12 13,1 2 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0186_all.fits
+10000276170,187,systematic_common_mode,lt800k,802,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0187_all.fits
+10000276235,191,systematic_common_mode,lt800k,830,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0191_all.fits
+10000276271,192,systematic_common_mode,lt800k,873,train,1 4 6 7 8 9 10 11 12 13,1 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0192_all.fits
+10000276280,193,systematic_common_mode,lt800k,781,train,2 4 6 7 9 10 11 12 13,2 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0193_all.fits
+10000276317,197,quiet,lt800k,779,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0197_all.fits
+10000276318,198,quiet,lt800k,791,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0198_all.fits
+10000297083,199,quiet,lt800k,843,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0199_all.fits
+10000297112,200,quiet,lt800k,772,train,1 2 3 4 6 7 8 9 11 12 13,1 2 3 4 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0200_all.fits
+10000297140,202,quiet,lt800k,796,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0202_all.fits
+10000297187,203,systematic_common_mode,lt800k,831,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0203_all.fits
+10000297189,204,quiet,lt800k,898,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0204_all.fits
+10000297215,207,systematic_common_mode,lt800k,778,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0207_all.fits
+10000297225,209,quiet,lt800k,832,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0209_all.fits
+10000297240,210,quiet,lt800k,843,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0210_all.fits
+10000297383,213,quiet,lt800k,862,train,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0213_all.fits
+10000297386,214,quiet,lt800k,835,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0214_all.fits
+10000297388,215,systematic_common_mode,lt800k,717,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0215_all.fits
+10000297465,220,quiet,lt800k,859,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0220_all.fits
+10000297479,221,systematic_common_mode,lt800k,884,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0221_all.fits
+10000297494,222,quiet,lt800k,820,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0222_all.fits
+10000297498,225,systematic_common_mode,lt800k,776,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0225_all.fits
+10000297515,226,quiet,lt800k,774,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 11 12 13,True,extracted/galaxy_stack/fits/0226_all.fits
+10000297541,227,quiet,lt800k,819,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0227_all.fits
+10000297555,228,systematic_common_mode,lt800k,814,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0228_all.fits
+10000297564,229,quiet,lt800k,802,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 12 13,True,extracted/galaxy_stack/fits/0229_all.fits
+10000297566,230,quiet,lt800k,721,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0230_all.fits
+10000297614,232,quiet,lt800k,799,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0232_all.fits
+10000297615,233,quiet,lt800k,785,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0233_all.fits
+10000297618,234,quiet,lt800k,707,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0234_all.fits
+10000297630,235,systematic_common_mode,lt800k,773,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0235_all.fits
+10000297771,236,systematic_common_mode,lt800k,801,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0236_all.fits
+10000297801,237,systematic_common_mode,lt800k,897,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0237_all.fits
+10000297846,238,systematic_common_mode,lt800k,777,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0238_all.fits
+10000297868,240,systematic_common_mode,lt800k,826,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0240_all.fits
+10000297879,241,systematic_common_mode,lt800k,840,train,1 2 4 5 6 7 8 9 10 12 13,1 2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0241_all.fits
+10000297923,244,quiet,lt800k,833,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0244_all.fits
+10000297933,245,systematic_common_mode,lt800k,802,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0245_all.fits
+10000297965,246,systematic_common_mode,lt800k,745,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0246_all.fits
+10000297966,247,systematic_common_mode,lt800k,763,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0247_all.fits
+10000297983,248,quiet,lt800k,803,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0248_all.fits
+10000297992,249,quiet,lt800k,869,train,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0249_all.fits
+10000298001,250,systematic_common_mode,lt800k,751,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0250_all.fits
+10000298011,251,systematic_common_mode,lt800k,761,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0251_all.fits
+10000298040,252,quiet,lt800k,821,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0252_all.fits
+10000298075,253,quiet,lt800k,740,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0253_all.fits
+10000298084,254,systematic_common_mode,lt800k,810,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0254_all.fits
+10000298110,255,quiet,lt800k,729,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0255_all.fits
+10000298123,256,systematic_common_mode,lt800k,849,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0256_all.fits
+10000298150,257,quiet,lt800k,776,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0257_all.fits
+10000422389,258,quiet,lt800k,826,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0258_all.fits
+10000422437,259,systematic_common_mode,lt800k,822,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0259_all.fits
+10000422477,260,systematic_common_mode,lt800k,838,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0260_all.fits
+10000422500,262,quiet,lt800k,748,train,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0262_all.fits
+10000422546,263,quiet,lt800k,788,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0263_all.fits
+10000422548,264,quiet,lt800k,805,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0264_all.fits
+10000422792,265,systematic_common_mode,lt800k,743,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0265_all.fits
+10000422794,266,quiet,lt800k,718,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0266_all.fits
+10000422806,267,quiet,lt800k,848,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0267_all.fits
+10000422809,268,systematic_common_mode,lt800k,800,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0268_all.fits
+10000422815,269,quiet,lt800k,834,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0269_all.fits
+10000422816,270,quiet,lt800k,790,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0270_all.fits
+10000422820,271,quiet,lt800k,748,train,2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0271_all.fits
+10000422838,272,quiet,lt800k,836,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0272_all.fits
+10000422846,273,quiet,lt800k,759,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0273_all.fits
+10000422860,274,quiet,lt800k,734,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0274_all.fits
+10000422862,275,systematic_common_mode,lt800k,774,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0275_all.fits
+10000422874,276,quiet,lt800k,830,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0276_all.fits
+10000422876,277,quiet,lt800k,755,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0277_all.fits
+10000422881,278,quiet,lt800k,796,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0278_all.fits
+10000422889,279,quiet,lt800k,836,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0279_all.fits
+10000422901,280,systematic_common_mode,lt800k,749,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0280_all.fits
+10000422908,282,quiet,lt800k,816,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0282_all.fits
+10000422910,283,systematic_common_mode,lt800k,754,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0283_all.fits
+10000422911,284,systematic_common_mode,lt800k,788,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0284_all.fits
+10000422927,285,quiet,lt800k,752,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0285_all.fits
+10000422937,286,systematic_common_mode,lt800k,758,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0286_all.fits
+10000422939,287,quiet,lt800k,776,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0287_all.fits
+10000422984,288,quiet,lt800k,843,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0288_all.fits
+10000422995,289,quiet,lt800k,802,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0289_all.fits
+10000423009,290,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0290_all.fits
+10000423042,291,quiet,lt800k,746,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0291_all.fits
+10000423064,292,quiet,lt800k,864,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0292_all.fits
+10000423065,293,systematic_common_mode,lt800k,764,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0293_all.fits
+10000423072,294,quiet,lt800k,789,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0294_all.fits
+10000423073,295,quiet,lt800k,865,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0295_all.fits
+10000423081,296,quiet,lt800k,837,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0296_all.fits
+10000423084,297,quiet,lt800k,761,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0297_all.fits
+10000423098,298,quiet,lt800k,872,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0298_all.fits
+10000423104,299,systematic_common_mode,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0299_all.fits
+10000423128,302,quiet,lt800k,804,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0302_all.fits
+10000423129,303,quiet,lt800k,831,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0303_all.fits
+10000423139,304,systematic_common_mode,lt800k,765,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0304_all.fits
+10000423149,305,quiet,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0305_all.fits
+10000423152,306,systematic_common_mode,lt800k,801,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0306_all.fits
+10000423174,307,quiet,lt800k,871,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0307_all.fits
+10000423195,308,systematic_common_mode,lt800k,789,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0308_all.fits
+10000423204,309,quiet,lt800k,854,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0309_all.fits
+10000423213,310,systematic_common_mode,lt800k,775,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0310_all.fits
+10000423214,311,quiet,lt800k,759,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0311_all.fits
+10000423245,312,quiet,lt800k,790,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0312_all.fits
+10000423246,313,quiet,lt800k,788,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0313_all.fits
+10000423281,314,systematic_common_mode,lt800k,721,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0314_all.fits
+10000423282,315,quiet,lt800k,838,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0315_all.fits
+10000423289,316,quiet,lt800k,771,train,1 2 3 4 6 8 9 10 11 12,1 2 3 4 6 8 9 10 11 12,True,extracted/galaxy_stack/fits/0316_all.fits
+10000423293,317,quiet,lt800k,815,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0317_all.fits
+10000423345,318,systematic_common_mode,lt800k,786,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0318_all.fits
+10000423356,320,quiet,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0320_all.fits
+10000423371,321,quiet,lt800k,789,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0321_all.fits
+10000423397,322,systematic_common_mode,lt800k,831,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0322_all.fits
+10000423401,324,systematic_common_mode,lt800k,741,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0324_all.fits
+10000423412,325,quiet,lt800k,800,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0325_all.fits
+10000423434,326,quiet,lt800k,729,train,1 2 3 6 7 8 9 10 11 12 13,1 2 3 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0326_all.fits
+10000423461,328,systematic_common_mode,lt800k,834,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0328_all.fits
+10000423493,329,quiet,lt800k,827,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0329_all.fits
+10000423495,330,systematic_common_mode,lt800k,802,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0330_all.fits
+10000423498,331,quiet,lt800k,821,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0331_all.fits
+10000423501,332,systematic_common_mode,lt800k,812,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0332_all.fits
+10000423510,333,quiet,lt800k,858,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0333_all.fits
+10000423514,334,quiet,lt800k,847,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0334_all.fits
+10000423516,335,quiet,lt800k,759,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0335_all.fits
+10000423542,336,quiet,lt800k,819,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/0336_all.fits
+10000423543,337,systematic_common_mode,lt800k,793,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0337_all.fits
+10000423583,338,quiet,lt800k,836,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0338_all.fits
+10000423603,339,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0339_all.fits
+10000423615,340,systematic_common_mode,lt800k,839,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0340_all.fits
+10000423636,341,systematic_common_mode,lt800k,763,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0341_all.fits
+10000424029,342,quiet,lt800k,834,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0342_all.fits
+10000424065,343,quiet,lt800k,786,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0343_all.fits
+10000424068,344,quiet,lt800k,784,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0344_all.fits
+10000424088,345,quiet,lt800k,785,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0345_all.fits
+10000424119,347,quiet,lt800k,786,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0347_all.fits
+10000424214,350,quiet,lt800k,766,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0350_all.fits
+10000424262,352,quiet,lt800k,831,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0352_all.fits
+10000424294,353,quiet,lt800k,766,train,1 2 4 7 8 9 10 11 12 13,1 2 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0353_all.fits
+10000424315,354,systematic_common_mode,lt800k,813,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0354_all.fits
+10000424361,355,quiet,lt800k,805,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0355_all.fits
+10000424383,357,quiet,lt800k,795,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0357_all.fits
+10000424408,358,quiet,lt800k,793,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0358_all.fits
+10000424427,359,quiet,lt800k,813,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0359_all.fits
+10000424465,360,quiet,lt800k,817,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0360_all.fits
+10000424471,361,systematic_common_mode,lt800k,758,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0361_all.fits
+10000424523,362,systematic_common_mode,lt800k,769,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0362_all.fits
+10000424529,363,quiet,lt800k,776,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0363_all.fits
+10000424530,364,quiet,lt800k,834,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0364_all.fits
+10000424539,365,quiet,lt800k,835,train,1 2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0365_all.fits
+10000424550,366,quiet,lt800k,777,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0366_all.fits
+10000424583,367,quiet,lt800k,772,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0367_all.fits
+10000424642,369,quiet,lt800k,785,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0369_all.fits
+10000424677,370,quiet,lt800k,725,train,5 6 7 8 9 10 11 12 13,5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0370_all.fits
+10000424687,371,quiet,lt800k,878,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0371_all.fits
+10000424694,372,quiet,lt800k,829,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0372_all.fits
+10000424728,373,quiet,lt800k,785,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0373_all.fits
+10000424729,374,quiet,lt800k,834,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0374_all.fits
+10000424782,375,quiet,lt800k,817,train,1 2 4 5 6 7 8 10 11 12 13,1 2 4 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0375_all.fits
+10000424788,377,quiet,lt800k,736,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0377_all.fits
+10000424853,378,quiet,lt800k,819,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0378_all.fits
+10000424859,379,quiet,lt800k,731,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0379_all.fits
+10000424860,380,systematic_common_mode,lt800k,843,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0380_all.fits
+10000424869,381,quiet,lt800k,748,train,1 2 3 4 5 6 7 8 9 10 11 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0381_all.fits
+10000424876,382,quiet,lt800k,793,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0382_all.fits
+10000424879,384,systematic_common_mode,lt800k,733,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0384_all.fits
+10000424942,386,quiet,lt800k,763,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0386_all.fits
+10000424987,388,systematic_common_mode,lt800k,708,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0388_all.fits
+10000424991,389,quiet,lt800k,825,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0389_all.fits
+10000425021,390,quiet,lt800k,741,train,1 2 3 4 5 6 7 8 9 10 11 13,1 2 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0390_all.fits
+10000425058,391,quiet,lt800k,818,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0391_all.fits
+10000425199,394,systematic_common_mode,lt800k,751,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0394_all.fits
+10000425212,395,quiet,lt800k,867,train,1 2 3 4 6 7 8 10 11 12 13,1 2 3 4 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0395_all.fits
+10000425244,396,quiet,lt800k,822,train,2 4 5 6 7 8 9 10 11 12 13,2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0396_all.fits
+10000425262,397,quiet,lt800k,760,train,1 2 4 5 6 7 8 9 10 11 13,1 2 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0397_all.fits
+10000425280,398,quiet,lt800k,849,train,1 2 3 4 5 6 7 8 9 10 11 13,1 2 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0398_all.fits
+10000425286,399,systematic_common_mode,lt800k,736,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0399_all.fits
+10000425321,400,quiet,lt800k,793,train,1 4 5 6 7 8 9 10 11 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0400_all.fits
+10000425327,401,quiet,lt800k,830,train,1 4 5 6 7 8 9 10 11 13,1 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0401_all.fits
+10000425379,402,quiet,lt800k,794,train,1 2 4 6 7 8 9 10 11 12 13,1 2 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0402_all.fits
+10000438345,403,systematic_common_mode,lt800k,782,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0403_all.fits
+10000438655,404,quiet,lt800k,786,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 13,True,extracted/galaxy_stack/fits/0404_all.fits
+10000438658,406,quiet,lt800k,857,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0406_all.fits
+10000438700,407,quiet,lt800k,776,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0407_all.fits
+10000438707,408,quiet,lt800k,794,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0408_all.fits
+10000438727,409,systematic_common_mode,lt800k,825,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0409_all.fits
+10000438743,411,quiet,lt800k,829,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0411_all.fits
+10000438769,412,quiet,lt800k,826,train,1 3 4 5 7 9 11 12 13,1 3 4 5 7 9 11 12 13,True,extracted/galaxy_stack/fits/0412_all.fits
+10000438782,413,systematic_common_mode,lt800k,830,train,1 2 3 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0413_all.fits
+10000438797,414,quiet,lt800k,800,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0414_all.fits
+10000438819,415,quiet,lt800k,748,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0415_all.fits
+10000438820,416,quiet,lt800k,872,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0416_all.fits
+10000438846,418,systematic_common_mode,lt800k,757,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0418_all.fits
+10000438865,419,quiet,lt800k,832,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0419_all.fits
+10000438880,421,systematic_common_mode,lt800k,781,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0421_all.fits
+10000438881,422,quiet,lt800k,849,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0422_all.fits
+10000438907,423,systematic_common_mode,lt800k,796,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0423_all.fits
+10000438910,424,systematic_common_mode,lt800k,799,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0424_all.fits
+10000438921,425,quiet,lt800k,791,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0425_all.fits
+10000438937,427,systematic_common_mode,lt800k,774,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0427_all.fits
+10000438962,428,systematic_common_mode,lt800k,818,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0428_all.fits
+10000438970,429,systematic_common_mode,lt800k,743,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0429_all.fits
+10000438995,431,quiet,lt800k,785,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0431_all.fits
+10000439056,435,quiet,lt800k,772,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 9 10 12 13,True,extracted/galaxy_stack/fits/0435_all.fits
+10000439071,436,quiet,lt800k,781,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0436_all.fits
+10000439082,437,quiet,lt800k,766,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0437_all.fits
+10000439083,438,systematic_common_mode,lt800k,822,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0438_all.fits
+10000439127,439,quiet,lt800k,845,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0439_all.fits
+10000439133,441,quiet,lt800k,871,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0441_all.fits
+10000439138,442,quiet,lt800k,802,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0442_all.fits
+10000439187,444,systematic_common_mode,lt800k,852,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0444_all.fits
+10000439212,445,systematic_common_mode,lt800k,764,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0445_all.fits
+10000439215,446,systematic_common_mode,lt800k,880,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0446_all.fits
+10000439251,447,quiet,lt800k,857,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0447_all.fits
+10000439345,448,quiet,lt800k,825,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0448_all.fits
+10000439348,449,quiet,lt800k,812,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/0449_all.fits
+10000439358,450,quiet,lt800k,924,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0450_all.fits
+10000439372,451,quiet,lt800k,798,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0451_all.fits
+10000439373,452,quiet,lt800k,806,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0452_all.fits
+10000439376,453,quiet,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0453_all.fits
+10000439446,454,systematic_common_mode,lt800k,794,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0454_all.fits
+10000439461,456,systematic_common_mode,lt800k,790,train,1 2 3 5 6 7 8 9 10 12 13,1 2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0456_all.fits
+10000439475,458,quiet,lt800k,766,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0458_all.fits
+10000439484,459,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0459_all.fits
+10000439512,460,quiet,lt800k,795,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0460_all.fits
+10000439526,461,systematic_common_mode,lt800k,843,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0461_all.fits
+10000439527,462,systematic_common_mode,lt800k,738,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0462_all.fits
+10000439581,464,quiet,lt800k,778,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0464_all.fits
+10000439618,465,quiet,lt800k,823,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0465_all.fits
+10000439619,466,quiet,lt800k,805,train,1 2 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0466_all.fits
+10000439620,467,systematic_common_mode,lt800k,878,train,1 3 4 6 7 8 9 10 11 12 13,1 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0467_all.fits
+10000439627,468,quiet,lt800k,811,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0468_all.fits
+10000439664,470,quiet,lt800k,737,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0470_all.fits
+10000439681,471,quiet,lt800k,721,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0471_all.fits
+10000439714,474,systematic_common_mode,lt800k,831,train,1 2 3 4 6 7 9 10 11 12 13,1 2 3 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0474_all.fits
+10000439764,478,quiet,lt800k,816,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0478_all.fits
+10000439773,479,quiet,lt800k,897,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0479_all.fits
+10000439774,480,systematic_common_mode,lt800k,814,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0480_all.fits
+10000439775,481,quiet,lt800k,829,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0481_all.fits
+10000439790,482,quiet,lt800k,793,train,1 2 3 4 6 7 9 10 11 12 13,1 2 3 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0482_all.fits
+10000439829,484,quiet,lt800k,824,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0484_all.fits
+10000439837,485,quiet,lt800k,759,train,1 2 4 5 7 8 10 11 12 13,1 2 4 5 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0485_all.fits
+10000439845,486,quiet,lt800k,845,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0486_all.fits
+10000439865,489,quiet,lt800k,789,train,1 2 3 4 6 7 9 10 11 12 13,1 2 3 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0489_all.fits
+10000440732,492,quiet,lt800k,760,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0492_all.fits
+10000440805,495,quiet,lt800k,847,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0495_all.fits
+10000440837,496,systematic_common_mode,lt800k,805,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0496_all.fits
+10000440841,497,quiet,lt800k,765,train,2 3 4 5 7 8 9 10 11 12 13,2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0497_all.fits
+10000440844,498,systematic_common_mode,lt800k,826,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0498_all.fits
+10000440910,503,quiet,lt800k,808,train,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0503_all.fits
+10000440917,505,quiet,lt800k,760,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0505_all.fits
+10000440942,506,quiet,lt800k,789,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0506_all.fits
+10000441013,516,quiet,lt800k,784,train,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0516_all.fits
+10000441051,518,quiet,lt800k,768,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0518_all.fits
+10000441054,519,quiet,lt800k,866,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0519_all.fits
+10000441057,520,quiet,lt800k,720,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0520_all.fits
+10000441060,521,quiet,lt800k,794,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0521_all.fits
+10000441096,524,quiet,lt800k,812,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0524_all.fits
+10000441097,525,quiet,lt800k,822,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0525_all.fits
+10000441112,526,quiet,lt800k,827,train,1 4 5 6 7 8 9 10 11 12,1 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0526_all.fits
+10000441155,528,quiet,lt800k,768,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0528_all.fits
+10000441183,529,quiet,lt800k,864,train,1 2 4 5 6 8 9 11 12 13,1 2 4 5 6 8 9 11 12 13,True,extracted/galaxy_stack/fits/0529_all.fits
+10000441212,531,quiet,lt800k,871,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0531_all.fits
+10000441319,536,quiet,lt800k,747,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0536_all.fits
+10000441322,537,quiet,lt800k,790,train,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0537_all.fits
+10000441355,538,quiet,lt800k,837,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0538_all.fits
+10000441425,542,systematic_common_mode,lt800k,804,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0542_all.fits
+10000441431,543,quiet,lt800k,794,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0543_all.fits
+10000441446,544,systematic_common_mode,lt800k,850,train,1 2 3 4 5 6 7 9 11 12 13,1 2 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/0544_all.fits
+10000441450,545,systematic_common_mode,lt800k,857,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0545_all.fits
+10000441474,547,quiet,lt800k,775,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0547_all.fits
+10000441504,549,quiet,lt800k,795,train,1 2 3 5 6 7 8 9 11 12 13,1 2 3 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0549_all.fits
+10000441516,550,quiet,lt800k,825,train,1 2 3 4 5 6 7 8 9 11 13,1 2 4 5 6 7 8 9 11 13,True,extracted/galaxy_stack/fits/0550_all.fits
+10000441522,551,systematic_common_mode,lt800k,796,train,1 2 3 4 5 6 7 8 9 11 13,1 2 3 4 5 6 7 8 9 11 13,True,extracted/galaxy_stack/fits/0551_all.fits
+10000441549,552,systematic_common_mode,lt800k,786,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0552_all.fits
+10000441575,554,quiet,lt800k,773,train,2 5 6 7 8 9 10 12 13,2 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0554_all.fits
+10000441590,555,systematic_common_mode,lt800k,780,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0555_all.fits
+10000441595,556,quiet,lt800k,784,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0556_all.fits
+10000441648,557,quiet,lt800k,830,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0557_all.fits
+10000441672,558,quiet,lt800k,866,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0558_all.fits
+10000441691,559,systematic_common_mode,lt800k,853,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0559_all.fits
+10000441709,560,systematic_common_mode,lt800k,782,train,2 3 4 5 6 7 9 10 12 13,2 3 4 5 6 7 9 10 12 13,True,extracted/galaxy_stack/fits/0560_all.fits
+10000441734,561,quiet,lt800k,849,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0561_all.fits
+10000441758,562,systematic_common_mode,lt800k,848,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0562_all.fits
+10000441761,563,systematic_common_mode,lt800k,783,train,2 4 5 6 7 9 10 11 12 13,2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0563_all.fits
+10000441762,564,systematic_common_mode,lt800k,728,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0564_all.fits
+10000441767,565,quiet,lt800k,776,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0565_all.fits
+10000441768,566,quiet,lt800k,775,train,1 2 3 4 5 7 9 10 11 12 13,1 2 3 4 5 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0566_all.fits
+10000441770,567,systematic_common_mode,lt800k,772,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0567_all.fits
+10000441773,568,quiet,lt800k,808,train,1 2 3 4 6 7 9 10 11 12 13,1 2 3 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0568_all.fits
+10000441796,570,systematic_common_mode,lt800k,771,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0570_all.fits
+10000441805,571,quiet,lt800k,744,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0571_all.fits
+10000441815,572,quiet,lt800k,799,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0572_all.fits
+10000441841,573,quiet,lt800k,795,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0573_all.fits
+10000441848,575,quiet,lt800k,774,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0575_all.fits
+10000441851,577,quiet,lt800k,772,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0577_all.fits
+10000441852,578,systematic_common_mode,lt800k,777,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0578_all.fits
+10000441854,580,quiet,lt800k,825,train,1 2 3 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0580_all.fits
+10000441865,582,systematic_common_mode,lt800k,757,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0582_all.fits
+10000441866,583,systematic_common_mode,lt800k,752,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0583_all.fits
+10000441868,585,quiet,lt800k,867,train,1 2 4 5 6 9 10 11 12 13,1 2 4 5 6 9 10 11 12 13,True,extracted/galaxy_stack/fits/0585_all.fits
+10000441870,586,quiet,lt800k,847,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0586_all.fits
+10000441872,587,quiet,lt800k,757,train,1 2 4 6 7 8 9 10 11 13,1 2 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0587_all.fits
+10000441879,589,systematic_common_mode,lt800k,761,train,1 2 3 4 6 7 8 9 10 11 13,1 2 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0589_all.fits
+10000441880,590,quiet,lt800k,773,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0590_all.fits
+10000441885,592,systematic_common_mode,lt800k,749,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0592_all.fits
+10000441898,593,quiet,lt800k,755,train,2 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0593_all.fits
+10000441900,594,systematic_common_mode,lt800k,792,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0594_all.fits
+10000441922,595,systematic_common_mode,lt800k,747,train,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0595_all.fits
+10000441935,597,quiet,lt800k,816,train,1 3 4 5 6 7 9 10 11 12 13,1 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0597_all.fits
+10000441940,599,systematic_common_mode,lt800k,799,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0599_all.fits
+10000441951,603,systematic_common_mode,lt800k,822,train,1 2 4 6 7 8 9 10 11 13,1 2 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0603_all.fits
+10000441958,604,quiet,lt800k,798,train,1 2 3 4 6 7 9 10 11 12 13,1 2 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0604_all.fits
+10000441981,607,systematic_common_mode,lt800k,823,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0607_all.fits
+10000442013,609,quiet,lt800k,736,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0609_all.fits
+10000442024,610,systematic_common_mode,lt800k,764,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0610_all.fits
+10000442025,611,quiet,lt800k,840,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0611_all.fits
+10000442026,612,quiet,lt800k,727,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0612_all.fits
+10000442030,613,systematic_common_mode,lt800k,911,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0613_all.fits
+10000442034,614,systematic_common_mode,lt800k,754,train,1 3 4 6 7 8 9 10 11 13,1 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0614_all.fits
+10000442054,616,systematic_common_mode,lt800k,874,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0616_all.fits
+10000442059,617,systematic_common_mode,lt800k,712,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0617_all.fits
+10000442096,619,systematic_common_mode,lt800k,833,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0619_all.fits
+10000442113,620,quiet,lt800k,829,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0620_all.fits
+10000442118,621,systematic_common_mode,lt800k,787,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0621_all.fits
+10000442122,622,systematic_common_mode,lt800k,814,train,2 3 4 5 6 7 8 10 12 13,2 3 4 5 6 7 8 10 12 13,True,extracted/galaxy_stack/fits/0622_all.fits
+10000442145,623,quiet,lt800k,799,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0623_all.fits
+10000442149,624,systematic_common_mode,lt800k,856,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0624_all.fits
+10000442152,625,quiet,lt800k,748,train,1 2 3 5 6 7 8 9 10 12 13,1 2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0625_all.fits
+10000442209,629,systematic_common_mode,lt800k,758,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0629_all.fits
+10000442219,630,quiet,lt800k,815,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0630_all.fits
+10000442235,631,quiet,lt800k,759,train,1 3 5 6 7 8 9 10 11 12 13,1 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0631_all.fits
+10000455048,636,quiet,lt800k,776,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0636_all.fits
+10000455056,638,systematic_common_mode,lt800k,781,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0638_all.fits
+10000455059,639,systematic_common_mode,lt800k,800,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0639_all.fits
+10000455073,640,systematic_common_mode,lt800k,851,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0640_all.fits
+10000455074,641,quiet,lt800k,746,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0641_all.fits
+10000455075,642,systematic_common_mode,lt800k,791,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0642_all.fits
+10000455077,643,systematic_common_mode,lt800k,877,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0643_all.fits
+10000455083,646,systematic_common_mode,lt800k,814,train,2 3 5 6 7 8 9 10 13,2 3 5 6 7 8 9 10 13,True,extracted/galaxy_stack/fits/0646_all.fits
+10000455088,647,quiet,lt800k,780,train,2 3 5 6 7 8 10 12 13,2 3 5 6 7 8 10 12 13,True,extracted/galaxy_stack/fits/0647_all.fits
+10000455128,648,quiet,lt800k,760,train,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0648_all.fits
+10000455131,649,quiet,lt800k,773,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0649_all.fits
+10000455132,650,quiet,lt800k,851,train,2 5 6 7 8 9 10 12 13,2 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0650_all.fits
+10000455159,651,quiet,lt800k,778,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0651_all.fits
+10000455176,652,quiet,lt800k,802,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0652_all.fits
+10000455177,653,quiet,lt800k,846,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0653_all.fits
+10000455191,654,systematic_common_mode,lt800k,773,train,1 2 4 7 8 10 11 12 13,1 2 4 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0654_all.fits
+10000455192,655,quiet,lt800k,790,train,1 2 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0655_all.fits
+10000455239,657,quiet,lt800k,845,train,1 2 3 5 6 8 9 10 11 12 13,1 2 3 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0657_all.fits
+10000455244,659,quiet,lt800k,830,train,2 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0659_all.fits
+10000455246,660,quiet,lt800k,823,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0660_all.fits
+10000455249,662,systematic_common_mode,lt800k,805,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0662_all.fits
+10000455275,663,quiet,lt800k,837,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0663_all.fits
+10000455290,664,quiet,lt800k,794,train,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0664_all.fits
+10000455323,667,quiet,lt800k,804,train,2 3 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0667_all.fits
+10000455350,668,systematic_common_mode,lt800k,841,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0668_all.fits
+10000455351,669,systematic_common_mode,lt800k,831,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0669_all.fits
+10000455365,670,systematic_common_mode,lt800k,830,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0670_all.fits
+10000455414,671,quiet,lt800k,745,train,1 3 4 6 7 8 9 10 11 13,1 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0671_all.fits
+10000455424,672,systematic_common_mode,lt800k,850,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0672_all.fits
+10000455425,673,quiet,lt800k,770,train,1 2 4 5 7 9 10 11 12 13,1 2 4 5 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0673_all.fits
+10000455436,674,systematic_common_mode,lt800k,835,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0674_all.fits
+10000455439,675,quiet,lt800k,745,train,1 2 3 4 5 7 8 10 11 12 13,1 2 4 5 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0675_all.fits
+10000455441,677,quiet,lt800k,778,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0677_all.fits
+10000455463,678,systematic_common_mode,lt800k,765,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0678_all.fits
+10000455507,680,systematic_common_mode,lt800k,720,train,1 2 3 5 6 7 8 9 10 11 12 13,2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0680_all.fits
+10000455521,681,systematic_common_mode,lt800k,824,train,1 2 3 4 5 7 8 10 11 12 13,1 2 3 4 5 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0681_all.fits
+10000455526,682,quiet,lt800k,814,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0682_all.fits
+10000455530,683,systematic_common_mode,lt800k,784,train,1 2 3 4 5 7 8 9 12 13,1 2 3 4 5 7 8 9 12 13,True,extracted/galaxy_stack/fits/0683_all.fits
+10000455536,685,quiet,lt800k,772,train,1 2 4 5 6 8 9 10 11 12 13,1 2 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0685_all.fits
+10000455572,686,systematic_common_mode,lt800k,848,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0686_all.fits
+10000455626,688,quiet,lt800k,824,train,1 2 3 5 6 8 10 11 12 13,1 2 5 6 8 10 11 12 13,True,extracted/galaxy_stack/fits/0688_all.fits
+10000455627,689,quiet,lt800k,703,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0689_all.fits
+10000455634,690,quiet,lt800k,782,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0690_all.fits
+10000455646,691,systematic_common_mode,lt800k,806,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0691_all.fits
+10000455660,693,quiet,lt800k,762,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0693_all.fits
+10000455687,695,quiet,lt800k,816,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0695_all.fits
+10000455690,696,quiet,lt800k,758,train,1 2 5 7 8 9 10 11 12,1 2 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0696_all.fits
+10000455697,697,quiet,lt800k,754,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0697_all.fits
+10000455718,698,quiet,lt800k,852,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0698_all.fits
+10000455721,699,quiet,lt800k,751,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0699_all.fits
+10000455735,700,systematic_common_mode,lt800k,767,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0700_all.fits
+10000455754,701,quiet,lt800k,811,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0701_all.fits
+10000455755,702,systematic_common_mode,lt800k,802,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0702_all.fits
+10000455763,703,quiet,lt800k,811,train,1 2 3 4 5 7 8 9 10 11 13,1 2 3 4 5 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0703_all.fits
+10000455782,704,quiet,lt800k,778,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0704_all.fits
+10000456637,705,quiet,lt800k,787,train,2 5 6 7 8 9 10 12 13,2 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0705_all.fits
+10000456641,707,quiet,lt800k,860,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0707_all.fits
+10000456642,708,quiet,lt800k,777,train,1 2 4 5 6 7 8 9 10 12 13,1 2 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0708_all.fits
+10000456664,710,systematic_common_mode,lt800k,850,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0710_all.fits
+10000456668,711,quiet,lt800k,780,train,1 4 5 6 7 8 9 10 11 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0711_all.fits
+10000456687,712,systematic_common_mode,lt800k,814,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0712_all.fits
+10000456721,714,systematic_common_mode,lt800k,821,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0714_all.fits
+10000456727,715,quiet,lt800k,739,train,1 2 5 6 7 8 9 10 11 12 13,1 2 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0715_all.fits
+10000456738,717,systematic_common_mode,lt800k,900,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0717_all.fits
+10000456743,718,systematic_common_mode,lt800k,765,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0718_all.fits
+10000456762,719,systematic_common_mode,lt800k,743,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0719_all.fits
+10000456763,720,systematic_common_mode,lt800k,772,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/0720_all.fits
+10000456764,721,quiet,lt800k,815,train,1 2 4 5 6 7 9 10 11 12 13,1 2 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0721_all.fits
+10000456834,723,quiet,lt800k,860,train,1 2 4 5 6 7 9 10 11 12 13,1 2 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0723_all.fits
+10000456865,725,quiet,lt800k,759,train,2 3 4 5 6 7 8 9 10 11 12,2 3 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0725_all.fits
+10000456877,726,quiet,lt800k,819,train,1 4 5 6 7 8 9 10 11 13,1 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0726_all.fits
+10000456878,727,systematic_common_mode,lt800k,836,train,3 4 5 6 8 9 10 13,3 4 5 6 8 9 10 13,True,extracted/galaxy_stack/fits/0727_all.fits
+10000456880,728,quiet,lt800k,739,train,1 4 5 6 7 8 9 10 11 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0728_all.fits
+10000456895,729,systematic_common_mode,lt800k,692,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0729_all.fits
+10000456896,730,quiet,lt800k,699,train,1 5 6 7 8 9 10 11 13,1 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0730_all.fits
+10000456899,731,systematic_common_mode,lt800k,768,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0731_all.fits
+10000456940,733,quiet,lt800k,818,train,1 3 4 5 6 7 8 9 10 11 12 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0733_all.fits
+10000456946,734,quiet,lt800k,769,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0734_all.fits
+10000456954,735,systematic_common_mode,lt800k,841,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0735_all.fits
+10000456982,736,systematic_common_mode,lt800k,754,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0736_all.fits
+10000456984,737,systematic_common_mode,lt800k,783,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0737_all.fits
+10000456990,738,quiet,lt800k,776,train,1 2 4 5 6 7 8 10 11 12 13,1 2 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0738_all.fits
+10000457003,739,quiet,lt800k,755,train,2 4 5 6 7 8 9 10 11 12 13,2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0739_all.fits
+10000457004,740,quiet,lt800k,798,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0740_all.fits
+10000457011,741,quiet,lt800k,857,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0741_all.fits
+10000457040,742,systematic_common_mode,lt800k,840,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0742_all.fits
+10000457045,744,systematic_common_mode,lt800k,790,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0744_all.fits
+10000457048,745,systematic_common_mode,lt800k,765,train,1 2 4 5 6 7 8 9 10 12 13,1 2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0745_all.fits
+10000457049,746,quiet,lt800k,777,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0746_all.fits
+10000457050,747,systematic_common_mode,lt800k,799,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/0747_all.fits
+10000457082,748,quiet,lt800k,818,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0748_all.fits
+10000457103,751,quiet,lt800k,854,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0751_all.fits
+10000457104,752,systematic_common_mode,lt800k,809,train,1 2 3 4 6 7 8 9 10 12 13,1 2 3 4 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0752_all.fits
+10000457147,753,systematic_common_mode,lt800k,783,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0753_all.fits
+10000457148,754,quiet,lt800k,727,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0754_all.fits
+10000457154,755,systematic_common_mode,lt800k,755,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0755_all.fits
+10000476095,759,quiet,lt800k,814,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0759_all.fits
+10000476105,760,quiet,lt800k,811,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0760_all.fits
+10000476110,763,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0763_all.fits
+10000476115,764,quiet,lt800k,803,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0764_all.fits
+10000476120,765,quiet,lt800k,836,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0765_all.fits
+10000476136,766,quiet,lt800k,789,train,1 2 3 4 5 6 7 9 10 11 12,1 2 3 4 5 6 7 9 10 11 12,True,extracted/galaxy_stack/fits/0766_all.fits
+10000476181,770,systematic_common_mode,lt800k,789,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0770_all.fits
+10000476195,771,quiet,lt800k,756,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0771_all.fits
+10000476224,772,systematic_common_mode,lt800k,856,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0772_all.fits
+10000476299,774,systematic_common_mode,lt800k,731,train,1 2 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0774_all.fits
+10000476328,775,quiet,lt800k,757,train,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0775_all.fits
+10000476341,776,quiet,lt800k,763,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0776_all.fits
+10000476345,778,quiet,lt800k,784,train,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0778_all.fits
+10000476349,779,quiet,lt800k,781,train,1 2 4 5 6 7 8 9 12 13,1 2 5 6 7 8 9 12 13,True,extracted/galaxy_stack/fits/0779_all.fits
+10000476363,780,quiet,lt800k,786,train,1 2 4 5 6 8 9 10 11 12 13,1 2 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0780_all.fits
+10000476389,782,quiet,lt800k,743,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0782_all.fits
+10000476399,783,systematic_common_mode,lt800k,759,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0783_all.fits
+10000476433,784,quiet,lt800k,700,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0784_all.fits
+10000476456,785,quiet,lt800k,808,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0785_all.fits
+10000476492,787,systematic_common_mode,lt800k,842,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0787_all.fits
+10000476503,788,systematic_common_mode,lt800k,867,train,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0788_all.fits
+10000476582,790,systematic_common_mode,lt800k,730,train,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0790_all.fits
+10000476594,791,systematic_common_mode,lt800k,763,train,1 2 4 5 6 7 9 10 11 12 13,1 2 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0791_all.fits
+10000476606,793,quiet,lt800k,803,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0793_all.fits
+10000476615,794,quiet,lt800k,789,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0794_all.fits
+10000476633,795,quiet,lt800k,858,train,1 5 7 8 9 10 11 12 13,1 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0795_all.fits
+10000476664,796,quiet,lt800k,799,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0796_all.fits
+10000476673,797,quiet,lt800k,845,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0797_all.fits
+10000476681,798,systematic_common_mode,lt800k,747,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0798_all.fits
+10000476707,799,quiet,lt800k,793,train,1 2 4 5 7 8 9 10 11 12,1 2 4 5 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0799_all.fits
+10000476712,800,quiet,lt800k,860,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0800_all.fits
+10000476732,802,quiet,lt800k,844,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0802_all.fits
+10000476738,803,quiet,lt800k,768,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0803_all.fits
+10000476759,804,systematic_common_mode,lt800k,853,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0804_all.fits
+10000476760,805,quiet,lt800k,791,train,2 4 5 6 7 8 9 10 12 13,2 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0805_all.fits
+10000476789,806,quiet,lt800k,743,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0806_all.fits
+10000476790,807,quiet,lt800k,759,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0807_all.fits
+10000476803,809,quiet,lt800k,828,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0809_all.fits
+10000476814,811,quiet,lt800k,852,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 11 12 13,True,extracted/galaxy_stack/fits/0811_all.fits
+10000476819,812,quiet,lt800k,794,train,1 2 3 5 6 8 9 10 11 13,1 2 3 5 6 8 9 10 11 13,True,extracted/galaxy_stack/fits/0812_all.fits
+10000476858,814,quiet,lt800k,800,train,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0814_all.fits
+10000476893,816,quiet,lt800k,815,train,2 3 5 6 8 9 10 11 12 13,2 5 6 8 9 10 12 13,True,extracted/galaxy_stack/fits/0816_all.fits
+10000476894,817,quiet,lt800k,848,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0817_all.fits
+10000476945,818,quiet,lt800k,782,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0818_all.fits
+10000476946,819,quiet,lt800k,812,train,1 2 4 6 7 8 9 10 11 12 13,1 2 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0819_all.fits
+10000476955,820,systematic_common_mode,lt800k,772,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0820_all.fits
+10000476964,821,quiet,lt800k,812,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0821_all.fits
+10000476986,822,quiet,lt800k,774,train,2 3 4 5 6 7 8 9 10 11 12,2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0822_all.fits
+10000477028,823,systematic_common_mode,lt800k,781,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0823_all.fits
+10000477038,825,quiet,lt800k,828,train,2 4 5 6 7 8 9 10 11 12 13,2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0825_all.fits
+10000477054,826,systematic_common_mode,lt800k,816,train,1 2 3 4 6 7 8 9 11 12,1 2 3 4 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/0826_all.fits
+10000477079,827,systematic_common_mode,lt800k,792,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0827_all.fits
+10000477102,828,quiet,lt800k,838,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0828_all.fits
+10000480222,831,quiet,lt800k,780,train,2 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0831_all.fits
+10000480230,832,quiet,lt800k,766,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0832_all.fits
+10000480276,835,systematic_common_mode,lt800k,775,train,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0835_all.fits
+10000480287,836,quiet,lt800k,808,train,2 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0836_all.fits
+10000480288,837,systematic_common_mode,lt800k,874,train,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0837_all.fits
+10000480299,838,systematic_common_mode,lt800k,792,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0838_all.fits
+10000480302,840,systematic_common_mode,lt800k,748,train,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0840_all.fits
+10000480315,842,quiet,lt800k,724,train,1 2 4 5 6 7 8 10 11 12 13,1 2 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0842_all.fits
+10000480324,843,quiet,lt800k,898,train,1 2 4 5 6 7 8 10 11 12 13,1 2 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0843_all.fits
+10000480330,844,quiet,lt800k,776,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0844_all.fits
+10000480331,845,systematic_common_mode,lt800k,845,train,1 2 4 6 7 8 9 10 11 13,1 2 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0845_all.fits
+10000480335,846,quiet,lt800k,808,train,2 3 4 5 6 8 9 10 12 13,2 3 4 5 6 8 9 10 12 13,True,extracted/galaxy_stack/fits/0846_all.fits
+10000480348,849,systematic_common_mode,lt800k,790,train,1 2 5 6 7 8 9 11 12 13,1 2 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0849_all.fits
+10000480354,850,quiet,lt800k,800,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0850_all.fits
+10000480359,851,quiet,lt800k,855,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0851_all.fits
+10000582914,852,systematic_common_mode,lt800k,862,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0852_all.fits
+10000583098,853,systematic_common_mode,lt800k,815,train,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/0853_all.fits
+10000583317,854,quiet,lt800k,823,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0854_all.fits
+10000583335,855,quiet,lt800k,795,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0855_all.fits
+10000583345,856,quiet,lt800k,886,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0856_all.fits
+10000583409,857,quiet,lt800k,781,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0857_all.fits
+10000583517,859,quiet,lt800k,757,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0859_all.fits
+10000583526,860,systematic_common_mode,lt800k,797,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0860_all.fits
+10000583530,861,quiet,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0861_all.fits
+10000583559,862,quiet,lt800k,821,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0862_all.fits
+10000583565,863,quiet,lt800k,795,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0863_all.fits
+10000583604,864,quiet,lt800k,790,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0864_all.fits
+10000583655,865,systematic_common_mode,lt800k,789,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0865_all.fits
+10000583659,866,quiet,lt800k,834,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0866_all.fits
+10000583713,868,systematic_common_mode,lt800k,772,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0868_all.fits
+10000583714,869,quiet,lt800k,794,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0869_all.fits
+10000583716,870,quiet,lt800k,757,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0870_all.fits
+10000583719,871,systematic_common_mode,lt800k,811,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0871_all.fits
+10000583722,872,quiet,lt800k,763,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0872_all.fits
+10000583724,873,systematic_common_mode,lt800k,867,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0873_all.fits
+10000583736,874,systematic_common_mode,lt800k,802,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0874_all.fits
+10000583737,875,quiet,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0875_all.fits
+10000583764,876,systematic_common_mode,lt800k,827,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0876_all.fits
+10000583775,877,quiet,lt800k,806,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0877_all.fits
+10000583805,878,systematic_common_mode,lt800k,823,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0878_all.fits
+10000583812,879,quiet,lt800k,848,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0879_all.fits
+10000583848,880,quiet,lt800k,755,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0880_all.fits
+10000583858,881,quiet,lt800k,850,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0881_all.fits
+10000583863,882,systematic_common_mode,lt800k,824,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0882_all.fits
+10000583872,883,quiet,lt800k,825,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0883_all.fits
+10000583875,884,quiet,lt800k,754,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0884_all.fits
+10000583916,885,quiet,lt800k,762,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0885_all.fits
+10000583948,887,quiet,lt800k,783,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0887_all.fits
+10000583963,888,quiet,lt800k,751,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0888_all.fits
+10000583966,889,systematic_common_mode,lt800k,815,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0889_all.fits
+10000583980,890,systematic_common_mode,lt800k,807,train,2 4 5 6 7 8 9 10 12,2 4 5 6 7 8 9 10 12,True,extracted/galaxy_stack/fits/0890_all.fits
+10000583984,891,quiet,lt800k,816,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0891_all.fits
+10000583989,892,systematic_common_mode,lt800k,842,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0892_all.fits
+10000583994,893,systematic_common_mode,lt800k,830,train,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0893_all.fits
+10000584022,895,quiet,lt800k,803,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0895_all.fits
+10000584026,896,systematic_common_mode,lt800k,764,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0896_all.fits
+10000584071,897,quiet,lt800k,784,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0897_all.fits
+10000584077,898,quiet,lt800k,752,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0898_all.fits
+10000584151,899,quiet,lt800k,774,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0899_all.fits
+10000584156,900,quiet,lt800k,806,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0900_all.fits
+10000584193,901,quiet,lt800k,798,train,1 2 4 5 6 8 9 10 11 12,1 2 4 5 6 8 9 10 11 12,True,extracted/galaxy_stack/fits/0901_all.fits
+10000584198,902,systematic_common_mode,lt800k,831,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0902_all.fits
+10000584204,903,systematic_common_mode,lt800k,814,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0903_all.fits
+10000584206,904,quiet,lt800k,812,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0904_all.fits
+10000584272,906,systematic_common_mode,lt800k,779,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0906_all.fits
+10000584344,908,systematic_common_mode,lt800k,806,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0908_all.fits
+10000584363,909,systematic_common_mode,lt800k,775,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0909_all.fits
+10000584364,910,quiet,lt800k,831,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0910_all.fits
+10000584365,911,quiet,lt800k,838,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0911_all.fits
+10000584367,912,quiet,lt800k,749,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0912_all.fits
+10000584382,913,quiet,lt800k,760,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0913_all.fits
+10000584421,916,quiet,lt800k,794,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0916_all.fits
+10000584451,919,systematic_common_mode,lt800k,825,train,1 2 4 5 6 8 9 10 11 12,1 2 4 5 6 8 9 11 12,True,extracted/galaxy_stack/fits/0919_all.fits
+10000584487,921,quiet,lt800k,855,train,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 9 10 12 13,True,extracted/galaxy_stack/fits/0921_all.fits
+10000584491,922,quiet,lt800k,810,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0922_all.fits
+10000584493,923,quiet,lt800k,797,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0923_all.fits
+10000584510,924,quiet,lt800k,785,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 11 12 13,True,extracted/galaxy_stack/fits/0924_all.fits
+10000584545,926,quiet,lt800k,795,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0926_all.fits
+10000584546,927,systematic_common_mode,lt800k,847,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0927_all.fits
+10000584555,928,systematic_common_mode,lt800k,774,train,1 2 3 5 6 7 8 9 11 12 13,1 2 3 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0928_all.fits
+10000584595,931,quiet,lt800k,795,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0931_all.fits
+10000584649,933,quiet,lt800k,762,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0933_all.fits
+10000584678,934,quiet,lt800k,810,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0934_all.fits
+10000584698,935,quiet,lt800k,728,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 9 12 13,True,extracted/galaxy_stack/fits/0935_all.fits
+10000584715,936,quiet,lt800k,797,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0936_all.fits
+10000584739,937,quiet,lt800k,853,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0937_all.fits
+10000584748,938,quiet,lt800k,742,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0938_all.fits
+10000584749,939,quiet,lt800k,760,train,1 2 3 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/0939_all.fits
+10000584768,941,quiet,lt800k,750,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0941_all.fits
+10000584776,942,quiet,lt800k,798,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0942_all.fits
+10000584786,943,quiet,lt800k,849,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0943_all.fits
+10000584792,944,quiet,lt800k,777,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0944_all.fits
+10000584795,945,quiet,lt800k,747,train,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0945_all.fits
+10000584867,946,quiet,lt800k,745,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0946_all.fits
+10000584932,948,systematic_common_mode,lt800k,735,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0948_all.fits
+10000584934,949,quiet,lt800k,762,train,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0949_all.fits
+10000584971,951,systematic_common_mode,lt800k,805,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0951_all.fits
+10000584987,952,quiet,lt800k,761,train,1 2 3 4 5 6 7 8 9 12,1 2 3 4 5 6 7 8 9 12,True,extracted/galaxy_stack/fits/0952_all.fits
+10000585010,953,quiet,lt800k,836,train,1 2 3 4 5 6 8 9 11 12 13,1 2 3 5 6 8 9 11 12 13,True,extracted/galaxy_stack/fits/0953_all.fits
+10000585011,954,quiet,lt800k,729,train,1 2 3 4 5 6 8 9 11 12 13,1 2 3 4 5 6 8 9 11 12 13,True,extracted/galaxy_stack/fits/0954_all.fits
+10000585019,955,quiet,lt800k,745,train,1 2 3 4 5 6 7 8 9 11 12 13,1 2 4 5 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0955_all.fits
+10000585043,956,quiet,lt800k,783,train,1 2 3 4 5 6 8 9 11 12 13,1 2 3 4 5 6 8 9 11 12 13,True,extracted/galaxy_stack/fits/0956_all.fits
+10000585058,957,quiet,lt800k,843,train,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0957_all.fits
+10000585068,958,systematic_common_mode,lt800k,757,train,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/0958_all.fits
+10000585078,959,quiet,lt800k,802,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0959_all.fits
+10000585117,960,systematic_common_mode,lt800k,823,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0960_all.fits
+10000609544,962,systematic_common_mode,lt800k,786,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0962_all.fits
+10000609564,963,systematic_common_mode,lt800k,824,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0963_all.fits
+10000609571,964,systematic_common_mode,lt800k,752,train,1 2 3 4 5 6 8 9 10 11 12 13,1 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0964_all.fits
+10000609589,965,systematic_common_mode,lt800k,779,train,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0965_all.fits
+10000609629,966,quiet,lt800k,838,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0966_all.fits
+10000609644,967,systematic_common_mode,lt800k,840,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0967_all.fits
+10000609704,968,quiet,lt800k,770,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0968_all.fits
+10000609739,969,quiet,lt800k,789,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0969_all.fits
+10000609755,971,quiet,lt800k,800,train,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0971_all.fits
+10000609765,972,systematic_common_mode,lt800k,828,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0972_all.fits
+10000609786,973,quiet,lt800k,804,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0973_all.fits
+10001389167,974,quiet,lt800k,776,train,1 2 3 4 6 7 8 9 10 11 13,1 2 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0974_all.fits
+10001389206,975,systematic_common_mode,lt800k,751,train,1 2 3 4 5 6 7 10 11 12 13,1 2 3 4 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/0975_all.fits
+10001389207,976,quiet,lt800k,758,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0976_all.fits
+10001389323,977,systematic_common_mode,lt800k,785,train,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0977_all.fits
+10001389327,978,quiet,lt800k,813,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0978_all.fits
+10001389449,979,quiet,lt800k,755,train,1 2 3 4 5 6 7 8 9 10 11 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0979_all.fits
+10001389467,980,quiet,lt800k,798,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0980_all.fits
+10001389518,981,systematic_common_mode,lt800k,820,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0981_all.fits
+10001389590,982,quiet,lt800k,805,train,1 2 3 4 5 8 9 10 11 12 13,1 2 3 4 5 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0982_all.fits
+10001389665,983,quiet,lt800k,787,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0983_all.fits
+10001389666,984,quiet,lt800k,797,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0984_all.fits
+10001389745,986,quiet,lt800k,773,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/0986_all.fits
+10001389749,987,quiet,lt800k,824,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0987_all.fits
+10001389814,988,quiet,lt800k,782,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0988_all.fits
+10001389827,989,quiet,lt800k,877,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0989_all.fits
+10001389839,990,quiet,lt800k,825,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0990_all.fits
+10001389884,991,quiet,lt800k,800,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0991_all.fits
+10001389903,993,systematic_common_mode,lt800k,850,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0993_all.fits
+10001389912,994,quiet,lt800k,837,train,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0994_all.fits
+10001389913,995,systematic_common_mode,lt800k,839,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0995_all.fits
+10001389914,996,quiet,lt800k,820,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0996_all.fits
+10001389917,997,quiet,lt800k,749,train,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/0997_all.fits
+10001389990,998,quiet,lt800k,817,train,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/0998_all.fits
+10001389992,999,systematic_common_mode,lt800k,845,train,1 2 3 4 5 6 7 8 9 10 11 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/0999_all.fits
+10001390027,1000,quiet,ge800k|lt800k,1082,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1000_all.fits
+10001390058,1001,systematic_common_mode,ge800k,257,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1001_all.fits
+10001390193,1004,quiet,ge800k,289,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1004_all.fits
+10001390204,1005,quiet,ge800k,291,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1005_all.fits
+10001416374,1008,quiet,ge800k,244,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1008_all.fits
+10001416377,1009,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1009_all.fits
+10001416378,1010,quiet,ge800k,305,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1010_all.fits
+10001416379,1011,systematic_common_mode,ge800k,287,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1011_all.fits
+10001416389,1012,quiet,ge800k,321,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1012_all.fits
+10001416411,1013,quiet,ge800k,284,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1013_all.fits
+10001416446,1015,quiet,ge800k,251,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1015_all.fits
+10001416476,1016,quiet,ge800k,305,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1016_all.fits
+10001416483,1017,quiet,ge800k,281,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1017_all.fits
+10001416494,1018,quiet,ge800k,314,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1018_all.fits
+10001416626,1023,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1023_all.fits
+10001416713,1028,quiet,ge800k,252,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1028_all.fits
+10001416781,1030,quiet,ge800k,258,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1030_all.fits
+10001416831,1032,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1032_all.fits
+10001416832,1033,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1033_all.fits
+10001416837,1034,systematic_common_mode,ge800k,278,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1034_all.fits
+10001416849,1035,quiet,ge800k,252,dev_medium,1 3 4 5 6 7 8 9 10 11 12 13,1 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1035_all.fits
+10001416858,1036,systematic_common_mode,ge800k,328,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1036_all.fits
+10001416864,1037,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1037_all.fits
+10001416865,1038,quiet,ge800k,301,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1038_all.fits
+10001416881,1040,quiet,ge800k,278,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1040_all.fits
+10001416912,1041,quiet,ge800k,292,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1041_all.fits
+10001416917,1043,quiet,ge800k,274,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1043_all.fits
+10001416920,1044,systematic_common_mode,ge800k,279,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1044_all.fits
+10001420998,1046,systematic_common_mode,ge800k,259,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1046_all.fits
+10001421004,1048,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1048_all.fits
+10001477171,1053,quiet,ge800k,235,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1053_all.fits
+10001477221,1055,quiet,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1055_all.fits
+10001477238,1056,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1056_all.fits
+10001477278,1057,systematic_common_mode,ge800k,310,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1057_all.fits
+10001477308,1058,quiet,ge800k,297,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1058_all.fits
+10001477339,1060,quiet,ge800k,263,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1060_all.fits
+10001477350,1061,quiet,ge800k,243,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1061_all.fits
+10001477357,1062,quiet,ge800k,234,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1062_all.fits
+10001477383,1063,quiet,ge800k,287,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1063_all.fits
+10001477393,1064,quiet,ge800k,309,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1064_all.fits
+10001477449,1066,systematic_common_mode,ge800k,254,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1066_all.fits
+10001477453,1067,quiet,ge800k,290,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1067_all.fits
+10001477462,1068,quiet,ge800k,283,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1068_all.fits
+10001477464,1069,quiet,ge800k,297,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11,True,extracted/galaxy_stack/fits/1069_all.fits
+10001477467,1070,quiet,ge800k,300,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1070_all.fits
+10001477479,1072,quiet,ge800k,330,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1072_all.fits
+10001477486,1073,quiet,ge800k,260,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1073_all.fits
+10001477498,1074,systematic_common_mode,ge800k,232,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1074_all.fits
+10001477546,1076,quiet,ge800k,264,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1076_all.fits
+10001477547,1077,quiet,ge800k,303,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1077_all.fits
+10001477606,1081,quiet,ge800k,300,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1081_all.fits
+10001477614,1085,quiet,ge800k,263,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1085_all.fits
+10001477622,1086,quiet,ge800k,243,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1086_all.fits
+10001477625,1087,quiet,ge800k,301,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1087_all.fits
+10001477626,1088,quiet,ge800k,294,dev_medium,1 2 3 4 5 6 7 8 9 11 13,1 2 3 4 5 6 7 8 9 11 13,True,extracted/galaxy_stack/fits/1088_all.fits
+10001477648,1089,quiet,ge800k,275,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1089_all.fits
+10001477658,1090,quiet,ge800k,260,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1090_all.fits
+10001477662,1091,quiet,ge800k,269,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1091_all.fits
+10001477671,1092,quiet,ge800k,269,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1092_all.fits
+10001477683,1093,quiet,ge800k,255,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1093_all.fits
+10001477714,1094,quiet,ge800k,302,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1094_all.fits
+10001477733,1096,quiet,ge800k,250,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1096_all.fits
+10001477754,1097,quiet,ge800k,262,dev_medium,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1097_all.fits
+10001477799,1098,systematic_common_mode,ge800k,263,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1098_all.fits
+10001477800,1099,quiet,ge800k,288,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1099_all.fits
+10001477811,1100,systematic_common_mode,ge800k,225,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1100_all.fits
+10001477816,1101,quiet,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 11 13,1 2 3 4 5 6 7 8 9 11 13,True,extracted/galaxy_stack/fits/1101_all.fits
+10001477879,1103,quiet,ge800k,276,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1103_all.fits
+10001477889,1104,systematic_common_mode,ge800k,278,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1104_all.fits
+10001477895,1105,systematic_common_mode,ge800k,239,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1105_all.fits
+10001477917,1106,quiet,ge800k,242,dev_medium,1 2 3 4 5 6 8 9 11 12 13,1 2 3 4 5 6 8 9 11 12 13,True,extracted/galaxy_stack/fits/1106_all.fits
+10001477981,1107,quiet,ge800k,287,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1107_all.fits
+10001478014,1108,quiet,ge800k,291,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1108_all.fits
+10001478031,1109,quiet,ge800k,271,dev_medium,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1109_all.fits
+10001478090,1112,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 8 9 11 12,1 2 3 4 5 6 8 9 11 12,True,extracted/galaxy_stack/fits/1112_all.fits
+10001478098,1115,quiet,ge800k,301,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1115_all.fits
+10001478250,1120,quiet,ge800k,263,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1120_all.fits
+10001478259,1121,systematic_common_mode,ge800k,285,dev_medium,1 2 3 4 5 6 7 8 9 12 13,1 2 3 4 5 6 7 8 9 12 13,True,extracted/galaxy_stack/fits/1121_all.fits
+10001478267,1122,quiet,ge800k,244,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1122_all.fits
+10001478283,1124,systematic_common_mode,ge800k,263,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1124_all.fits
+10001478293,1125,quiet,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1125_all.fits
+10001478395,1127,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1127_all.fits
+10001478425,1128,systematic_common_mode,ge800k,244,dev_medium,3 4 5 6 7 8 9 10 11 12 13,3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1128_all.fits
+10001478448,1130,systematic_common_mode,ge800k,258,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1130_all.fits
+10001478453,1131,systematic_common_mode,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1131_all.fits
+10001478511,1132,systematic_common_mode,ge800k,264,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1132_all.fits
+10001478523,1134,quiet,ge800k,315,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1134_all.fits
+10001478554,1135,quiet,ge800k,267,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1135_all.fits
+10001478616,1137,systematic_common_mode,ge800k,291,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1137_all.fits
+10001478626,1138,quiet,ge800k,298,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1138_all.fits
+10001478627,1139,systematic_common_mode,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1139_all.fits
+10001478642,1140,systematic_common_mode,ge800k,257,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1140_all.fits
+10001478655,1141,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1141_all.fits
+10001478723,1143,systematic_common_mode,ge800k,241,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1143_all.fits
+10001478733,1144,quiet,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1144_all.fits
+10001479787,1151,systematic_common_mode,ge800k,305,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1151_all.fits
+10001491200,1154,quiet,ge800k,291,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1154_all.fits
+10001492655,1156,quiet,ge800k,273,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1156_all.fits
+10001492702,1157,quiet,ge800k,297,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1157_all.fits
+10001492704,1158,quiet,ge800k,288,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1158_all.fits
+10001492715,1159,quiet,ge800k,281,dev_medium,1 2 3 4 5 6 7 8 12 13,1 2 3 4 5 6 7 8 12 13,True,extracted/galaxy_stack/fits/1159_all.fits
+10001492783,1160,quiet,ge800k,260,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1160_all.fits
+10001492873,1161,systematic_common_mode,ge800k,269,dev_medium,1 2 3 4 5 6 7 8 9 11 12,1 2 3 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/1161_all.fits
+10001492884,1162,systematic_common_mode,ge800k,296,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1162_all.fits
+10001492892,1163,quiet,ge800k,314,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1163_all.fits
+10001492987,1165,systematic_common_mode,ge800k,281,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1165_all.fits
+10001493118,1166,quiet,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1166_all.fits
+10001493148,1167,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1167_all.fits
+10001493316,1168,quiet,ge800k,277,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1168_all.fits
+10001493353,1169,systematic_common_mode,ge800k,270,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1169_all.fits
+10001493435,1171,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1171_all.fits
+10001493490,1172,quiet,ge800k,277,dev_medium,2 4 5 6 7 8 9 10 12 13,2 5 6 7 8 9 10 13,True,extracted/galaxy_stack/fits/1172_all.fits
+10001493491,1173,systematic_common_mode,ge800k,272,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1173_all.fits
+10001493555,1174,systematic_common_mode,ge800k,284,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1174_all.fits
+10001493558,1176,quiet,ge800k,293,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1176_all.fits
+10001493608,1177,quiet,ge800k,234,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1177_all.fits
+10001493745,1179,quiet,ge800k,295,dev_medium,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1179_all.fits
+10001499149,1180,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1180_all.fits
+10001499152,1182,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1182_all.fits
+10001499191,1183,quiet,ge800k,283,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1183_all.fits
+10001499211,1184,systematic_common_mode,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1184_all.fits
+10001499297,1185,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1185_all.fits
+10001499298,1186,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1186_all.fits
+10001499363,1187,quiet,ge800k,314,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1187_all.fits
+10001499369,1188,quiet,ge800k,292,dev_medium,1 2 3 4 5 6 7 8 10 12 13,1 2 3 5 6 7 8 10 12 13,True,extracted/galaxy_stack/fits/1188_all.fits
+10001499395,1190,quiet,ge800k,279,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1190_all.fits
+10001499403,1192,systematic_common_mode,ge800k,260,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1192_all.fits
+10001499432,1193,quiet,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1193_all.fits
+10001499441,1194,quiet,ge800k,258,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1194_all.fits
+10001499443,1195,quiet,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1195_all.fits
+10001499485,1196,quiet,ge800k,243,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1196_all.fits
+10001499537,1198,quiet,ge800k,340,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1198_all.fits
+10001499539,1199,quiet,ge800k,268,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1199_all.fits
+10001499545,1200,systematic_common_mode,ge800k,298,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1200_all.fits
+10001499676,1203,quiet,ge800k,286,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1203_all.fits
+10001499740,1204,systematic_common_mode,ge800k,245,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1204_all.fits
+10001499765,1205,quiet,ge800k,277,dev_medium,2 3 5 6 7 8 9 10 11 12 13,5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1205_all.fits
+10001499770,1206,quiet,ge800k,235,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1206_all.fits
+10001499824,1207,quiet,ge800k,276,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1207_all.fits
+10001499845,1208,quiet,ge800k,252,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1208_all.fits
+10001499947,1212,systematic_common_mode,ge800k,267,dev_medium,3 4 5 6 7 8 9 10 12 13,3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1212_all.fits
+10001500021,1213,quiet,ge800k,256,dev_medium,2 3 4 5 6 7 8 9 10 11 12 13,2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1213_all.fits
+10001500181,1214,quiet,ge800k,271,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1214_all.fits
+10001500248,1215,systematic_common_mode,ge800k,323,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1215_all.fits
+10001504182,1219,systematic_common_mode,ge800k,301,dev_medium,2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1219_all.fits
+10001512353,1223,systematic_common_mode,ge800k,274,dev_medium,2 3 4 5 6 7 8 9 10 11 13,2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1223_all.fits
+10001512587,1225,quiet,ge800k,255,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1225_all.fits
+10001513376,1228,quiet,ge800k,255,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1228_all.fits
+10001513396,1229,quiet,ge800k,296,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1229_all.fits
+10001513399,1230,quiet,ge800k,312,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1230_all.fits
+10001513400,1231,quiet,ge800k,264,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1231_all.fits
+10001513404,1233,quiet,ge800k,278,dev_medium,1 3 5 6 7 8 10 11 12 13,1 3 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1233_all.fits
+10001513405,1234,quiet,ge800k,333,dev_medium,1 5 6 7 8 9 10 11 12,1 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1234_all.fits
+10001513433,1237,quiet,ge800k,244,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1237_all.fits
+10001513502,1240,quiet,ge800k,299,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1240_all.fits
+10001513514,1241,systematic_common_mode,ge800k,316,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1241_all.fits
+10001513515,1242,quiet,ge800k,286,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1242_all.fits
+10001513597,1245,quiet,ge800k,240,dev_medium,1 2 3 5 6 7 8 9 11 12 13,1 2 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1245_all.fits
+10001513660,1248,quiet,ge800k,245,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1248_all.fits
+10001513676,1249,systematic_common_mode,ge800k,301,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1249_all.fits
+10001513679,1250,quiet,ge800k,306,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1250_all.fits
+10001513688,1251,quiet,ge800k,279,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1251_all.fits
+10001513714,1252,quiet,ge800k,303,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1252_all.fits
+10001513719,1253,systematic_common_mode,ge800k,266,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1253_all.fits
+10001513788,1255,quiet,ge800k,227,dev_medium,1 2 5 6 7 8 9 11 12 13,1 2 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1255_all.fits
+10001513855,1258,quiet,ge800k,259,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1258_all.fits
+10001513881,1259,systematic_common_mode,ge800k,289,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1259_all.fits
+10001513934,1260,quiet,ge800k,270,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1260_all.fits
+10001513975,1261,quiet,ge800k,274,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1261_all.fits
+10001514086,1266,quiet,ge800k,267,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1266_all.fits
+10001514128,1269,systematic_common_mode,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1269_all.fits
+10001514155,1271,systematic_common_mode,ge800k,234,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1271_all.fits
+10001514167,1273,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1273_all.fits
+10001514175,1274,quiet,ge800k,275,dev_medium,1 4 5 6 7 8 9 10 11 12 13,1 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1274_all.fits
+10001514273,1279,systematic_common_mode,ge800k,297,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1279_all.fits
+10001514278,1280,quiet,ge800k,264,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1280_all.fits
+10001514291,1281,quiet,ge800k,283,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1281_all.fits
+10001514319,1282,systematic_common_mode,ge800k,245,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1282_all.fits
+10001514334,1285,quiet,ge800k,287,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1285_all.fits
+10001514356,1288,quiet,ge800k,275,dev_medium,1 3 4 6 8 9 10 11 12 13,1 3 4 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1288_all.fits
+10001514428,1292,systematic_common_mode,ge800k,273,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1292_all.fits
+10001514438,1293,quiet,ge800k,271,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1293_all.fits
+10001514463,1294,systematic_common_mode,ge800k,298,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1294_all.fits
+10001514468,1295,quiet,ge800k,318,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1295_all.fits
+10001514511,1298,quiet,ge800k,305,dev_medium,1 2 4 5 7 8 10 11 12 13,1 2 4 5 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1298_all.fits
+10001514573,1300,quiet,ge800k,313,dev_medium,1 2 3 5 6 8 9 10 11,1 2 3 5 6 8 9 10 11,True,extracted/galaxy_stack/fits/1300_all.fits
+10001514608,1301,quiet,ge800k,291,dev_medium,1 2 3 4 5 6 7 8 9 11 13,1 2 3 4 5 6 7 8 9 11 13,True,extracted/galaxy_stack/fits/1301_all.fits
+10001514618,1302,systematic_common_mode,ge800k,267,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1302_all.fits
+10001514632,1303,systematic_common_mode,ge800k,250,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1303_all.fits
+10001514646,1304,systematic_common_mode,ge800k,254,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1304_all.fits
+10001518783,1305,quiet,ge800k,260,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1305_all.fits
+10001518849,1307,systematic_common_mode,ge800k,281,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1307_all.fits
+10001518937,1309,quiet,ge800k,268,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1309_all.fits
+10001518979,1310,quiet,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1310_all.fits
+10001519009,1311,quiet,ge800k,248,dev_medium,2 7 9 10 11 12 13,2 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1311_all.fits
+10001519017,1312,quiet,ge800k,303,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1312_all.fits
+10001519028,1313,systematic_common_mode,ge800k,299,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1313_all.fits
+10001519030,1314,quiet,ge800k,272,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1314_all.fits
+10001542629,1318,quiet,ge800k,295,dev_medium,1 2 4 5 6 8 9 10 11 12 13,1 2 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1318_all.fits
+10001542718,1324,systematic_common_mode,ge800k,292,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1324_all.fits
+10001542742,1325,quiet,ge800k,287,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1325_all.fits
+10001542746,1326,quiet,ge800k,298,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1326_all.fits
+10001542760,1327,systematic_common_mode,ge800k,298,dev_medium,1 2 4 5 6 7 8 10 11 12 13,1 2 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1327_all.fits
+10001542776,1329,quiet,ge800k,261,dev_medium,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1329_all.fits
+10001542812,1331,systematic_common_mode,ge800k,287,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1331_all.fits
+10001542849,1334,quiet,ge800k,302,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1334_all.fits
+10001542866,1335,quiet,ge800k,296,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1335_all.fits
+10001542899,1337,quiet,ge800k,267,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1337_all.fits
+10001542903,1340,quiet,ge800k,281,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 9 10 11 12,True,extracted/galaxy_stack/fits/1340_all.fits
+10001543030,1341,systematic_common_mode,ge800k,277,dev_medium,1 4 5 6 7 8 9 10 11 13,1 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1341_all.fits
+10001543051,1342,quiet,ge800k,265,dev_medium,2 4 5 6 7 8 9 10 11 12,5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1342_all.fits
+10001543075,1343,quiet,ge800k,264,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1343_all.fits
+10001543099,1345,quiet,ge800k,309,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1345_all.fits
+10001543137,1347,quiet,ge800k,301,dev_medium,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1347_all.fits
+10001543142,1349,systematic_common_mode,ge800k,318,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1349_all.fits
+10001543164,1350,quiet,ge800k,258,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1350_all.fits
+10001543173,1351,quiet,ge800k,284,dev_medium,1 3 5 6 7 8 9 10 11 13,1 3 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1351_all.fits
+10001543233,1353,quiet,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1353_all.fits
+10001543269,1354,quiet,ge800k,291,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1354_all.fits
+10001543298,1355,systematic_common_mode,ge800k,251,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 5 6 7 10 11 12 13,True,extracted/galaxy_stack/fits/1355_all.fits
+10001543320,1356,systematic_common_mode,ge800k,286,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1356_all.fits
+10001543335,1357,quiet,ge800k,294,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1357_all.fits
+10001543336,1358,quiet,ge800k,277,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1358_all.fits
+10001543343,1359,quiet,ge800k,283,dev_medium,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1359_all.fits
+10001543397,1361,systematic_common_mode,ge800k,266,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1361_all.fits
+10001543398,1362,quiet,ge800k,261,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1362_all.fits
+10001543399,1363,quiet,ge800k,269,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1363_all.fits
+10001543406,1364,quiet,ge800k,247,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1364_all.fits
+10001543412,1365,systematic_common_mode,ge800k,272,dev_medium,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1365_all.fits
+10001543429,1366,systematic_common_mode,ge800k,279,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1366_all.fits
+10001543490,1368,quiet,ge800k,331,dev_medium,1 2 4 5 7 8 9 10 11 12 13,1 2 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1368_all.fits
+10001543547,1369,systematic_common_mode,ge800k,290,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1369_all.fits
+10001543563,1370,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1370_all.fits
+10001543564,1371,systematic_common_mode,ge800k,296,dev_medium,1 2 5 6 7 8 10 11 12 13,1 2 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1371_all.fits
+10001543569,1372,quiet,ge800k,283,dev_medium,1 2 3 4 5 7 8 9 12 13,1 2 3 4 5 7 8 9 12 13,True,extracted/galaxy_stack/fits/1372_all.fits
+10001543584,1373,quiet,ge800k,290,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1373_all.fits
+10001543739,1375,quiet,ge800k,263,dev_medium,3 4 5 6 7 8 10 11 12 13,3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1375_all.fits
+10001544098,1377,quiet,ge800k,253,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1377_all.fits
+10001544120,1378,quiet,ge800k,303,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1378_all.fits
+10001544149,1379,quiet,ge800k,275,dev_medium,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/1379_all.fits
+10001544223,1381,quiet,ge800k,265,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1381_all.fits
+10001544331,1382,quiet,ge800k,296,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1382_all.fits
+10001544359,1383,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 7 8 9 10 11 13,1 2 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1383_all.fits
+10001544367,1385,systematic_common_mode,ge800k,267,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1385_all.fits
+10001544435,1387,quiet,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1387_all.fits
+10001544482,1389,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1389_all.fits
+10001544485,1390,quiet,ge800k,276,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1390_all.fits
+10001544601,1393,systematic_common_mode,ge800k,289,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1393_all.fits
+10001544602,1394,quiet,ge800k,301,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1394_all.fits
+10001544614,1395,quiet,ge800k,267,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1395_all.fits
+10001544616,1396,quiet,ge800k,296,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1396_all.fits
+10001544623,1397,quiet,ge800k,256,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1397_all.fits
+10001544696,1399,quiet,ge800k,330,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1399_all.fits
+10001544868,1402,systematic_common_mode,ge800k,282,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1402_all.fits
+10001544971,1403,quiet,ge800k,281,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1403_all.fits
+10001544984,1404,systematic_common_mode,ge800k,315,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1404_all.fits
+10001545019,1405,quiet,ge800k,283,dev_medium,2 3 4 5 6 7 8 10 11 12 13,2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1405_all.fits
+10001545028,1406,quiet,ge800k,337,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1406_all.fits
+10001545054,1408,systematic_common_mode,ge800k,241,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1408_all.fits
+10001545093,1409,quiet,ge800k,308,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1409_all.fits
+10001545133,1410,systematic_common_mode,ge800k,306,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1410_all.fits
+10001545198,1411,systematic_common_mode,ge800k,290,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1411_all.fits
+10001545230,1413,quiet,ge800k,275,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1413_all.fits
+10001545289,1414,quiet,ge800k,259,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1414_all.fits
+10001545444,1418,quiet,ge800k,278,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1418_all.fits
+10001545447,1419,quiet,ge800k,277,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1419_all.fits
+10001545452,1420,quiet,ge800k,339,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1420_all.fits
+10001545466,1421,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1421_all.fits
+10001545495,1422,systematic_common_mode,ge800k,282,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1422_all.fits
+10001545527,1425,quiet,ge800k,306,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1425_all.fits
+10001545600,1430,quiet,ge800k,289,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1430_all.fits
+10001545611,1432,systematic_common_mode,ge800k,278,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1432_all.fits
+10001545613,1433,quiet,ge800k,277,dev_medium,1 2 3 4 5 7 8 9 11 13,1 2 3 4 5 7 8 9 11,True,extracted/galaxy_stack/fits/1433_all.fits
+10001545634,1434,quiet,ge800k,279,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1434_all.fits
+10001545636,1435,quiet,ge800k,291,dev_medium,1 2 4 5 7 8 9 10 11 12 13,1 2 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1435_all.fits
+10001545646,1436,quiet,ge800k,272,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1436_all.fits
+10001545656,1437,systematic_common_mode,ge800k,305,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1437_all.fits
+10001545658,1438,systematic_common_mode,ge800k,292,dev_medium,1 2 3 4 5 7 8 9 10 11 12 13,1 2 3 4 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1438_all.fits
+10001551197,1443,quiet,ge800k,270,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1443_all.fits
+10001551248,1444,quiet,ge800k,296,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1444_all.fits
+10001551594,1445,quiet,ge800k,260,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1445_all.fits
+10001551604,1446,systematic_common_mode,ge800k,328,dev_medium,1 2 3 4 5 6 7 8 11 12 13,1 2 3 4 5 6 7 8 11 12 13,True,extracted/galaxy_stack/fits/1446_all.fits
+10001557633,1448,quiet,ge800k,323,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1448_all.fits
+10001557651,1450,systematic_common_mode,ge800k,250,dev_medium,1 2 3 4 5 7 8 9 10 11 13,1 2 3 4 5 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1450_all.fits
+10001557663,1451,systematic_common_mode,ge800k,274,dev_medium,1 2 3 6 7 9 10 11 12 13,1 2 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1451_all.fits
+10001557713,1453,quiet,ge800k,230,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1453_all.fits
+10001557899,1456,quiet,ge800k,305,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1456_all.fits
+10001557906,1457,quiet,ge800k,276,dev_medium,1 2 4 6 7 8 9 11,1 2 4 6 7 8 9 11,True,extracted/galaxy_stack/fits/1457_all.fits
+10001557911,1458,quiet,ge800k,268,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1458_all.fits
+10001566301,1460,systematic_common_mode,ge800k,294,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1460_all.fits
+10001566387,1461,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1461_all.fits
+10001566392,1462,quiet,ge800k,245,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1462_all.fits
+10001566514,1463,systematic_common_mode,ge800k,304,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1463_all.fits
+10001566623,1465,quiet,ge800k,308,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1465_all.fits
+10001566690,1466,quiet,ge800k,282,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1466_all.fits
+10001566857,1467,quiet,ge800k,276,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1467_all.fits
+10001566874,1469,quiet,ge800k,281,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1469_all.fits
+10001566897,1470,quiet,ge800k,274,dev_medium,1 4 5 6 7 8 9 10 11 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1470_all.fits
+10001566965,1472,quiet,ge800k,234,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1472_all.fits
+10001566980,1473,quiet,ge800k,304,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1473_all.fits
+10001567105,1474,quiet,ge800k,256,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1474_all.fits
+10001567175,1475,quiet,ge800k,285,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1475_all.fits
+10001567214,1476,systematic_common_mode,ge800k,239,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1476_all.fits
+10001567274,1477,quiet,ge800k,288,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1477_all.fits
+10001567433,1479,quiet,ge800k,309,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1479_all.fits
+10001567496,1481,quiet,ge800k,299,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1481_all.fits
+10001567524,1483,quiet,ge800k,276,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1483_all.fits
+10001567571,1484,systematic_common_mode,ge800k,296,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1484_all.fits
+10001567613,1485,quiet,ge800k,295,dev_medium,1 3 4 5 6 8 9 10 11 13,1 3 4 5 6 8 9 10 11 13,True,extracted/galaxy_stack/fits/1485_all.fits
+10001567619,1486,quiet,ge800k,268,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1486_all.fits
+10001567627,1487,quiet,ge800k,308,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1487_all.fits
+10001567631,1489,quiet,ge800k,274,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1489_all.fits
+10001569248,1490,quiet,ge800k,294,dev_medium,1 4 5 6 7 8 9 10 11 12 13,1 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1490_all.fits
+10001569282,1491,systematic_common_mode,ge800k,290,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1491_all.fits
+10001569312,1492,quiet,ge800k,269,dev_medium,1 2 4 5 7 8 9 10 11 12 13,1 2 5 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1492_all.fits
+10001596046,1493,systematic_common_mode,ge800k,276,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1493_all.fits
+10001596062,1494,quiet,ge800k,289,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1494_all.fits
+10001596083,1495,systematic_common_mode,ge800k,291,dev_medium,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1495_all.fits
+10001596151,1497,quiet,ge800k,232,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1497_all.fits
+10001596170,1498,quiet,ge800k,259,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1498_all.fits
+10001596173,1499,quiet,ge800k,323,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1499_all.fits
+10001638723,1500,quiet,ge800k,264,dev_medium,2 3 5 6 7 8 9 10 11 12 13,2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1500_all.fits
+10001638755,1501,quiet,ge800k,275,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1501_all.fits
+10001638778,1502,systematic_common_mode,ge800k,309,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1502_all.fits
+10001638782,1503,systematic_common_mode,ge800k,322,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1503_all.fits
+10001638798,1506,systematic_common_mode,ge800k,292,dev_medium,1 2 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1506_all.fits
+10001638859,1513,quiet,ge800k,293,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1513_all.fits
+10001638867,1515,quiet,ge800k,315,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1515_all.fits
+10001638881,1517,quiet,ge800k,255,dev_medium,1 2 3 4 6 7 9 10 11 12 13,1 2 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1517_all.fits
+10001642644,1519,quiet,ge800k,263,dev_medium,1 2 4 5 7 8 9 10 12 13,1 2 4 5 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1519_all.fits
+10001642668,1521,systematic_common_mode,ge800k,264,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1521_all.fits
+10001642672,1522,quiet,ge800k,291,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1522_all.fits
+10001658492,1523,quiet,ge800k,290,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1523_all.fits
+10001658496,1525,quiet,ge800k,279,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1525_all.fits
+10001658499,1526,systematic_common_mode,ge800k,288,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1526_all.fits
+10001658509,1527,quiet,ge800k,305,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1527_all.fits
+10001658544,1528,quiet,ge800k,278,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1528_all.fits
+10001658545,1529,quiet,ge800k,287,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1529_all.fits
+10001658574,1530,systematic_common_mode,ge800k,309,dev_medium,1 2 4 5 6 7 8 9 10 11 13,1 2 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1530_all.fits
+10001673149,1532,quiet,ge800k,267,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1532_all.fits
+10001673159,1534,quiet,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1534_all.fits
+10001673180,1537,quiet,ge800k,301,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1537_all.fits
+10001673188,1538,quiet,ge800k,275,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1538_all.fits
+10001673189,1539,systematic_common_mode,ge800k,271,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1539_all.fits
+10001673190,1540,systematic_common_mode,ge800k,269,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1540_all.fits
+10001673195,1542,systematic_common_mode,ge800k,256,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1542_all.fits
+10001673198,1543,systematic_common_mode,ge800k,261,dev_medium,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1543_all.fits
+10001673214,1544,quiet,ge800k,268,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1544_all.fits
+10001673220,1545,quiet,ge800k,279,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1545_all.fits
+10001673221,1546,systematic_common_mode,ge800k,298,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1546_all.fits
+10001673234,1547,quiet,ge800k,250,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1547_all.fits
+10001673242,1548,quiet,ge800k,218,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1548_all.fits
+10001673296,1550,quiet,ge800k,271,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1550_all.fits
+10001673314,1551,quiet,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1551_all.fits
+10001673320,1552,quiet,ge800k,276,dev_medium,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1552_all.fits
+10001673321,1553,systematic_common_mode,ge800k,247,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1553_all.fits
+10001673329,1554,systematic_common_mode,ge800k,274,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1554_all.fits
+10001673338,1555,systematic_common_mode,ge800k,282,dev_medium,1 2 4 5 6 7 8 9 11 12,1 2 4 5 6 7 8 9 11 12,True,extracted/galaxy_stack/fits/1555_all.fits
+10001673408,1557,quiet,ge800k,295,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1557_all.fits
+10001673419,1558,quiet,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1558_all.fits
+10001673421,1559,quiet,ge800k,280,dev_medium,1 2 3 4 5 6 7 8 9 10 12 13,1 2 3 4 5 6 7 9 10 12 13,True,extracted/galaxy_stack/fits/1559_all.fits
+10001673440,1561,quiet,ge800k,275,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1561_all.fits
+10001673502,1564,quiet,ge800k,258,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1564_all.fits
+10001673503,1565,quiet,ge800k,278,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1565_all.fits
+10001690795,1567,systematic_common_mode,ge800k,274,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1567_all.fits
+10001695087,1571,systematic_common_mode,ge800k,296,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1571_all.fits
+10001695140,1572,quiet,ge800k,231,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1572_all.fits
+10001695154,1573,quiet,ge800k,266,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1573_all.fits
+10001695158,1574,quiet,ge800k,302,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/1574_all.fits
+10001695184,1575,systematic_common_mode,ge800k,308,dev_medium,1 3 4 5 6 7 8 9 10 11 12 13,1 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1575_all.fits
+10001695382,1581,quiet,ge800k,268,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1581_all.fits
+10001715098,1582,systematic_common_mode,ge800k,280,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1582_all.fits
+10001715101,1583,quiet,ge800k,248,dev_medium,1 2 4 6 7 8 9 10 11 12 13,1 2 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1583_all.fits
+10001715210,1584,quiet,ge800k,298,dev_medium,2 4 5 6 7 9 10 11 12 13,2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1584_all.fits
+10001715211,1585,quiet,ge800k,216,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1585_all.fits
+10001715222,1587,quiet,ge800k,298,dev_medium,1 3 4 5 6 7 8 9 10 11 13,1 3 4 5 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1587_all.fits
+10001715238,1588,quiet,ge800k,272,dev_medium,1 2 3 4 6 7 8 9 10 11 12 13,1 2 3 4 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1588_all.fits
+10001715245,1589,quiet,ge800k,310,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1589_all.fits
+10001715293,1591,quiet,ge800k,271,dev_medium,1 2 3 4 5 7 8 9 11 12 13,1 2 3 4 5 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1591_all.fits
+10001717076,1592,quiet,ge800k,262,dev_medium,1 3 4 5 6 7 8 10 11 13,1 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/1592_all.fits
+10001717080,1593,systematic_common_mode,ge800k,279,dev_medium,1 3 4 5 6 7 8 10 11 13,1 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/1593_all.fits
+10001717113,1595,quiet,ge800k,250,dev_medium,1 2 4 5 6 7 8 10 11 12 13,1 2 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1595_all.fits
+10001717114,1596,quiet,ge800k,279,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1596_all.fits
+10001717115,1597,systematic_common_mode,ge800k,294,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1597_all.fits
+10001717117,1599,quiet,ge800k,289,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1599_all.fits
+10001717142,1602,quiet,ge800k,252,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1602_all.fits
+10001717147,1603,quiet,ge800k,249,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1603_all.fits
+10001717150,1604,systematic_common_mode,ge800k,317,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1604_all.fits
+10001717153,1605,systematic_common_mode,ge800k,290,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1605_all.fits
+10001717200,1610,quiet,ge800k,291,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1610_all.fits
+10001717205,1611,quiet,ge800k,262,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1611_all.fits
+10001717288,1614,quiet,ge800k,260,dev_medium,1 3 4 6 7 8 9 10 11 13,1 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1614_all.fits
+10001717327,1615,systematic_common_mode,ge800k,343,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 3 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1615_all.fits
+10001717339,1616,quiet,ge800k,232,dev_medium,2 3 4 5 6 7 8 9 10 12 13,2 3 4 5 6 7 8 9 10 12 13,True,extracted/galaxy_stack/fits/1616_all.fits
+10001717378,1618,quiet,ge800k,263,dev_medium,2 3 4 5 6 7 9 10 11 12 13,2 3 4 5 6 7 9 11 12 13,True,extracted/galaxy_stack/fits/1618_all.fits
+10001717392,1619,quiet,ge800k,312,dev_medium,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1619_all.fits
+10001736022,1624,quiet,ge800k,246,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1624_all.fits
+10001742265,1626,quiet,ge800k,236,dev_medium,1 2 4 5 7 8 10 11 12 13,1 2 4 5 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1626_all.fits
+10001742266,1627,quiet,ge800k,284,dev_medium,1 2 3 4 5 6 7 8 10 11 13,1 2 3 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/1627_all.fits
+10001742267,1628,quiet,ge800k,297,dev_medium,1 4 5 6 7 8 10 11 13,1 4 5 6 7 8 10 11 13,True,extracted/galaxy_stack/fits/1628_all.fits
+10001742280,1630,quiet,ge800k,210,dev_medium,1 2 3 4 5 6 8 11 12 13,1 2 3 4 5 6 8 11 12 13,True,extracted/galaxy_stack/fits/1630_all.fits
+10001742283,1631,systematic_common_mode,ge800k,297,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1631_all.fits
+10001742325,1632,quiet,ge800k,242,dev_medium,1 2 3 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1632_all.fits
+10001742389,1635,systematic_common_mode,ge800k,291,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1635_all.fits
+10001802029,1637,systematic_common_mode,ge800k,290,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1637_all.fits
+10001802030,1638,quiet,ge800k,247,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1638_all.fits
+10001802043,1639,quiet,ge800k,250,dev_medium,1 3 4 6 7 8 9 10 11 13,1 3 4 6 7 8 9 10 11 13,True,extracted/galaxy_stack/fits/1639_all.fits
+10002332188,1643,quiet,ge800k,241,dev_medium,1 2 5 6 7 8 9 10 11 12 13,1 2 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1643_all.fits
+10002332424,1644,quiet,ge800k,292,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1644_all.fits
+10002332428,1645,quiet,ge800k,297,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12,1 2 3 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1645_all.fits
+10002332439,1646,quiet,ge800k,253,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1646_all.fits
+10002332454,1647,systematic_common_mode,ge800k,271,dev_medium,2 3 4 6 7 9 10 11 12 13,2 4 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1647_all.fits
+10002340265,1648,quiet,ge800k,302,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1648_all.fits
+10002382522,1649,quiet,ge800k,277,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1649_all.fits
+10002382539,1650,quiet,ge800k,243,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1650_all.fits
+10002385510,1651,quiet,ge800k,269,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1651_all.fits
+10002408820,1652,quiet,ge800k,277,dev_medium,1 2 3 4 5 6 7 8 10 11 12 13,1 2 3 4 5 6 7 8 10 11 12 13,True,extracted/galaxy_stack/fits/1652_all.fits
+10002408850,1654,systematic_common_mode,ge800k,260,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 4 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1654_all.fits
+10002408881,1655,quiet,ge800k,266,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1655_all.fits
+10002408980,1662,quiet,ge800k,274,dev_medium,1 2 3 4 5 6 7 8 9 10 11 12 13,1 2 3 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1662_all.fits
+10002468249,1665,quiet,ge800k,247,dev_medium,1 2 3 5 6 8 9 10 11 12 13,1 2 3 6 8 9 10 12 13,True,extracted/galaxy_stack/fits/1665_all.fits
+10002468250,1666,quiet,ge800k,307,dev_medium,1 2 5 6 8 9 10 11 12 13,1 2 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1666_all.fits
+10002468271,1669,quiet,ge800k,267,dev_medium,1 2 3 4 5 6 7 8 9 11 12 13,1 2 3 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1669_all.fits
+10002468366,1673,systematic_common_mode,ge800k,251,dev_medium,1 2 4 5 6 7 8 9 11 12 13,1 2 4 5 6 7 8 9 11 12 13,True,extracted/galaxy_stack/fits/1673_all.fits
+10002468379,1675,quiet,ge800k,258,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1675_all.fits
+10002480881,1692,quiet,ge800k,302,dev_medium,1 2 3 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1692_all.fits
+10002480932,1708,quiet,ge800k,274,dev_medium,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1708_all.fits
+10002480934,1709,quiet,ge800k,294,dev_medium,1 2 3 4 5 6 8 9 10 11 12 13,1 2 3 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1709_all.fits
+10002480962,1711,quiet,ge800k,279,dev_medium,1 3 4 6 7 9 10 11 13,1 3 4 6 7 9 10 11,True,extracted/galaxy_stack/fits/1711_all.fits
+10002480963,1712,quiet,ge800k,309,dev_medium,1 2 3 4 7 9 10 11 12 13,1 2 3 4 7 9 10 11 12 13,True,extracted/galaxy_stack/fits/1712_all.fits
+10005000093,1714,quiet,ge800k,237,dev_medium,1 2 4 5 6 8 9 10 11 12 13,1 2 4 5 6 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1714_all.fits
+10005000130,1715,systematic_common_mode,ge800k,244,dev_medium,1 2 4 5 6 7 8 9 10 11 12 13,1 2 4 5 6 7 8 9 10 11 12 13,True,extracted/galaxy_stack/fits/1715_all.fits
+10005000308,1716,quiet,ge800k,279,dev_medium,1 2 3 4 5 6 7 9 10 11 12 13,1 2 3 5 6 7 9 10 11 12,True,extracted/galaxy_stack/fits/1716_all.fits
+10005000369,1718,quiet,ge800k,305,dev_medium,1 2 4 5 6 7 8 9 10 11 12,1 2 4 5 6 7 8 9 10 11 12,True,extracted/galaxy_stack/fits/1718_all.fits

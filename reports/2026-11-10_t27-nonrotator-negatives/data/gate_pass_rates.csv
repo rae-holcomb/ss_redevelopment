@@ -1,0 +1,43 @@
+table,gate,n,pass_rate
+neg_assigned,n_peaks,62623,0.9860594350318573
+neg_assigned,frac_positive_heights,62623,0.4427606470466123
+neg_assigned,mean_height_snr,62623,0.12554492758251762
+neg_assigned,frac_vertex_in_window,62623,0.4268878846430225
+neg_assigned,half_lag_consistency,62623,0.07490857991472781
+neg_assigned,few_peaks_height,62623,0.8762116155406161
+neg_assigned,ALL (passed_gates),62623,0.0021078517477604074
+neg_fullyear,n_peaks,24503,0.9916744888381015
+neg_fullyear,frac_positive_heights,24503,0.44733297963514673
+neg_fullyear,mean_height_snr,24503,0.06599191935681345
+neg_fullyear,frac_vertex_in_window,24503,0.48594049708198994
+neg_fullyear,half_lag_consistency,24503,0.06631840999061339
+neg_fullyear,few_peaks_height,24503,0.8931559400889687
+neg_fullyear,ALL (passed_gates),24503,0.00032649063379994284
+rot_assigned,n_peaks,19089,0.9858033422389858
+rot_assigned,frac_positive_heights,19089,0.45575986170045574
+rot_assigned,mean_height_snr,19089,0.2648121955052648
+rot_assigned,frac_vertex_in_window,19089,0.34863010110534864
+rot_assigned,half_lag_consistency,19089,0.09984808004609985
+rot_assigned,few_peaks_height,19089,0.8697679291738698
+rot_assigned,ALL (passed_gates),19089,0.017654146367017655
+rot_assigned_relevant,n_peaks,1541,0.9922128487994809
+rot_assigned_relevant,frac_positive_heights,1541,0.6294613887086308
+rot_assigned_relevant,mean_height_snr,1541,0.48020765736534715
+rot_assigned_relevant,frac_vertex_in_window,1541,0.46658014276443865
+rot_assigned_relevant,half_lag_consistency,1541,0.4153147306943543
+rot_assigned_relevant,few_peaks_height,1541,0.8948734587929915
+rot_assigned_relevant,ALL (passed_gates),1541,0.15574302401038287
+rot_fullyear,n_peaks,22538,0.9924571834235514
+rot_fullyear,frac_positive_heights,22538,0.44751087052977195
+rot_fullyear,mean_height_snr,22538,0.2139497737155027
+rot_fullyear,frac_vertex_in_window,22538,0.4364628627207383
+rot_fullyear,half_lag_consistency,22538,0.1118999023870796
+rot_fullyear,few_peaks_height,22538,0.8824208004259473
+rot_fullyear,ALL (passed_gates),22538,0.023604578933356997
+rot_fullyear_relevant,n_peaks,2149,0.9911586784550954
+rot_fullyear_relevant,frac_positive_heights,2149,0.6505351326198232
+rot_fullyear_relevant,mean_height_snr,2149,0.5253606328524896
+rot_fullyear_relevant,frac_vertex_in_window,2149,0.5053513261982318
+rot_fullyear_relevant,half_lag_consistency,2149,0.4388087482550023
+rot_fullyear_relevant,few_peaks_height,2149,0.9185667752442996
+rot_fullyear_relevant,ALL (passed_gates),2149,0.17449976733364356

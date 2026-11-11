@@ -622,6 +622,14 @@ chats should know:
   strength (no-decline top-1 0.441 vs oracle 0.764); the global decline threshold is the weakness (over-declines
   correct long-period answers, P24). Alias features + wavelet/LS spectra matter most; gate flags and
   `acf_fft_highpass`/`pairwise_histogram` spectra least (T12). Label ablations only move the threshold.
+- **2026-11-10 — T27 non-rotator negatives** (`reports/2026-11-10_t27-nonrotator-negatives/`): `datasets/negatives_v0.csv`
+  (4,708 rows: T20 A+B noise stacks of 743 train-pool + 434 dev_medium quiet/SCM sources, 3 class-balanced coverage draws
+  + full-year; pools TIC-disjoint), builder `--nonrotator` mode (relevance 0, `is_rotator` False), tables on the drive
+  (`extracted/t27_negatives/`). Stacks are fair (imprint at chance, p2p = single files). Hand-arbitration FP rate 2.5–3.1%
+  assigned, ≤ 0.8% full-year (gates `mean_height_snr`, `half_lag_consistency`); ranker v0 1.6–1.8% on dev_medium.
+  All-zero queries give `rank:ndcg` no gradient, so negatives only help a decline model: an exploratory star-level
+  decline head (prec 0.89 at 1:1) gives full-year 0.251/0.050 wrong/0.5% FP vs hand 0.248/0.088/0%. Many "quiet" FPs are
+  consistent weak real periods (label noise). Open: precision target and negative:rotator ratio (Rae).
 - **2026-11-10, scorecard v5 (T24/T25/P22b; branch claude/t24-t25-scorecard-v5-84eca3, report
   `reports/2026-11-10_scorecard-v5-noise-period/`):** noise-source join (`benchmarks/noise_sources_dev.csv`, built by
   `tools/build_noise_table.py`) gives per-star `noise_*` columns and `final.noise.*` (wrong split into noise_period vs other:
