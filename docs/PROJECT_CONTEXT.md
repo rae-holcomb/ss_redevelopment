@@ -637,3 +637,6 @@ chats should know:
   quiet P_ref values look like red-noise/common-mode peaks of the fixed noise realization: dev_medium's 10 remaining
   quiet `noise_period` wrongs are 5× chance (null mean 2.0) but none of their sources is time-coherent or has a Gaia/FFI
   match. Weak injected signals let the pipeline lock onto the noise peak. Recommended: no further exclusions.
+- **2026-11-10 — Decline operating point deferred (Rae).** The precision target / non-rotator mix for the ranker's
+  decline threshold stays open until more of the pipeline is in place. Working default: match hand arbitration's OOF
+  training precision; reports plot the full purity–completeness curve instead of asking Rae to pick a point (T11).

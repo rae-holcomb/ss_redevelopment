@@ -844,6 +844,11 @@ for confirmation (ask Rae first).
   (`tools/train_ranker.py --train .../train_3k --sizes 3000 --outdir runs/t11_ranker --resume`).
 - **Goal:** XGBoost ranker, star-grouped splits, beats hand-tuned arbitration
   per period bin, with a calibrated "decline" threshold.
+- **Decline operating point (Rae, 2026-11-10): deferred.** Working default: calibrate the decline threshold to
+  match hand arbitration's OOF training precision (non-rotator:rotator mix stated alongside, currently 1:1). Every
+  ranker/decline report must also plot the full purity–completeness (precision vs answer-rate) curve with candidate
+  cutoffs marked. Don't list the precision target as an open question for Rae; she will set it once more of the
+  pipeline is in place.
 - **Revisit the hard period limits (Rae, 2026-11-10; see P23):** don't let the ACF-based R/2 cap remove candidates
   that another method (e.g. wavelet) can still support. Give the ranker `beyond_reach` candidates as rows, with
   `P_over_reach` as a feature, rather than relying on the comb fit's skip.
