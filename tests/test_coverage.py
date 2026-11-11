@@ -495,5 +495,5 @@ def test_scorecard_fits_manifest_with_coverage(tmp_path):
     assert ps.loc[0, "total_baseline_days"] < 2 * 27.4
     m = json.loads((out / "metrics.json").read_text())
     assert m["config"]["dataset"].endswith(",coverage=pattern:3-4")
-    assert m["config"]["scorecard_version"] == 5  # bumped 4 -> 5 (T24/T25/P22b)
+    assert m["config"]["scorecard_version"] == 6  # bumped 4 -> 5 (T24/T25/P22b), 5 -> 6 (T26 detectable)
     assert ps.loc[0, "final_outcome"] in ("correct", "diffrot")

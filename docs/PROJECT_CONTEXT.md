@@ -664,3 +664,16 @@ chats should know:
   0.267 → 0.273 full-year, 0.188 → 0.197 assigned; no-decline flat. The curve has plateaued: ranker v1 should train on
   train_3k, but gains must come from the decline stage, Stage 1 recall and new kinds of training data. `runs/t11_ranker`
   now lives in the main checkout.
+- **2026-11-10 — T26 detectability ceiling** (`reports/2026-11-10_t26-detectability/`, branch `claude/t26-detectability-7f7523`).
+  Per-star D_band·√N_cyc from the injected signal (SMARTS flux / T20 stack) vs the noise on rotation timescales, on the
+  pipeline's cadences; AUC for success 0.86 FY / 0.88 assigned vs 0.81 / 0.79 for the T1 amp proxy. Proposed `detectable` ≥ 5:
+  56% (FY) / 44% (assigned) of dev_medium; detectable FY success 0.43, wrong 0.10, declined 0.47. Undetectable quiet-noise stars
+  are declined 97% of the time (correct); wrong answers on undetectable stars are mostly contaminated noise sources (41/47).
+  The "correct P in any candidate" ceiling is mostly chance (0.76 vs 0.65 shuffled); only <1 d is informative, and there half of
+  detectable stars have no correct candidate (agrees with the candidate-recall report). Scorecard flag proposed as P26.
+- **2026-11-10 — Scorecard v6: `detectable` flag (T26/P26, Rae's request).** Committed side table
+  `benchmarks/detectability_dev.csv` (`tools/build_detectability_table.py`; T20 stacks on the drive, read-only) keyed by
+  (star_id, loaded sectors) for dev_small + dev_medium in both coverage modes. The scorecard joins it into per-star
+  `detectability`/`detectable` (`--detectable-threshold`, default 5) and reports `final.detectable`, `final.undetectable`,
+  `final.detectable_searchable`; all earlier metric keys are bit-identical (dev_small v5 vs v6). Rae: undetectable stars are
+  **not** ranker negatives; noise-only stack light curves (T27) are the negatives.

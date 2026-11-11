@@ -78,6 +78,13 @@ Outputs (in --outdir)
                                  noise_P_ref, noise_period_match (a `wrong` answer within
                                  REL_TOL of the noise source's P_ref; never a success),
                                  noise_alias ('half'/'double' of it; diagnostic)
+                                 (v6, T26/P26; join of benchmarks/detectability_dev.csv,
+                                 built by tools/build_detectability_table.py, on
+                                 (star_id, loaded sectors)): detectability (snr_rot =
+                                 D_band*sqrt(N_cyc), injected-signal S/N on rotation
+                                 timescales) and detectable (detectability >=
+                                 --detectable-threshold, default 5); empty where the star /
+                                 coverage pattern has no table row (synthetic, other draws)
     per_method.csv               one row per (star, method)
     per_candidate.csv            one row per (star, candidate tested by the comb
                                  fit): fitted period and its outcome, every
@@ -139,7 +146,7 @@ from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
-SCORECARD_VERSION = 5  # v5 (2026-11-10): noise-source columns/breakdowns (T24, T25), beyond_reach candidate rows (P22b); v4: v2 (2026-10-13): diffrot outcome; recall/union_recall count success
+SCORECARD_VERSION = 6  # v6 (2026-11-10, T26/P26): per-star detectability/detectable columns + final.detectable.*, final.undetectable.*, final.detectable_searchable.*; earlier keys unchanged. v5 v5 (2026-11-10): noise-source columns/breakdowns (T24, T25), beyond_reach candidate rows (P22b); v4: v2 (2026-10-13): diffrot outcome; recall/union_recall count success
 # v3 (2026-10-14, T16a): --coverage dataset option + per-star coverage descriptor
 # columns. Metric definitions and outcome logic are unchanged from v2, and
 # --coverage full (default) reproduces v2 per-star results exactly.
@@ -386,6 +393,37 @@ def _noise_columns(noise: dict | None, P, outcome: str, rel_tol: float) -> dict:
                 noise_P_ref=None if _missing(pref) else float(pref),
                 noise_period_match=bool(wrong and ev.noise_period_match(P, pref, rel_tol)),
                 noise_alias=(ev.noise_alias_kind(P, pref, rel_tol) or "") if wrong else "")
+
+
+DETECTABILITY_TABLE = ROOT / "benchmarks" / "detectability_dev.csv"
+DETECTABLE_THRESHOLD = 5.0  # T26 proposal: keeps 97% of dev_medium successes; below it success < 2%
+
+
+def load_detectability_table(path=None) -> pd.DataFrame | None:
+    """The committed per-star detectability table (tools/build_detectability_table.py); None if absent."""
+    path = Path(path or DETECTABILITY_TABLE)
+    if not path.exists():
+        return None
+    return pd.read_csv(path, usecols=["star_id", "sectors", "snr_rot"], dtype={"sectors": str})
+
+
+def add_detectability_columns(per_star: pd.DataFrame, table: pd.DataFrame | None,
+                              threshold: float = DETECTABLE_THRESHOLD) -> pd.DataFrame:
+    """Append v6 `detectability` and `detectable` columns, joined on (star_id, loaded `sectors`).
+
+    Descriptor only: no outcome or earlier metric uses them. A star whose loaded coverage pattern has
+    no table row (synthetic stars, coverage draws the table wasn't built for) gets NaN / None, and is
+    left out of the detectable/undetectable subsets. Returns per_star unchanged if there is no table
+    or no `sectors` column.
+    """
+    if table is None or "sectors" not in per_star.columns or not len(per_star):
+        return per_star
+    key = per_star[["star_id", "sectors"]].astype({"sectors": str})
+    snr = key.merge(table.drop_duplicates(["star_id", "sectors"]), on=["star_id", "sectors"], how="left")["snr_rot"]
+    out = per_star.copy()
+    out["detectability"] = snr.to_numpy()
+    out["detectable"] = [None if pd.isna(v) else bool(v >= threshold) for v in snr]
+    return out
 
 
 def score_one_star(task: dict, pipeline_methods: tuple, rel_tol: float) -> dict:
@@ -638,6 +676,7 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
         m["union_recall"]["by_bin"] = {b: float(g["hit"].mean()) for b, g in hit.groupby("period_bin")}
     m["final"].update(_v4_final_breakdowns(per_star))
     m["final"].update(_v5_noise_breakdowns(per_star))
+    m["final"].update(_v6_detectability_breakdowns(per_star))
     m["runtime"] = {"median_seconds": float(per_star["seconds"].median()),
                     "p90_seconds": float(per_star["seconds"].quantile(0.9))}
     m["errors"]["n_star_errors"] = int(per_star["error"].notna().sum())
@@ -719,6 +758,25 @@ def _v5_noise_breakdowns(per_star: pd.DataFrame) -> dict:
         sub = known[mask]
         if len(sub):
             out[name] = _subset_block(sub) | {"noise": _noise_block(sub)}
+    return out
+
+
+def _v6_detectability_breakdowns(per_star: pd.DataFrame) -> dict:
+    """The scorecard-v6 additions to `final` (T26/P26); {} if no star has a detectability value.
+
+    final.detectable / final.undetectable / final.detectable_searchable: _subset_block over stars with
+    a known `detectable` flag (detectable_searchable also needs searchable == True).
+    """
+    if "detectable" not in per_star.columns:
+        return {}
+    known = per_star[per_star["detectable"].notna()]
+    if not len(known):
+        return {}
+    flag = known["detectable"].astype(bool)
+    out = {"detectable": _subset_block(known[flag]), "undetectable": _subset_block(known[~flag])}
+    if "searchable" in known.columns:
+        both = flag & known["searchable"].fillna(False).astype(bool)
+        out["detectable_searchable"] = _subset_block(known[both])
     return out
 
 
@@ -883,6 +941,10 @@ def main(argv=None):
                         "are always reported (final.quiet_noise*, v5) whatever this is. Changes config.dataset.")
     p.add_argument("--noise-table", type=Path, default=None,
                    help="per-star noise table (default benchmarks/noise_sources_dev.csv)")
+    p.add_argument("--detectability-table", type=Path, default=None,
+                   help="per-star detectability table (default benchmarks/detectability_dev.csv; v6)")
+    p.add_argument("--detectable-threshold", type=float, default=DETECTABLE_THRESHOLD,
+                   help=f"detectable = detectability >= this (default {DETECTABLE_THRESHOLD:g}; T26)")
     args = p.parse_args(argv)
     if args.coverage not in cov.valid_coverage_specs() and not args.coverage.startswith("pattern:"):
         p.error(f"--coverage must be one of {cov.valid_coverage_specs()} or pattern:<sectors>")
@@ -930,6 +992,8 @@ def main(argv=None):
                     _write(fut.result())
 
     per_star, per_method = flatten(list(done.values()))
+    per_star = add_detectability_columns(per_star, load_detectability_table(args.detectability_table),
+                                         args.detectable_threshold)
     per_star.to_csv(outdir / "per_star.csv", index=False)
     per_method.to_csv(outdir / "per_method.csv", index=False)
     flatten_candidates(list(done.values())).to_csv(outdir / "per_candidate.csv", index=False)
@@ -941,6 +1005,8 @@ def main(argv=None):
                       library=str(args.coverage_library or cov.DEFAULT_LIBRARY.relative_to(ROOT))),
         data_root=manifest_data_root(args)[0] if args.manifest else None,
         ignore_manifest_sectors=bool(args.ignore_manifest_sectors),
+        detectable_threshold=args.detectable_threshold,
+        detectability_table=str(args.detectability_table or DETECTABILITY_TABLE.relative_to(ROOT)),
         pipeline_methods=list(methods), n_guesses_default=N_GUESSES_DEFAULT, n_guesses_overrides=N_GUESSES,
         wall_seconds=time.time() - t0, created=time.strftime("%Y-%m-%d %H:%M:%S"),
     )

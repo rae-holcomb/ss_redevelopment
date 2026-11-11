@@ -732,7 +732,14 @@ for confirmation (ask Rae first).
 
 ### T26. Detectability ceiling for SMARTS stars (roadmap step 1, 2026-11-09)
 - **Agent:** `data-auditor` (+ scorecard reporting; can share T24/T25's scorecard bump)
-- **Status:** ready
+- **Status:** done, awaiting Rae's review (2026-11-10; branch `claude/t26-detectability-7f7523`; `reports/2026-11-10_t26-detectability/`).
+  Per-star detectability D_band·√N_cyc (injected signal = SMARTS flux / T20 stack, band-limited S/N on the pipeline's cadences)
+  for dev_medium in both coverage modes. Proposed `detectable` = ≥ 5 (keeps 97% of successes). Detectable full-year success
+  0.43 / wrong 0.10 / declined 0.47 (n=560); 385 of 650 declines are undetectable stars, 265 are detectable. Scorecard flag
+  proposed as P26, then **implemented as scorecard v6 at Rae's request (2026-11-10)**: `benchmarks/detectability_dev.csv`
+  (dev_small + dev_medium, both coverage modes) joined into per-star `detectability`/`detectable` and `final.detectable*` /
+  `final.undetectable` metrics; existing metrics bit-identical (dev_small check). **Rae (2026-11-10): undetectable stars
+  are not ranker negatives;** use the noise-only stack light curves (T27) for that. Threshold default 5 (T26 proposal).
 - **Why:** dev_medium declines 65% of stars, and T16b found most declined stars' correct candidates look like noise.
   Without a per-star "is the signal detectable at all" measure, we can't tell whether success 0.27 is poor or near the ceiling.
 - **Do:** per-star injected-signal strength. Multiplicative injection (T20) means signal ≈ SMARTS flux / recovered
@@ -1308,4 +1315,13 @@ for confirmation (ask Rae first).
   2. **Per-sector inverse-variance weighting** when sectors are pooled (ACF/periodograms), so one noisy sector doesn't
      dominate. That's a method change, so it goes through the dev_medium scorecard with `check_goals.py --baseline`.
 - Step 1 can ride along with ranker v1; step 2 is its own task.
+
+### P26. Scorecard `detectable` descriptor from a per-star detectability side table (from T26, 2026-11-10)
+- **Status:** done (2026-11-10, Rae said yes): scorecard v6 on branch `claude/t26-detectability-7f7523`.
+- **Proposed by:** T26 (`reports/2026-11-10_t26-detectability/`).
+- **Idea:** a scorecard v6 `detectable` flag + detectable-subset metrics (like `searchable`; existing metrics bit-identical).
+  The scorecard can't compute it itself (needs the T20 noise stack from the drive), so commit a per-star side table
+  (`star_id, coverage pattern, snr_rot`) built by `tools/audit/detectability.py` for dev_small/dev_medium, and add a
+  `--detectability <csv>` option that joins it. Keyed by coverage pattern, since detectability depends on it.
+- **Not done yet:** a table for the holdout or other coverage draws (build with `tools/build_detectability_table.py`).
 
