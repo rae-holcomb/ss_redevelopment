@@ -1,0 +1,85 @@
+{
+  "_comment": "PROPOSAL ONLY (not enforced). Same schema as goals.json; Rae merges what she accepts. All status=draft. G13-G19 continue goals.json numbering. regression_guard here lists proposed ADDITIONS to the guard (not a replacement). Source: reports/2026-11-10_goals-proposal/. Baselines: benchmarks/baselines/*_v5.json (v4 keys are bit-identical).",
+  "goals": [
+    {
+      "id": "G13",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "metric": "final.searchable.overall.none",
+      "op": "<=",
+      "target": 0.65,
+      "description": "G7 restated on searchable stars: fewer declines among stars the ACF can reach (current 0.724). Threshold is a placeholder: v4 report said 'pick X after T16c/T16d'. [source: scorecard-v4]"
+    },
+    {
+      "id": "G14",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "metric": "final.unsearchable.overall.none",
+      "op": ">=",
+      "target": 0.9,
+      "description": "Correct-decline guard: decline when the ACF cannot reach the period (do not hallucinate where blind). [source: scorecard-v4]"
+    },
+    {
+      "id": "G15",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "metric": "final.searchable.overall.wrong",
+      "op": "<=",
+      "target": 0.05,
+      "description": "Confident-wrong rate among searchable stars on assigned coverage (full-year is 0.076; see G10). [source: scorecard-v4]"
+    },
+    {
+      "id": "G16",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.searchable.by_bin.*.success",
+      "op": ">=",
+      "target": 0.3,
+      "description": "Searchable success per period bin (every bin must meet it; shown value is the worst bin). 0.30 mirrors G11. Placeholder threshold: the v4 report gave none. [source: scorecard-v4]"
+    },
+    {
+      "id": "G17",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "metric": "final.unsearchable.overall.wrong",
+      "op": "<=",
+      "target": 0.05,
+      "description": "Wrong answers where the period is beyond ACF reach (T16d target; R/2 cannot move it). [source: t16c]"
+    },
+    {
+      "id": "G18",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.quiet_noise_strict.overall.success",
+      "op": ">=",
+      "target": 0.254,
+      "description": "Quiet-subset success guard at the v5 baseline. [source: scorecard-v5]"
+    },
+    {
+      "id": "G19",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "final.quiet_noise_strict.overall.wrong",
+      "op": "<=",
+      "target": 0.036,
+      "description": "Quiet-subset wrong guard. The v5 report said 0.035, but the baseline is 0.0353 (30 of 850) so 0.035 fails today; 0.036 allows the baseline value. [source: scorecard-v5]"
+    }
+  ],
+  "regression_guard": {
+    "max_drop": 0.02,
+    "metrics": [
+      {
+        "pattern": "final.searchable.overall.success",
+        "max_drop": 0.0
+      },
+      {
+        "pattern": "final.searchable.by_bin.*.success",
+        "max_drop": 0.06
+      },
+      {
+        "pattern": "final.by_band_width.ge_0p5.success",
+        "max_drop": 0.06
+      }
+    ]
+  }
+}
