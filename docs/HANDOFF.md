@@ -1,4 +1,4 @@
-# Handoff note (2026-11-11, coordinator)
+# Handoff note (2026-11-11, coordinator; updated late 2026-11-11)
 
 For a **fresh coordinator session.** The previous coordinator ran from 2026-10-22 to 2026-11-11 and was summarized
 once; it was handed off to keep turns cheap on Rae's Pro plan.
@@ -31,24 +31,24 @@ of everything merged.
   the stable path ranker work reads from.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
-## Open sessions
-- **SMARTS contamination release note** (`local_2f338ed6-…`, branch `claude/smarts-contamination-note-969cc1`) and its
-  **independent review** (`local_c656acac-…`). Rae drives these herself. Remaining: rebuild tables after the
-  2026-11-11 flag relabel (435 quiet → common-mode), M6 (segment table and clipping rule), should-fixes S2/S4/S5/S7,
-  PDF render, questions for Zach Claytor (Q1–Q3, Q6). Keep both until the note is delivered.
-- **Quiet-noise follow-ups** (`local_ad2c3dac-…`): see "Waiting" below for its one leftover.
+## Open sessions (2026-11-11 night)
+- **Short-period recovery** (T5, `local_26fb9ed8-…`, branch prefix `claude/t5-short-period`): diagnose the full-year <1 d
+  deficit, then pick optional method(s) to pool by recall / compute / non-rotator FP. Expect 2–4 h; needs v6 baselines.
+- **Midway review** (`local_d5a20966-…`, branch prefix `claude/midway-review`): read-only science/plan/wheel-spinning
+  review, report `reports/2026-11-11_midway-review/`.
+- **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these. They were
+  archived by accident on 2026-11-11 (side sessions of the old coordinator); worktrees intact; Rae to unarchive.
 
 ## Waiting on Rae
-- Her local run of `tools/run_t10_train_tables.sh` (~51 min) for the ranker's 3k learning-curve point.
-- Whether to build a full-year training table for the ranker.
-- Whether to adopt T27's star-level decline model as ranker v1's decline (needs learning curve, feature ablation,
-  per-period-bin thresholds, P24) and how many negatives per rotator to train with.
-- T27 open questions 4–7: weak-signal "quiet" sources in the negatives, common-mode full-year FPs (T29), the 125
-  spike-dropped stacks, synthetic red noise.
-- Photometric-uncertainty proposal (empirical noise features, then per-sector weighting): not yet filed; Rae hasn't
-  responded.
-- Goals proposals not yet in `goals.json` (v4's five, T16c drafts, v5's quiet-subset guards): offer to collect them
-  into one proposal, now that the quiet subset's definition is settled.
+- Thresholds/conflicts in the goals proposal (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
+- T5's choice of which optional method(s) to pool, when it reports.
+
+## Next up (decided)
+- **Ranker v1** after T5 settles the candidate pool: T27 decline model (all 3 draws per negative source), per-bin
+  thresholds, train on `train_3k` (drive `extracted/t10_tables/train_3k`; learning curve plateaued at 3k), `half_snr_min`,
+  drop persistent-weak-period "quiet" stacks from the negatives. `runs/t11_ranker`, `runs/t27_ranker` are in main's `runs/`.
+- **Efficiency pass** (performance-optimizer) alone on the machine, after T5 merges.
+- P25 noise-level features (step 1 with ranker v1 if cheap; step 2 per-sector weighting is its own task).
 
 ## Pending, no decision needed
 - FFI check of three line-like noise peaks (TIC 10001638723 at 2.95 d, 10001717113 at 5.52 d, 10001695140 at
