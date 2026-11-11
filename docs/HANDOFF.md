@@ -33,6 +33,11 @@ of everything merged.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
 ## Open sessions (2026-11-12)
+- **WG6 Roman data scoping** (T28 scoping; `local_5b376121-…`, branch prefix `claude/t28-wg6-scoping`): docs/code read,
+  per-class profile of `/Volumes/Data_Vault/wg6_roman_data`, class triage, game plan. Needs the drive.
+- **Headline card + Roman-season proxy** (P28/P29; `local_914fa6b5-…`, branch prefix `claude/p28-p29-headline-card`).
+- **Queued:** real-TESS validation-set scoping (P27) once the headline card finishes (2-session cap; it should read the
+  WG6 triage first). **Tonight:** speed-up pass alone on the machine (it makes the v6 baselines from its "before" run).
 - **Midway review** (`local_d5a20966-…`): merged (`eca4926`). **Don't archive**: Rae is reading it.
 - **Short-period recovery** (`local_26fb9ed8-…`) and **repo cleanup** (`local_a3c86310-…`): merged, idle; archive on Rae's OK.
 - **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these. They were
