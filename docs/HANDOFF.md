@@ -50,15 +50,12 @@ of everything merged.
 - The midway review's open questions (validation sources, Roman scoping now vs later, headline period population).
 
 ## Next up (decided)
-- **New baselines on the T5 code** (`d04a88f`): T5 changed pipeline results, so the committed v5 baselines describe the old
-  code. Rescore dev_medium full-year + assigned and synth200 at scorecard v6 (~20 min each at 4 workers) and commit as the
-  new baselines; earlier baselines stay for history.
-- **Rebuild ranker tables on the T5 code (P31):** dev_medium T10 tables, `train_3k` and the T27 negatives tables. Needs the
-  drive; give Rae a time estimate first. T5's <1 d gain only reaches answers through the ranker.
+- **Tonight:** T31 (wavelet determinism + result-changing comb-fit/CWT speed-ups), machine alone. Start it when Rae
+  says she's done with the laptop.
+- **Rebuild ranker tables (P31)** after Rae picks a T31 variant (~2.5 h with the drive; tell Rae first).
 - **Ranker v1** on the rebuilt tables: T27 decline model (all 3 draws per negative source), per-bin
   thresholds, `train_3k`, `half_snr_min`, drop persistent-weak-period "quiet" stacks from the negatives.
   `runs/t11_ranker`, `runs/t27_ranker` are in main's `runs/`. Report <1 d success at matched precision + negatives FP rate.
-- **Efficiency pass** (performance-optimizer) alone on the machine; T5 and P30 are merged, so it's unblocked.
 - P25 noise-level features (step 1 with ranker v1 if cheap; step 2 per-sector weighting is its own task).
 - T5 follow-ups: P32 (`half_lag_consistency` gate vs sub-day success), P33 (`pairwise_histogram` on long baselines, low priority).
 
