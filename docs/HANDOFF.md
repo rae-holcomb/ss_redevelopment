@@ -32,17 +32,17 @@ of everything merged.
   the stable path ranker work reads from.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
-## Open sessions (2026-11-12)
-- **WG6 Roman data scoping** (T28 scoping; `local_5b376121-…`, branch `claude/t28-wg6-scoping-43bfaa`, 7496dc0): first pass
-  done on what turned out to be the **raw archival OGLE/TESS light curves** (no Roman resampling). **Don't merge yet**
-  (Rae, 2026-11-12): she is downloading the Roman-resampled WG6 set; when it's on the drive, send this same session back
-  to analyze it, then verify and merge. Keep the session (not archived).
-- **Headline card** (P28/P29): merged `facc568`; session idle, archive on Rae's OK.
-- **Real-TESS validation-set scoping** (P27): running (started 2026-11-12). **Tonight:** speed-up pass alone on the machine (it makes the v6 baselines from its "before" run).
-- **Midway review** (`local_d5a20966-…`): merged (`eca4926`). **Don't archive**: Rae is reading it.
-- **Short-period recovery** (`local_26fb9ed8-…`) and **repo cleanup** (`local_a3c86310-…`): merged, idle; archive on Rae's OK.
-- **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these. They were
-  archived by accident on 2026-11-11 (side sessions of the old coordinator); worktrees intact; Rae to unarchive.
+## Open sessions (2026-11-12 night)
+- **Speed-up pass** (T12; `local_8a41a57b-…`, branch prefix `claude/t12-speed-up`): running overnight, machine alone.
+  Bit-identical optimizations; its "before" runs become the v6 baselines; also worker-count and rebuild-time estimates.
+- **WG6 scoping** (T28; `local_5b376121-…`): merged `9063c95` (raw + Roman-resampled). **Don't archive**: Rae reviews tomorrow.
+- **Validation-set scoping** (P27; `local_13645bab-…`, branch `claude/p27-validation-scoping-4c1c1b`, f6edf03): done, not
+  merged; Rae decided Q1 (Zach's list = `expected_undetectable`), Q2 (SPOC SAP + QLP fallback; also score PDCSAP), Q6
+  (astroquery installed). Q3–5, Q7 wait on her review.
+- **Midway review** (`local_d5a20966-…`): merged; **don't archive** (Rae reading).
+- **Short-period, headline card:** merged, idle; archive on Rae's OK.
+- **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these; archived by
+  accident 2026-11-11, Rae to unarchive.
 
 ## Waiting on Rae
 - Thresholds/conflicts in the goals proposal (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
