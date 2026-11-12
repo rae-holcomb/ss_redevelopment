@@ -32,9 +32,10 @@ of everything merged.
   the stable path ranker work reads from.
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
-## Open sessions (2026-11-12 night)
-- **Speed-up pass** (T12; `local_8a41a57b-…`, branch prefix `claude/t12-speed-up`): running overnight, machine alone.
-  Bit-identical optimizations; its "before" runs become the v6 baselines; also worker-count and rebuild-time estimates.
+## Open sessions (2026-11-13)
+- **Speed-up pass** (T12; `local_8a41a57b-…`): merged `44768ec` (1.5–1.6× faster, bit-identical; v6 baselines). Archive on
+  Rae's OK. Open questions in its report (wavelet np.exp fix P4, result-changing speed-ups P38, 6 workers, runtime goal).
+  **Next:** rebuild the ranker tables (P31, ~2.5 h with the drive; tell Rae first).
 - **WG6 scoping** (T28; `local_5b376121-…`): merged `9063c95` (raw + Roman-resampled). **Don't archive**: Rae reviews tomorrow.
 - **Validation-set scoping** (P27; `local_13645bab-…`, branch `claude/p27-validation-scoping-4c1c1b`, f6edf03): done, not
   merged; Rae decided Q1 (Zach's list = `expected_undetectable`), Q2 (SPOC SAP + QLP fallback; also score PDCSAP), Q6
