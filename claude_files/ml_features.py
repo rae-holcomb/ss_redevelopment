@@ -540,12 +540,28 @@ def _s_ph(time: np.ndarray, flux: np.ndarray, P: float, min_bins: int = 5) -> fl
     if bin_pts < 2 or n_bins < min_bins:
         return float("nan")
 
+    # T12 (2026-11-12): bins with no NaN (the usual case) get their std from
+    # one axis=1 np.std over a C-contiguous (n_bins, bin_pts) block, which
+    # reduces each row with the same pairwise summation a 1-D np.std of that
+    # bin uses, so every value is bit-identical (tests/test_t12_speedups.py);
+    # bins holding NaNs keep the per-bin path. Was ~half the ml_features time
+    # for short periods (thousands of 1-D np.std calls per candidate).
+    block = np.ascontiguousarray(np.asarray(flux, dtype=float)[:n_bins * bin_pts].reshape(n_bins, bin_pts))
+    finite = np.isfinite(block)
+    all_ok = finite.all(axis=1)
+    fast = np.std(block[all_ok], axis=1) if all_ok.any() else np.empty(0)
+    need = max(3, bin_pts // 3)
     stds = []
+    j = 0
     for i in range(n_bins):
-        seg = flux[i * bin_pts:(i + 1) * bin_pts]
-        seg_valid = seg[np.isfinite(seg)]
-        if len(seg_valid) >= max(3, bin_pts // 3):
-            stds.append(np.std(seg_valid))
+        if all_ok[i]:
+            if bin_pts >= need:
+                stds.append(fast[j])
+            j += 1
+        else:
+            seg_valid = block[i][finite[i]]
+            if len(seg_valid) >= need:
+                stds.append(np.std(seg_valid))
     return float(np.mean(stds)) if stds else float("nan")
 
 

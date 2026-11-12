@@ -35,6 +35,98 @@ import numpy as np
 STAGE1_MAX_LAG_FRAC = 1 / 3
 
 
+class _ExactCache:
+    """Tiny most-recently-used cache keyed on the exact bytes of numpy arrays.
+
+    T12 (2026-11-12): the per-star pipeline autocorrelates the same flux twice
+    (Stage 2 view, then the Stage 1 view, which only truncates differently)
+    and the same gap mask up to seven times (both views plus the five
+    high-pass windows of guess_acf_fft_highpass, whose filtered flux keeps the
+    original mask almost always). The key is the arrays' raw bytes plus
+    dtype/shape, so a hit means bit-identical input and therefore returns
+    bit-identical output; nothing is approximated. Values are treated as
+    read-only by the callers below.
+    """
+
+    def __init__(self, maxsize: int = 2):
+        """Keep up to `maxsize` entries, evicting the least recently used."""
+        self.maxsize = maxsize
+        self._d: dict = {}
+
+    @staticmethod
+    def key(*arrays) -> tuple:
+        """Exact identity key for a tuple of arrays."""
+        return tuple((a.dtype.str, a.shape, a.tobytes()) for a in arrays)
+
+    def get(self, key):
+        """Return the cached value or None (and mark it most recently used)."""
+        val = self._d.pop(key, None)
+        if val is not None:
+            self._d[key] = val
+        return val
+
+    def put(self, key, val) -> None:
+        """Insert `val` under `key`, evicting the oldest entry if full."""
+        self._d.pop(key, None)
+        self._d[key] = val
+        while len(self._d) > self.maxsize:
+            self._d.pop(next(iter(self._d)))
+
+
+_PAIR_COUNT_CACHE = _ExactCache(maxsize=2)
+_ACF_CACHE = _ExactCache(maxsize=2)
+
+
+def _pair_counts(mask: np.ndarray) -> np.ndarray:
+    """Valid-pair count at every lag 0..n-1 for a finite-sample mask (cached).
+
+    The autocorrelation of the 0/1 mask via a zero-padded FFT, clipped at 0
+    (FFT round-off can leave tiny negative counts). Returned array is shared
+    with the cache: do not modify it in place.
+    """
+    key = _ExactCache.key(mask)
+    hit = _PAIR_COUNT_CACHE.get(key)
+    if hit is not None:
+        return hit
+    n = len(mask)
+    fm = np.fft.fft(mask.astype(float), n=2 * n)
+    valid_count = np.fft.ifft(fm * np.conj(fm)).real[:n]
+    # numerical noise can leave tiny negative/zero counts; clip
+    valid_count = np.clip(valid_count, 0, None)
+    _PAIR_COUNT_CACHE.put(key, valid_count)
+    return valid_count
+
+
+def _full_acf(flux: np.ndarray, mask: np.ndarray) -> tuple:
+    """Gap-normalized ACF (normalized to 1 at lag 0) and pair counts at every lag (cached).
+
+    The full-length, untruncated core of compute_acf; see its docstring for
+    the masked-FFT method. Returned arrays are shared with the cache: do not
+    modify them in place.
+    """
+    key = _ExactCache.key(flux)
+    hit = _ACF_CACHE.get(key)
+    if hit is not None:
+        return hit
+    x = np.where(mask, flux - np.mean(flux[mask]), 0.0)
+    n = len(x)
+    nfft = 2 * n  # zero-padded to avoid circular wraparound
+
+    fx = np.fft.fft(x, n=nfft)
+    raw_acf = np.fft.ifft(fx * np.conj(fx)).real[:n]
+
+    valid_count = _pair_counts(mask)
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        acf = raw_acf / valid_count
+    acf[valid_count == 0] = np.nan
+
+    # normalize to acf(0) = 1 (acf[0] equals the variance of the valid data)
+    acf = acf / acf[0]
+    _ACF_CACHE.put(key, (acf, valid_count))
+    return acf, valid_count
+
+
 def compute_acf(
     time: np.ndarray,
     flux: np.ndarray,
@@ -83,26 +175,8 @@ def compute_acf(
     if mask.sum() < 10:
         raise ValueError("compute_acf: fewer than 10 finite flux points.")
 
-    x = np.where(mask, flux - np.mean(flux[mask]), 0.0)
-    m = mask.astype(float)
-
-    n = len(x)
-    nfft = 2 * n  # zero-padded to avoid circular wraparound
-
-    fx = np.fft.fft(x, n=nfft)
-    raw_acf = np.fft.ifft(fx * np.conj(fx)).real[:n]
-
-    fm = np.fft.fft(m, n=nfft)
-    valid_count = np.fft.ifft(fm * np.conj(fm)).real[:n]
-    # numerical noise can leave tiny negative/zero counts; clip
-    valid_count = np.clip(valid_count, 0, None)
-
-    with np.errstate(invalid="ignore", divide="ignore"):
-        acf = raw_acf / valid_count
-    acf[valid_count == 0] = np.nan
-
-    # normalize to acf(0) = 1 (acf[0] equals the variance of the valid data)
-    acf = acf / acf[0]
+    acf, valid_count = _full_acf(flux, mask)
+    n = len(flux)
 
     dt = np.median(np.diff(time))
     lags = np.arange(n) * dt

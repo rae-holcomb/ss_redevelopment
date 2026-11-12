@@ -286,11 +286,49 @@ def _grid_search_t0(
     """
     lo = max(min_lag, 0.5 * P0) if skip_lag0_tooth else min_lag
     trial_t0 = np.linspace(lo, lo + P0, n_phase, endpoint=False)
-    scores = [
-        comb_score(acf_lags, acf, P0, t0, n_max=n_teeth_for_score, weight_func=weight_func)
-        for t0 in trial_t0
-    ]
+    scores = _comb_scores_over_t0(acf_lags, acf, P0, trial_t0, n_teeth_for_score, weight_func)
     return float(trial_t0[int(np.argmax(scores))])
+
+
+def _comb_scores_over_t0(
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    P: float,
+    trial_t0: np.ndarray,
+    n_max: int,
+    weight_func: Optional[Callable[[int], float]] = None,
+) -> list:
+    """comb_score(acf_lags, acf, P, t0, n_max=n_max, weight_func=weight_func)
+    for every t0 in `trial_t0`, bit-identical to calling it in a loop.
+
+    T12 (2026-11-12): _grid_search_t0 called comb_score 200 times per
+    candidate, ~80 us each, almost all per-call numpy overhead (~8% of a
+    star's wall time). Here the tooth lags and the ACF interpolation are
+    computed for all trial phases at once (elementwise, so every value is
+    the same float as before). The two sums stay per-row np.sum calls on
+    contiguous 1-D slices of the in-range teeth, exactly the arrays
+    comb_score sums: a single axis=1 reduction over zero-padded rows could
+    differ in the last bit (numpy's reduction order), so it is not used.
+    tests/test_t12_speedups.py checks equality against comb_score.
+    """
+    if weight_func is None:
+        weight_func = default_comb_weight
+    lag_max = acf_lags[-1]
+    n = np.arange(0, max(n_max, 0) + 1)
+    weights = np.array([weight_func(int(nn)) for nn in n])
+    comb_lags = np.asarray(trial_t0, dtype=float)[:, None] + n * P  # same op order as comb_score
+    # in-range teeth form a prefix of each row (lags increase with n)
+    n_in = np.count_nonzero(comb_lags <= lag_max, axis=1)
+    vals = np.interp(comb_lags, acf_lags, acf)
+    prod = weights * vals
+    wsum = [None] + [np.sum(weights[:k]) for k in range(1, len(n) + 1)]
+    scores = []
+    for i, k in enumerate(n_in):
+        if k == 0:
+            scores.append(-np.inf)
+        else:
+            scores.append(float(np.sum(prod[i, :k]) / wsum[k]))
+    return scores
 
 
 # --------------------------------------------------------------------------
@@ -447,29 +485,47 @@ def _comb_model_setup(
             c[i] += x[idx_delta0 + delta_pos_of[i]]
         return c
 
+    # T12 (2026-11-12): residual and jacobian are evaluated over all windows
+    # at once on concatenated per-point arrays (each window's A, h, centre and
+    # n repeated over its points) instead of a Python loop over windows. Every
+    # element goes through the same elementwise operations in the same order
+    # as the per-window loop did, so the floats are identical (checked in
+    # tests/test_t12_speedups.py); ~2x faster per call (~13k residual and ~9k
+    # jacobian calls per 9 stars in the 2026-11-12 profile).
+    win_of_pt = np.repeat(np.arange(m), n_points)  # window index of each residual row
+    lag_all = np.concatenate(lag_subs) if m else np.empty(0)
+    acf_all = np.concatenate(acf_subs) if m else np.empty(0)
+    w_all = np.concatenate(w_subs) if m else np.empty(0)
+    w2_all = w_all * 2.0
+    neg_w_all = -w_all
+    n_all = np.asarray(ns, dtype=float)[win_of_pt] if m else np.empty(0)
+    rows = np.arange(total_pts)
+    col_A = idx_A0 + win_of_pt
+    col_h = idx_h0 + win_of_pt
+    has_delta = np.array([i in delta_pos_of for i in range(m)], dtype=bool)[win_of_pt] if m else np.empty(0, bool)
+    rows_delta = rows[has_delta]
+    col_delta = np.array([idx_delta0 + delta_pos_of.get(i, 0) for i in range(m)], dtype=int)[win_of_pt][has_delta] \
+        if m else np.empty(0, int)
+
     def residual(x):
         centers = _centers(x)
-        out = np.empty(total_pts)
-        for i in range(m):
-            A, h, c = x[idx_A0 + i], x[idx_h0 + i], centers[i]
-            out[starts[i]:starts[i + 1]] = w_subs[i] * ((h - A * (lag_subs[i] - c) ** 2) - acf_subs[i])
-        return out
+        A = x[idx_A0:idx_A0 + m][win_of_pt]
+        h = x[idx_h0:idx_h0 + m][win_of_pt]
+        c = centers[win_of_pt]
+        return w_all * ((h - A * (lag_all - c) ** 2) - acf_all)
 
     def jacobian(x):
         centers = _centers(x)
+        A = x[idx_A0:idx_A0 + m][win_of_pt]
+        c = centers[win_of_pt]
         J = np.zeros((total_pts, n_params))
-        for i in range(m):
-            n, A, c = ns[i], x[idx_A0 + i], centers[i]
-            s0, s1 = starts[i], starts[i + 1]
-            wi = w_subs[i]
-            diff = lag_subs[i] - c
-            dresid_dc = wi * 2.0 * A * diff  # d/dc[w*(h - A*(lag-c)^2)] = 2*w*A*(lag-c)
-            J[s0:s1, idx_A0 + i] = -wi * diff**2
-            J[s0:s1, idx_h0 + i] = wi
-            J[s0:s1, idx_P] = dresid_dc * n
-            J[s0:s1, idx_t0] = dresid_dc
-            if i in delta_pos_of:
-                J[s0:s1, idx_delta0 + delta_pos_of[i]] = dresid_dc
+        diff = lag_all - c
+        dresid_dc = w2_all * A * diff  # d/dc[w*(h - A*(lag-c)^2)] = 2*w*A*(lag-c)
+        J[rows, col_A] = neg_w_all * diff**2
+        J[rows, col_h] = w_all
+        J[:, idx_P] = dresid_dc * n_all
+        J[:, idx_t0] = dresid_dc
+        J[rows_delta, col_delta] = dresid_dc[has_delta]
         return J
 
     return dict(residual=residual, jacobian=jacobian, x0=x0, lb=lb, ub=ub,

@@ -60,6 +60,22 @@ except ImportError:  # pragma: no cover
 # Small shared utilities
 # --------------------------------------------------------------------------
 
+def acf_independent(fn: Callable) -> Callable:
+    """Mark a guess_* function as never reading its `acf_lags`/`acf` arguments.
+
+    two_view_guesses runs every method on two ACF views; for a method marked
+    here the long-view call would return exactly the short-view candidates
+    (same time/flux in, deterministic out), all of which its dedup then
+    discards, so it skips that call (T12, 2026-11-12: bit-identical, saves a
+    second Lomb-Scargle / wavelet / high-pass run per star). Returns `fn`
+    itself, so signatures and introspection are unchanged. Only mark a
+    function whose output provably ignores the ACF arguments;
+    tests/test_t12_speedups.py checks every marked one with a garbage ACF.
+    """
+    fn.acf_independent = True
+    return fn
+
+
 
 def _acf_peak_candidates(
     acf_lags: np.ndarray,
@@ -411,6 +427,7 @@ def guess_pairwise_histogram(
 # 2. Candidate generation: Lomb-Scargle periodogram of the light curve
 # --------------------------------------------------------------------------
 
+@acf_independent
 def guess_lombscargle(
     time: np.ndarray,
     flux: np.ndarray,
@@ -683,6 +700,7 @@ def guess_acf_fft(
 # methods=("pairwise_histogram", "lombscargle", "acf_fft",
 # "lombscargle_short", "acf_fft_short").
 
+@acf_independent
 def guess_lombscargle_short(
     time: np.ndarray,
     flux: np.ndarray,
@@ -784,6 +802,7 @@ def _highpass_flux(time: np.ndarray, flux: np.ndarray, window_days: float) -> np
     return flux - trend
 
 
+@acf_independent
 def guess_acf_fft_highpass(
     time: np.ndarray,
     flux: np.ndarray,
@@ -1028,6 +1047,7 @@ def _fit_and_subtract_gaussian(
     return peak_info, new_residual
 
 
+@acf_independent
 def guess_wavelet(
     time: np.ndarray,
     flux: np.ndarray,
@@ -1236,7 +1256,9 @@ def two_view_guesses(fn, time, flux, short_view: tuple, long_view: Optional[tupl
         short_exc = None
     except Exception as exc:  # noqa: BLE001 -- the long view may still contribute
         out, short_exc = [], exc
-    if long_view is not None:
+    if long_view is not None and not getattr(fn, "acf_independent", False):
+        # (an acf_independent method would return `out` again here, every
+        # element of which is already in `seen`, so the call is skipped; T12)
         p_cut = 0.5 * (short_view[0][-1] - short_view[0][0])
         seen = {(g.method, round(g.P0, 9)) for g in out}
         try:
