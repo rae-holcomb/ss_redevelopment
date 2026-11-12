@@ -204,3 +204,82 @@ def test_s_ph_vectorized_matches_loop(seed, clean_lc, noise_lc):
         for P in np.concatenate([[0.03, 0.06, 0.1], rng.uniform(0.05, 12.0, 25)]):
             a, b = mf._s_ph(t, f, P), _s_ph_loop(t, f, P)
             assert (a == b) or (np.isnan(a) and np.isnan(b)), (P, a, b)
+
+
+def _nearest_peak_stats_ref(x, y, target):
+    """Pre-T12 ml_features._nearest_peak_stats (no caching), as a reference."""
+    from scipy.signal import find_peaks
+    idx, _ = find_peaks(y)
+    if len(idx) == 0:
+        return None
+    peak_x, peak_y = x[idx], y[idx]
+    order = np.argsort(peak_y)[::-1]
+    ranks = np.empty(len(idx), dtype=int)
+    ranks[order] = np.arange(1, len(idx) + 1)
+    nl = int(np.argmin(np.abs(peak_x - target)))
+    ni = idx[nl]
+    raw = float(peak_y[nl])
+    y_max = float(np.max(y))
+    half = raw / 2
+    i = ni
+    while i > 0 and y[i] > half:
+        i -= 1
+    j = ni
+    while j < len(y) - 1 and y[j] > half:
+        j += 1
+    return dict(rank=int(ranks[nl]), raw_value=raw, frac_power=raw / y_max if y_max > 0 else np.nan,
+                rel_distance=float(abs(peak_x[nl] - target) / target), width=float(abs(x[j] - x[i])),
+                is_local_max_within_tol=None)
+
+
+def test_cached_peak_stats_match_reference():
+    """Cached peak tables give exactly the uncached _nearest_peak_stats, incl. after array reuse."""
+    import ml_features as mf
+    rng = np.random.default_rng(3)
+    for trial in range(30):
+        x = np.sort(rng.uniform(0.1, 50, 400))
+        y = np.abs(rng.normal(size=400)) + (trial == 0) * 0.0
+        flat = np.ones(50)
+        for target in rng.uniform(0.1, 50, 15):
+            assert mf._nearest_peak_stats(x, y, target) == _nearest_peak_stats_ref(x, y, target)
+        assert mf._nearest_peak_stats(np.arange(50.0), flat, 3.0) is None
+        del x, y  # ids get reused by later arrays: the identity check must catch that
+
+
+def test_fft_family_block_cache_matches_uncached():
+    """_fft_family_block with the cached sorted spectrum == recomputing it every call."""
+    import ml_features as mf
+    from guesses import InitialGuess
+    rng = np.random.default_rng(4)
+    freq = np.linspace(0.01, 5, 3000)
+    power = np.abs(rng.normal(size=3000)) ** 2
+    g = InitialGuess(P0=1.0, method="acf_fft", info=dict(fft_freq=freq, fft_power=power))
+    for P in rng.uniform(0.2, 90, 20):
+        a = mf._fft_family_block(g, "fft", P, 0.1)
+        mf._SPECTRUM_CACHE._d.clear()
+        b = mf._fft_family_block(g, "fft", P, 0.1)
+        assert repr(a) == repr(b)
+        periods = 1.0 / freq
+        order = np.argsort(periods)
+        ref = _nearest_peak_stats_ref(periods[order], power[order], P)
+        assert a[0]["fft_nearest_peak_rank"] == ref["rank"]
+        assert a[3] == ref["raw_value"] / float(np.median(power[order]))
+
+
+def test_identity_cache_lru_and_identity():
+    """_IdentityCache: hit only for the same objects; LRU eviction."""
+    import ml_features as mf
+    c = mf._IdentityCache(maxsize=2)
+    calls = []
+    f = lambda a: calls.append(1) or float(a.sum())  # noqa: E731
+    a, b, d = np.ones(3), np.zeros(3), np.full(3, 2.0)
+    assert c.get_or_compute((a,), f) == 3.0 and c.get_or_compute((a,), f) == 3.0 and len(calls) == 1
+    assert c.get_or_compute((a.copy(),), f) == 3.0 and len(calls) == 2  # equal values, other object
+    c.get_or_compute((b,), f)
+    c.get_or_compute((a,), f)  # refresh a
+    c.get_or_compute((d,), f)  # evicts b (a was used more recently)
+    n = len(calls)
+    c.get_or_compute((a,), f)
+    assert len(calls) == n
+    c.get_or_compute((b,), f)
+    assert len(calls) == n + 1

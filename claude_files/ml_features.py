@@ -187,6 +187,73 @@ def _agreement_and_harmonic_features(
 # each candidate's fitted period, not just whichever method proposed it
 # ==========================================================================
 
+class _IdentityCache:
+    """Memo keyed on the identity of the input arrays (T12, 2026-11-12).
+
+    Every candidate of a star evaluates the same per-method spectra
+    (_method_spectrum_features), and the candidate-independent work on them
+    (sorting by period, find_peaks, peak ranks, the median noise floor) was
+    redone per candidate: ~1.5 s of ml_features time per 15 stars. Entries
+    hold references to their input arrays and a hit requires `is` identity,
+    so an id can't be reused while its entry exists and a hit returns exactly
+    what recomputing would (the spectra in InitialGuess.info are never
+    modified in place). Bounded LRU, so memory stays small.
+    """
+
+    def __init__(self, maxsize: int = 128):
+        """Hold at most `maxsize` entries (least recently used evicted first)."""
+        self.maxsize = maxsize
+        self._d: dict = {}
+
+    def get_or_compute(self, arrays: tuple, fn):
+        """Return fn(*arrays), computed once per identical tuple of array objects."""
+        key = tuple(id(a) for a in arrays)
+        hit = self._d.get(key)
+        if hit is not None and all(h is a for h, a in zip(hit[0], arrays)):
+            self._d[key] = self._d.pop(key)  # most recently used goes last
+            return hit[1]
+        val = fn(*arrays)
+        self._d.pop(key, None)
+        self._d[key] = (arrays, val)
+        while len(self._d) > self.maxsize:
+            self._d.pop(next(iter(self._d)))
+        return val
+
+
+_SPECTRUM_CACHE = _IdentityCache()
+
+
+def _compute_peak_table(x: np.ndarray, y: np.ndarray):
+    """Target-independent part of _nearest_peak_stats: (idx, peak_x, peak_y, ranks, y_max), or None."""
+    idx, _ = find_peaks(y)
+    if len(idx) == 0:
+        return None
+    peak_x = x[idx]
+    peak_y = y[idx]
+    order = np.argsort(peak_y)[::-1]
+    ranks = np.empty(len(idx), dtype=int)
+    ranks[order] = np.arange(1, len(idx) + 1)
+    return idx, peak_x, peak_y, ranks, float(np.max(y))
+
+
+def _peak_table(x: np.ndarray, y: np.ndarray):
+    """_compute_peak_table, cached on the identity of (x, y)."""
+    return _SPECTRUM_CACHE.get_or_compute((x, y), _compute_peak_table)
+
+
+def _compute_sorted_fft_spectrum(freq: np.ndarray, power: np.ndarray) -> tuple:
+    """(periods ascending, power in that order, median power) of an acf_fft-style spectrum."""
+    periods = 1.0 / freq
+    order = np.argsort(periods)
+    periods_sorted, power_sorted = periods[order], power[order]
+    return periods_sorted, power_sorted, float(np.median(power_sorted))
+
+
+def _median_of(y: np.ndarray) -> float:
+    """float(np.median(y)), cached on the identity of y."""
+    return _SPECTRUM_CACHE.get_or_compute((y,), lambda a: float(np.median(a)))
+
+
 def _nearest_peak_stats(x: np.ndarray, y: np.ndarray, target: float) -> Optional[dict]:
     """Given an ascending-x spectrum/histogram (x=period, y=power or
     count), find the local maximum nearest `target` -- among ALL local
@@ -196,19 +263,14 @@ def _nearest_peak_stats(x: np.ndarray, y: np.ndarray, target: float) -> Optional
     relative distance from `target`, and half-max width. Returns None if
     the array has no local maxima at all (e.g. perfectly flat).
     """
-    idx, _ = find_peaks(y)
-    if len(idx) == 0:
+    table = _peak_table(x, y)
+    if table is None:
         return None
-    peak_x = x[idx]
-    peak_y = y[idx]
-    order = np.argsort(peak_y)[::-1]
-    ranks = np.empty(len(idx), dtype=int)
-    ranks[order] = np.arange(1, len(idx) + 1)
+    idx, peak_x, peak_y, ranks, y_max = table
 
     nearest_local = int(np.argmin(np.abs(peak_x - target)))
     nearest_idx = idx[nearest_local]
     raw_value = float(peak_y[nearest_local])
-    y_max = float(np.max(y))
 
     half = raw_value / 2
     i = nearest_idx
@@ -294,14 +356,12 @@ def _fft_family_block(guess, prefix: str, fitted_P: float, agreement_rel_tol: fl
         return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False, np.nan
 
     freq, power = guess.info["fft_freq"], guess.info["fft_power"]
-    periods = 1.0 / freq
-    order = np.argsort(periods)
-    periods_sorted, power_sorted = periods[order], power[order]
+    periods_sorted, power_sorted, noise_floor = _SPECTRUM_CACHE.get_or_compute(
+        (freq, power), _compute_sorted_fft_spectrum)
     stats = _nearest_peak_stats(periods_sorted, power_sorted, fitted_P)
     if stats is None:
         return {f"{prefix}_nearest_peak_{k}": np.nan for k in keys}, None, False, np.nan
 
-    noise_floor = float(np.median(power_sorted))
     snr = stats["raw_value"] / noise_floor if noise_floor > 0 else np.nan
     out = {
         f"{prefix}_nearest_peak_rank": stats["rank"],
@@ -331,7 +391,7 @@ def _wavelet_block(guess, fitted_P: float, agreement_rel_tol: float):
     if stats is None:
         return {f"wavelet_nearest_peak_{k}": np.nan for k in keys}, None, False
 
-    noise_floor = float(np.median(gwps))
+    noise_floor = _median_of(gwps)
     out = {
         "wavelet_nearest_peak_rank": stats["rank"],
         "wavelet_nearest_peak_frac_power": stats["frac_power"],
