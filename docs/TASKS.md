@@ -391,6 +391,25 @@ for confirmation (ask Rae first).
 
 ---
 
+### T31. Wavelet determinism fix + result-changing speed-ups (comb fit, CWT) (Rae, 2026-11-13; from P4, P38)
+- **Agent:** `performance-optimizer` (with method-improver judgement for the comb-fit variants). **Run overnight, machine alone.**
+- **Part A (P4):** make `_morlet2_kernel` / the CWT bit-reproducible (deterministic Morlet envelope). Test: repeated
+  in-process calls give identical bytes. One dev_medium run in both modes; only wavelet fields may move, no outcome change.
+  New baselines `_v6w` (or similar) after Rae's OK.
+- **Part B (P38), Rae's latitude:** the comb fit may change in its details. It must stay true to the idea of finding
+  repeated ACF peaks and characterizing their shapes, sizes and locations, but the current global least-squares comb schema
+  isn't sacred. Explore:
+  - solver settings (tolerances, `tr_solver`, Jacobian, points per window);
+  - structural alternatives, e.g. independent per-peak local fits combined afterwards;
+  - a cheaper CWT (fewer scales, smaller transform length).
+  Score each variant on dev_medium full-year + assigned (~12 min per variant at 4 workers).
+- **Done when:** a report with an accuracy-vs-seconds-per-star frontier (success by period bin, per variant), failure-mode
+  examples for any variant that loses stars, and a recommended variant with `check_goals.py --baseline` before/after.
+  Don't adopt a redesign silently: the chosen variant is Rae's call.
+- **Sequencing:** the ranker-table rebuild (P31) waits for this, since ranker features come from the comb fit and wavelet.
+
+---
+
 ## Phase 3: features
 
 *Done here (moved to `docs/TASKS_DONE.md`): T9.*
