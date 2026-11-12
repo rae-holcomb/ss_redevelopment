@@ -1,0 +1,18 @@
+{
+  "kind": "scorecard",
+  "n_stars": 200,
+  "row_values": 183960,
+  "metric_values": 724,
+  "values_compared": 184684,
+  "runtime_keys_skipped": 1802,
+  "n_diffs": 5,
+  "diffs": [
+    "rows[synth-s0-00017].methods.wavelet.n_candidates: 11 != 10",
+    "rows[synth-s0-00049].methods.wavelet.n_candidates: 10 != 9",
+    "rows[synth-s0-00058].methods.wavelet.top1: 155.43585644091257 != 155.43585643800017",
+    "rows[synth-s0-00175].methods.wavelet.n_candidates: 5 != 4",
+    "rows[synth-s0-00175].methods.wavelet.top1: 114.04080671073488 != 114.04080670660748"
+  ],
+  "run_a": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/runs_before/syn",
+  "run_b": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/runs_after/syn"
+}

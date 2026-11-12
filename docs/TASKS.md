@@ -366,7 +366,9 @@ for confirmation (ask Rae first).
 
 ### T12. Efficiency pass on the production pipeline
 - **Agent:** `performance-optimizer`
-- **Status:** ready (synthetic is enough; re-check on dev_small once T2 lands)
+- **Status:** done 2026-11-12, awaiting Rae's review (`reports/2026-11-12_t12-speed-up/`, branch `claude/t12-speed-up-2a627c`).
+  Six bit-identical changes, 1.5–1.6× per star (production path 1.31×); harness `benchmarks/profile_pipeline.py`,
+  equivalence tests `tests/test_t12_speedups.py`, v6 baselines committed. Follow-ups: P4 (updated), P38.
 - **Why:** at ~1.16 s/star on the default path (`ss_local`, 2026-10-13), one pass over
   1M stars is ~322 CPU-hours (~32 h on 10 workers), and the corpus will be
   re-run many times. Each 10% speedup saves ~32 CPU-hours per pass.
@@ -678,6 +680,15 @@ for confirmation (ask Rae first).
   **T16a (2026-10-14) adds:** the residue also changes wavelet's candidate *count*: star 00058
   gave 6, 7 or 8 in different invocations of the same code, and top-1 on 00038 shifted by
   1.5e-10. So rtol alone won't make T12's per-method check pass; compare top-1 only, or skip wavelet.
+  **T12 (2026-11-12) located it:** `_morlet2_kernel`'s `np.exp(-0.5 * x**2)` (numpy 1.26.4, AVX-512 on the i5)
+  returns two different byte patterns for byte-identical input within one process, depending on allocation
+  state (input alignment alone doesn't trigger it), so the CWT coefficients, the GWPS and the wavelet
+  candidates/features vary in the last bits. Unchanged code gives 2-4 distinct GWPS per star over 8 in-process
+  calls (dev_small 031596, 419951, 107369). Any change that alters allocation patterns can flip it, and it
+  reaches the ranker tables (`wavelet_nearest_peak_*`). Final answers are unaffected (wavelet isn't pooled).
+  Fix options (each changes wavelet bits once, so Rae's call): build the kernel's Gaussian envelope from a
+  deterministic path (e.g. `np.exp` on a fixed scratch buffer, or `math.exp` per element for the short
+  kernels), or round the GWPS to ~1e-12 before peak fitting. See `reports/2026-11-12_t12-speed-up/`.
 
 ### P5. Re-verify determinism and the default worker count on Apple Silicon
 - **Proposed by:** T14 report (2026-10-14)
@@ -1018,3 +1029,17 @@ for confirmation (ask Rae first).
     i.e. the over-tuning test from roadmap step 3.
   - Complements the Roman-cadence FL set, which is built from 65 of these templates.
   - Caveats: literature periods come from different methods, and Medina's MEarth periods run to 180 d.
+
+### P38. Further bit-identical speed-ups not done in T12 (from T12, 2026-11-12)
+- **Proposed by:** T12 report (`reports/2026-11-12_t12-speed-up/`).
+- **Idea (ranked by measured share of the optimized per-star time):**
+  1. The comb fit's `scipy.optimize.least_squares` internals (~57% of the scorecard path; SVD per trust-region
+     step, Python overhead in `trf_bounds`). Bit-identical options are exhausted; anything faster (looser tolerances,
+     `tr_solver="lsmr"`, fewer points per window, a C-level solver) changes results and needs a before/after scorecard.
+  2. `guess_wavelet` (~20%): 200 kernel FFTs + inverse FFTs at the padded length per star. Same-bits options are
+     exhausted. A result-changing option is to compute the GWPS from `|FFT(data) x FFT(kernel)|^2` at a reduced
+     scale set, or drop `info["wavelet_power"]` (a 200 x N float array kept per guess; memory only, ~27 MB per
+     full-year star).
+  3. Scorecard scheduling: submit tasks longest-expected-first (e.g. by number of sectors) to trim the 4-worker tail.
+     Wall time only, no result change.
+

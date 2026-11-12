@@ -1,13 +1,18 @@
 # Benchmark baselines
 
-**Use the `_t5` files for new work** (current pipeline code, since T5's hybrid peak ranking merged 2026-11-11). The `_v5`
-files describe the pre-T5 pipeline and stay for before/after comparisons. Scorecard v6 (T26) adds only the `detectable`
-keys; no v6 baseline is committed yet (the speed-up pass's "before" run is meant to supply it), so goals on those keys
-report n/a. The other files are kept because a goal, test or tool cites them.
+**Use the `_v6` files for new work** (scorecard v6, current pipeline; T12's "before" run, 2026-11-12). Every v5 key of
+the `_v6` files is bit-identical to the `_t5` files on the same dataset string (checked with
+`tools/compare_scorecard_keys.py`: 1151 / 1439 / 724 values, 0 differ), so `_v6` = `_t5` + the v6 `detectable` keys
+(`final.detectable.*`, `final.undetectable.*`, `final.detectable_searchable.*`; per-star `detectability`/`detectable`).
+The `_t5` files stay as history; the `_v5` files describe the pre-T5 pipeline. The other files are kept because a goal,
+test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_fullyear_t5.json` + `_t5_tables/` | **Current judging baseline** (T5, 2026-11-11): same dataset string as `_v5`, on the T5 pipeline (hybrid peak ranking in `lombscargle`/`acf_fft`). Success 0.251, wrong 0.088, <1 d union recall 0.698. Scorecard v5 keys (no `detectable`). | `ss_openblas`, run as `99c46ef-dirty` = pipeline code of `15c88d8` (checked: runs postdate the last code edit) |
+| `dev_medium_fullyear_v6.json` + `_v6_tables/` | **Current judging baseline** (T12 before run, 2026-11-12): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6. Success 0.251, wrong 0.088 (same as `_t5`). `per_candidate.csv` not committed (size). | `ss_openblas`, 4 workers, pipeline code of `9063c95` (= T5 pipeline, unchanged since) |
+| `dev_medium_assigned_v6.json` + `_v6_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.147, wrong 0.055. | same |
+| `synth200_s0_v6.json` + `_v6_tables/` | `synthetic:n=200,seed=0`, scorecard v6 (no detectability table rows for synthetic, so the v6 groups are empty). Success 0.755, wrong 0. | same |
+| `dev_medium_fullyear_t5.json` + `_t5_tables/` | Previous judging baseline (T5, 2026-11-11): same dataset string as `_v5`, on the T5 pipeline (hybrid peak ranking in `lombscargle`/`acf_fft`). Success 0.251, wrong 0.088, <1 d union recall 0.698. Scorecard v5 keys (no `detectable`). | `ss_openblas`, run as `99c46ef-dirty` = pipeline code of `15c88d8` (checked: runs postdate the last code edit) |
 | `dev_medium_assigned_t5.json` + `_t5_tables/` | Same, assigned coverage. Success 0.147, wrong 0.055, <1 d union recall 0.779. | same |
 | `synth200_s0_t5.json` + `_t5_tables/` | `synthetic:n=200,seed=0` on the T5 pipeline. Success 0.755, wrong 0. | same |
 | `dev_medium_fullyear_v5.json` + `_v5_tables/` | Pre-T5 judging baseline (T24/T25/P22b, 2026-11-10): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`. Every v4 key is bit-identical to v4; adds `final.noise.*` (wrong split into `wrong_noise_period`/`wrong_other`), `final.quiet_noise`, `final.quiet_noise_strict`, `final.periodic_noise`; per-star `noise_*` columns. `per_candidate.csv` (`beyond_reach` rows) isn't committed (10 MB). | `ss_openblas`, claude/t24-t25-scorecard-v5-84eca3 |
@@ -22,7 +27,7 @@ Refreshing a baseline is Rae's call. Record why in docs/PROJECT_CONTEXT.md's cha
 
 **Version notes.** v3 keys are unchanged and comparable across v3–v6. `check_goals.py` reports a goal on a key the
 baseline lacks (v4: `final.by_band_width.*`, `final.by_coverage_class.*`, `final.(un)searchable.*`; v5: `final.noise.*`,
-`final.quiet_noise*`; v6: `detectable`) as n/a. The noise join comes from `benchmarks/noise_sources_dev.csv`
+`final.quiet_noise*`; v6: `detectable`) as n/a; against a `_v6` baseline the v6 keys are guarded too. The noise join comes from `benchmarks/noise_sources_dev.csv`
 (dev_small + dev_medium only; `tools/build_noise_table.py`), so `synthetic:` runs and the holdout have no noise columns.
 
 **Pruned 2026-11-11 (P30)**, recoverable from git at commit `d3f73e6`: `synth200_s0_pre_acf` (+tables, before the ACF

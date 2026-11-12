@@ -36,7 +36,7 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
   figures; also the batch runner for any manifest, with per-method Stage-1
   results in `per_method.csv`), `check_goals.py` (grades against `goals.json`
-  and a baseline), `baselines/` (committed reference metrics; use the `_v5` files).
+  and a baseline), `baselines/` (committed reference metrics; use the `_v6` files).
 - `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
   `datasets/README.md`). Dev files are local in `data/smarts_dev/`; score them with
   `--data-root data/smarts_dev` (`--ignore-manifest-sectors` for full-year).
@@ -90,9 +90,9 @@ results depend on memory alignment).
 
 Use parallel processing for batch scripts when reasonable
 (`ProcessPoolExecutor`, `--n-workers` CLI override, `--n-workers 1` as a
-debugging fallback). Older scripts hardcode `DEFAULT_N_WORKERS=10`, which was
-tuned for the Apple Silicon machine and oversubscribes the i5. T14 is
-benchmarking 4/8/10 workers and will set the default. Pin BLAS threads to
+debugging fallback). Default worker count is `determinism.default_n_workers()`
+(one per physical core, 4 on the i5; T14, re-checked by T12: 6–8 workers add
+no throughput beyond noise). `benchmarks/pb_scan.py` still hardcodes 10. Pin BLAS threads to
 1 per worker, or OpenBLAS × many workers can run ~50× slower. Batch jobs at
 real scale (hundreds to thousands of files) are always run locally by Rae,
 not inside a Claude Code session. Timings in reports dated 2026-10-13
@@ -219,8 +219,8 @@ task from `docs/TASKS.md`:
 - Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks".
   **dev_medium full-year is the default judging set for method changes**
   (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
-  ~20 min at 4 workers; Rae's standing OK, 2026-10-21; baseline
-  `benchmarks/baselines/dev_medium_fullyear_t5.json`; `_assigned_t5` for assigned). Use assigned coverage (no
+  ~7 min at 4 workers since T12; Rae's standing OK, 2026-10-21; baseline
+  `benchmarks/baselines/dev_medium_fullyear_v6.json`; `_assigned_v6` for assigned). Use assigned coverage (no
   `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
   without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go under "Proposed" in `docs/TASKS.md`.
