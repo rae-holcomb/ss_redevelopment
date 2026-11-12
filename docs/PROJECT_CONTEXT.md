@@ -509,3 +509,29 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   0.205 hand / 0.284 ranker (unchanged by T5); a true 70 d window needs a per-star-sectors manifest + a
   `--max-span-days` dataset option (~14 min to score, not run). Population default, prevalences and goals H1–H5
   (proposed, `goals.json` untouched) await Rae.
+- **2026-11-12 — T28 scoping: WG6 variable-star set** (`reports/2026-11-12_wg6-dataset-scoping/`; new `docs/WG6_REFERENCE.md`,
+  draft `docs/ROMAN_REFERENCE.md`).
+  - The RGES PIT WG6 download is **archival, not Roman-simulated**: 68,824 OGLE I/V + UKIRT H/K light curves of known
+    bulge variables, plus 390 TESS 20-s flare M dwarfs. No GP resampling or Roman noise has been applied, despite the
+    README, and the files store no truth.
+  - Truth comes from the OGLE OCVS catalog tables (`tools/fetch_ogle_truth.py`, 106 MB on the drive, Rae OK), joined
+    for 99–100% of each OGLE class.
+  - 3,172 OGLE spotted rotators (ROT) with reliable photometric periods: 88/89 measurable stars agree with a quick LS
+    check. EB/ELL catalog periods are orbital, and their light curves show P_orb/2.
+  - The pipeline can't run on the raw OGLE sampling (the ACF coverage cut), so Roman-like resampling comes first (P34).
+  - A Roman-like 70 d × 12.1 min season costs ~0.7 s per star on the i5.
+  - Extraction (22 GB) lives on the drive under `wg6_roman_data_raw/extracted/` (`tools/extract_wg6.py`).
+  - Follow-ups P34–P37.
+- **2026-11-12 — T28 Part 2: WG6 Roman-resampled set** (`reports/2026-11-12_wg6-dataset-scoping/`, Part 2;
+  `docs/WG6_REFERENCE.md` §8; `docs/ROMAN_REFERENCE.md` corrected).
+  - Received at `/Volumes/Data_Vault/wg6_roman_data_resampled/` (42 GB in zips, read in place, not extracted). The raw
+    set moved to `wg6_roman_data_raw/` and the tool defaults follow it.
+  - It is GP-resampled OGLE/UKIRT variables on WG6's Roman grid: 6 consecutive 71-d seasons (2027–2030), F146 at
+    12.1 min, F087/F213 at 6 h.
+  - Two noise variants, both white Gaussian at a quoted σ(mag) on the same light curve:
+    - **simple:** bright, one σ(mag) curve, 1.0 mmag floor; "shifted" = +8 mag;
+    - **improved:** shifted into F146 ~14–21, with per-star σ scatter (blending). **Use improved.**
+  - **No ROT.** The FL TESS M-dwarf templates (54 with literature P, 0.2–5 d) are the only Roman-cadence rotators.
+  - Pipeline: 1.1 s per star-season. 14/16 contaminants get confident periods.
+  - Follow-ups P34–P37 revised.
+

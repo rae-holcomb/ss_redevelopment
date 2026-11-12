@@ -335,7 +335,7 @@ for confirmation (ask Rae first).
 
 ### T28. Roman GBTDS track: data, loader, first scorecard (roadmap step 3, 2026-11-09)
 - **Agent:** start with a scoping session with Rae, then `method-improver`
-- **Status:** ready for scoping. **Discuss with Rae first** (data access, which WG6 sets).
+- **Status:** scoping in review (`reports/2026-11-12_wg6-dataset-scoping/`). Raw WG6 set is archival; the WG6 Roman-resampled set (received 2026-11-11, improved noise recommended) is profiled in Part 2. It has no ROT; FL (TESS M-dwarf templates) are the only Roman-cadence rotators. Next steps: P34 (ROT), P35 (loader + manifest), P36 (negatives).
 - **Why:** Roman is a must-have mission and the Season 1 paper is the deadline. It differs from TESS in cadence (~15 min),
   per-season baseline (~70 d, contiguous), crowding, faintness and stellar population.
 - **Do:** (a) confirm the current GBTDS design (season length/count, cadence, filters, off-season sampling) and record it
@@ -972,3 +972,49 @@ for confirmation (ask Rae first).
   has ~m-k supporting pairs, so the winner is set by bin merging, not the fundamental (re-binning to relative widths
   doesn't fix it). Try nearest-neighbour spacings (j-i <= K) or a comb fold of the peak list. Low priority: the fixed
   `acf_fft`/`lombscargle` now cover these stars.
+
+### P34. Roman-cadence ROT (spotted rotators) (from T28 scoping, revised 2026-11-12)
+- **Proposed by:** T28 scoping (`reports/2026-11-12_wg6-dataset-scoping/`, Part 2).
+- **Idea:** WG6 shipped GP-resampled Roman light curves (6 × 71 d, F146 at 12.1 min) for every class except the 3,172
+  OGLE spotted rotators. The only Roman-cadence rotators are 54 TESS M-dwarf templates (FL), with no spot evolution.
+  Either:
+  - (i) ask WG6 to resample ROT (their `add_rotators` branch already holds the archival ROT); or
+  - (ii) do it ourselves on WG6's grid (`roman_times_shortcadence.npy`) with WG6's improved σ(mag): a quasi-periodic GP
+    per OGLE season (`celerite2`/`tinygp`: Rae's OK), or inject ROT periods and amplitudes into `synthetic.spot_signal`.
+
+  Add spot evolution either way.
+- **Needs Rae:** (i) vs (ii), and the GP package.
+
+### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
+- **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
+- **Idea:**
+  - Loader: `load_wg6_roman(zip_or_path, member=None, band="F146", season=None)` reads in place from the zips (no
+    42 GB extraction needed). It takes the JD column, or the `.npy` grid for simple, converts mag to relative flux with
+    a NaN-safe median (FL has NaN cadences), cuts one 71-d season, and returns σ. It returns the `load_smarts_fits`
+    container. Keep `load_wg6_raw` (OGLE I, HJD fix) for ROT work.
+  - Manifest: `zip`/`member` relative to `WG6_RESAMPLED_ROOT`, with `variant`, `cls`, `P_true`, `p_convention`,
+    `P_phot_expected`, `fl_template`, `wfmag`, `season`, `is_rotator`, `is_eb` and `eval_set`. **Split by FL template
+    and by OGLE star.**
+  - Dataset strings: `wg6r_fl_v0_improved_s<k>` and `wg6r_contam_v0_improved_s<k>`.
+  - Test with a tiny synthetic FITS-in-zip fixture (no drive).
+
+### P36. WG6 contaminants as the first astrophysical ranker negatives (from T28 scoping, revised 2026-11-12)
+- **Proposed by:** T28 scoping.
+- **Idea:**
+  - With P35: ~300 improved-noise stars per class (ECL, ELL, T2CEP, RRLYR, CEP + FL "flat"; HB, DSCT, LPV and CV as
+    stress tests), one season each, as star-level declines next to T27's noise stacks. Every candidate is at relevance 0.
+  - Tag ECL/ELL candidates near P_orb or P_orb/2 as `eb_period` for T29.
+  - Report the per-class FP rate at matched rotator precision on the FL rotators. Today 14/16 contaminants get confident
+    periods (4/4 T2CEP and RRLYR).
+  - Compute: 1.1 s per star-season, so ~1.4 CPU-h for 300 × 5 classes + 1,600 FL × 2 magnitudes.
+- **Needs Rae:** EBs/ELLs as plain negatives vs a flagged class.
+
+### P37. TESS flare stars as a real-star validation set (from T28 scoping, 2026-11-12)
+- **Proposed by:** T28 scoping.
+- **Idea:**
+  - The 390 *raw* WG6 flare files are real TESS 20-s PDCSAP M dwarfs; 273 have literature rotation periods
+    (Günther+2020, Medina+2020).
+  - Bin to 30 min and score the current pipeline and ranker per sector: the first real-star (non-SMARTS) TESS check,
+    i.e. the over-tuning test from roadmap step 3.
+  - Complements the Roman-cadence FL set, which is built from 65 of these templates.
+  - Caveats: literature periods come from different methods, and Medina's MEarth periods run to 180 d.
