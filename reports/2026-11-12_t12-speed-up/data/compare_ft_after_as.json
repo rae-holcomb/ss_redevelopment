@@ -1,0 +1,19 @@
+{
+  "kind": "feature_tables",
+  "n_stars": 50,
+  "values_compared": 165213,
+  "runtime_keys_skipped": 50,
+  "n_diffs": 8,
+  "diffs": [
+    "cands[smarts-tess-v1.0-107369][5].wavelet_nearest_peak_frac_power: 0.39917596068435696 != 0.3991759606843569",
+    "cands[smarts-tess-v1.0-107369][7].wavelet_nearest_peak_frac_power: 0.39917596068435696 != 0.3991759606843569",
+    "cands[smarts-tess-v1.0-107369][9].wavelet_nearest_peak_frac_power: 0.39917596068435696 != 0.3991759606843569",
+    "cands[smarts-tess-v1.0-107369][12].wavelet_nearest_peak_frac_power: 0.39917596068435696 != 0.3991759606843569",
+    "cands[smarts-tess-v1.0-107369][5].wavelet_nearest_peak_snr: 5.628539564786039 != 5.628539564786038",
+    "cands[smarts-tess-v1.0-107369][7].wavelet_nearest_peak_snr: 5.628539564786039 != 5.628539564786038",
+    "cands[smarts-tess-v1.0-107369][9].wavelet_nearest_peak_snr: 5.628539564786039 != 5.628539564786038",
+    "cands[smarts-tess-v1.0-107369][12].wavelet_nearest_peak_snr: 5.628539564786039 != 5.628539564786038"
+  ],
+  "run_a": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/ft/before_as",
+  "run_b": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/ft/after_as"
+}

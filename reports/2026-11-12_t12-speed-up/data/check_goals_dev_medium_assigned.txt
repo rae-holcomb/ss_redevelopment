@@ -1,0 +1,20 @@
+Run: /private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/runs_after/dmas/metrics.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest, commit 2be3a08)
+Baseline: benchmarks/baselines/dev_medium_assigned_v6.json  (commit 9063c95)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.147   0.147  +0.000  0.020  final.overall.success
+  0.221   0.221  +0.000  0.060  final.by_bin.1-3d.success
+  0.175   0.175  +0.000  0.060  final.by_bin.10-30d.success
+  0.193   0.193  +0.000  0.060  final.by_bin.3-10d.success
+  0.180   0.180  +0.000  0.060  final.by_bin.<1d.success
+  0.048   0.048  +0.000  0.060  final.by_bin.>30d.success
+  0.930   0.930  +0.000  0.060  union_recall.by_bin.1-3d
+  0.865   0.865  +0.000  0.060  union_recall.by_bin.10-30d
+  0.930   0.930  +0.000  0.060  union_recall.by_bin.3-10d
+  0.779   0.779  +0.000  0.060  union_recall.by_bin.<1d
+  0.516   0.516  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS

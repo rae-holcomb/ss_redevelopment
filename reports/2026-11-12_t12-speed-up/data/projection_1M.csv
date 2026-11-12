@@ -1,0 +1,5 @@
+,,production,scorecard,feature_build,production_cpu_hours_per_1M,scorecard_cpu_hours_per_1M,feature_build_cpu_hours_per_1M
+assigned,after,0.813,1.082,1.184,226.0,301.0,329.0
+assigned,before,1.062,1.656,1.871,295.0,460.0,520.0
+fullyear,after,1.07,1.569,1.713,297.0,436.0,476.0
+fullyear,before,1.397,2.446,2.782,388.0,679.0,773.0

@@ -1,0 +1,12 @@
+{
+  "kind": "scorecard",
+  "n_stars": 50,
+  "row_values": 42142,
+  "metric_values": 1711,
+  "values_compared": 43853,
+  "runtime_keys_skipped": 452,
+  "n_diffs": 0,
+  "diffs": [],
+  "run_a": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/runs_before/dsas",
+  "run_b": "/private/tmp/claude-501/-Users-raeholcomb-Documents-GitHub-ss-redevelopment--claude-worktrees-t16c-searchable-range-6f41b7/b75b9687-6ff9-4f88-88f9-c3317b44a588/scratchpad/runs_s1/dsas"
+}

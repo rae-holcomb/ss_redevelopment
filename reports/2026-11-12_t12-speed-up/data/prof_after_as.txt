@@ -1,0 +1,138 @@
+===== sorted by tottime =====
+         8191254 function calls (8177548 primitive calls) in 27.548 seconds
+
+   Ordered by: internal time
+   List reduced from 1614 to 60 due to restriction <60>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    14174    3.060    0.000    3.858    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/linalg/_decomp_svd.py:16(svd)
+     6015    1.490    0.000    1.490    0.000 {built-in method scipy.fft._pocketfft.pypocketfft.c2c}
+      628    1.324    0.002   16.734    0.027 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:206(trf_bounds)
+      552    1.308    0.002    1.308    0.002 {built-in method numpy.fft._pocketfft_internal.execute}
+   328453    1.266    0.000    1.266    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+    26106    0.683    0.000    1.402    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:372(step_size_to_bound)
+    28608    0.641    0.000    0.641    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:195(soft_l1)
+   136640    0.575    0.000    1.086    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/linalg/linalg.py:2383(norm)
+       15    0.574    0.038    2.955    0.197 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:945(_cwt_morlet)
+     3000    0.567    0.000    0.596    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:933(_morlet2_kernel)
+   206140    0.552    0.000    0.552    0.000 {method 'dot' of 'numpy.ndarray' objects}
+    13662    0.462    0.000    0.637    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:517(jacobian)
+    37096    0.446    0.000    0.947    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:106(phi_and_derivative)
+    15497    0.430    0.000    3.082    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:129(select_step)
+    15497    0.399    0.000    1.635    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:57(solve_lsq_trust_region)
+   206487    0.398    0.000    1.162    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/fromnumeric.py:71(_wrapreduction)
+    15321    0.387    0.000    0.577    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:467(CL_scaling_vector)
+    28608    0.323    0.000    1.086    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:234(loss_function)
+    16125    0.298    0.000    0.565    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:440(make_strictly_feasible)
+    29127    0.274    0.000    0.274    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:481(_centers)
+    13662    0.258    0.000    0.298    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:687(left_multiply)
+      644    0.256    0.000    0.482    0.001 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/alias_metrics.py:85(fold_half_cycle_corr)
+       15    0.232    0.015    4.139    0.276 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:1050(guess_wavelet)
+      163    0.231    0.001    0.258    0.002 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/pandas/core/window/rolling.py:601(calc)
+       15    0.219    0.015    0.220    0.015 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/astropy/io/fits/file.py:327(readarray)
+    14946    0.212    0.000    0.365    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:510(residual)
+    13662    0.205    0.000    0.503    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:720(scale_for_robust_loss_function)
+    78131    0.195    0.000    0.195    0.000 {method 'astype' of 'numpy.ndarray' objects}
+    14174    0.188    0.000    4.068    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/_lib/_util.py:1196(wrapper)
+    14248    0.177    0.000    0.305    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:302(minimize_quadratic_1d)
+462463/462105    0.172    0.000    0.264    0.000 {built-in method builtins.isinstance}
+    65736    0.166    0.000    0.166    0.000 {built-in method numpy.zeros}
+    92851    0.158    0.000    0.179    0.000 {built-in method numpy.array}
+    33367    0.157    0.000    0.198    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/numeric.py:67(zeros_like)
+   119852    0.155    0.000    0.728    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/fromnumeric.py:2177(sum)
+    14248    0.149    0.000    0.252    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:251(build_quadratic_1d)
+    14174    0.146    0.000    0.217    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/linalg/lapack.py:1025(_compute_lwork)
+    16753    0.140    0.000    0.266    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:401(find_active_constraints)
+      295    0.135    0.000   17.133    0.058 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:679(_fit_single_candidate)
+    30818    0.134    0.000    0.676    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:677(_update_x)
+    14392    0.131    0.000    0.263    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/function_base.py:564(asarray_chkfinite)
+   303149    0.131    0.000    0.131    0.000 {built-in method numpy.asarray}
+      295    0.125    0.000    0.441    0.001 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:293(_comb_scores_over_t0)
+    10895    0.123    0.000    0.123    0.000 {method 'partition' of 'numpy.ndarray' objects}
+    16352    0.118    0.000    0.124    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/numeric.py:203(ones_like)
+    15497    0.117    0.000    0.203    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:325(evaluate_quadratic)
+    60476    0.115    0.000    0.266    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/_ufunc_config.py:33(seterr)
+    30876    0.112    0.000    0.292    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/numeric.py:2378(array_equal)
+    16125    0.107    0.000    0.268    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:367(in_bounds)
+    14693    0.102    0.000    1.272    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:702(_update_jac)
+     8702    0.100    0.000    0.117    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:18(intersect_trust_region)
+    21265    0.100    0.000    0.325    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/_methods.py:101(_mean)
+    10836    0.098    0.000    0.608    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/function_base.py:3931(_median)
+     3402    0.098    0.000    0.195    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/ml_features.py:257(_nearest_peak_stats)
+   149301    0.096    0.000    0.096    0.000 {built-in method builtins.getattr}
+    14584    0.096    0.000    0.137    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/twodim_base.py:234(diag)
+     3987    0.093    0.000    0.184    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/_methods.py:135(_var)
+      519    0.090    0.000    0.165    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:400(_comb_model_setup)
+    14065    0.090    0.000    1.119    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:438(__call__)
+    32880    0.084    0.000    1.158    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:262(__call__)
+
+
+===== sorted by cumulative =====
+         8191254 function calls (8177548 primitive calls) in 27.548 seconds
+
+   Ordered by: cumulative time
+   List reduced from 1614 to 60 due to restriction <60>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       15    0.010    0.001   27.551    1.837 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/benchmarks/profile_pipeline.py:56(time_one_star)
+       15    0.020    0.001   17.823    1.188 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:1631(fit_rotation_period)
+      628    0.046    0.000   17.187    0.027 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/_lib/_util.py:677(inner)
+      628    0.041    0.000   17.139    0.027 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:266(least_squares)
+      295    0.135    0.000   17.133    0.058 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:679(_fit_single_candidate)
+      628    0.023    0.000   16.761    0.027 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:113(trf)
+      628    1.324    0.002   16.734    0.027 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:206(trf_bounds)
+      519    0.072    0.000   16.722    0.032 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:543(_fit_comb_core)
+      105    0.061    0.001    5.976    0.057 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:1226(two_view_guesses)
+       15    0.232    0.015    4.139    0.276 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:1050(guess_wavelet)
+    14174    0.188    0.000    4.068    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/_lib/_util.py:1196(wrapper)
+    14174    3.060    0.000    3.858    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/linalg/_decomp_svd.py:16(svd)
+    15497    0.430    0.000    3.082    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/trf.py:129(select_step)
+       15    0.574    0.038    2.955    0.197 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:945(_cwt_morlet)
+       15    0.007    0.000    2.611    0.174 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/tools/build_feature_tables.py:169(candidate_table)
+       15    0.025    0.002    1.816    0.121 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/ml_features.py:948(extract_candidate_features)
+     6015    0.023    0.000    1.783    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/fft/_backend.py:18(__ua_function__)
+     6015    0.029    0.000    1.745    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/fft/_basic_backend.py:27(_execute_1D)
+     6015    0.029    0.000    1.709    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/fft/_pocketfft/basic.py:11(c2c)
+    15497    0.399    0.000    1.635    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:57(solve_lsq_trust_region)
+    14693    0.038    0.000    1.550    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:739(jac)
+     6015    1.490    0.000    1.490    0.000 {built-in method scipy.fft._pocketfft.pypocketfft.c2c}
+    26106    0.683    0.000    1.402    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:372(step_size_to_bound)
+      552    0.009    0.000    1.321    0.002 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/fft/_pocketfft.py:49(_raw_fft)
+      552    1.308    0.002    1.308    0.002 {built-in method numpy.fft._pocketfft_internal.execute}
+    16125    0.033    0.000    1.273    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:732(fun)
+    14693    0.102    0.000    1.272    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:702(_update_jac)
+   328453    1.266    0.000    1.266    0.000 {method 'reduce' of 'numpy.ufunc' objects}
+   206487    0.398    0.000    1.162    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/fromnumeric.py:71(_wrapreduction)
+    32880    0.084    0.000    1.158    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:262(__call__)
+    14065    0.090    0.000    1.119    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:438(__call__)
+    28608    0.323    0.000    1.086    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:234(loss_function)
+   136640    0.575    0.000    1.086    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/linalg/linalg.py:2383(norm)
+    37096    0.446    0.000    0.947    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:106(phi_and_derivative)
+       15    0.006    0.000    0.923    0.062 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:805(guess_acf_fft_highpass)
+     3000    0.005    0.000    0.912    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/fft/_basic_backend.py:83(ifft)
+      109    0.005    0.000    0.903    0.008 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:999(_fit_and_subtract_gaussian)
+      109    0.009    0.000    0.891    0.008 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_minpack_py.py:590(curve_fit)
+     3015    0.005    0.000    0.843    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/fft/_basic_backend.py:77(fft)
+       15    0.005    0.000    0.775    0.052 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/benchmarks/scorecard.py:201(_load)
+      135    0.031    0.000    0.764    0.006 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:564(guess_acf_fft)
+   119852    0.155    0.000    0.728    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/core/fromnumeric.py:2177(sum)
+       15    0.003    0.000    0.724    0.048 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/preprocessing.py:900(load_smarts_fits)
+    17675    0.045    0.000    0.686    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:696(_update_fun)
+11389/10895    0.041    0.000    0.677    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/function_base.py:3763(_ureduce)
+    30818    0.134    0.000    0.676    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:677(_update_x)
+    10836    0.016    0.000    0.671    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/function_base.py:3845(median)
+    28608    0.641    0.000    0.641    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/least_squares.py:195(soft_l1)
+    13662    0.462    0.000    0.637    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/comb_fit.py:517(jacobian)
+    19218    0.064    0.000    0.616    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_differentiable_functions.py:413(__call__)
+    10836    0.098    0.000    0.608    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/lib/function_base.py:3931(_median)
+      105    0.019    0.000    0.598    0.006 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/acf_utils.py:130(compute_acf)
+     3000    0.567    0.000    0.596    0.000 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/guesses.py:933(_morlet2_kernel)
+    15321    0.387    0.000    0.577    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:467(CL_scaling_vector)
+      322    0.013    0.000    0.576    0.002 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/ml_features.py:636(_alias_discrimination_features)
+    16125    0.298    0.000    0.565    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:440(make_strictly_feasible)
+   206140    0.552    0.000    0.552    0.000 {method 'dot' of 'numpy.ndarray' objects}
+      105    0.029    0.000    0.548    0.005 /Users/raeholcomb/Documents/GitHub/ss_redevelopment/.claude/worktrees/t16c-searchable-range-6f41b7/claude_files/acf_utils.py:100(_full_acf)
+    13662    0.205    0.000    0.503    0.000 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/scipy/optimize/_lsq/common.py:720(scale_for_robust_loss_function)
+      239    0.002    0.000    0.489    0.002 /opt/anaconda3/envs/ss_openblas/lib/python3.12/site-packages/numpy/fft/_pocketfft.py:219(ifft)
+
+

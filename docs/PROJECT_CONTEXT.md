@@ -535,3 +535,25 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   - Pipeline: 1.1 s per star-season. 14/16 contaminants get confident periods.
   - Follow-ups P34–P37 revised.
 
+- **2026-11-12 — T12 efficiency pass** (`reports/2026-11-12_t12-speed-up/`):
+  - **1.5–1.6× per star, results unchanged.** dev_medium at 4 workers: full-year median 2.66 → 1.73 s, assigned
+    1.56 → 1.07 s; the feature build is 1.62×, the production path 1.31×. dev_medium full-year now takes ~7 min at 4 workers.
+  - **Six changes:**
+    - `two_view_guesses` skips the long view for `@acf_independent` methods;
+    - vectorized `_grid_search_t0`;
+    - concatenated comb residual/Jacobian;
+    - exact-bytes `compute_acf` cache;
+    - block `np.std` in `_s_ph`;
+    - identity-cached spectrum tables in ml_features.
+    
+    Equivalence tests are in `tests/test_t12_speedups.py`. The harness is `benchmarks/profile_pipeline.py`, and
+    `tools/compare_runs_exact.py` does value-by-value run comparison.
+  - **Scorecard v6 baselines** `benchmarks/baselines/*_v6.json` (+ tables) are now current. Their v5 keys are
+    bit-identical to `_t5`.
+  - **Found:** `guess_wavelet` isn't bit-reproducible even on unchanged code. `_morlet2_kernel`'s `np.exp` returns
+    allocation-state-dependent last bits (numpy 1.26.4, AVX-512), which explains P4. Wavelet top-1 / candidate count
+    flip on ~2% of stars between runs, and it reaches the ranker's `wavelet_nearest_peak_*` features. Final answers
+    are unaffected.
+  - Keep 4 workers. Ranker-table rebuild (9,708 stars) ≈ 2.5 h on the drive at 4 workers.
+  - **Pitfall:** time before/after back to back on an idle machine. The first "before" runs ran ~1.9× slow under
+    background load.
