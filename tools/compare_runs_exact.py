@@ -33,6 +33,9 @@ import numpy as np
 import pandas as pd
 
 RUNTIME_KEYS = {"seconds", "fit_seconds"}
+# Input-file provenance: the absolute path differs between checkouts (worktrees resolve
+# data/smarts_dev to different absolute roots), so `path` values are compared by file name.
+PATH_KEYS = {"path"}
 
 
 def _equal_leaf(a, b) -> bool:
@@ -57,6 +60,11 @@ def walk(a, b, path: str, stats: Counter, diffs: list, skip_top=()):
                 continue
             if k not in a or k not in b:
                 diffs.append(f"{path}.{k}: only in {'A' if k in a else 'B'}")
+                continue
+            if k in PATH_KEYS and isinstance(a[k], str) and isinstance(b[k], str):
+                stats["leaves"] += 1
+                if Path(a[k]).name != Path(b[k]).name:
+                    diffs.append(f"{path}.{k}: {a[k]!r} != {b[k]!r}")
                 continue
             walk(a[k], b[k], f"{path}.{k}" if path else str(k), stats, diffs)
     elif isinstance(a, list) and isinstance(b, list):
@@ -91,10 +99,10 @@ def compare_scorecards(a: Path, b: Path) -> dict:
         walk(ra[sid], rb[sid], f"rows[{sid}]", stats, diffs)
     row_leaves = stats["leaves"]
     ma, mb = (json.loads((p / "metrics.json").read_text()) for p in (a, b))
-    walk(ma, mb, "", stats, diffs, skip_top=("config",))
+    walk(ma, mb, "", stats, diffs, skip_top=("config", "runtime"))
     return dict(kind="scorecard", n_stars=len(set(ra) & set(rb)), row_values=row_leaves,
                 metric_values=stats["leaves"] - row_leaves, values_compared=stats["leaves"],
-                runtime_keys_skipped=stats["runtime_skipped"], n_diffs=len(diffs), diffs=diffs[:50])
+                runtime_keys_skipped=stats["runtime_skipped"], n_diffs=len(diffs), diffs=diffs[:500])
 
 
 def _frame_equal(x: pd.DataFrame, y: pd.DataFrame, where: str, stats: Counter, diffs: list):
@@ -126,7 +134,7 @@ def compare_feature_tables(a: Path, b: Path) -> dict:
         walk(da["star"], db["star"], f"star[{sid}]", stats, diffs)
         _frame_equal(da["candidates"], db["candidates"], f"cands[{sid}]", stats, diffs)
     return dict(kind="feature_tables", n_stars=len(set(sa) & set(sb)), values_compared=stats["leaves"],
-                runtime_keys_skipped=stats["runtime_skipped"], n_diffs=len(diffs), diffs=diffs[:50])
+                runtime_keys_skipped=stats["runtime_skipped"], n_diffs=len(diffs), diffs=diffs[:500])
 
 
 def main(argv=None):
