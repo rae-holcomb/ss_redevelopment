@@ -960,7 +960,7 @@ def _abs2(c: np.ndarray) -> np.ndarray:
 
     T31 (2026-11-13, P4): replaces np.abs(c)**2 in the wavelet power. numpy
     1.26.4's complex np.abs (a SIMD hypot loop) gave different last bits for
-    the same input in some processes (caught in ~1 of 6 fresh processes:
+    the same input in some processes (caught in 4 of 12 fresh processes:
     np.abs of the 2D CWT array disagreed with np.abs of one of its rows).
     Elementwise multiply and add are exactly rounded in any SIMD path, so
     this is reproducible; it also skips a sqrt per element.
