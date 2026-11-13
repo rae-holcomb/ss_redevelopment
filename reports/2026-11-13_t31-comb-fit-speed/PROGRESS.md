@@ -16,3 +16,10 @@
   8.3 min (as) at 3 workers, nice 15.
 - 03:45 Part B variants committed (bac443e). Running profile round 1, in-process repro before/after, and a Part A
   rerun pair (determinism proof), then the variant scorecards.
+- 04:15 Part A rerun pair: 0 values differ vs the first Part A runs (both modes). _v6w baselines committed;
+  Part A-only branch `claude/t31-partA-wavelet-determinism` pushed (Part A commits + baselines).
+- 04:23 local+dec scored: fy success 0.260 (main 0.251), as 0.152 (0.147) but as wrong 0.066 (0.055).
+- 04:36 lsq_tol3+n100: fy 0.251 / as 0.147, wrong +0.001 / +0.003.
+- 04:45 added local_screen1/2 (local screens, lsq refits candidates failing <=1/2 gates); default path verified
+  bit-identical on dev_small. Queue: local_screen1+lean, local_screen2, lsq_tol4+dec_n100, lsq_tol4_pts40,
+  local_warm_tol4, lsq_pts40.
