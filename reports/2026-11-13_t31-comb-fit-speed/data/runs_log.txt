@@ -20,3 +20,26 @@
 04:32:22 START runs/v_lsq_tol3__n100_dmas (B_wt as SS_COMB_VARIANT=lsq_tol3 SS_CWT_VARIANT=n100) free=79% swap=77.50M
 04:35:47 END runs/v_lsq_tol3__n100_dmas rc=0 wall=205s Final answer (n=1000): success 14.7% (correct 10.9%, diffrot 3.8%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.8%  none 78.6%
 04:38:32 START runs/v_local_screen1__lean_dmfy (B_wt fy SS_COMB_VARIANT=local_screen1 SS_CWT_VARIANT=lean) free=79% swap=77.50M
+04:43:25 END runs/v_local_screen1__lean_dmfy rc=0 wall=293s Final answer (n=1000): success 24.8% (correct 19.5%, diffrot 5.3%)  alias 1.4% (half 1.1%, double 0.3%)  wrong 8.3%  none 65.5%
+04:45:25 START runs/v_local_screen1__lean_dmas (B_wt as SS_COMB_VARIANT=local_screen1 SS_CWT_VARIANT=lean) free=79% swap=77.50M
+04:48:30 END runs/v_local_screen1__lean_dmas rc=0 wall=185s Final answer (n=1000): success 14.5% (correct 10.9%, diffrot 3.6%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.4%  none 79.2%
+04:50:31 START runs/v_local_screen2_dmfy (B_wt fy SS_COMB_VARIANT=local_screen2 SS_CWT_VARIANT=full) free=78% swap=77.50M
+04:56:49 END runs/v_local_screen2_dmfy rc=0 wall=378s Final answer (n=1000): success 25.1% (correct 19.8%, diffrot 5.3%)  alias 1.4% (half 1.1%, double 0.3%)  wrong 8.8%  none 64.7%
+04:58:49 START runs/v_local_screen2_dmas (B_wt as SS_COMB_VARIANT=local_screen2 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:02:47 END runs/v_local_screen2_dmas rc=0 wall=238s Final answer (n=1000): success 14.7% (correct 10.9%, diffrot 3.8%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.5%  none 78.9%
+05:04:48 START runs/v_lsq_tol4__dec_n100_dmfy (B_wt fy SS_COMB_VARIANT=lsq_tol4 SS_CWT_VARIANT=dec_n100) free=79% swap=77.50M
+05:10:23 END runs/v_lsq_tol4__dec_n100_dmfy rc=0 wall=335s Final answer (n=1000): success 25.0% (correct 19.7%, diffrot 5.3%)  alias 1.3% (half 1.0%, double 0.3%)  wrong 8.8%  none 64.9%
+05:12:23 START runs/v_lsq_tol4__dec_n100_dmas (B_wt as SS_COMB_VARIANT=lsq_tol4 SS_CWT_VARIANT=dec_n100) free=79% swap=77.50M
+05:16:06 END runs/v_lsq_tol4__dec_n100_dmas rc=0 wall=223s Final answer (n=1000): success 14.7% (correct 10.9%, diffrot 3.8%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.5%  none 78.9%
+05:18:06 START runs/v_lsq_tol4_pts40_dmfy (B_wt fy SS_COMB_VARIANT=lsq_tol4_pts40 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:24:55 END runs/v_lsq_tol4_pts40_dmfy rc=0 wall=409s Final answer (n=1000): success 24.6% (correct 19.5%, diffrot 5.1%)  alias 1.4% (half 1.1%, double 0.3%)  wrong 8.8%  none 65.2%
+05:26:56 START runs/v_lsq_tol4_pts40_dmas (B_wt as SS_COMB_VARIANT=lsq_tol4_pts40 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:31:15 END runs/v_lsq_tol4_pts40_dmas rc=0 wall=259s Final answer (n=1000): success 14.7% (correct 10.9%, diffrot 3.8%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.4%  none 79.0%
+05:33:16 START runs/v_local_warm_tol4_dmfy (B_wt fy SS_COMB_VARIANT=local_warm_tol4 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:40:07 END runs/v_local_warm_tol4_dmfy rc=0 wall=411s Final answer (n=1000): success 25.1% (correct 19.8%, diffrot 5.3%)  alias 1.5% (half 1.1%, double 0.4%)  wrong 8.2%  none 65.2%
+05:42:07 START runs/v_local_warm_tol4_dmas (B_wt as SS_COMB_VARIANT=local_warm_tol4 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:46:25 END runs/v_local_warm_tol4_dmas rc=0 wall=258s Final answer (n=1000): success 14.6% (correct 10.8%, diffrot 3.8%)  alias 1.0% (half 0.8%, double 0.2%)  wrong 5.5%  none 78.9%
+05:48:25 START runs/v_lsq_pts40_dmfy (B_wt fy SS_COMB_VARIANT=lsq_pts40 SS_CWT_VARIANT=full) free=79% swap=77.50M
+05:56:26 END runs/v_lsq_pts40_dmfy rc=0 wall=481s Final answer (n=1000): success 24.4% (correct 19.4%, diffrot 5.0%)  alias 1.5% (half 1.2%, double 0.3%)  wrong 8.8%  none 65.3%
+05:58:26 START runs/v_lsq_pts40_dmas (B_wt as SS_COMB_VARIANT=lsq_pts40 SS_CWT_VARIANT=full) free=79% swap=77.50M
+06:03:46 END runs/v_lsq_pts40_dmas rc=0 wall=320s Final answer (n=1000): success 14.7% (correct 10.9%, diffrot 3.8%)  alias 0.9% (half 0.7%, double 0.2%)  wrong 5.4%  none 79.0%

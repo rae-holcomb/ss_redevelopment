@@ -23,3 +23,4 @@
 - 04:45 added local_screen1/2 (local screens, lsq refits candidates failing <=1/2 gates); default path verified
   bit-identical on dev_small. Queue: local_screen1+lean, local_screen2, lsq_tol4+dec_n100, lsq_tol4_pts40,
   local_warm_tol4, lsq_pts40.
+- 06:04 all 8 scored variants done; next: profile round 2 (incl. local_screen1/2), figures, report.
