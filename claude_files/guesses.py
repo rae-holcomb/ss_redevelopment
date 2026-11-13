@@ -648,7 +648,9 @@ def guess_acf_fft(
     n_fft = max(int(oversample * n), n)
     fft_vals = np.fft.rfft(y, n=n_fft)
     fft_freq = np.fft.rfftfreq(n_fft, d=dt)
-    power = np.abs(fft_vals) ** 2
+    # P39 (2026-11-13): _abs2, not np.abs(c)**2. numpy 1.26.4's complex np.abs
+    # SIMD loop gave process-dependent last bits (T31); this feeds final answers.
+    power = _abs2(fft_vals)
 
     freq_mask = (fft_freq > 1.0 / max_period) & (fft_freq < 1.0 / min_period)
     freq_sub = fft_freq[freq_mask]

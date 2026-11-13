@@ -46,7 +46,7 @@ from alias_metrics import (  # shared with comb_fit (T18); moved verbatim from h
 )
 from comb_fit import EnsembleResult
 from coverage import GAP_SPLIT_DAYS, sampling_descriptors, searchable_range
-from guesses import _peak_coverage_fraction
+from guesses import _abs2, _peak_coverage_fraction
 
 
 # ==========================================================================
@@ -792,7 +792,7 @@ def _fliper_lite(
 
     dt = np.median(np.diff(time))
     nfft = 2 * n
-    power = np.abs(np.fft.rfft(xw, n=nfft)) ** 2
+    power = _abs2(np.fft.rfft(xw, n=nfft))  # P39: reproducible |c|^2 (see guesses._abs2)
     freq = np.fft.rfftfreq(nfft, d=dt)
     nyquist = 0.5 / dt
 
