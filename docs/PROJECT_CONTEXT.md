@@ -557,3 +557,8 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   - Keep 4 workers. Ranker-table rebuild (9,708 stars) ≈ 2.5 h on the drive at 4 workers.
   - **Pitfall:** time before/after back to back on an idle machine. The first "before" runs ran ~1.9× slow under
     background load.
+- **2026-11-13 — Machine safety; T31 done; T32 logged; coordinator handoff.** WindowServer watchdog hang logged Rae
+  out overnight (not a reboot; moderate thermal, heavy memory compression). New standing rule in `CLAUDE.md` Hardware
+  (`nice -n 15`, 3 workers, one heavy job at a time). T31 (`claude/t31-comb-fit-speed-e7e5bb`, unmerged): wavelet made
+  bit-reproducible (P4 resolved); Rae adopts `local_screen2` as the default comb fit at merge. T32 (drift-robust `local`)
+  logged. See `docs/HANDOFF.md`.

@@ -99,6 +99,12 @@ not inside a Claude Code session. Timings in reports dated 2026-10-13
 (e.g. "1.16 s/star", "322 CPU-hours per 1M stars") were measured on the i5
 with 10 workers.
 
+**Machine safety (2026-11-13):** heavy jobs have starved the macOS UI and Rae has been logged out
+(WindowServer watchdog) several times. In Claude sessions run every heavy job (scorecards, profiling,
+pytest, repro loops) under `nice -n 15` (not `taskpolicy -b`, which throttles to ~half a core), use 3 workers,
+never run two heavy jobs at once, check `memory_pressure -Q` / `pmset -g therm` before long runs, and
+commit/checkpoint after each scored step.
+
 ## Working conventions
 
 - **Docstrings**: every function delivered needs a docstring.
