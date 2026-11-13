@@ -938,7 +938,20 @@ def _morlet2_kernel(M: int, s: float, w0: float) -> np.ndarray:
     (e.g. PyWavelets) just for this.
     """
     x = (np.arange(0, M) - (M - 1.0) / 2.0) / s
-    wavelet = np.exp(1j * w0 * x) * np.exp(-0.5 * x**2) * np.pi**(-0.25)
+    # T31 (2026-11-13, P4): the envelope and the carrier are built as ONE
+    # complex exp, exp(-x^2/2 + i*w0*x), instead of np.exp(1j*w0*x) *
+    # np.exp(-0.5*x**2). numpy 1.26.4's AVX-512 float64 np.exp returned
+    # different last bits for byte-identical input depending on allocation
+    # state (seen on the i5: a few elements with |x| << 1 in short kernels),
+    # so the CWT/GWPS and every wavelet candidate and feature varied run to
+    # run. numpy's complex128 exp is a scalar loop over libm (npy_cexp), so it
+    # is bit-reproducible and matches cmath.exp exactly; it is also ~20%
+    # faster here (one exp instead of two plus a multiply). Changes wavelet
+    # bits once versus the v6 baselines (new `_v6w` baselines).
+    arg = np.empty(M, dtype=complex)
+    arg.real = -0.5 * x**2
+    arg.imag = w0 * x
+    wavelet = np.exp(arg) * np.pi**(-0.25)
     return np.sqrt(1.0 / s) * wavelet
 
 
