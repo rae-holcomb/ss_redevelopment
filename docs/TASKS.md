@@ -1110,3 +1110,26 @@ for confirmation (ask Rae first).
   fraction of windows whose free local vertex was accepted, or the scatter of vertices about the fitted line, and a
   robust (soft-L1 / Huber) per-window height fit. Then rescore. This could make `local` the fast default without the extra wrongs.
 
+
+### P41. Skeptical reviewer of the methodology (Rae, 2026-11-13; logged, not scheduled)
+- **Proposed by:** Rae.
+- **Idea:** a standing skeptical reviewer of the *methodology*, not of one branch (the existing `reviewer` agent checks a
+  finished branch's numbers). Questions it would press: is SMARTS representative of real TESS stars (spot model, noise,
+  diffrot), does scoring against `REL_TOL` / alias / diffrot outcomes flatter us, are dev_medium and the `_v7` baselines
+  being overfit by repeated method tuning, are ranker negatives realistic, and does anything leak between training, dev
+  and holdout. Possibly a new `.claude/agents/methodology-reviewer.md` role, run at milestones (e.g. before ranker v1 and
+  before the paper). Related: the midway review (`reports/2026-11-11_midway-review/`) covered part of this once.
+
+### P42. Fewer candidates per method: top-N cut and better candidate ordering (Rae, 2026-11-13; logged, not scheduled)
+- **Proposed by:** Rae.
+- **Idea:** every `guess_*` method currently passes `n_guesses=10` candidates (5 for `acf_fft_highpass`) to the comb fit,
+  which dominates per-star cost. If the correct period usually ranks near the top, a smaller N saves time.
+  1. **Right N per method:** recall@N (true period or diffrot within `REL_TOL`) vs N = 1–10, per method, per period bin,
+     full-year and assigned, plus the fit-time saved. This can come from existing data (per-method ranks in the
+     scorecard's `per_candidate.csv` / the T10 feature tables) without rerunning the pipeline.
+  2. **Push the right candidate higher:** cheap changes to how each method ranks its peaks (e.g. long-timescale power
+     crowding short periods out of the top 10 on full-year light curves; see
+     `reports/2026-11-11_candidate-recall-by-method/`, where every method's <1 d recall drops full-year vs assigned).
+- **Caution (Rae):** don't tune N or the rankings tightly yet. Other telescopes (Roman, other training sets) differ in
+  baseline, cadence and noise, which changes candidate ordering. For now, only a quick check for easy, robust gains
+  (e.g. a method whose recall saturates by N=3 everywhere).
