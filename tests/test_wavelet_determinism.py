@@ -5,7 +5,7 @@ varied with process / allocation state on the i5 (AVX-512): the float64
 np.exp (Morlet envelope, Gaussian peak fits) and the complex np.abs (|c|^2).
 The CWT, the GWPS and the wavelet candidates then varied run to run (T12 saw
 2-4 distinct GWPS per star over 8 in-process calls on dev_small 031596,
-419951, 107369; np.abs flipped in ~1 of 6 fresh processes). Now the kernel is
+419951, 107369; np.abs flipped in 4 of 12 fresh processes). Now the kernel is
 one complex exp (scalar libm loop), |c|^2 is re*re + im*im, and the Gaussian
 uses guesses._det_exp.
 
@@ -74,7 +74,7 @@ def test_morlet_kernel_repeatable_under_heap_churn():
 def test_abs2_matches_rowwise_and_definition():
     """|c|^2 of the 2D CWT equals the per-row result and re*re + im*im exactly.
 
-    The old np.abs(c)**2 failed the row-vs-2D comparison in ~1 of 6 fresh
+    The old np.abs(c)**2 failed the row-vs-2D comparison in 4 of 12 fresh
     processes (numpy 1.26.4 complex abs SIMD loop), so this also guards that
     path from coming back.
     """
