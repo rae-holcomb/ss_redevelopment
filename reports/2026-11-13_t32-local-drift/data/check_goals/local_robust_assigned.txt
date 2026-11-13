@@ -1,0 +1,20 @@
+Run: runs/t32/sc/local_robust_dmas/metrics.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest, commit 2887e8f)
+Baseline: benchmarks/baselines/dev_medium_assigned_v7.json  (commit 5d14f3f-dirty)
+
+goal  status  result  value    target   base  metric
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.147   0.137  -0.010  0.020  final.overall.success
+  0.221   0.198  -0.023  0.060  final.by_bin.1-3d.success
+  0.175   0.158  -0.018  0.060  final.by_bin.10-30d.success
+  0.193   0.187  -0.006  0.060  final.by_bin.3-10d.success
+  0.180   0.186  +0.006  0.060  final.by_bin.<1d.success
+  0.048   0.038  -0.010  0.060  final.by_bin.>30d.success
+  0.930   0.930  +0.000  0.060  union_recall.by_bin.1-3d
+  0.865   0.865  +0.000  0.060  union_recall.by_bin.10-30d
+  0.930   0.930  +0.000  0.060  union_recall.by_bin.3-10d
+  0.779   0.779  +0.000  0.060  union_recall.by_bin.<1d
+  0.516   0.516  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS
