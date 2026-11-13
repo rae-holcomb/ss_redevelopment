@@ -911,11 +911,14 @@ for confirmation (ask Rae first).
   - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
 - **Status:** scoped 2026-11-12 (`reports/2026-11-12_validation-set-scoping/`, branch `claude/p27-validation-scoping-4c1c1b`).
   Draft manifest `datasets/proposed/p27_validation_draft.csv` (480: 268 rotators 0.1–71 d with method/data-set provenance,
-  100 Kepler-quiet negatives, 62 candidate negatives, 50 Prša EBs); download plan ≈ 2.3 GB (TESS-SPOC + QLP SAP).
+  100 Kepler-quiet negatives, 22 WD candidates, 40 expected-undetectable, 50 Prša EBs); download plan ≈ 2.4 GB (TESS-SPOC + QLP SAP).
   Zach's list = Claytor+2024 SCVZ 5800–6000 K noise templates, not vetted non-rotators.
 - **Rae's decisions (2026-11-12):**
   - **Zach's list:** label `expected_undetectable` ("This will allow us to use them, but remain appropriately wary");
     score its detection rate, not as false positives. Applied in the manifest, the report and `datasets/external/README.md`.
+    Zach (2026-11-13) confirmed the selection is Claytor+2024 §3.1.2 with no noise filtering and "some oscillators hiding
+    in there". Gaia DR3 check: 294/23,332 (1.3%) are known variables (200 SOLAR_LIKE, 43 EB, 17 δ Sct/γ Dor, 13 RS CVn,
+    34 rotation-modulation; a lower bound). These are now excluded from the manifest's expected-undetectable draw.
   - **Product:** TESS-SPOC `SAP_FLUX` is primary, QLP `SAP_FLUX` the fallback. **Also score PDCSAP on the same stars**
     (paper result: long-period suppression). PDCSAP is in the SPOC files (no extra download); 161 rotators get a pair,
     only 6 at 40–71 d (report §7b has the comparison design and a proposed long-period block).

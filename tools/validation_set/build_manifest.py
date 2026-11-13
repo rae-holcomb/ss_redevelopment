@@ -101,12 +101,17 @@ def pick_claytor(rng: np.random.Generator) -> pd.DataFrame:
     """Sample Zach Claytor's SCVZ list (Claytor+2024 noise templates), brightest-first within Tmag bins."""
     z = pd.read_csv(os.path.join(ROOT, "data", "p27_cache", "zach_tic.csv"))
     z = z[(z["Tmag"] <= TMAG_MAX) & ((z["contratio"].isna()) | (z["contratio"] < 0.2))]
+    # Zach (2026-11-13): no noise filtering was applied and "some oscillators [are] hiding in there". Drop the 294
+    # stars that appear in any Gaia DR3 variability table (zach_gaia_variability.py) before drawing.
+    var = pd.read_csv(os.path.join(REPORT, "data", "zach_gaia_variability.csv.gz"))
+    known = set(var.loc[var.filter(like="in_").sum(axis=1) > 0, "ID"])
+    z = z[~z["ID"].isin(known)]
     z = z.sample(N_NONROT["claytor_scvz_template"], random_state=int(rng.integers(1e9)))
     # Rae, 2026-11-12: label "expected undetectable" ("use them, but remain appropriately wary"); scored by
     # detection rate, not as false positives.
     return pd.DataFrame({"tic": z["ID"].astype("Int64"), "label": "expected_undetectable",
                          "source": "claytor_scvz_template", "truth_period": np.nan,
-                         "period_method": "expected undetectable (5800-6000 K dwarf; Claytor+2024 noise template), unvetted",
+                         "period_method": "expected undetectable (5800-6000 K dwarf; Claytor+2024 noise template; not in Gaia DR3 variability tables), otherwise unvetted",
                          "period_dataset": "TESS (SCVZ)", "period_ref": "Claytor+2024 (ApJ 962, 47) sec. III.1.2",
                          "Tmag": z["Tmag"], "Teff": z["Teff"], "logg": z["logg"], "ra": z["ra"], "dec": z["dec"],
                          "contratio": z["contratio"], "gyro_flag": "n/a"})

@@ -4,15 +4,15 @@
 
 ## TL;DR
 - **Zach's 23,332 TIC IDs are not vetted non-rotators.** They are exactly the Claytor+2024 SCVZ noise-template cut
-  (5800–6000 K dwarfs, Tmag 6–15), and 14% of such Kepler stars rotate. Rae's decision: label them
-  `expected_undetectable` and score them by detection rate.
+  (5800–6000 K dwarfs, Tmag 6–15), which Zach confirmed, with no noise filtering. 294 (1.3%) are Gaia DR3 variables,
+  including 17 δ Sct/γ Dor. They are labelled `expected_undetectable` (Rae) and the Gaia variables are excluded.
 - **Literature verdict:**
   - Red clump: usable only if seismically classified and Kepler-quiet; a CMD-only cut carries 2–15% rotators.
   - White dwarfs: a clean but faint control (157 at G < 14).
   - Kepler non-detections are the best negative pool.
 - **Draft manifest** (`datasets/proposed/p27_validation_draft.csv`, 480 stars): 268 rotators 0.1–71 d with
   method/data-set provenance, 122 negatives, 40 expected-undetectable, 50 Prša EBs.
-- **Decided:** TESS-SPOC SAP primary, QLP SAP fallback (≈ 2.3 GB). PDCSAP comes free in the SPOC files; 161 rotators
+- **Decided:** TESS-SPOC SAP primary, QLP SAP fallback (≈ 2.4 GB). PDCSAP comes free in the SPOC files; 161 rotators
   get a pair, but only 6 at 40–71 d.
 - **Open:** mix, and a long-period block for the PDCSAP result.
 
@@ -34,6 +34,7 @@ All steps are catalogue queries, cached under the gitignored `data/p27_cache/`. 
 - `build_rotators.py`: cluster and Kepler-field periods, mapped to TIC through Gaia DR2 / KIC, plus the MH08 gyro flag.
   Output: `data/rotators_all.csv`.
 - `gaia_counts.py`, `gaia_vari_counts.py`: Gaia DR3 red-clump counts and variability-class counts (ESA archive TAP).
+- `zach_gaia_variability.py`: Gaia DR3 variability-table match for Zach's list (added 2026-11-13).
 - `summarize_sources.py`: non-rotator pool sizes and McQuillan detection fraction vs Teff.
 - `build_manifest.py`: the draft manifest, with FFI sectors (TESScut) and HLSP availability per star (MAST CAOM).
 - `download_plan.py`: real file sizes from MAST product metadata (no downloads). Output: `data/download_plan.csv`.
@@ -57,13 +58,44 @@ All 23,332 IDs have:
 - ecliptic latitude ≤ −78°;
 - Tmag ≤ 15.
 
-That is exactly the Claytor+2024 §III.1.2 cut for TASOC "quiescent" noise templates. The paper's 22,090 are what was
-left after a ≥ 4-sector light-curve cut, so this list is plausibly the parent sample. The stars are not red-clump stars
-(red clump was the *Kepler* paper, Claytor & Tayar 2025), and nobody vetted them as non-rotating. They were chosen
-because hotter-than-solar stars are *less often* detected (right panel). Even so, 14.4% of Kepler stars at
-5800–6000 K have a McQuillan period, with a median of 11 d. Only 33% are brighter than Tmag 13.5. **Decided (Rae,
-2026-11-12): label them `expected_undetectable`** ("This will allow us to use them, but remain appropriately wary"). The
-scorecard reports their *detection rate* in its own row and never counts their detections as false positives.
+That is exactly the Claytor+2024 §III.1.2 cut for TASOC "quiescent" noise templates.
+- **Zach confirmed (2026-11-13):** §3.1.2 of Claytor+2024 (ApJ 962, 47, doi:10.3847/1538-4357/ad159a) describes the
+  selection. He "did not pass them through any noise filters", and is "certain there are some oscillators hiding in
+  there."
+- **What the section says, re-read against his note:**
+  - The cut was Teff 5800–6000 K with Tmag 6–15. TASOC had only processed sectors 1–6 then, and the paper kept the
+    22,090 stars with ≥ 4 sectors (160 d baseline). This list, 1,242 larger, is consistent with the parent sample
+    before that cut.
+  - The paper's second template set, TESS-SPOC 6000–8000 K (17,637 stars), is the one it says overlaps the
+    δ Sct / γ Dor strips: ~10% in the δ Sct strip and 30–67% in the γ Dor strip. It states that **"the TASOC noise
+    sample does not overlap with either instability strip."** None of Zach's IDs is above 6000 K, so his list contains
+    none of the SPOC set.
+  - Oscillators in *this* list must therefore be stars whose TIC Teff (photometric, ±~130 K, dereddened) is wrong, or
+    blends: 9,395 of the stars (40%) lie within 8° of the LMC. It is also possible that Zach's remark was about the
+    template sets in general.
+- **Tested against Gaia DR3** (`tools/validation_set/zach_gaia_variability.py`): DR3 variability tables (VizieR I/358,
+  CfA mirror) for a 12° cone around the south ecliptic pole, matched within 2″. **294 of 23,332 (1.3%) are known
+  variables:**
+  - 200 classified SOLAR_LIKE (activity / rotation);
+  - 43 eclipsing binaries;
+  - **17 δ Sct/γ Dor/SX Phe**, so his oscillators are confirmed;
+  - 13 RS CVn;
+  - 34 in the rotation-modulation table (median P = 5.4 d, range 0.33–35 d).
+
+  Gaia's sparse sampling and mmag thresholds make this a **lower bound**. The rate is 2.1% at Tmag ≤ 13.5 vs 0.8%
+  fainter, as expected if detectability limits it.
+- **What changes:**
+  1. The interpretation stands: they are noise templates, not vetted non-rotators, and not red-clump stars (red clump
+     was the *Kepler* paper, Claytor & Tayar 2025).
+  2. The manifest's `expected_undetectable` block now **excludes the 294 Gaia-variable stars** before drawing. One of
+     the previous 40, TIC 349058011, was a Gaia rotation-modulation star with P = 0.36 d.
+  3. "Expected undetectable" stays the right label. Besides rotation (14.4% of Kepler stars at 5800–6000 K have a
+     McQuillan period, median 11 d), expect some pulsators and binaries that Gaia missed. Only 33% are brighter than
+     Tmag 13.5.
+
+**Decided (Rae, 2026-11-12): label them `expected_undetectable`** ("This will allow us to use them, but remain
+appropriately wary"). The scorecard reports their *detection rate* in its own row and never counts their detections as
+false positives.
 
 ### 2. Literature check: are white dwarfs and red-clump stars good "non-rotators"?
 
@@ -131,7 +163,8 @@ from systematics and red noise. For that, "astrophysically quiet in 0.1–180 d"
      Mount Wilson / HARPS samples). They are few and bright (Tmag < 8, saturation risk), so they are a small
      "bright-star" negative block for later.
   3. Hot A/F stars are **not** quiet: δ Sct / γ Dor pulsate at 0.3–3 d. Gaia DR3 flags 748,058 DSCT|GDOR|SXPHE
-     candidates and 54,476 `vari_ms_oscillator` stars.
+     candidates and 54,476 `vari_ms_oscillator` stars. This applies to Claytor+2024's 6000–8000 K TESS-SPOC template
+     set, not to Zach's 5800–6000 K list, although 17 Gaia-classified pulsators are in his list too (§1).
 
 ![Non-rotator pools](figures/nonrotator_pools.png)
 
@@ -185,15 +218,16 @@ P/sin i or are statistical, so they don't belong in a ±10% scorer.
 |---|---|---|---|
 | `kepler_rc_quiet` | 50 | nonrotator | Yu+2018 He-burning (seismic), not in Ceillier+2017 rotating/polluted tables; Kp < 12.5 |
 | `kepler_dwarf_nodetect` | 50 | nonrotator | McQuillan+2014 non-periodic, 4000–6200 K, log g > 4.2, minus Santos+2019/2021 detections (cleaning removes 3,158 of 61,793) |
-| `claytor_scvz_template` | 40 | **expected_undetectable** | Zach's list (Claytor+2024 SCVZ noise templates, unvetted); scored by detection rate only |
+| `claytor_scvz_template` | 40 | **expected_undetectable** | Zach's list (Claytor+2024 SCVZ noise templates; no noise filtering, per Zach), minus the 294 Gaia DR3 variables; scored by detection rate only |
 | `white_dwarf` | 22 | nonrotator_candidate | Gentile Fusillo+2021, P_WD > 0.9, G < 14.5 |
 | `prsa2022_eb` | 50 | contaminant_eb | Prša+2022 TESS EBs, orbital period stratified 0.1–71 d |
 
 **Proposed checks of "quiet"** (none run; they need light curves):
 1. Kepler-quiet stars: re-read the Kepler PDC light curve and require a 4-yr ACF/LS peak below an amplitude threshold
    (cheap, small downloads).
-2. Zach's list: query Gaia DR3 `vari_summary` / `vari_classifier_result` by Gaia ID, drop any star in a variable class,
-   and drop stars with a TESS-SPOC/QLP S1–13 LS amplitude above ~3σ of the CDPP.
+2. Zach's list: **Gaia DR3 step done** (§1). The 294 known variables are excluded from the draw. Still to do with light
+   curves: drop stars whose TESS-SPOC/QLP LS amplitude is above ~3σ of the CDPP, and (Zach's warning) look for
+   pulsation peaks at 0.02–3 d.
 3. WDs: TESS-localize-style centroid check of any detected signal.
 4. All negatives: TIC `contratio` < 0.2 (applied), plus no Gaia DR3 neighbour brighter than the target within 2 TESS
    pixels (not applied; one Gaia cone per star).
@@ -298,14 +332,14 @@ times the per-star file counts.
 
 | Product | Stars | Files | MB/file | Total |
 |---|---|---|---|---|
-| TESS-SPOC (primary; SAP_FLUX) | 284 | 1,785 | 0.58 | **1.0 GB** |
-| PDCSAP_FLUX (same TESS-SPOC files) | 284 | 0 extra | 0 | **0 GB extra** |
-| QLP (fallback) | 409 | 3,890 | 0.32 | **1.3 GB** |
+| TESS-SPOC (primary; SAP_FLUX) | 291 | 1,928 | 0.58 | **1.1 GB** |
+| PDCSAP_FLUX (same TESS-SPOC files) | 291 | 0 extra | 0 | **0 GB extra** |
+| QLP (fallback) | 408 | 3,916 | 0.32 | **1.3 GB** |
 | CDIPS (cluster cross-check) | 156 | 486 | 0.67 | 0.3 GB |
-| TGLC (HLSP, S1–26 only) | 110 | 546 | 0.05 | 0.03 GB |
-| TESScut 10×10 cutouts (all 5,541 star-sectors) | 480 | 5,541 | ~11 | ~61 GB (on the drive; later) |
+| TGLC (HLSP, S1–26 only) | 110 | 550 | 0.05 | 0.03 GB |
+| TESScut 10×10 cutouts (all 5,537 star-sectors) | 480 | 5,537 | ~11 | ~61 GB (on the drive; later) |
 
-SPOC + QLP comes to ≈ 2.3 GB and 5,675 files. That is small enough for the laptop, roughly 1–2 h with resumable
+SPOC + QLP comes to ≈ 2.4 GB and 5,844 files (numbers after the 2026-11-13 redraw of the expected-undetectable block). That is small enough for the laptop, roughly 1–2 h with resumable
 `astroquery.mast` / curl scripts at typical MAST throughput (a guess; I timed nothing). TESScut cutouts are a
 many-hour, drive-only job, needed only if SAP proves too lossy at P > 13 d. A download script isn't written yet.
 astroquery 0.4.11 is now installed in `ss_openblas` (pinned in `environment.yml` on main), so it can be a resumable
@@ -346,6 +380,9 @@ cut.
   slow but fine.
 - **MAST `Caom.Cone` per star takes ~100 s**, too slow. `Caom.Filtered` on `target_name` lists is fast and is what
   the manifest uses.
+- **2026-11-13: the ESA Gaia archive returned HTTP 429 (rate-limited) even for one-row queries, and CDS XMatch was
+  down.** The Gaia DR3 variability check of Zach's list used SCVZ cone downloads of VizieR I/358 from the CfA mirror
+  (~170k classifier rows) and a 2″ positional match.
 - The red-clump count uses a CMD box with no extinction correction. Take it as an order of magnitude.
 
 ## Open questions for Rae
@@ -373,6 +410,7 @@ Network needed for the first run; reruns read `data/p27_cache/`.
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/gaia_counts.py
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/gaia_vari_counts.py
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/summarize_sources.py
+/opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/zach_gaia_variability.py
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/build_rotators.py
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/build_manifest.py
 /opt/anaconda3/envs/ss_openblas/bin/python tools/validation_set/download_plan.py
@@ -421,7 +459,8 @@ them before they go into a paper.
     Kepler M/K and F/G rotation periods that McQuillan missed; used to clean the non-detection pool (removes 3,158 of
     61,793).
 15. †Claytor, Z. R., et al. 2024, ApJ 962, 47 (2024ApJ...962...47C; arXiv:2307.05664). TESS SCVZ rotation to 80 d.
-    §III.1.2 defines the 5800–6000 K TASOC "quiescent" noise templates that Zach's 23,332 TIC IDs reproduce exactly.
+    §III.1.2 defines the 5800–6000 K TASOC "quiescent" noise templates that Zach's 23,332 TIC IDs reproduce exactly
+    (confirmed by Zach, 2026-11-13; doi:10.3847/1538-4357/ad159a).
 
 **Cluster rotation periods (truth; method and data set in the source table)**
 16. †Godoy-Rivera, D., Pinsonneault, M. H. & Rebull, L. M. 2021, ApJS 257, 46 (2021ApJS..257...46G). Homogeneous

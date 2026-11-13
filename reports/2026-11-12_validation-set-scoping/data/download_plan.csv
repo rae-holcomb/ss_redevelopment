@@ -1,7 +1,7 @@
 product,stars_with_any,files,median_mb_per_file,est_gb
-TESS-SPOC,284,1785,0.58,1.03
-QLP,409,3890,0.32,1.25
-TGLC,110,546,0.05,0.03
+TESS-SPOC,291,1928,0.58,1.12
+QLP,408,3916,0.32,1.26
+TGLC,110,550,0.05,0.03
 CDIPS,156,486,0.67,0.33
-PDCSAP_FLUX (inside the TESS-SPOC files),284,0,0.0,0.0
-TESScut 10x10 cutouts,480,5541,11.04,61.1
+PDCSAP_FLUX (inside the TESS-SPOC files),291,0,0.0,0.0
+TESScut 10x10 cutouts,480,5537,11.04,61.1

@@ -167,10 +167,12 @@ ax.text(0.98, 0.35, "draft manifest uses:\\n" + "\\n".join(f"{k}: {v}" for k, v 
         ha="right", va="bottom", fontsize=8, bbox=dict(fc="w", ec="0.7"))
 fig.savefig(FIG / "nonrotator_pools.png"); plt.show()''')
 md("## 7. Zach's list: what the stars are\n\nTIC v8.2 properties of all 23,332 TIC IDs, compared with the Claytor+2024 noise-template cuts (Teff 5800-6000 K, Tmag 6-15, ecliptic latitude <= -78 deg). "
-   "Right: Kepler detection fraction vs Teff from McQuillan+2014, showing that ~14% of Kepler stars in this Teff range do show rotation.")
+   "Third panel: Kepler detection fraction vs Teff from McQuillan+2014 (~14% of Kepler stars in this Teff range show rotation). "
+   "Right: stars in Gaia DR3 variability tables (I/358, 2 arcsec match): a lower bound on contamination, given Gaia's sparse sampling.")
 code('''z = pd.read_csv(DATA / "zach_list_tic.csv.gz")
 dfrac = pd.read_csv(DATA / "mcquillan_detfrac.csv")
-fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+gv = pd.read_csv(DATA / "zach_gaia_variability.csv.gz")
+fig, axes = plt.subplots(1, 4, figsize=(20, 4))
 axes[0].hist(z.Teff, bins=40); axes[0].axvspan(5800, 6000, color="C1", alpha=0.15, label="Claytor+2024 TASOC cut")
 axes[0].set_xlabel("TIC Teff [K]"); axes[0].legend(fontsize=8); axes[0].set_title(f"Teff (n={len(z)})")
 axes[1].hist(z.Tmag, bins=40); axes[1].axvline(13.5, color="C3", ls="--"); axes[1].set_xlabel("Tmag")
@@ -180,6 +182,18 @@ mid = 0.5 * (dfrac.teff_lo + dfrac.teff_hi)
 ax.plot(mid, dfrac.frac, "o-"); ax.axvspan(5800, 6000, color="C1", alpha=0.15)
 ax.set_xlabel("Teff [K] (McQuillan+2014 Kepler sample)"); ax.set_ylabel("fraction with detected P$_{rot}$")
 ax.set_title("Kepler rotation detection fraction vs Teff")
+ax = axes[3]
+cls = gv.gaia_class.fillna("").replace("", np.nan).dropna().value_counts()
+extra = pd.Series({"rotation_modulation table": int(gv.in_vrm.sum()), "EB table": int(gv.in_veb.sum()),
+                   "MS-oscillator table": int(gv.in_vmsosc.sum())})
+both = pd.concat([cls.rename(lambda k: f"classifier: {k}"), extra])
+ax.barh(both.index, both.values, color=["C0"] * len(cls) + ["C1"] * len(extra))
+for i, v in enumerate(both.values):
+    ax.text(v + 2, i, str(int(v)), va="center", fontsize=8)
+nvar = int((gv.filter(like="in_").sum(axis=1) > 0).sum())
+ax.set_title(f"Gaia DR3 variability: {nvar} of {len(gv)} ({nvar/len(gv):.1%})"); ax.set_xlabel("stars")
+ax.invert_yaxis()
+fig.tight_layout()
 fig.savefig(FIG / "zach_list_properties.png"); plt.show()
 print(z[["Teff","Tmag","logg"]].describe().round(2))''')
 nb = nbf.v4.new_notebook(); nb.cells = C
