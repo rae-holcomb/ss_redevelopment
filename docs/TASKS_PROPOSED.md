@@ -367,7 +367,11 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
     per OGLE season (`celerite2`/`tinygp`: Rae's OK), or inject ROT periods and amplitudes into `synthetic.spot_signal`.
 
   Add spot evolution either way.
-- **Needs Rae:** (i) vs (ii), and the GP package.
+- **Rae (2026-11-13):** (ii), we resample ourselves. GP package: the lighter option, **`celerite2`** (NumPy + a small
+  C++ extension; its `RotationTerm` is a quasi-periodic spot kernel). `tinygp` needs JAX/jaxlib, a much heavier
+  install. Install into `ss_openblas` only when this task starts; check that it keeps numpy 1.26.4 and pin it in
+  `environment.yml`. FL's 54 templates aren't enough. The rotator set needs a real spread of spectral types and periods
+  (T28 decisions), so start with a short scoping pass on where those come from.
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".

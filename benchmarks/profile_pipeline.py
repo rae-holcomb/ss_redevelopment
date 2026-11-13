@@ -139,8 +139,16 @@ def main(argv=None):
     p.add_argument("--out", type=Path, default=None, help="per-star per-stage timings CSV")
     p.add_argument("--cprofile", type=Path, default=None, help="write cProfile top-N text here (one pass)")
     p.add_argument("--mode-label", default=None, help="value for the `mode` column (default fullyear/assigned)")
+    p.add_argument("--star-ids-file", type=Path, default=None,
+                   help="file with one star_id per line (e.g. benchmarks/profile_stars.txt); overrides --star-ids")
+    p.add_argument("--summary-json", type=Path, default=None,
+                   help="write a check_goals-readable runtime summary (runtime goals RT2*)")
     args = p.parse_args(argv)
     args.coverage = sc.cov.FULL
+    if args.star_ids_file:
+        ids = [x.strip() for x in args.star_ids_file.read_text().splitlines()
+               if x.strip() and not x.startswith("#")]
+        args.star_ids = ",".join(ids)
     tasks = build_tasks(args)
     mode = args.mode_label or ("synthetic" if args.synthetic else
                                ("fullyear" if args.ignore_manifest_sectors else "assigned"))
@@ -171,6 +179,50 @@ def main(argv=None):
     stage_cols = [c for c in df.columns if c not in ("star_id", "mode", "repeat", "n_pooled", "n_fit",
                                                      "final_period")]
     print(df[stage_cols].median().round(4).to_string())
+    if args.summary_json:
+        write_summary(df, stage_cols, args, mode)
+
+
+def write_summary(df: pd.DataFrame, stage_cols: list, args, mode: str) -> dict:
+    """Write the runtime summary check_goals.py grades (atomically) and return it.
+
+    Per star, the median over repeats; then the mean over stars (``mean_total_s`` = seconds per star,
+    the T12/T31 convention) and the median. The dataset string names the star list, mode and
+    --features, so a goal only compares like with like.
+    """
+    import json
+    import os
+    import subprocess
+
+    import comb_fit
+    import guesses
+    per_star = df.groupby("star_id")[stage_cols].median()
+    if args.star_ids_file:
+        f = args.star_ids_file.resolve()
+        src = f.relative_to(ROOT).as_posix() if f.is_relative_to(ROOT) else f.as_posix()
+    else:
+        src = "synthetic" if args.synthetic else "manifest"
+    try:
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=ROOT, capture_output=True,
+                                text=True).stdout.strip()
+    except OSError:
+        commit = None
+    summary = {
+        "config": {"dataset": f"profile:{src}:{mode},features={int(bool(args.features))}",
+                   "git_commit": commit, "n_stars": int(len(per_star)), "repeats": args.repeats,
+                   "comb_variant": comb_fit.resolve_comb_variant()[0],
+                   "cwt_variant": guesses.resolve_cwt_variant()[0],
+                   "created": time.strftime("%Y-%m-%d %H:%M:%S")},
+        "runtime": {"mean_total_s": float(per_star["total"].mean()),
+                    "median_total_s": float(per_star["total"].median()),
+                    "mean_stage_s": {c: float(per_star[c].mean()) for c in stage_cols if c != "total"}},
+    }
+    args.summary_json.parent.mkdir(parents=True, exist_ok=True)
+    tmp = args.summary_json.with_suffix(".tmp")
+    tmp.write_text(json.dumps(summary, indent=1))
+    os.replace(tmp, args.summary_json)
+    print(f"wrote {args.summary_json}")
+    return summary
 
 
 if __name__ == "__main__":

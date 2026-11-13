@@ -107,9 +107,16 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - WG6: how to handle long ROT periods.
 - Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
 - Midway review leftovers: validation sources; Roman scoping now vs later.
-- T12 leftover: add a runtime goal on `profile_pipeline.py` output?
 
 ## Next up (after the above)
+- **Runtime baseline for goal RT2** (no Rae input needed): when the machine is idle (after T32), run
+  `nice -n 15 $PY benchmarks/profile_pipeline.py --manifest datasets/dev_medium.csv --data-root data/smarts_dev
+  --ignore-manifest-sectors --star-ids-file benchmarks/profile_stars.txt --features --repeats 3
+  --summary-json benchmarks/baselines/profile15_fullyear_v7.json` (~2–3 min), and commit it. RT2 (≤ 10% slower) is
+  run only occasionally, before speed-relevant merges. RT1a/b are free draft checks on every scorecard.
+- **Batch the baseline-changing work** (Rae, 2026-11-13: avoid dead time): P39 and any adopted T32 variant go into one
+  baseline refresh (~15 min of scorecards), then the ranker-table rebuild (P31, ~2.5 h, needs the drive) runs
+  **overnight**. Neither is urgent.
 - **Ranker v1** on the rebuilt tables:
   - T27 decline model (all 3 draws per negative source);
   - per-bin thresholds;

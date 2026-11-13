@@ -1,0 +1,16 @@
+# Fixed 15-star dev_medium set for runtime profiling (T12/T31; benchmarks/profile_pipeline.py --star-ids-file)
+smarts-tess-v1.0-001810
+smarts-tess-v1.0-002102
+smarts-tess-v1.0-004433
+smarts-tess-v1.0-008705
+smarts-tess-v1.0-009444
+smarts-tess-v1.0-014308
+smarts-tess-v1.0-029013
+smarts-tess-v1.0-030879
+smarts-tess-v1.0-049025
+smarts-tess-v1.0-091212
+smarts-tess-v1.0-098694
+smarts-tess-v1.0-151481
+smarts-tess-v1.0-218521
+smarts-tess-v1.0-311204
+smarts-tess-v1.0-995392

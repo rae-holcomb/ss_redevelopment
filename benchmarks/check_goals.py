@@ -44,6 +44,25 @@ Usage
 
 Exit code is 1 if any *active* goal fails or any regression guard trips
 (useful for automation), else 0. Draft goals are reported but never fail.
+
+Other inputs (2026-11-13, Rae's OK)
+-----------------------------------
+The positional file may also be:
+
+* a headline card, ``headline.json`` from ``tools/headline_card.py``. Its dataset string is
+  ``meta.dataset`` (``headline:<manifest stem>:<mode>,population=<pop>``). A goal on it names a
+  ``"system"``: a card label, or a kind (``"ranker"`` / ``"hand"``) when exactly one card has that
+  kind; pick one of several with ``--system ranker="ranker v1"``. The metric path is inside that
+  card's ``values`` (e.g. ``R4_precision.0.1``);
+* a runtime summary, ``--summary-json`` from ``benchmarks/profile_pipeline.py`` (dataset
+  ``profile:<star list>:<mode>,features=<0|1>``, metrics under ``runtime``).
+
+Extra goal keys:
+
+* ``"target_system": "hand"``: the target is the same metric on another card (e.g. ranker >= hand);
+* ``"relative": {"max_drop": 0.02}`` (higher is better) or ``{"max_rise_frac": 0.15}`` (lower is
+  better, e.g. seconds per star): compare with the same metric in ``--baseline``. Without a baseline
+  the goal reports n/a and never fails.
 """
 
 from __future__ import annotations
@@ -99,6 +118,45 @@ def expand(d: dict, pattern: str) -> list:
     return [p for p in paths if isinstance(get_path(d, p), (int, float))]
 
 
+def card_values(data: dict, system: str, overrides: dict | None = None):
+    """Return (label, values dict) of the headline card `system` names, or (None, reason).
+
+    `system` is a card label or a kind ("ranker", "hand"); a kind must match exactly one card unless
+    `overrides` maps it to a label (from --system KIND=LABEL).
+    """
+    cards = data.get("cards", {})
+    want = (overrides or {}).get(system, system)
+    if want in cards:
+        return want, cards[want].get("values", {})
+    # older cards (e.g. the P28 report's cards.json) have no "kind": use the label's first word
+    hits = [lab for lab, c in cards.items() if (c.get("kind") or lab.split()[0]) == want]
+    if len(hits) == 1:
+        return hits[0], cards[hits[0]].get("values", {})
+    if not hits:
+        return None, f"no card for system {want!r}"
+    return None, f"system {want!r} is ambiguous ({', '.join(hits)}); pass --system {want}=LABEL"
+
+
+def run_dataset(data: dict) -> str:
+    """Dataset string of a scorecard metrics.json, a profile summary or a headline card."""
+    if "cards" in data and "meta" in data:
+        meta = data["meta"]
+        if meta.get("dataset"):
+            return meta["dataset"]
+        pops = {c.get("population") for c in data["cards"].values()}
+        return f"headline:?:{meta.get('mode')},population={pops.pop() if len(pops) == 1 else '?'}"
+    return data.get("config", {}).get("dataset", "?")
+
+
+def goal_root(data: dict | None, g: dict, overrides: dict | None):
+    """The dict a goal's metric path is looked up in (the card's values for headline goals)."""
+    if data is None:
+        return None, None
+    if "system" in g and "cards" in data:
+        return card_values(data, g["system"], overrides)
+    return None, data
+
+
 def _fmt(x) -> str:
     """Format a metric value for the table."""
     if x is None or (isinstance(x, float) and math.isnan(x)):
@@ -109,15 +167,19 @@ def _fmt(x) -> str:
 def main(argv=None) -> int:
     """CLI entry point; returns the process exit code."""
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("metrics", type=Path, help="metrics.json from scorecard.py")
+    p.add_argument("metrics", type=Path,
+                   help="metrics.json from scorecard.py, headline.json, or a profile_pipeline summary")
     p.add_argument("--baseline", type=Path, help="baseline metrics.json to compare against")
     p.add_argument("--goals", type=Path, default=ROOT / "benchmarks" / "goals.json")
+    p.add_argument("--system", action="append", metavar="KIND=LABEL",
+                   help="headline cards: which card a goal's system kind means (repeatable)")
     args = p.parse_args(argv)
 
     m = json.loads(args.metrics.read_text())
     base = json.loads(args.baseline.read_text()) if args.baseline else None
     goals = json.loads(args.goals.read_text())
-    dataset = m.get("config", {}).get("dataset", "?")
+    overrides = dict(x.split("=", 1) for x in (args.system or []))
+    dataset = run_dataset(m)
     failed = False
 
     print(f"Run: {args.metrics}  (dataset {dataset}, commit {m.get('config', {}).get('git_commit')})")
@@ -127,34 +189,60 @@ def main(argv=None) -> int:
     for g in goals.get("goals", []):
         if g.get("dataset") and g["dataset"] != dataset:
             continue
-        if "*" in g["metric"]:
+        label, root = goal_root(m, g, overrides)
+        _, broot = goal_root(base, g, overrides)
+        note = ""
+        target_txt = f"{g.get('op', ''):>2} {g.get('target', ''):<6}"
+        if root is None or isinstance(root, str):
+            # headline goal whose system can't be resolved: report, fail only if active
+            v, b, ok, note = None, None, False, f" [{label or ''}{root or ''}]"
+        elif "*" in g["metric"]:
             # Wildcard goal: every expanded metric must satisfy op/target.
             # Report the worst value (and which path) so a FAIL is actionable.
-            paths = expand(m, g["metric"])
-            vals = {p_: get_path(m, p_) for p_ in paths}
+            paths = expand(root, g["metric"])
+            vals = {p_: get_path(root, p_) for p_ in paths}
             bad = [p_ for p_, x in vals.items() if not OPS[g["op"]](x, g["target"])]
             ok = bool(paths) and not bad
             worst_key = max if g["op"] in ("<=", "<") else min
             v = worst_key(vals.values()) if vals else None
             b = None
-            if base:
-                bvals = [get_path(base, p_) for p_ in expand(base, g["metric"])]
+            if broot is not None and not isinstance(broot, str):
+                bvals = [get_path(broot, p_) for p_ in expand(broot, g["metric"])]
                 b = worst_key(bvals) if bvals else None
             if bad:
                 g = dict(g, description=(g.get("description", "") + f" FAILING: {', '.join(bad)}").strip())
         else:
-            v = get_path(m, g["metric"])
-            ok = v is not None and OPS[g["op"]](v, g["target"])
-            b = get_path(base, g["metric"]) if base else None
-        verdict = "PASS" if ok else "FAIL"
-        if not ok and g.get("status") == "active":
+            v = get_path(root, g["metric"])
+            b = get_path(broot, g["metric"]) if isinstance(broot, dict) else None
+            if "relative" in g:
+                rel = g["relative"]
+                if b is None or v is None:
+                    ok, note = None, " [n/a: needs --baseline with this metric]"
+                elif "max_rise_frac" in rel:
+                    ok = v <= b * (1 + rel["max_rise_frac"])
+                    target_txt = f"<= base*{1 + rel['max_rise_frac']:.2f}"
+                else:
+                    ok = v >= b - rel.get("max_drop", 0.0)
+                    target_txt = f">= base-{rel.get('max_drop', 0.0):g}"
+            elif "target_system" in g:
+                tlab, troot = card_values(m, g["target_system"], overrides)
+                t = get_path(troot, g["metric"]) if isinstance(troot, dict) else None
+                ok = v is not None and t is not None and OPS[g["op"]](v, t)
+                target_txt = f"{g['op']:>2} {_fmt(t).strip():<6}"
+                note = f" [{label} vs {tlab or troot}]"
+            else:
+                ok = v is not None and OPS[g["op"]](v, g["target"])
+                if label:
+                    note = f" [{label}]"
+        verdict = "n/a" if ok is None else ("PASS" if ok else "FAIL")
+        if ok is False and g.get("status") == "active":
             failed = True
-        print(f"{g['id']:5} {g.get('status', 'draft'):7} {verdict:6} {_fmt(v)} {g['op']:>2} {g['target']:<6} "
-              f"{_fmt(b)}  {g['metric']}")
+        print(f"{g['id']:5} {g.get('status', 'draft'):7} {verdict:6} {_fmt(v)} {target_txt} "
+              f"{_fmt(b)}  {g['metric']}{note}")
         if g.get("description"):
             print(f"{'':21}{g['description']}")
 
-    if base:
+    if base and "cards" not in m:
         guard = goals.get("regression_guard", {})
         default_drop = guard.get("max_drop", 0.02)
         print("\nRegression guard (fail if a metric drops by more than its limit):")

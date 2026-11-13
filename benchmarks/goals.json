@@ -1,5 +1,5 @@
 {
-  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only. G9-G12 (2026-10-21) are on real SMARTS dev_medium full-year, the default judging set for method changes (Rae); synthetic goals G1-G8 remain as regression checks.",
+  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only. G9-G12 (2026-10-21) are on real SMARTS dev_medium full-year, the default judging set for method changes (Rae); synthetic goals G1-G8 remain as regression checks. H1-H5 (2026-11-13, Rae: headline-card recommendations) grade tools/headline_card.py's headline.json; RT1a/b grade scorecard runtime (free, draft); RT2 grades benchmarks/profile_pipeline.py --summary-json, run occasionally.",
   "goals": [
     {
       "id": "G1",
@@ -108,6 +108,98 @@
       "op": ">=",
       "target": 0.6,
       "description": "Real-data Stage-1 recall for P<1d (baseline 0.44; 0.88 on synthetic). Relates to P16. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses."
+    },
+    {
+      "id": "H1",
+      "status": "active",
+      "dataset": "headline:dev_medium:assigned,population=dev_medium",
+      "system": "ranker",
+      "metric": "R1_success_tess_cov_P30",
+      "op": ">=",
+      "target": 0.25,
+      "description": "Headline R1: assigned, TESS coverage mix, P <= 30 d, shipped system (ranker). Baseline ranker v0 0.198 +/- 0.028. Rae 2026-11-13."
+    },
+    {
+      "id": "H2",
+      "status": "active",
+      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "system": "ranker",
+      "metric": "R3_correct_pop",
+      "relative": {
+        "max_drop": 0.02
+      },
+      "description": "Headline R3 guard: correct-only (no diffrot credit), full-year; no drop > 0.02 (~1 SE) vs --baseline headline.json."
+    },
+    {
+      "id": "H3a",
+      "status": "active",
+      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "system": "ranker",
+      "target_system": "hand",
+      "metric": "R4_precision.0.1",
+      "op": ">=",
+      "description": "Headline R4: precision at f = 0.1, full-year; ranker >= hand arbitration (the 'match hand' default). v0: 0.534 vs 0.711."
+    },
+    {
+      "id": "H3b",
+      "status": "active",
+      "dataset": "headline:dev_medium:assigned,population=dev_medium",
+      "system": "ranker",
+      "target_system": "hand",
+      "metric": "R4_precision.0.1",
+      "op": ">=",
+      "description": "Headline R4: precision at f = 0.1, assigned; ranker >= hand. v0: 0.251 vs 0.206."
+    },
+    {
+      "id": "H4",
+      "status": "active",
+      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "system": "ranker",
+      "metric": "R5_within20_half",
+      "op": ">=",
+      "target": 0.69,
+      "description": "Headline R5: within 20%, most credible half, full-year; Claytor+2022's 0.69. v0 0.642 +/- 0.023."
+    },
+    {
+      "id": "H5",
+      "status": "active",
+      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "system": "ranker",
+      "metric": "R2_success_pop",
+      "relative": {
+        "max_drop": 0.02
+      },
+      "description": "Headline R2 guard: success, full-year, dev_medium population; no drop > 0.02 vs --baseline headline.json."
+    },
+    {
+      "id": "RT1a",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "metric": "runtime.median_seconds",
+      "relative": {
+        "max_rise_frac": 0.25
+      },
+      "description": "Runtime, free on every scorecard: median s/star no more than 25% above the baseline's. Draft (reported only): parallel wall time moves with machine load."
+    },
+    {
+      "id": "RT1b",
+      "status": "draft",
+      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "metric": "runtime.median_seconds",
+      "relative": {
+        "max_rise_frac": 0.25
+      },
+      "description": "Same as RT1a, assigned coverage."
+    },
+    {
+      "id": "RT2",
+      "status": "active",
+      "dataset": "profile:benchmarks/profile_stars.txt:fullyear,features=1",
+      "metric": "runtime.mean_total_s",
+      "relative": {
+        "max_rise_frac": 0.1
+      },
+      "description": "Runtime, occasional (idle machine, serial, ~2 min): profile_pipeline.py --star-ids-file benchmarks/profile_stars.txt --ignore-manifest-sectors --features --repeats 3 --summary-json; no more than 10% slower than benchmarks/baselines/profile15_fullyear_v7.json. Run before merging speed-relevant changes, not on every update."
     }
   ],
   "regression_guard": {

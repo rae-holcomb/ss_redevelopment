@@ -504,7 +504,8 @@ board phase they were filed under, in board order. Statuses for T1, T16e, T21, T
   prevalence f = 0.1 as the canonical R4 number (0.3 / 0.5 stay in the JSON); activate H1, H3, H4, with H2 and H5 as
   regression guards; R5 reports hand both ways (declines as misses, and among answered stars only); P29's 70 d run is
   deferred. Follow-up: H1–H5 live only in the report. Encoding them needs `check_goals.py` to read the headline-card
-  JSON (a protected-file change, now approved in principle).
+  JSON (a protected-file change, now approved in principle). **Done 2026-11-13 (coordinator):** H1, H2, H3a/b, H4, H5
+  are in `goals.json` and graded by `check_goals.py` on `headline.json` (`system` / `target_system` / `relative` keys).
 - **Proposed by:** midway review (rec. 5).
   `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
   Awaiting Rae: period population, prevalences, which goals to activate.

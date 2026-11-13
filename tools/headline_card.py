@@ -375,6 +375,12 @@ def card_markdown(cards: dict, title: str = "") -> str:
     return "\n".join(lines) + "\n"
 
 
+def headline_dataset(manifest, mode: str, population: str) -> str:
+    """Dataset string of a card, e.g. ``headline:dev_medium:fullyear,population=dev_medium``."""
+    stem = Path(manifest).stem if manifest else "?"
+    return f"headline:{stem}:{mode},population={population}"
+
+
 def _parse_pairs(items) -> list:
     """Parse repeated LABEL=PATH options."""
     out = []
@@ -419,7 +425,9 @@ def main(argv=None):
         cards[label] = card
     os.makedirs(args.out, exist_ok=True)
     meta = {"definitions": ROW_DEFINITIONS, "population_note": POPULATION_NOTES[args.population],
-            "rel_tol": REL_TOL, "ranker_threshold": args.ranker_threshold, "mode": args.mode}
+            "rel_tol": REL_TOL, "ranker_threshold": args.ranker_threshold, "mode": args.mode,
+            # dataset string benchmarks/check_goals.py matches headline goals on (H1-H5)
+            "dataset": headline_dataset(args.manifest, args.mode, args.population)}
     tmp = os.path.join(args.out, "headline.json.tmp")
     with open(tmp, "w") as fh:
         json.dump({"meta": meta, "cards": cards}, fh, indent=1)
