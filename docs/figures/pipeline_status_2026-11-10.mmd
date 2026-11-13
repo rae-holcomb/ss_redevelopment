@@ -1,0 +1,98 @@
+flowchart TD
+    subgraph DATA["Data sources: what we learn and test on"]
+        SMARTS["<b>SMARTS-TESS simulations</b><br/>~1M real TESS backgrounds with injected<br/>spotted-star signals and known periods.<br/>Lives on the external drive."]
+        DEV["<b>Frozen dev sets + holdout</b><br/>Small stratified subsets (dev_small,<br/>dev_medium) for quick, comparable tests;<br/>a locked holdout for final judging."]
+        NOISE["<b>Noise-source quietness</b><br/>Flags SMARTS background stars that<br/>are secretly variable, so they don't<br/>pollute labels. Reclassification running."]
+        NEG["<b>Non-rotator negatives</b><br/>Noise-only light curves with no injected<br/>spots: teaches the ranker what<br/>'no rotation' looks like."]
+        ROMAN["<b>Roman GBTDS training sets</b><br/>WG6 simulated Roman light curves;<br/>the deployment target. Needs scoping<br/>(data access, which sets)."]
+        BUTTERPY["<b>Further training data</b><br/>Own butterpy multi-year sims, then<br/>Kepler / ground-based (wishlist).<br/>Guards against over-tuning to SMARTS."]
+    end
+
+    subgraph PREP["Input layer: raw files to clean light curves"]
+        LOAD["<b>Light-curve loader</b><br/>preprocessing.py: reads SMARTS FITS,<br/>re-finds orbit gaps, drops bad orbits,<br/>regrids to even cadence."]
+        COV["<b>Sector-coverage patterns</b><br/>coverage.py: real TESS observing<br/>patterns, so tests mimic patchy<br/>real-star coverage."]
+        SYN["<b>Synthetic star generator</b><br/>synthetic.py: fast fake spotted stars<br/>with known truth, for unit tests and<br/>regression checks."]
+        RLOAD["<b>Roman loader</b><br/>Reads Roman light curves into the<br/>same (time, flux) format."]
+        API["<b>Mission-agnostic core API</b><br/>One interface so the pipeline doesn't<br/>care whether data is TESS, Roman,<br/>or Kepler."]
+    end
+
+    subgraph S1["Stage 1: propose candidate periods"]
+        ACF["<b>Gap-aware autocorrelation</b><br/>acf_utils.py: ACF that tolerates<br/>data gaps without interpolating."]
+        GUESS["<b>Candidate-period methods</b><br/>guesses.py: several cheap, independent<br/>methods (periodogram, ACF, wavelet...).<br/>Goal: keep the true P on the list."]
+        SHORTP["<b>Short-period recovery</b><br/>Improve candidates for stars<br/>rotating faster than ~3 days."]
+    end
+
+    subgraph S2["Stage 2: test each candidate"]
+        COMB["<b>Comb-of-parabolae fit</b><br/>comb_fit.py: fits evenly spaced ACF<br/>peaks at each candidate P; fit quality<br/>says how well P explains the data."]
+        GATES["<b>Hand-tuned reliability gates</b><br/>Rules that reject weak or aliased fits<br/>and pick a winner, or decline.<br/>Paused: the ranker should replace them."]
+        LONGP["<b>Long-period honest failure</b><br/>Decline rather than guess when<br/>P is too long for the baseline."]
+    end
+
+    subgraph S3["Stage 3: learn to pick the right candidate"]
+        FEAT["<b>Candidate features</b><br/>ml_features.py: ~120 numbers per<br/>candidate (fit quality, alias tests,<br/>coverage) describing how good it looks."]
+        FTAB["<b>Feature tables v0</b><br/>Features + true labels for a 3,000-star<br/>quiet-noise training sample and<br/>dev_medium. Just merged."]
+        RANK["<b>Ranker v0</b><br/>Gradient-boosted model that ranks each<br/>star's candidates. Does it beat the<br/>hand-tuned gates? Next up."]
+        FLAGS["<b>Variable-star / EB flags</b><br/>Tell rotation apart from other<br/>periodic variables and eclipsing<br/>binaries."]
+    end
+
+    subgraph EVAL["Evaluation: are we getting better?"]
+        EVALPY["<b>Scoring rules</b><br/>evaluation.py: one definition of correct,<br/>half/double alias, differential-rotation<br/>success, wrong, declined."]
+        SCORE["<b>Scorecard + goals</b><br/>Standard benchmark run with before/after<br/>comparison against baselines; now v5,<br/>with noise_period and searchable-range splits."]
+        CEIL["<b>Detectability ceiling</b><br/>How many SMARTS stars are recoverable<br/>at all? Tells us which declines<br/>are actually correct."]
+        RSCORE["<b>Roman scorecard</b><br/>First benchmark on Roman data;<br/>also a train-on-one, test-on-other<br/>over-tuning check."]
+    end
+
+    subgraph INFRA["Infrastructure and release"]
+        DET["<b>Reproducibility</b><br/>determinism.py: OpenBLAS + pinned<br/>threads, so reruns give identical bits."]
+        TESTS["<b>Tests + reports</b><br/>pytest suite and a report per agent<br/>task, so changes stay legible."]
+        EFF["<b>Efficiency pass</b><br/>Profile and speed up per-star cost<br/>for million-star runs."]
+        PKG["<b>Cleanup + packaging</b><br/>Beginner-friendly, documented<br/>public release."]
+    end
+
+    OUT(["<b>GOAL: Roman GBTDS Season 1</b><br/>Deployable pipeline and a quick<br/>rotation-period catalog paper"])
+
+    SMARTS --> DEV --> LOAD
+    NOISE --> DEV
+    COV --> LOAD
+    SYN --> ACF
+    LOAD --> ACF
+    ROMAN --> RLOAD --> API
+    LOAD --> API
+    API -.-> ACF
+    ACF --> GUESS --> COMB --> GATES
+    SHORTP -.-> GUESS
+    LONGP -.-> GATES
+    GATES --> FEAT --> FTAB --> RANK
+    NEG --> FTAB
+    BUTTERPY -.-> FTAB
+    RANK --> FLAGS --> OUT
+    GATES --> SCORE
+    RANK --> SCORE
+    EVALPY --> SCORE
+    CEIL --> SCORE
+    RLOAD --> RSCORE
+    RANK --> RSCORE --> OUT
+    EFF -.-> OUT
+    PKG -.-> OUT
+
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+
+    class SMARTS,DEV,LOAD,COV,SYN,ACF,GUESS,COMB,FEAT,FTAB,EVALPY,SCORE,DET,TESTS done
+    class NOISE active
+    class NEG,CEIL,RANK,SHORTP,EFF,API ready
+    class ROMAN,RLOAD,RSCORE,FLAGS,BUTTERPY,PKG,LONGP blocked
+    class GATES paused
+    class OUT goal
+
+    subgraph LEGEND["Legend (solid arrow = data flow; dashed = planned contribution)"]
+        L1["Done / merged"]:::done
+        L2["Agent running now"]:::active
+        L3["Ready, next up"]:::ready
+        L4["Blocked / later"]:::blocked
+        L5["Paused: ranker should replace"]:::paused
+    end

@@ -1,0 +1,277 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Pipeline Status</title>
+<style>
+body{background:#fff;margin:16px;font-family:sans-serif;color:#111}
+nav{position:sticky;top:0;background:#fff;padding:8px 0;border-bottom:1px solid #ddd;z-index:5;font-size:14px}
+section{margin:24px 0 48px} h3{border-bottom:2px solid #eee;padding-bottom:4px}
+a.top{font-size:12px;font-weight:normal}
+.legend{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+pre.mermaid svg .node span.sq.sq-done{color:#2e7d32 !important} pre.mermaid svg .node span.sq.sq-active{color:#f9a825 !important} pre.mermaid svg .node span.sq.sq-ready{color:#1976d2 !important} pre.mermaid svg .node span.sq.sq-blocked{color:#9e9e9e !important} pre.mermaid svg .node span.sq.sq-paused{color:#ce93d8 !important}
+.sq{font-size:20px} .cnt{font-size:12px}
+.chip{padding:2px 8px;border:1px solid;border-radius:3px;font-size:12px} .note{font-size:12px;color:#555}
+</style></head><body>
+<h2>SpinSpotter v2: project status by stage (2026-11-10)</h2>
+<nav><a href='#overview'>Overview</a> | <a href='#DATA'>Data sources</a> | <a href='#PREP'>Input layer</a> | <a href='#S1'>Stage 1: propose candidates</a> | <a href='#S2'>Stage 2: test candidates</a> | <a href='#S3'>Stage 3: learn to pick</a> | <a href='#EVAL'>Evaluation</a> | <a href='#INFRA'>Infrastructure + release</a><div class='legend'><span class='chip' style='background:#2e7d32;border-color:#1b5e20;color:#fff'>Done / merged</span><span class='chip' style='background:#f9a825;border-color:#f57f17;color:#000'>Agent running now</span><span class='chip' style='background:#1976d2;border-color:#0d47a1;color:#fff'>Ready, next up</span><span class='chip' style='background:#9e9e9e;border-color:#616161;color:#fff'>Blocked / later</span><span class='chip' style='background:#ce93d8;border-color:#7b1fa2;color:#000'>Paused: ranker should replace</span><span class='chip' style='background:#fff;border:2px dashed #555'>Lives in another stage</span><span class='note'>Solid arrow = data flow; dashed arrow = planned contribution. Overview squares = one per element.</span></div></nav>
+<section id='overview'><h3>Overview <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+%%{init: {&quot;flowchart&quot;: {&quot;useMaxWidth&quot;: true}}}%%
+flowchart LR
+    DATA[&quot;&lt;b&gt;Data sources&lt;/b&gt;&lt;br/&gt;What we train and test on: SMARTS now,&lt;br/&gt;Roman next, more sims later.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-active&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;2 done · 1 running · 1 ready · 2 later&lt;/span&gt;&quot;]:::sec
+    PREP[&quot;&lt;b&gt;Input layer&lt;/b&gt;&lt;br/&gt;Turns raw files into clean, evenly&lt;br/&gt;sampled light curves for any mission.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;3 done · 1 ready · 1 later&lt;/span&gt;&quot;]:::sec
+    S1[&quot;&lt;b&gt;Stage 1: propose candidates&lt;/b&gt;&lt;br/&gt;Several cheap methods suggest periods;&lt;br/&gt;the true P just has to be on the list.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;2 done · 1 ready&lt;/span&gt;&quot;]:::sec
+    S2[&quot;&lt;b&gt;Stage 2: test candidates&lt;/b&gt;&lt;br/&gt;Fit an ACF comb at each candidate;&lt;br/&gt;gates reject weak or aliased fits.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-paused&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;1 done · 1 later · 1 paused&lt;/span&gt;&quot;]:::sec
+    S3[&quot;&lt;b&gt;Stage 3: learn to pick&lt;/b&gt;&lt;br/&gt;ML ranker scores each candidate using&lt;br/&gt;~120 features. Critical path now.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;2 done · 1 ready · 1 later&lt;/span&gt;&quot;]:::sec
+    EVAL[&quot;&lt;b&gt;Evaluation&lt;/b&gt;&lt;br/&gt;Scoring rules and benchmarks that tell&lt;br/&gt;us whether a change actually helps.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;2 done · 1 ready · 1 later&lt;/span&gt;&quot;]:::sec
+    INFRA[&quot;&lt;b&gt;Infrastructure + release&lt;/b&gt;&lt;br/&gt;Reproducibility, tests, speed, and a&lt;br/&gt;beginner-friendly public package.&lt;br/&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-done&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-ready&#x27;&gt;■&lt;/span&gt;&lt;span class=&#x27;sq sq-blocked&#x27;&gt;■&lt;/span&gt;&lt;br/&gt;&lt;span class=&#x27;cnt&#x27;&gt;2 done · 1 ready · 1 later&lt;/span&gt;&quot;]:::sec
+    OUT([&quot;&lt;b&gt;GOAL: Roman GBTDS Season 1&lt;/b&gt;&lt;br/&gt;Deployable pipeline and a quick&lt;br/&gt;rotation-period catalog paper&quot;]):::goal
+    DATA --&gt; PREP
+    PREP --&gt; S1
+    S1 --&gt; S2
+    S2 --&gt; S3
+    DATA --&gt; S3
+    S3 --&gt; OUT
+    S2 --&gt; EVAL
+    S3 --&gt; EVAL
+    PREP --&gt; EVAL
+    EVAL --&gt; OUT
+    INFRA -.-&gt; OUT
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='DATA'><h3>Data sources <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph DATA[&quot;Data sources&quot;]
+        SMARTS[&quot;&lt;b&gt;SMARTS-TESS simulations&lt;/b&gt;&lt;br/&gt;~1M real TESS backgrounds with injected&lt;br/&gt;spotted-star signals and known periods.&lt;br/&gt;Lives on the external drive.&quot;]:::done
+        DEV[&quot;&lt;b&gt;Frozen dev sets + holdout&lt;/b&gt;&lt;br/&gt;Small stratified subsets (dev_small,&lt;br/&gt;dev_medium) for quick, comparable tests;&lt;br/&gt;a locked holdout for final judging.&quot;]:::done
+        NOISE[&quot;&lt;b&gt;Noise-source quietness&lt;/b&gt;&lt;br/&gt;Flags SMARTS background stars that&lt;br/&gt;are secretly variable, so they don&#x27;t&lt;br/&gt;pollute labels. Reclassification running.&quot;]:::active
+        NEG[&quot;&lt;b&gt;Non-rotator negatives&lt;/b&gt;&lt;br/&gt;Noise-only light curves with no injected&lt;br/&gt;spots: teaches the ranker what&lt;br/&gt;&#x27;no rotation&#x27; looks like.&quot;]:::ready
+        ROMAN[&quot;&lt;b&gt;Roman GBTDS training sets&lt;/b&gt;&lt;br/&gt;WG6 simulated Roman light curves;&lt;br/&gt;the deployment target. Needs scoping&lt;br/&gt;(data access, which sets).&quot;]:::blocked
+        BUTTERPY[&quot;&lt;b&gt;Further training data&lt;/b&gt;&lt;br/&gt;Own butterpy multi-year sims, then&lt;br/&gt;Kepler / ground-based (wishlist).&lt;br/&gt;Guards against over-tuning to SMARTS.&quot;]:::blocked
+    end
+    x_LOAD[&quot;&lt;b&gt;Light-curve loader&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_done
+    x_RLOAD[&quot;&lt;b&gt;Roman loader&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_blocked
+    x_FTAB[&quot;&lt;b&gt;Feature tables v0&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 3: learn to pick&lt;/i&gt;&quot;]:::ext_done
+    SMARTS --&gt; DEV
+    DEV --&gt; x_LOAD
+    NOISE --&gt; DEV
+    ROMAN --&gt; x_RLOAD
+    NEG --&gt; x_FTAB
+    BUTTERPY -.-&gt; x_FTAB
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='PREP'><h3>Input layer <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph PREP[&quot;Input layer&quot;]
+        LOAD[&quot;&lt;b&gt;Light-curve loader&lt;/b&gt;&lt;br/&gt;preprocessing.py: reads SMARTS FITS,&lt;br/&gt;re-finds orbit gaps, drops bad orbits,&lt;br/&gt;regrids to even cadence.&quot;]:::done
+        COV[&quot;&lt;b&gt;Sector-coverage patterns&lt;/b&gt;&lt;br/&gt;coverage.py: real TESS observing&lt;br/&gt;patterns, so tests mimic patchy&lt;br/&gt;real-star coverage.&quot;]:::done
+        SYN[&quot;&lt;b&gt;Synthetic star generator&lt;/b&gt;&lt;br/&gt;synthetic.py: fast fake spotted stars&lt;br/&gt;with known truth, for unit tests and&lt;br/&gt;regression checks.&quot;]:::done
+        RLOAD[&quot;&lt;b&gt;Roman loader&lt;/b&gt;&lt;br/&gt;Reads Roman light curves into the&lt;br/&gt;same (time, flux) format.&quot;]:::blocked
+        API[&quot;&lt;b&gt;Mission-agnostic core API&lt;/b&gt;&lt;br/&gt;One interface so the pipeline doesn&#x27;t&lt;br/&gt;care whether data is TESS, Roman,&lt;br/&gt;or Kepler.&quot;]:::ready
+    end
+    x_DEV[&quot;&lt;b&gt;Frozen dev sets + holdout&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Data sources&lt;/i&gt;&quot;]:::ext_done
+    x_ACF[&quot;&lt;b&gt;Gap-aware autocorrelation&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 1: propose candidates&lt;/i&gt;&quot;]:::ext_done
+    x_ROMAN[&quot;&lt;b&gt;Roman GBTDS training sets&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Data sources&lt;/i&gt;&quot;]:::ext_blocked
+    x_RSCORE[&quot;&lt;b&gt;Roman scorecard&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Evaluation&lt;/i&gt;&quot;]:::ext_blocked
+    x_DEV --&gt; LOAD
+    COV --&gt; LOAD
+    SYN --&gt; x_ACF
+    LOAD --&gt; x_ACF
+    x_ROMAN --&gt; RLOAD
+    RLOAD --&gt; API
+    LOAD --&gt; API
+    API -.-&gt; x_ACF
+    RLOAD --&gt; x_RSCORE
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='S1'><h3>Stage 1: propose candidates <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph S1[&quot;Stage 1: propose candidates&quot;]
+        ACF[&quot;&lt;b&gt;Gap-aware autocorrelation&lt;/b&gt;&lt;br/&gt;acf_utils.py: ACF that tolerates&lt;br/&gt;data gaps without interpolating.&quot;]:::done
+        GUESS[&quot;&lt;b&gt;Candidate-period methods&lt;/b&gt;&lt;br/&gt;guesses.py: several cheap, independent&lt;br/&gt;methods (periodogram, ACF, wavelet...).&lt;br/&gt;Goal: keep the true P on the list.&quot;]:::done
+        SHORTP[&quot;&lt;b&gt;Short-period recovery&lt;/b&gt;&lt;br/&gt;Improve candidates for stars&lt;br/&gt;rotating faster than ~3 days.&quot;]:::ready
+    end
+    x_SYN[&quot;&lt;b&gt;Synthetic star generator&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_done
+    x_LOAD[&quot;&lt;b&gt;Light-curve loader&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_done
+    x_API[&quot;&lt;b&gt;Mission-agnostic core API&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_ready
+    x_COMB[&quot;&lt;b&gt;Comb-of-parabolae fit&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 2: test candidates&lt;/i&gt;&quot;]:::ext_done
+    x_SYN --&gt; ACF
+    x_LOAD --&gt; ACF
+    x_API -.-&gt; ACF
+    ACF --&gt; GUESS
+    GUESS --&gt; x_COMB
+    SHORTP -.-&gt; GUESS
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='S2'><h3>Stage 2: test candidates <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph S2[&quot;Stage 2: test candidates&quot;]
+        COMB[&quot;&lt;b&gt;Comb-of-parabolae fit&lt;/b&gt;&lt;br/&gt;comb_fit.py: fits evenly spaced ACF&lt;br/&gt;peaks at each candidate P; fit quality&lt;br/&gt;says how well P explains the data.&quot;]:::done
+        GATES[&quot;&lt;b&gt;Hand-tuned reliability gates&lt;/b&gt;&lt;br/&gt;Rules that reject weak or aliased fits&lt;br/&gt;and pick a winner, or decline.&lt;br/&gt;Paused: the ranker should replace them.&quot;]:::paused
+        LONGP[&quot;&lt;b&gt;Long-period honest failure&lt;/b&gt;&lt;br/&gt;Decline rather than guess when&lt;br/&gt;P is too long for the baseline.&quot;]:::blocked
+    end
+    x_GUESS[&quot;&lt;b&gt;Candidate-period methods&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 1: propose candidates&lt;/i&gt;&quot;]:::ext_done
+    x_FEAT[&quot;&lt;b&gt;Candidate features&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 3: learn to pick&lt;/i&gt;&quot;]:::ext_done
+    x_SCORE[&quot;&lt;b&gt;Scorecard + goals&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Evaluation&lt;/i&gt;&quot;]:::ext_done
+    x_GUESS --&gt; COMB
+    COMB --&gt; GATES
+    LONGP -.-&gt; GATES
+    GATES --&gt; x_FEAT
+    GATES --&gt; x_SCORE
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='S3'><h3>Stage 3: learn to pick <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph S3[&quot;Stage 3: learn to pick&quot;]
+        FEAT[&quot;&lt;b&gt;Candidate features&lt;/b&gt;&lt;br/&gt;ml_features.py: ~120 numbers per&lt;br/&gt;candidate (fit quality, alias tests,&lt;br/&gt;coverage) describing how good it looks.&quot;]:::done
+        FTAB[&quot;&lt;b&gt;Feature tables v0&lt;/b&gt;&lt;br/&gt;Features + true labels for a 3,000-star&lt;br/&gt;quiet-noise training sample and&lt;br/&gt;dev_medium. Just merged.&quot;]:::done
+        RANK[&quot;&lt;b&gt;Ranker v0&lt;/b&gt;&lt;br/&gt;Gradient-boosted model that ranks each&lt;br/&gt;star&#x27;s candidates. Does it beat the&lt;br/&gt;hand-tuned gates? Next up.&quot;]:::ready
+        FLAGS[&quot;&lt;b&gt;Variable-star / EB flags&lt;/b&gt;&lt;br/&gt;Tell rotation apart from other&lt;br/&gt;periodic variables and eclipsing&lt;br/&gt;binaries.&quot;]:::blocked
+    end
+    x_GATES[&quot;&lt;b&gt;Hand-tuned reliability gates&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 2: test candidates&lt;/i&gt;&quot;]:::ext_paused
+    x_NEG[&quot;&lt;b&gt;Non-rotator negatives&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Data sources&lt;/i&gt;&quot;]:::ext_ready
+    x_BUTTERPY[&quot;&lt;b&gt;Further training data&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Data sources&lt;/i&gt;&quot;]:::ext_blocked
+    x_OUT([&quot;&lt;b&gt;GOAL: Roman GBTDS Season 1&lt;/b&gt;&quot;]):::ext_goal
+    x_SCORE[&quot;&lt;b&gt;Scorecard + goals&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Evaluation&lt;/i&gt;&quot;]:::ext_done
+    x_RSCORE[&quot;&lt;b&gt;Roman scorecard&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Evaluation&lt;/i&gt;&quot;]:::ext_blocked
+    x_GATES --&gt; FEAT
+    FEAT --&gt; FTAB
+    FTAB --&gt; RANK
+    x_NEG --&gt; FTAB
+    x_BUTTERPY -.-&gt; FTAB
+    RANK --&gt; FLAGS
+    FLAGS --&gt; x_OUT
+    RANK --&gt; x_SCORE
+    RANK --&gt; x_RSCORE
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='EVAL'><h3>Evaluation <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph EVAL[&quot;Evaluation&quot;]
+        EVALPY[&quot;&lt;b&gt;Scoring rules&lt;/b&gt;&lt;br/&gt;evaluation.py: one definition of correct,&lt;br/&gt;half/double alias, differential-rotation&lt;br/&gt;success, wrong, declined.&quot;]:::done
+        SCORE[&quot;&lt;b&gt;Scorecard + goals&lt;/b&gt;&lt;br/&gt;Standard benchmark with before/after&lt;br/&gt;comparison against baselines; now v5,&lt;br/&gt;with noise_period and searchable splits.&quot;]:::done
+        CEIL[&quot;&lt;b&gt;Detectability ceiling&lt;/b&gt;&lt;br/&gt;How many SMARTS stars are recoverable&lt;br/&gt;at all? Tells us which declines&lt;br/&gt;are actually correct.&quot;]:::ready
+        RSCORE[&quot;&lt;b&gt;Roman scorecard&lt;/b&gt;&lt;br/&gt;First benchmark on Roman data;&lt;br/&gt;also a train-on-one, test-on-other&lt;br/&gt;over-tuning check.&quot;]:::blocked
+    end
+    x_GATES[&quot;&lt;b&gt;Hand-tuned reliability gates&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 2: test candidates&lt;/i&gt;&quot;]:::ext_paused
+    x_RANK[&quot;&lt;b&gt;Ranker v0&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Stage 3: learn to pick&lt;/i&gt;&quot;]:::ext_ready
+    x_RLOAD[&quot;&lt;b&gt;Roman loader&lt;/b&gt;&lt;br/&gt;&lt;i&gt;Input layer&lt;/i&gt;&quot;]:::ext_blocked
+    x_OUT([&quot;&lt;b&gt;GOAL: Roman GBTDS Season 1&lt;/b&gt;&quot;]):::ext_goal
+    x_GATES --&gt; SCORE
+    x_RANK --&gt; SCORE
+    EVALPY --&gt; SCORE
+    CEIL --&gt; SCORE
+    x_RLOAD --&gt; RSCORE
+    x_RANK --&gt; RSCORE
+    RSCORE --&gt; x_OUT
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<section id='INFRA'><h3>Infrastructure + release <a class='top' href='#'>(top)</a></h3><pre class='mermaid'>
+flowchart TD
+    subgraph INFRA[&quot;Infrastructure + release&quot;]
+        DET[&quot;&lt;b&gt;Reproducibility&lt;/b&gt;&lt;br/&gt;determinism.py: OpenBLAS + pinned&lt;br/&gt;threads, so reruns give identical bits.&quot;]:::done
+        TESTS[&quot;&lt;b&gt;Tests + reports&lt;/b&gt;&lt;br/&gt;pytest suite and a report per agent&lt;br/&gt;task, so changes stay legible.&quot;]:::done
+        EFF[&quot;&lt;b&gt;Efficiency pass&lt;/b&gt;&lt;br/&gt;Profile and speed up per-star cost&lt;br/&gt;for million-star runs.&quot;]:::ready
+        PKG[&quot;&lt;b&gt;Cleanup + packaging&lt;/b&gt;&lt;br/&gt;Beginner-friendly, documented&lt;br/&gt;public release.&quot;]:::blocked
+    end
+    x_OUT([&quot;&lt;b&gt;GOAL: Roman GBTDS Season 1&lt;/b&gt;&quot;]):::ext_goal
+    EFF -.-&gt; x_OUT
+    PKG -.-&gt; x_OUT
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+    classDef sec fill:#fffbe6,stroke:#b8a54a,stroke-width:1.5px
+    classDef ext_done fill:#fff,stroke:#1b5e20,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_active fill:#fff,stroke:#f57f17,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_ready fill:#fff,stroke:#0d47a1,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_blocked fill:#fff,stroke:#616161,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_paused fill:#fff,stroke:#7b1fa2,color:#333,stroke-dasharray:4 3,stroke-width:2px
+    classDef ext_goal fill:#fff,stroke:#000,color:#333,stroke-dasharray:4 3,stroke-width:2px
+</pre></section>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, securityLevel:'loose', flowchart:{htmlLabels:true, useMaxWidth:false}});</script>
+</body></html>

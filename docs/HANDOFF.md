@@ -100,18 +100,14 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
   accident 2026-11-11, and Rae is to unarchive them.
 
 ## Waiting on Rae
-- P27 validation-set Q3–5, Q7.
-- WG6 questions (`reports/2026-11-12_wg6-dataset-scoping/`):
-  - ROT resampling: done by WG6 or by us?
-  - Noise variant: "improved" is recommended.
-  - EBs: negatives or a flagged class?
-  - Is FL (54 M-dwarf rotators) enough?
-  - How to handle long ROT periods?
-  - Which GBTDS design to assume?
-- Headline card: which prevalences to quote, and which of H1–H5 to activate.
+- Answered 2026-11-13 (recorded in the task files): P27 mix + `pulsation` outcome; WG6 (resample ROT ourselves,
+  improved noise, EBs flagged, more varied rotators than FL, dev uses the 3 early seasons); headline card (f = 0.1;
+  H1/H3/H4 active, H2/H5 guards); P29 70 d run deferred; 6 workers ruled out (4 already strains the machine).
+- P27: pick a long-period (70–180 d) block from the options in `TASKS_PROPOSED.md` P27; then freeze (Q7).
+- WG6: how to handle long ROT periods.
 - Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
 - Midway review leftovers: validation sources; Roman scoping now vs later.
-- T12 leftovers: time 6 workers on 1,000 stars? Add a runtime goal on `profile_pipeline.py` output?
+- T12 leftover: add a runtime goal on `profile_pipeline.py` output?
 
 ## Next up (after the above)
 - **Ranker v1** on the rebuilt tables:

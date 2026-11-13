@@ -326,6 +326,15 @@ for confirmation (ask Rae first).
 ### T28. Roman GBTDS track: data, loader, first scorecard (roadmap step 3, 2026-11-09)
 - **Agent:** start with a scoping session with Rae, then `method-improver`
 - **Status:** scoping in review (`reports/2026-11-12_wg6-dataset-scoping/`). Raw WG6 set is archival; the WG6 Roman-resampled set (received 2026-11-11, improved noise recommended) is profiled in Part 2. It has no ROT; FL (TESS M-dwarf templates) are the only Roman-cadence rotators. Next steps: P34 (ROT), P35 (loader + manifest), P36 (negatives).
+- **Rae's decisions (2026-11-13):**
+  - ROT resampling to Roman cadence: **we do it ourselves** (P34).
+  - Noise: the **improved** variant.
+  - EBs: a **flagged class**, not plain negatives (consistent with T29).
+  - FL's 54 M-dwarf rotators are **not enough**. Build a rotator set with a real mix of spectral types and rotation
+    periods (P34 scope).
+  - GBTDS design: **3 early + 3 late seasons** is correct. For development use **only the 3 early seasons**. Late-season
+    data is years away, so it isn't a pipeline design concern now.
+  - Still open: how to handle long ROT periods.
 - **Why:** Roman is a must-have mission and the Season 1 paper is the deadline. It differs from TESS in cadence (~15 min),
   per-season baseline (~70 d, contiguous), crowding, faintness and stellar population.
 - **Do:** (a) confirm the current GBTDS design (season length/count, cadence, filters, off-season sampling) and record it

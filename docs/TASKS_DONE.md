@@ -500,7 +500,11 @@ board phase they were filed under, in board order. Statuses for T1, T16e, T21, T
 ### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
 - **Status:** done, merged 2026-11-12 (`facc568`). **Period population decided (Rae, 2026-11-12): `dev_medium`'s own
   period-bin mix is the default for R2–R4, not McQuillan+2014** (Kepler's selection has almost no P < 1 d stars, and we
-  must stay sensitive to fast rotators). Still open: the prevalences and which goals H1–H5 to activate.
+  must stay sensitive to fast rotators). **Rae (2026-11-13) took the report's/coordinator's recommendations:** quote
+  prevalence f = 0.1 as the canonical R4 number (0.3 / 0.5 stay in the JSON); activate H1, H3, H4, with H2 and H5 as
+  regression guards; R5 reports hand both ways (declines as misses, and among answered stars only); P29's 70 d run is
+  deferred. Follow-up: H1–H5 live only in the report. Encoding them needs `check_goals.py` to read the headline-card
+  JSON (a protected-file change, now approved in principle).
 - **Proposed by:** midway review (rec. 5).
   `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
   Awaiting Rae: period population, prevalences, which goals to activate.

@@ -32,6 +32,7 @@ OGLE/UKIRT/TESS photometry). See `docs/WG6_REFERENCE.md` §1. So every number be
 |---|---|---|
 | Fields | 6: five ~0.28 deg² bulge fields plus one Galactic Centre field, ~1.7 deg² total | [web] STScI/NASA GBTDS pages; arXiv:2505.10574 |
 | Seasons | 6 (3 early, 3 late in the mission) | [web] NASA GBTDS technical page |
+| Seasons used for development | **3 early seasons only** (Rae, 2026-11-13): the late seasons are years away, so they aren't a pipeline design concern now | Rae |
 | Seasons in the WG6 grid | **6 consecutive seasons** (no early/late split): 2027-08-14→10-23, 2028-02-10→04-20, 2028-08-14→10-23, 2029-02-10→04-21, 2029-08-14→10-23, 2030-02-10→04-21; gaps 109–115 d | [WG6-grid] (contradicts the [web] 3+3 layout; dates are WG6's assumption) |
 | Season length | ~72 d visibility window, twice a year; plan on ~70 d usable | [web] STScI ("~72 days twice per year") |
 | Season length in the WG6 grid | **71.00 d**, contiguous (no gap > 1 h inside a season) | [WG6-grid] |

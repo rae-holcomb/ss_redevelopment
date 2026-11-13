@@ -306,13 +306,32 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   - Zach's TIC list is committed at `datasets/external/claytor2025_nonrotator_ticids.txt` (23,332 IDs; provenance and
     caveat in `datasets/external/README.md`).
   - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
-- **Status:** scoping session started 2026-11-12.
+- **Status:** scoping session started 2026-11-12. Report on `claude/p27-validation-scoping-4c1c1b`
+  (`reports/2026-11-12_validation-set-scoping/`), unmerged.
+- **Rae's decisions (2026-11-13), on the report's Q3–5:**
+  - Q3 mix (268 rotators / 122 negatives / 40 expected-undetectable / 50 EBs): about right.
+  - Q5 long periods: **not OK to have nothing at 70–180 d.** Add a small long-period block; options in the coordinator's
+    note below. Rae picks.
+  - Q4: a 0.2–0.5 d detection on a red-clump giant is its own outcome, named **`pulsation`** rather than `seismic`
+    (coordinator agreed). `pulsation` also covers δ Sct / γ Dor hits on hot stars, and the star's class
+    tells the mechanisms apart.
+  - Q7 (freeze): after the long-period block is settled.
+- **Long-period block options (coordinator, 2026-11-13; to quantify before Rae picks):**
+  - (a) Ground-based M-dwarf periods independent of TESS: MEarth (Newton+2016, 2018; periods to ≳ 100 d) and ASAS
+    (Kiraga & Stępień 2007; Suárez Mascareño+2016). Pick the stars TESS covered with ≥ 10 sectors in a year (CVZs).
+  - (b) Kepler-field stars at 50–100 d (Santos+2019/2021 extend past McQuillan+2014's ~70 d ceiling). Few reach > 70 d
+    with TESS coverage.
+  - (c) Gaia DR3 `vari_rotation_modulation`, but its periods are mostly short; check how many exceed 70 d.
+  - Whatever the source, a 70–180 d star needs ~2 cycles, i.e. 140–360 d of near-contiguous coverage (CVZ). In most
+    cases the honest outcome on TESS is a decline. So this block mainly measures decline honesty and SAP-vs-PDCSAP
+    attenuation, plus recovery for the few CVZ stars. Target ~20–40 stars.
 
 ### P29. Roman-season proxy on SMARTS (from the midway review, 2026-11-11)
 - **Proposed by:** midway review (rec. 2).
 - **Status:** first cut done (2026-11-12, `reports/2026-11-12_headline-card/`): `consecutive-3-5`, P ≤ 30 d =
   0.205 hand (T5) / 0.284 ranker v0 on dev_medium assigned. The true 70 d window (per-star-sectors manifest +
-  `--max-span-days 70` dataset option, ~14 min) is specified but not run; Rae decides.
+  `--max-span-days 70` dataset option, ~14 min) is specified but not run. **Rae (2026-11-13): not now.** Keep
+  `consecutive-3-5` until the WG6 Roman sets (T28) give real Season-1-like light curves.
 - **Idea:** until the WG6 sets exist (T28), report SMARTS performance on one contiguous ~70 d window: 5 consecutive
   sectors trimmed to 70 d, or the `consecutive-3-5` class as a first cut. Today `consecutive-3-5` at P ≤ 30 d
   gives 0.20 hand / 0.28 ranker v0 on dev_medium assigned. Cheap, and it says what Season 1 should expect from the TESS-trained model.

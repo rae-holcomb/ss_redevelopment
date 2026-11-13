@@ -1,0 +1,109 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Pipeline Status</title>
+<style>body{background:#fff;margin:16px;font-family:sans-serif}</style>
+</head><body>
+<h2>SpinSpotter v2: package structure by development stage (2026-11-10)</h2>
+<pre class="mermaid">
+flowchart TD
+    subgraph DATA[&quot;Data sources: what we learn and test on&quot;]
+        SMARTS[&quot;&lt;b&gt;SMARTS-TESS simulations&lt;/b&gt;&lt;br/&gt;~1M real TESS backgrounds with injected&lt;br/&gt;spotted-star signals and known periods.&lt;br/&gt;Lives on the external drive.&quot;]
+        DEV[&quot;&lt;b&gt;Frozen dev sets + holdout&lt;/b&gt;&lt;br/&gt;Small stratified subsets (dev_small,&lt;br/&gt;dev_medium) for quick, comparable tests;&lt;br/&gt;a locked holdout for final judging.&quot;]
+        NOISE[&quot;&lt;b&gt;Noise-source quietness&lt;/b&gt;&lt;br/&gt;Flags SMARTS background stars that&lt;br/&gt;are secretly variable, so they don&#x27;t&lt;br/&gt;pollute labels. Reclassification running.&quot;]
+        NEG[&quot;&lt;b&gt;Non-rotator negatives&lt;/b&gt;&lt;br/&gt;Noise-only light curves with no injected&lt;br/&gt;spots: teaches the ranker what&lt;br/&gt;&#x27;no rotation&#x27; looks like.&quot;]
+        ROMAN[&quot;&lt;b&gt;Roman GBTDS training sets&lt;/b&gt;&lt;br/&gt;WG6 simulated Roman light curves;&lt;br/&gt;the deployment target. Needs scoping&lt;br/&gt;(data access, which sets).&quot;]
+        BUTTERPY[&quot;&lt;b&gt;Further training data&lt;/b&gt;&lt;br/&gt;Own butterpy multi-year sims, then&lt;br/&gt;Kepler / ground-based (wishlist).&lt;br/&gt;Guards against over-tuning to SMARTS.&quot;]
+    end
+
+    subgraph PREP[&quot;Input layer: raw files to clean light curves&quot;]
+        LOAD[&quot;&lt;b&gt;Light-curve loader&lt;/b&gt;&lt;br/&gt;preprocessing.py: reads SMARTS FITS,&lt;br/&gt;re-finds orbit gaps, drops bad orbits,&lt;br/&gt;regrids to even cadence.&quot;]
+        COV[&quot;&lt;b&gt;Sector-coverage patterns&lt;/b&gt;&lt;br/&gt;coverage.py: real TESS observing&lt;br/&gt;patterns, so tests mimic patchy&lt;br/&gt;real-star coverage.&quot;]
+        SYN[&quot;&lt;b&gt;Synthetic star generator&lt;/b&gt;&lt;br/&gt;synthetic.py: fast fake spotted stars&lt;br/&gt;with known truth, for unit tests and&lt;br/&gt;regression checks.&quot;]
+        RLOAD[&quot;&lt;b&gt;Roman loader&lt;/b&gt;&lt;br/&gt;Reads Roman light curves into the&lt;br/&gt;same (time, flux) format.&quot;]
+        API[&quot;&lt;b&gt;Mission-agnostic core API&lt;/b&gt;&lt;br/&gt;One interface so the pipeline doesn&#x27;t&lt;br/&gt;care whether data is TESS, Roman,&lt;br/&gt;or Kepler.&quot;]
+    end
+
+    subgraph S1[&quot;Stage 1: propose candidate periods&quot;]
+        ACF[&quot;&lt;b&gt;Gap-aware autocorrelation&lt;/b&gt;&lt;br/&gt;acf_utils.py: ACF that tolerates&lt;br/&gt;data gaps without interpolating.&quot;]
+        GUESS[&quot;&lt;b&gt;Candidate-period methods&lt;/b&gt;&lt;br/&gt;guesses.py: several cheap, independent&lt;br/&gt;methods (periodogram, ACF, wavelet...).&lt;br/&gt;Goal: keep the true P on the list.&quot;]
+        SHORTP[&quot;&lt;b&gt;Short-period recovery&lt;/b&gt;&lt;br/&gt;Improve candidates for stars&lt;br/&gt;rotating faster than ~3 days.&quot;]
+    end
+
+    subgraph S2[&quot;Stage 2: test each candidate&quot;]
+        COMB[&quot;&lt;b&gt;Comb-of-parabolae fit&lt;/b&gt;&lt;br/&gt;comb_fit.py: fits evenly spaced ACF&lt;br/&gt;peaks at each candidate P; fit quality&lt;br/&gt;says how well P explains the data.&quot;]
+        GATES[&quot;&lt;b&gt;Hand-tuned reliability gates&lt;/b&gt;&lt;br/&gt;Rules that reject weak or aliased fits&lt;br/&gt;and pick a winner, or decline.&lt;br/&gt;Paused: the ranker should replace them.&quot;]
+        LONGP[&quot;&lt;b&gt;Long-period honest failure&lt;/b&gt;&lt;br/&gt;Decline rather than guess when&lt;br/&gt;P is too long for the baseline.&quot;]
+    end
+
+    subgraph S3[&quot;Stage 3: learn to pick the right candidate&quot;]
+        FEAT[&quot;&lt;b&gt;Candidate features&lt;/b&gt;&lt;br/&gt;ml_features.py: ~120 numbers per&lt;br/&gt;candidate (fit quality, alias tests,&lt;br/&gt;coverage) describing how good it looks.&quot;]
+        FTAB[&quot;&lt;b&gt;Feature tables v0&lt;/b&gt;&lt;br/&gt;Features + true labels for a 3,000-star&lt;br/&gt;quiet-noise training sample and&lt;br/&gt;dev_medium. Just merged.&quot;]
+        RANK[&quot;&lt;b&gt;Ranker v0&lt;/b&gt;&lt;br/&gt;Gradient-boosted model that ranks each&lt;br/&gt;star&#x27;s candidates. Does it beat the&lt;br/&gt;hand-tuned gates? Next up.&quot;]
+        FLAGS[&quot;&lt;b&gt;Variable-star / EB flags&lt;/b&gt;&lt;br/&gt;Tell rotation apart from other&lt;br/&gt;periodic variables and eclipsing&lt;br/&gt;binaries.&quot;]
+    end
+
+    subgraph EVAL[&quot;Evaluation: are we getting better?&quot;]
+        EVALPY[&quot;&lt;b&gt;Scoring rules&lt;/b&gt;&lt;br/&gt;evaluation.py: one definition of correct,&lt;br/&gt;half/double alias, differential-rotation&lt;br/&gt;success, wrong, declined.&quot;]
+        SCORE[&quot;&lt;b&gt;Scorecard + goals&lt;/b&gt;&lt;br/&gt;Standard benchmark run with before/after&lt;br/&gt;comparison against baselines; now v5,&lt;br/&gt;with noise_period and searchable-range splits.&quot;]
+        CEIL[&quot;&lt;b&gt;Detectability ceiling&lt;/b&gt;&lt;br/&gt;How many SMARTS stars are recoverable&lt;br/&gt;at all? Tells us which declines&lt;br/&gt;are actually correct.&quot;]
+        RSCORE[&quot;&lt;b&gt;Roman scorecard&lt;/b&gt;&lt;br/&gt;First benchmark on Roman data;&lt;br/&gt;also a train-on-one, test-on-other&lt;br/&gt;over-tuning check.&quot;]
+    end
+
+    subgraph INFRA[&quot;Infrastructure and release&quot;]
+        DET[&quot;&lt;b&gt;Reproducibility&lt;/b&gt;&lt;br/&gt;determinism.py: OpenBLAS + pinned&lt;br/&gt;threads, so reruns give identical bits.&quot;]
+        TESTS[&quot;&lt;b&gt;Tests + reports&lt;/b&gt;&lt;br/&gt;pytest suite and a report per agent&lt;br/&gt;task, so changes stay legible.&quot;]
+        EFF[&quot;&lt;b&gt;Efficiency pass&lt;/b&gt;&lt;br/&gt;Profile and speed up per-star cost&lt;br/&gt;for million-star runs.&quot;]
+        PKG[&quot;&lt;b&gt;Cleanup + packaging&lt;/b&gt;&lt;br/&gt;Beginner-friendly, documented&lt;br/&gt;public release.&quot;]
+    end
+
+    OUT([&quot;&lt;b&gt;GOAL: Roman GBTDS Season 1&lt;/b&gt;&lt;br/&gt;Deployable pipeline and a quick&lt;br/&gt;rotation-period catalog paper&quot;])
+
+    SMARTS --&gt; DEV --&gt; LOAD
+    NOISE --&gt; DEV
+    COV --&gt; LOAD
+    SYN --&gt; ACF
+    LOAD --&gt; ACF
+    ROMAN --&gt; RLOAD --&gt; API
+    LOAD --&gt; API
+    API -.-&gt; ACF
+    ACF --&gt; GUESS --&gt; COMB --&gt; GATES
+    SHORTP -.-&gt; GUESS
+    LONGP -.-&gt; GATES
+    GATES --&gt; FEAT --&gt; FTAB --&gt; RANK
+    NEG --&gt; FTAB
+    BUTTERPY -.-&gt; FTAB
+    RANK --&gt; FLAGS --&gt; OUT
+    GATES --&gt; SCORE
+    RANK --&gt; SCORE
+    EVALPY --&gt; SCORE
+    CEIL --&gt; SCORE
+    RLOAD --&gt; RSCORE
+    RANK --&gt; RSCORE --&gt; OUT
+    EFF -.-&gt; OUT
+    PKG -.-&gt; OUT
+
+    classDef done fill:#2e7d32,stroke:#1b5e20,color:#fff
+    classDef active fill:#f9a825,stroke:#f57f17,color:#000
+    classDef ready fill:#1976d2,stroke:#0d47a1,color:#fff
+    classDef blocked fill:#9e9e9e,stroke:#616161,color:#fff
+    classDef paused fill:#ce93d8,stroke:#7b1fa2,color:#000
+    classDef goal fill:#000,stroke:#000,color:#fff
+
+    class SMARTS,DEV,LOAD,COV,SYN,ACF,GUESS,COMB,FEAT,FTAB,EVALPY,SCORE,DET,TESTS done
+    class NOISE active
+    class NEG,CEIL,RANK,SHORTP,EFF,API ready
+    class ROMAN,RLOAD,RSCORE,FLAGS,BUTTERPY,PKG,LONGP blocked
+    class GATES paused
+    class OUT goal
+
+    subgraph LEGEND[&quot;Legend (solid arrow = data flow; dashed = planned contribution)&quot;]
+        L1[&quot;Done / merged&quot;]:::done
+        L2[&quot;Agent running now&quot;]:::active
+        L3[&quot;Ready, next up&quot;]:::ready
+        L4[&quot;Blocked / later&quot;]:::blocked
+        L5[&quot;Paused: ranker should replace&quot;]:::paused
+    end
+
+</pre>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad:true, securityLevel:'loose', flowchart:{htmlLabels:true, useMaxWidth:false}});</script>
+</body></html>
