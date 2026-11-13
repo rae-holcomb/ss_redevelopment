@@ -1024,6 +1024,101 @@ def _cwt_morlet(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
     return output
 
 
+# T31 (2026-11-13): result-changing CWT speed variants, behind a switch.
+# "full" (default) is the unchanged method. Select with
+# guess_wavelet(..., cwt_variant=NAME) or the SS_CWT_VARIANT env variable
+# (inherited by spawned scorecard / feature-table workers).
+#   lean      GWPS accumulated scale by scale; the 2D info["wavelet_power"]
+#             array (200 x N floats, ~27 MB per full-year star) is not kept.
+#             Same GWPS bytes as "full" (tests/test_t31_variants.py).
+#   dec       lean + long scales transformed on a block-averaged light curve
+#             (see _gwps_morlet): fewer, shorter FFTs. Changes the GWPS.
+#   n100      lean + 100 trial periods instead of 200 (Gaussian fit window
+#             scaled to ~7 bins, so it spans the same log-period width).
+#   dec_n100  both.
+CWT_VARIANTS = {
+    "full": dict(lean=False, decimate=False, n_periods=None),
+    "lean": dict(lean=True, decimate=False, n_periods=None),
+    "dec": dict(lean=True, decimate=True, n_periods=None),
+    "n100": dict(lean=True, decimate=False, n_periods=100),
+    "dec_n100": dict(lean=True, decimate=True, n_periods=100),
+}
+DEFAULT_CWT_VARIANT = "full"
+CWT_VARIANT_ENV = "SS_CWT_VARIANT"
+# Decimated scales keep at least this many block-averaged samples per period
+# (block averaging over b samples attenuates a period-P sinusoid by
+# sinc(b dt / P) >= sinc(1/16) = 0.994), and the binned series keeps at
+# least _DEC_MIN_LEN samples.
+_DEC_MIN_SAMPLES_PER_PERIOD = 16
+_DEC_MIN_LEN = 256
+
+
+def resolve_cwt_variant(name: Optional[str] = None) -> tuple:
+    """Return (variant_name, spec) for `name`, the SS_CWT_VARIANT env var, or "full"; unknown names raise."""
+    import os
+    name = name or os.environ.get(CWT_VARIANT_ENV) or DEFAULT_CWT_VARIANT
+    if name not in CWT_VARIANTS:
+        raise ValueError(f"unknown CWT variant {name!r}; choose from {sorted(CWT_VARIANTS)}")
+    return name, dict(CWT_VARIANTS[name])
+
+
+def _gwps_lean(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
+    """Time-averaged Morlet power per scale, without keeping the 2D transform.
+
+    Same arithmetic, per row, as np.mean(_abs2(_cwt_morlet(...)), axis=1)
+    (each row is reduced with the same contiguous pairwise sum), so the bytes
+    match the "full" path; memory is one row instead of len(scales) rows.
+    """
+    from scipy.fft import fft, ifft, next_fast_len
+
+    n_data = len(data)
+    kernel_lens = [max(int(min(10 * s, n_data)), 3) for s in scales]
+    n_fft = next_fast_len(n_data + max(kernel_lens) - 1)
+    data_fft = fft(data, n=n_fft)
+    gwps = np.empty(len(scales))
+    for i, s in enumerate(scales):
+        n_kernel = kernel_lens[i]
+        full = ifft(data_fft * fft(_morlet2_kernel(n_kernel, s, w0), n=n_fft))
+        start = (n_kernel - 1) // 2
+        gwps[i] = np.mean(_abs2(full[start:start + n_data]))
+    return gwps
+
+
+def _gwps_morlet(data: np.ndarray, scales: np.ndarray, w0: float, periods: np.ndarray, dt: float,
+                 decimate: bool) -> np.ndarray:
+    """GWPS per trial period; with `decimate`, long periods use a block-averaged light curve.
+
+    Scales are grouped by a power-of-two block size b, the largest with
+    period / (b dt) >= _DEC_MIN_SAMPLES_PER_PERIOD and len(data) / b >=
+    _DEC_MIN_LEN. Each group is transformed on the b-sample block means at
+    scale s / b, and its power multiplied by b: the unit-energy kernel
+    normalization (1/sqrt(s)) makes the coefficient of a b-times coarser
+    series sqrt(b) smaller for the same signal. b = 1 groups are exactly
+    _gwps_lean up to FFT rounding (the group's transform length can differ,
+    ~1e-15 relative). Cost: every group needs one FFT pair per scale at its own
+    (b-times shorter) transform length.
+    """
+    if not decimate:
+        return _gwps_lean(data, scales, w0)
+    n = len(data)
+    b = np.ones(len(scales), dtype=int)
+    for i, P in enumerate(periods):
+        k = 1
+        while P / (2 * k * dt) >= _DEC_MIN_SAMPLES_PER_PERIOD and n // (2 * k) >= _DEC_MIN_LEN:
+            k *= 2
+        b[i] = k
+    gwps = np.empty(len(scales))
+    for k in np.unique(b):
+        sel = b == k
+        if k == 1:
+            gwps[sel] = _gwps_lean(data, scales[sel], w0)
+            continue
+        m = (n // k) * k
+        binned = data[:m].reshape(-1, k).mean(axis=1)
+        gwps[sel] = k * _gwps_lean(binned, scales[sel] / k, w0)
+    return gwps
+
+
 def _gaussian(x: np.ndarray, height: float, center: float, sigma: float) -> np.ndarray:
     """height-parameterized Gaussian: height * exp(-(x-center)^2 / (2*sigma^2)).
     Used by _fit_and_subtract_gaussian -- deliberately NOT lmfit's
@@ -1097,6 +1192,7 @@ def guess_wavelet(
     n_periods: int = 200,
     w0: float = 6.0,
     min_peak_snr: float = 3.0,
+    cwt_variant: Optional[str] = None,
 ) -> list:
     """Propose candidate periods from peaks in the Global Wavelet Power
     Spectrum (GWPS) of the light curve -- see Garcia et al. (2014) and the
@@ -1172,6 +1268,10 @@ def guess_wavelet(
     min_peak_snr : minimum height (in units of the median absolute
         deviation of the once-peak-subtracted GWPS) for a Gaussian fit to
         be kept as a genuine candidate rather than noise.
+    cwt_variant : T31 speed variant, a key of CWT_VARIANTS (None = the
+        SS_CWT_VARIANT env variable, else "full", the unchanged method).
+        Every variant except "full" omits info["wavelet_power"]; "n100"
+        variants override n_periods with 100.
 
     Returns
     -------
@@ -1207,14 +1307,23 @@ def guess_wavelet(
     if not _valid_period_window(min_period, max_period):
         return []
 
+    _, cwt_spec = resolve_cwt_variant(cwt_variant)
+    fit_half_width_bins = 15
+    if cwt_spec["n_periods"] is not None:
+        # same log-period width for the Gaussian fit window on the coarser grid
+        fit_half_width_bins = max(int(round(15 * (cwt_spec["n_periods"] - 1) / (n_periods - 1))), 3)
+        n_periods = cwt_spec["n_periods"]
     periods = np.geomspace(min_period, max_period, n_periods)
     scales = _period_to_morlet_scale(periods, dt, w0)
 
     y = flux - np.mean(flux)
-    wavelet_coeffs = _cwt_morlet(y, scales, w0)
-    wavelet_power = _abs2(wavelet_coeffs)  # shape (n_periods, n_time); T31: reproducible |c|^2
-
-    gwps = np.mean(wavelet_power, axis=1)
+    if cwt_spec["lean"]:
+        wavelet_power = None
+        gwps = _gwps_morlet(y, scales, w0, periods, dt, cwt_spec["decimate"])
+    else:
+        wavelet_coeffs = _cwt_morlet(y, scales, w0)
+        wavelet_power = _abs2(wavelet_coeffs)  # shape (n_periods, n_time); T31: reproducible |c|^2
+        gwps = np.mean(wavelet_power, axis=1)
 
     # --- iterative Gaussian peak extraction in log-period space ---
     log_periods = np.log(periods)
@@ -1226,7 +1335,7 @@ def guess_wavelet(
         noise_sigma = 1.4826 * mad if mad > 0 else np.std(residual)
         if noise_sigma == 0 or np.max(residual) < med + min_peak_snr * noise_sigma:
             break
-        out = _fit_and_subtract_gaussian(log_periods, residual)
+        out = _fit_and_subtract_gaussian(log_periods, residual, fit_half_width_bins=fit_half_width_bins)
         if out is None:
             break
         peak_info, residual = out
@@ -1252,7 +1361,7 @@ def guess_wavelet(
             info=dict(
                 periods=periods,
                 gwps=gwps,
-                wavelet_power=wavelet_power,
+                **({} if wavelet_power is None else dict(wavelet_power=wavelet_power)),
                 fitted_gaussians=fitted,
                 peak_height=peak["height"],
                 peak_log_width=peak["sigma_log_period"],

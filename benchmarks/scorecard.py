@@ -114,6 +114,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
@@ -1008,6 +1009,9 @@ def main(argv=None):
         detectable_threshold=args.detectable_threshold,
         detectability_table=str(args.detectability_table or DETECTABILITY_TABLE.relative_to(ROOT)),
         pipeline_methods=list(methods), n_guesses_default=N_GUESSES_DEFAULT, n_guesses_overrides=N_GUESSES,
+        # T31: speed variants in effect (env-selected; defaults = the unchanged methods)
+        comb_variant=os.environ.get("SS_COMB_VARIANT") or "lsq",
+        cwt_variant=os.environ.get("SS_CWT_VARIANT") or "full",
         wall_seconds=time.time() - t0, created=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
     (outdir / "metrics.json").write_text(json.dumps(metrics, indent=2, default=float))
