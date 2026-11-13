@@ -1,0 +1,28 @@
+Run: runs/t32/sc/local_quad_dmfy/metrics.json  (dataset datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored, commit 6b6387f)
+Baseline: benchmarks/baselines/dev_medium_fullyear_v7.json  (commit 5d14f3f-dirty)
+
+goal  status  result  value    target   base  metric
+G9    draft   FAIL    0.259 >= 0.35    0.251  final.overall.success
+                     Real-data overall success (baseline 0.248). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G10   draft   FAIL    0.085 <= 0.04    0.088  final.overall.wrong
+                     Real-data confident-wrong rate (baseline 0.088; 0 on synthetic). Honest decline beats wrong. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G11   draft   FAIL    0.209 >= 0.3     0.186  final.by_bin.<1d.success
+                     Real-data success for P<1d (baseline 0.17). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G12   draft   PASS    0.698 >= 0.6     0.698  union_recall.by_bin.<1d
+                     Real-data Stage-1 recall for P<1d (baseline 0.44; 0.88 on synthetic). Relates to P16. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.251   0.259  +0.008  0.020  final.overall.success
+  0.233   0.238  +0.006  0.060  final.by_bin.1-3d.success
+  0.363   0.368  +0.006  0.060  final.by_bin.10-30d.success
+  0.298   0.298  +0.000  0.060  final.by_bin.3-10d.success
+  0.186   0.209  +0.023  0.060  final.by_bin.<1d.success
+  0.210   0.217  +0.006  0.060  final.by_bin.>30d.success
+  0.983   0.983  +0.000  0.060  union_recall.by_bin.1-3d
+  0.982   0.982  +0.000  0.060  union_recall.by_bin.10-30d
+  0.942   0.942  +0.000  0.060  union_recall.by_bin.3-10d
+  0.698   0.698  +0.000  0.060  union_recall.by_bin.<1d
+  0.908   0.908  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS
