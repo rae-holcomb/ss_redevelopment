@@ -372,6 +372,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   install. Install into `ss_openblas` only when this task starts; check that it keeps numpy 1.26.4 and pin it in
   `environment.yml`. FL's 54 templates aren't enough. The rotator set needs a real spread of spectral types and periods
   (T28 decisions), so start with a short scoping pass on where those come from.
+- **Status (2026-11-13):** scoping + prototype done, in review (`reports/2026-11-13_p34-roman-rotators/`, branch
+  `claude/p34-roman-rotators-accd50`). Recommends a celerite2 GP generator (`tools/make_roman_rotators.py`) as `romrot_v0`;
+  build waits on Rae's answers (long periods, giants stratum, Kepler realism check) and the P35 merge.
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
@@ -460,3 +463,13 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Caution (Rae):** don't tune N or the rankings tightly yet. Other telescopes (Roman, other training sets) differ in
   baseline, cadence and noise, which changes candidate ordering. For now, only a quick check for easy, robust gains
   (e.g. a method whose recall saturates by N=3 everywhere).
+
+### P43. Multi-season (3 early seasons) rotation for long periods (from P34, 2026-11-13)
+- **Proposed by:** P34 report. Forecast Roman rotators (old bulge G/K dwarfs) have P_eq ~20–50 d, at or beyond one season's
+  R/3–R/2, and Rvar ≲ σ per point. Prototype a joint analysis of the 3 early seasons (per-season ACF/periodogram averaged,
+  or a joint GP likelihood with celerite2) on `romrot_beyond_v0`, and measure the gain vs single-season decline.
+
+### P44. Kepler realism check for the Roman GP rotators (from P34, 2026-11-13; needs Rae's OK to download)
+- **Proposed by:** P34 report. ~200 Kepler long-cadence stars with McQuillan/Santos periods, cut to 71 d, resampled to
+  12.1 min, scaled ×0.7 to F146 and given WG6 improved noise; compare pipeline outcomes vs `romrot_v0` GP stars at matched
+  (P, Rvar, σ). Also ask Zach Claytor for his GBTDS synthetic population to set `pop_weight`.

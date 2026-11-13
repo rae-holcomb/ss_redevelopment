@@ -590,3 +590,11 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   `CLAUDE.md` (auto-loaded). Archive-at-merge rule restated in TASKS.md and AGENT_WORKFLOW.md; repo-curator gets a
   context-budget check. Untracked the gitignored `results_products/batch1/*.csv` (~100 MB, still on disk; history
   not rewritten) and tracked `.DS_Store` files.
+- **2026-11-13 — P34 scoping: Roman-cadence rotators** (`reports/2026-11-13_p34-roman-rotators/`, branch
+  `claude/p34-roman-rotators-accd50`, unmerged). Forecast GBTDS rotators are old bulge F–late-K dwarfs at F146 ~18–23
+  (Claytor & Tayar 2026, ~1.7M periods); OGLE ROT is giant-dominated (~72% est. saturated in F146), so it is not the
+  Roman rotator truth. New `tools/make_roman_rotators.py`: celerite2 `RotationTerm` GP (exact numpy SHO fallback) on
+  WG6's season grid with improved σ(F146), two latitude bands so truth has P_eq + DIFFROT `period_range`; regenerated
+  from seed. celerite2 0.3.2 installed in ss_openblas (numpy/scipy unchanged); **`environment.yml` pin still to add**.
+  Prototype 30 star-seasons: 14 correct / 2 wrong / 14 declined; old G/K dwarfs (P 18–30 d, Rvar ≲ σ) decline, so
+  long periods are the central Roman design issue. Proposed `romrot_v0` (3,375 stars, ~2–3 CPU-h).
