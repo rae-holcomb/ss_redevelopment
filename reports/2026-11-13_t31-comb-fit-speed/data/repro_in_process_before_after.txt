@@ -1,0 +1,6 @@
+main_wt smarts-tess-v1.0-031596 distinct gwps: 1
+main_wt smarts-tess-v1.0-107369 distinct gwps: 2
+main_wt smarts-tess-v1.0-419951 distinct gwps: 1
+A_wt smarts-tess-v1.0-031596 distinct gwps: 1
+A_wt smarts-tess-v1.0-107369 distinct gwps: 1
+A_wt smarts-tess-v1.0-419951 distinct gwps: 1

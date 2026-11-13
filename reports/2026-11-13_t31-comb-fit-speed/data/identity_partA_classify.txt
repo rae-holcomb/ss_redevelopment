@@ -1,0 +1,14 @@
+== main_dmfy vs A_dmfy
+values compared 1007054 differ 884
+  .methods.wavelet.top1: 884 values on 884 stars  e.g. ('smarts-tess-v1.0-000011', 13.333112892929886, 13.333112892776821)
+metrics values 1394 differ 0 []
+== main_dmas vs A_dmas
+values compared 863445 differ 818
+  .methods.wavelet.top1: 818 values on 818 stars  e.g. ('smarts-tess-v1.0-000064', 11.801149686778327, 11.801149686742836)
+metrics values 1817 differ 0 []
+== A_dmfy vs A_rep_dmfy
+values compared 1007054 differ 0
+metrics values 1394 differ 0 []
+== A_dmas vs A_rep_dmas
+values compared 863445 differ 0
+metrics values 1817 differ 0 []
