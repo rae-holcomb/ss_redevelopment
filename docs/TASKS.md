@@ -294,7 +294,7 @@ for confirmation (ask Rae first).
 - **Known candidates (inventory 2026-10-15):**
   - **`results_products/batch1/candidates.csv` (90 MB) and other result CSVs are
     tracked**, despite CLAUDE.md saying they're gitignored. GitHub rejects files > 100 MB.
-    Untrack them (and decide on history, see T19b).
+    Untrack them (and decide on history, see T19b). **Untracked 2026-11-13; history kept.**
   - `.DS_Store` is tracked; gitignore it.
   - Root-level `split_smarts_lc.py` (used by `preprocessing.py`) belongs in the package.
   - ~~`claude_files/old/`; `batch_test_acf_fft_highpass.py` (open issue 9); `batch_test_guesses.py`;
@@ -313,6 +313,11 @@ for confirmation (ask Rae first).
   - Decide what of `reports/`, `docs/` and the agent infrastructure (`.claude/`,
     CLAUDE.md, TASKS.md) ships publicly, versus an archive branch.
   - Optionally purge large files from git history (**destructive; Rae's explicit OK**).
+    Deferred to here on 2026-11-13 (Rae): `results_products/batch1/candidates.csv` (90 MB) is still in history,
+    most of `.git`'s ~163 MB. Purging rewrites nearly every commit ID (31 IDs are cited in 99 files: reports,
+    docs, baselines' `git_commit`), so commit an old→new ID map and update the living docs, and do it when no
+    agent session is running, rewriting all local and GitHub branches. Consider the ~12 MB of other
+    `batch1/*.csv` at the same time.
   - Scan for absolute local paths, secrets, and personal info.
   - Set up CI to run the test suite on push.
 - **Done when:** a fresh clone installs and passes its tests with no local paths and no
