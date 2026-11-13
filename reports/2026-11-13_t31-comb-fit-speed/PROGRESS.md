@@ -11,3 +11,8 @@
 - 03:05 Part A needed two fixes: (1) Morlet kernel as one complex exp (in-process np.exp flips, T12's finding);
   (2) |c|^2 as re*re+im*im and a libm exp for the Gaussian peak fits: np.abs(complex) flipped in 4/12 fresh
   pytest processes. Fixed code stable in 12/12 processes. First queue (old fix) stopped at main_dmfy 896/1000.
+- 03:41 Part A dev_medium done (runs in scratch): main vs Part A differ only in methods.wavelet.top1
+  (fy 884 / 1,007,054 values; as 818 / 863,445), metrics.json 0 differ in both modes. Part A runs ~13.7 min (fy) /
+  8.3 min (as) at 3 workers, nice 15.
+- 03:45 Part B variants committed (bac443e). Running profile round 1, in-process repro before/after, and a Part A
+  rerun pair (determinism proof), then the variant scorecards.
