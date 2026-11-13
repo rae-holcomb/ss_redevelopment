@@ -955,6 +955,31 @@ def _morlet2_kernel(M: int, s: float, w0: float) -> np.ndarray:
     return np.sqrt(1.0 / s) * wavelet
 
 
+def _abs2(c: np.ndarray) -> np.ndarray:
+    """|c|^2 of a complex array as re*re + im*im.
+
+    T31 (2026-11-13, P4): replaces np.abs(c)**2 in the wavelet power. numpy
+    1.26.4's complex np.abs (a SIMD hypot loop) gave different last bits for
+    the same input in some processes (caught in ~1 of 6 fresh processes:
+    np.abs of the 2D CWT array disagreed with np.abs of one of its rows).
+    Elementwise multiply and add are exactly rounded in any SIMD path, so
+    this is reproducible; it also skips a sqrt per element.
+    """
+    return c.real * c.real + c.imag * c.imag
+
+
+def _det_exp(x: np.ndarray) -> np.ndarray:
+    """exp(x) for a real array through numpy's complex exp (scalar libm cexp).
+
+    T31 (2026-11-13, P4): numpy 1.26.4's float64 np.exp (AVX-512 loop on the
+    i5) returned different last bits for byte-identical input depending on
+    process/allocation state. The complex loop is a plain scalar libm call per
+    element, so it is reproducible. For the small arrays it's used on
+    (Gaussian peak fits, ~30-200 points) the extra cost is negligible.
+    """
+    return np.exp(np.asarray(x, dtype=complex)).real
+
+
 def _cwt_morlet(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
     """Continuous wavelet transform of `data` at each scale in `scales`,
     using a complex Morlet wavelet (reimplements the old
@@ -1006,7 +1031,7 @@ def _gaussian(x: np.ndarray, height: float, center: float, sigma: float) -> np.n
     an extra evaluation step to recover the peak height), so the fit
     directly returns what we actually want.
     """
-    return height * np.exp(-0.5 * ((x - center) / sigma) ** 2)
+    return height * _det_exp(-0.5 * ((x - center) / sigma) ** 2)  # T31: reproducible exp
 
 
 def _fit_and_subtract_gaussian(
@@ -1187,7 +1212,7 @@ def guess_wavelet(
 
     y = flux - np.mean(flux)
     wavelet_coeffs = _cwt_morlet(y, scales, w0)
-    wavelet_power = np.abs(wavelet_coeffs) ** 2  # shape (n_periods, n_time)
+    wavelet_power = _abs2(wavelet_coeffs)  # shape (n_periods, n_time); T31: reproducible |c|^2
 
     gwps = np.mean(wavelet_power, axis=1)
 

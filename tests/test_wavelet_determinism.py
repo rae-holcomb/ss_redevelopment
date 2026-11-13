@@ -1,12 +1,13 @@
 """Bit-reproducibility of guess_wavelet (T31 Part A, backlog P4).
 
-Before T31, `_morlet2_kernel` built the Gaussian envelope with the float64
-np.exp, whose AVX-512 loop (numpy 1.26.4 on the i5) returned different last
-bits for byte-identical input depending on allocation state. The CWT, the
-GWPS and the wavelet candidates then varied run to run (T12 saw 2-4 distinct
-GWPS per star over 8 in-process calls on dev_small 031596, 419951, 107369).
-The kernel is now one complex exp, which numpy evaluates with a scalar libm
-loop.
+Before T31, the wavelet used two numpy 1.26.4 SIMD loops whose last bits
+varied with process / allocation state on the i5 (AVX-512): the float64
+np.exp (Morlet envelope, Gaussian peak fits) and the complex np.abs (|c|^2).
+The CWT, the GWPS and the wavelet candidates then varied run to run (T12 saw
+2-4 distinct GWPS per star over 8 in-process calls on dev_small 031596,
+419951, 107369; np.abs flipped in ~1 of 6 fresh processes). Now the kernel is
+one complex exp (scalar libm loop), |c|^2 is re*re + im*im, and the Gaussian
+uses guesses._det_exp.
 
 Checks:
 - the kernel equals an element-by-element reference bit for bit;
@@ -68,6 +69,35 @@ def test_morlet_kernel_repeatable_under_heap_churn():
             if len(keep) > 30:
                 keep.pop(int(rng.integers(0, 30)))
             assert guesses._morlet2_kernel(max(int(min(10 * s, 5190)), 3), s, 6.0).tobytes() == ref[i]
+
+
+def test_abs2_matches_rowwise_and_definition():
+    """|c|^2 of the 2D CWT equals the per-row result and re*re + im*im exactly.
+
+    The old np.abs(c)**2 failed the row-vs-2D comparison in ~1 of 6 fresh
+    processes (numpy 1.26.4 complex abs SIMD loop), so this also guards that
+    path from coming back.
+    """
+    rng = np.random.default_rng(2)
+    t = np.arange(0, 54.0, 1 / 48)
+    y = np.sin(2 * np.pi * t / 4.3) + rng.normal(0, 0.3, len(t))
+    y -= y.mean()
+    dt = t[1] - t[0]
+    scales = guesses._period_to_morlet_scale(np.geomspace(4 * dt, 27.0, 60), dt, 6.0)
+    W = guesses._cwt_morlet(y, scales, 6.0)
+    P = guesses._abs2(W)
+    for i in range(len(scales)):
+        assert guesses._abs2(W[i]).tobytes() == P[i].tobytes()
+    assert P.tobytes() == (W.real * W.real + W.imag * W.imag).tobytes()
+
+
+def test_det_exp_is_elementwise_libm():
+    """_det_exp of an array equals _det_exp of each element on its own, and is close to np.exp."""
+    x = -0.5 * np.linspace(-6, 6, 301) ** 2
+    full = guesses._det_exp(x)
+    one = np.array([guesses._det_exp(np.array([v]))[0] for v in x])
+    assert full.tobytes() == one.tobytes()
+    np.testing.assert_allclose(full, np.exp(x), rtol=1e-15, atol=0)
 
 
 def _wavelet_digest(star: str) -> str:
