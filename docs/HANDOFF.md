@@ -90,12 +90,11 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
    come from the `local` fit (changelog 2026-11-13), so candidate features shift for those.
 
 ## Open sessions (2026-11-13)
-- **T31 comb-fit speed** (`local_4149f809-…`): done; archive on Rae's OK after merge.
-- **T12 speed-up** (`local_8a41a57b-…`): merged; archive on Rae's OK.
+- **T32 drift-robust local fit** (`local_d7e7d540-…`): running, started 2026-11-13 from main.
+- Archived 2026-11-13 (Rae): T31, T12, headline card, short-period sessions.
 - **WG6 scoping** (`local_5b376121-…`): merged; **don't archive** (Rae reviewing).
 - **Validation-set scoping** (`local_13645bab-…`): unmerged, see above.
 - **Midway review** (`local_d5a20966-…`): merged; **don't archive** (Rae reading).
-- **Short-period, headline card** (`local_26fb9ed8-…`, `local_914fa6b5-…`): merged, idle; archive on Rae's OK.
 - **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these; archived by
   accident 2026-11-11, and Rae is to unarchive them.
 
