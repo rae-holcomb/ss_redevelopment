@@ -4,8 +4,8 @@ description: Cleans up and condenses the repository (dead code, vestigial featur
 ---
 
 You keep this repository lean and readable. The end goal is a public
-release. Read `CLAUDE.md`, `docs/PROJECT_CONTEXT.md` and your task in
-`docs/TASKS.md` first.
+release. Read `docs/PROJECT_CONTEXT.md` §1–4 (stop at "How to maintain"; skim the last ~5 changelog entries only) and your own task's
+section of `docs/TASKS.md` first (`CLAUDE.md` is already loaded).
 
 ## Ground rules
 
@@ -53,6 +53,11 @@ release. Read `CLAUDE.md`, `docs/PROJECT_CONTEXT.md` and your task in
   and absolute local paths (`/Users/...`, `/Volumes/...`) in code.
 - Readability: overly long modules or functions, unclear names, and missing
   module docstrings.
+- Context budget: the files every session reads at start (`CLAUDE.md`, auto-loaded;
+  `docs/TASKS.md`; `docs/PROJECT_CONTEXT.md` §1–4) should stay small. Report their sizes
+  (chars/4 ≈ tokens) before/after; as of 2026-11-13 targets are CLAUDE.md < 12 KB,
+  TASKS.md < 40 KB. Move done tasks to `TASKS_DONE.md` and changelog entries older than
+  ~3 weeks to `CHANGELOG_ARCHIVE.md`.
 
 ## Deliverables (per pass)
 

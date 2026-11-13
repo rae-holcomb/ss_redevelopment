@@ -63,9 +63,11 @@ kernel is registered as **"Python (ss_openblas)"**.
 6. Merge (or ask the session to open a PR and merge it there). The merge step
    isn't finished until the board and changelog match it; do these in the
    merge commit or right after it (the coordinator's job, not the agent's):
-   - set the task's **Status** in `docs/TASKS.md` to `done, merged <date>`
-     (with the report folder), then move its section to `docs/TASKS_DONE.md`
-     under the same phase heading;
+   - set the task's **Status** to `done, merged <date>` (with the report
+     folder), then move its section to `docs/TASKS_DONE.md` under the same
+     phase heading. This applies to proposals too: a merged P## leaves
+     `docs/TASKS_PROPOSED.md` the same way. Don't skip it: every coordinator
+     session reads the board, so done sections left on it cost tokens daily;
    - add a dated entry to `docs/PROJECT_CONTEXT.md`'s changelog (what was
      merged, headline result, decisions Rae made), and update §2 / §4 there
      if the code map or an open issue changed;
@@ -73,6 +75,11 @@ kernel is registered as **"Python (ss_openblas)"**.
 
    Stale "in review / awaiting" statuses on merged tasks (T1, T16e, T21, T26
    as of 2026-11-11) came from skipping this.
+
+   Board files: `docs/TASKS.md` (roadmap + active tasks), `docs/TASKS_PROPOSED.md`
+   (P##, agents add here), `docs/TASKS_DISCUSSIONS.md` (D##, Rae's open
+   decisions), `docs/TASKS_DONE.md` (archive). Split 2026-11-13 to cut
+   start-up reading; agents read only their own task's section.
 
 ## Setting goals (TDD for science)
 

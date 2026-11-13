@@ -3,8 +3,9 @@
 For a **fresh coordinator session.** The previous coordinator ran 2026-11-11 → 2026-11-13 (summarized twice) and was
 handed off to keep turns cheap on Rae's Pro plan.
 
-**Start here:** read `CLAUDE.md`, the tail of the changelog in `docs/PROJECT_CONTEXT.md`, the statuses in
-`docs/TASKS.md`, and this note. Don't re-read whole reports unless a task needs them. Git history has the details.
+**Start here:** `CLAUDE.md` is already loaded; read the last few changelog entries in `docs/PROJECT_CONTEXT.md`,
+the Roadmap and statuses in `docs/TASKS.md`, and this note. Open `TASKS_PROPOSED.md` / `TASKS_DISCUSSIONS.md`
+only for the item you need (search by its `### P##.` / `### D##.` heading). Don't re-read whole reports unless a task needs them. Git history has the details.
 
 **Update (2026-11-13, coordinator #2):** T31 merged with Rae's answers (`local_screen2` + CWT `lean` defaults, `_v6w`
 replaces `_v6`), dev_medium + synth200 rerun and committed as **`_v7`, the judging baseline**. Next: start T32 from main.

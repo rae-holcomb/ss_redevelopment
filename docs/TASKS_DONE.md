@@ -456,6 +456,24 @@ board phase they were filed under, in board order. Statuses for T1, T16e, T21, T
 
 ---
 
+### T5. Short-period recovery (<3 d) (open issue 1)
+- **Status:** done, merged to main 2026-11-11 (Rae OK). Optional methods: none pooled (Rae accepted). Report
+  `reports/2026-11-11_t5-short-period-recovery/`). Full-year <1 d deficit = top-10 crowding by red-noise peaks in
+  `lombscargle`/`acf_fft`; fixed with hybrid raw-power / local-SNR peak ranking (new default, no extra compute).
+  dev_medium full-year <1 d Stage-1 union 0.44 -> 0.70, fitted ceiling 0.33 -> 0.65; final success barely moves
+  (`half_lag_consistency` rejects the rescued candidates). No optional method recommended for the pool. G2/G3 still fail.
+- **Goal:** improve Stage 1 recall and final correctness in the `<1d` and `1-3d`
+  bins. Separate the Nyquist/points-per-cycle wall (unfixable) from search
+  failures (fixable).
+- **Update (coordinator, 2026-11-11; `reports/2026-11-11_candidate-recall-by-method/`):** Rae's priority is <1 d recall,
+  with minimal extra compute and no new false positives that survive the ranker. On dev_medium, all 7 methods together
+  put the true period in the raw guesses for only 44% of <1 d stars full-year (63% assigned); the 3 pooled methods 34% / 60%.
+  Best single addition is `acf_fft_highpass` (+0.099 full-year, +0.029 assigned). Every method is worse at <1 d full-year
+  than on the same stars' assigned coverage (`acf_fft` 0.60 → 0.34): diagnose that shared deficit first, then choose which
+  optional method(s) to pool by marginal recall, per-star compute, and FP rate on the T27 non-rotators.
+- **Done when:** goals G2/G3 in `benchmarks/goals.json` pass with no regression guard
+  tripped.
+
 ## Phase 3: features
 
 ### T9. Feature literature and empirical search
@@ -478,3 +496,36 @@ board phase they were filed under, in board order. Statuses for T1, T16e, T21, T
   (`star_id, coverage pattern, snr_rot`) built by `tools/audit/detectability.py` for dev_small/dev_medium, and add a
   `--detectability <csv>` option that joins it. Keyed by coverage pattern, since detectability depends on it.
 - **Not done yet:** a table for the holdout or other coverage draws (build with `tools/build_detectability_table.py`).
+
+### P28. Headline card with fixed definitions (from the midway review, 2026-11-11)
+- **Status:** done, merged 2026-11-12 (`facc568`). **Period population decided (Rae, 2026-11-12): `dev_medium`'s own
+  period-bin mix is the default for R2–R4, not McQuillan+2014** (Kepler's selection has almost no P < 1 d stars, and we
+  must stay sensitive to fast rotators). Still open: the prevalences and which goals H1–H5 to activate.
+- **Proposed by:** midway review (rec. 5).
+  `tools/headline_card.py` built and tested; goals H1–H5 proposed in the report (`goals.json` untouched).
+  Awaiting Rae: period population, prevalences, which goals to activate.
+- **Idea:** one small, fixed table that every method/ranker report quotes, computed from the existing scorecard per-star
+  CSVs. It needs no new scorecard subsets. Rows:
+  - assigned coverage at the real coverage mix (`coverage_weight`);
+  - success re-weighted to a named period population;
+  - correct-only beside success;
+  - precision at a stated non-rotator prevalence;
+  - a Claytor+2022-comparable "fraction within 10% / 20% at the most-credible half".
+- Activate 3–5 goals in `goals.json` on these numbers (Rae's call).
+
+### P30. Repo and docs diet (from the midway review, 2026-11-11)
+- **Agent:** `repo-curator`.
+- **Status:** done, merged to main 2026-11-11 (Rae OK) (`reports/2026-11-11_p30-repo-docs-diet/`); results bit-identical on dev_small.
+- **Idea:** one session, results bit-identical:
+  - **Code:**
+    - delete `claude_files/old/`;
+    - settle open issue 9 (`batch_test_acf_fft_highpass.py`);
+    - retire `batch_test_guesses.py` and `run_debug_baseline*.py` (the scorecard and `build_feature_tables.py` cover them);
+    - prune superseded `benchmarks/baselines/`.
+  - **Docs:**
+    - refresh `PROJECT_CONTEXT.md` §4 (issues 2–5 and 12 are stale) and `METHODOLOGY_NOTES.md` §7 (both still say there is no ranker);
+    - fix the code map (lists a missing `example_usage.py`);
+    - fix the stale TASKS statuses (T1, T16e, T21, T26);
+    - move done tasks to `TASKS_DONE.md` and old changelog entries to an archive file;
+    - cap report TL;DRs at ~150 words in the write-report skill.
+

@@ -4,7 +4,8 @@ description: Scrutinizes the SMARTS training-set light curves and their labels f
 ---
 
 You audit the SMARTS simulated training set for the SpinSpotter rewrite.
-Read `CLAUDE.md`, `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` and `docs/TASKS.md` first.
+Read `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` §1–4 (stop at "How to maintain"; skim the last ~5 changelog entries only), and your own task's section of `docs/TASKS.md` first
+(`CLAUDE.md` is already loaded; don't re-read it).
 
 ## Your job
 
@@ -39,7 +40,7 @@ Questions to answer, roughly in order:
   hundred files is a batch job: write a resumable script
   (`ProcessPoolExecutor`, `--n-workers`, `--resume`, module-level worker)
   and **give Rae the command to run locally**. Don't run it yourself.
-- The data lives on an external drive that is often unplugged (see CLAUDE.md "SMARTS data location"): check the mount first, extract only to the drive, and make every reader resumable.
+- The data lives on an external drive that is often unplugged (see CLAUDE.md "Hardware, data drive, debug set" and `docs/LOCAL_SETUP.md`): check the mount first, extract only to the drive, and make every reader resumable.
 - Every finding needs a number and, where possible, a plot plus 2–3
   example files showing it.
 - Finish with the `write-report` skill. Put recommended exclusion or flag

@@ -76,5 +76,6 @@ This creates `reports/YYYY-MM-DD_<slug>/` with `README.md`, `notebook.ipynb`,
 - Add a terse dated changelog entry to `docs/PROJECT_CONTEXT.md` pointing at
   the report folder. Update its Section 4 if you resolved or found an open
   issue.
-- Update the task's status line in `docs/TASKS.md`.
+- Update the task's status line (in `docs/TASKS.md`, or `docs/TASKS_PROPOSED.md` for a P##).
+- New follow-up ideas go at the end of `docs/TASKS_PROPOSED.md`, a few lines each; detail stays in your report.
 - Commit the report together with the code it describes, on your task branch.

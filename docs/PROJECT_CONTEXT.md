@@ -141,7 +141,7 @@ Outside `claude_files/` (see `docs/AGENT_WORKFLOW.md`): `tests/` (pytest), `benc
 (`scorecard.py`, the standard benchmark and the batch runner for any manifest; `check_goals.py`, `goals.json`,
 `baselines/`), `reports/` (one folder per task), `tools/` (`build_feature_tables.py` for ranker tables,
 `train_ranker.py`, `headline_card.py` (P28 fixed-definition headline card), dataset/side-table builders, `audit/` for data-audit scripts, `new_report.py`, `run_notebook.py`),
-`.claude/agents/` (agent roles), `.claude/skills/write-report/`, `docs/TASKS.md` (open tasks),
+`.claude/agents/` (agent roles), `.claude/skills/write-report/`, `docs/TASKS.md` (roadmap + active tasks; `TASKS_PROPOSED.md`, `TASKS_DISCUSSIONS.md`, `TASKS_DONE.md` beside it),
 `docs/TASKS_DONE.md` (finished tasks), `docs/CHANGELOG_ARCHIVE.md` (changelog before 2026-10-22).
 The old per-method batch runners (`batch_test_guesses.py`, `batch_test_acf_fft_highpass.py`,
 `run_debug_baseline*.py`) were retired 2026-11-11 (P30): the scorecard's `per_method.csv` gives per-method Stage-1
@@ -582,3 +582,11 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   for ~170–300 stars and candidate-level features of screened-out candidates now come from the local fit.
   `info["wavelet_power"]` is gone by default; pass `cwt_variant="full"` for `plotting.py`'s 2D wavelet panel.
   dev_medium timing at 3 workers: 7.6 min full-year, 5.3 min assigned.
+- **2026-11-13: Context diet (start-up token cost).** Reports/figures were not the problem (nothing auto-reads them);
+  the cost was the docs every session reads at start. `TASKS.md` split: Proposed → `docs/TASKS_PROPOSED.md`, Open
+  discussions → `docs/TASKS_DISCUSSIONS.md`, merged T5/P28/P30 → `TASKS_DONE.md` (84 KB → ~35 KB). `CLAUDE.md`
+  14.5 → ~8.5 KB: hardware/drive/debug-set detail moved verbatim to `docs/LOCAL_SETUP.md`, rules kept. Agent role
+  files now read only their own task's section and PROJECT_CONTEXT §1–4 + recent changelog, and no longer re-read
+  `CLAUDE.md` (auto-loaded). Archive-at-merge rule restated in TASKS.md and AGENT_WORKFLOW.md; repo-curator gets a
+  context-budget check. Untracked the gitignored `results_products/batch1/*.csv` (~100 MB, still on disk; history
+  not rewritten) and tracked `.DS_Store` files.

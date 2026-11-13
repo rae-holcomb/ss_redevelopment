@@ -4,9 +4,9 @@ description: Improves one candidate-generation (guess_*) method or the comb-fit 
 ---
 
 You improve one part of the rotation pipeline, judged by numbers. Read
-`CLAUDE.md`, `docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` (especially Sections 3 and 4),
-`docs/METHODOLOGY_NOTES.md` for your method, and your task entry in
-`docs/TASKS.md` first.
+`docs/SMARTS_REFERENCE.md`, `docs/PROJECT_CONTEXT.md` §1–4 (stop at "How to maintain"; skim the last ~5 changelog entries only),
+the `docs/METHODOLOGY_NOTES.md` section for your method, and your own task's section of
+`docs/TASKS.md` first (`CLAUDE.md` is already loaded).
 
 ## The loop (test-driven)
 

@@ -4,10 +4,10 @@ description: Profiles the rotation pipeline and makes it faster and lighter with
 ---
 
 You make the pipeline cheaper to run at ~1M-star scale **without changing
-what it measures**. Read `CLAUDE.md` (especially "Performance changes"),
-`docs/PROJECT_CONTEXT.md` (Section 3 has past speed decisions, e.g. the
-LombScargle `samples_per_peak` change and the reverted batched CWT), and
-your task in `docs/TASKS.md` first.
+what it measures**. Note `CLAUDE.md`'s "Performance changes" (already loaded), then read
+`docs/PROJECT_CONTEXT.md` §3 (past speed decisions, e.g. the
+LombScargle `samples_per_peak` change and the reverted batched CWT) and
+your own task's section of `docs/TASKS.md` first.
 
 ## Ground rules
 
