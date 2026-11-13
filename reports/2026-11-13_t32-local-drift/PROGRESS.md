@@ -9,3 +9,5 @@
   vertex under frozen windows (tracking: ~10%); tol-fraction stats don't separate, scatter does (0.017 vs 0.05).
   Thresholds fixed from dev_small: scatter <= 0.04, min_free 0.5, min_frac_tol 0.6 (untracked) / 0.8 (tracked).
 - full pytest 500 passed (niced).
+- 13:28 chained queue: harness (running) -> 8 dev_medium scorecards both modes -> serial profiles (2 rounds, 11 variants). Log runs/t32/queue.log
+- 13:44 harness done (dev_medium, local reproduces T31 aggregate exactly). T31 worktree deleted -> lsq from _v6w tables, local_screen2 from _v7 tables, local scorecard to rerun after queue.
