@@ -108,6 +108,14 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
 - Midway review leftovers: validation sources; Roman scoping now vs later.
 
+## Overnight queue 2026-11-13 (coordinator; log `runs/overnight_2026-11-13/queue.log`)
+Script: the coordinator's scratchpad `overnight_2026-11-13.zsh` (all steps `--resume`; rerun it if interrupted).
+1. pytest on trial merges of T32 and P35. 2. RT2 profile baseline -> `runs/overnight_2026-11-13/profile15_fullyear_v7.json`
+(review, then commit to `benchmarks/baselines/`). 3. P39 (`claude/p39-acf-fft-abs2`, reproducible |c|^2 in acf_fft +
+ml_features) scorecards dev_medium fy/as + synth200 vs `_v7` -> candidate `_v8`. 4. P31 tables on P39 code:
+`runs/p31_dev_medium_{assigned,fullyear}`, drive `extracted/p31_tables/{train_3k,neg_dev_medium,neg_train}`.
+Default comb fit is still `local_screen2`. If Rae adopts T32's `local_tol`, the tables need another (overnight) rebuild.
+
 ## Next up (after the above)
 - **Runtime baseline for goal RT2** (no Rae input needed): when the machine is idle (after T32), run
   `nice -n 15 $PY benchmarks/profile_pipeline.py --manifest datasets/dev_medium.csv --data-root data/smarts_dev

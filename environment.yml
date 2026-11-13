@@ -73,3 +73,4 @@ dependencies:
       - xgboost==3.4.1          # T11 ranker
       - scikit-learn==1.9.1     # T11 ranker
       - astroquery==0.4.11      # P27 validation-set downloads (Rae OK 2026-11-12); installed with -c numpy/scipy/astropy pins; pulls pyvo 1.10.0, requests 2.34.2
+      - celerite2==0.3.2        # P34 Roman rotator GP resampling (Rae installed 2026-11-13); --only-binary :all: (0.3.3 is sdist-only and pulls jax)
