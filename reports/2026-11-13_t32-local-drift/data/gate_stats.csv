@@ -1,0 +1,7 @@
+variant,stat,threshold,op,n_success,n_wrong,kept_success,kept_wrong,n_inf
+local,v_frac_vertex_in_window,0.8,>=,1009,285,0.755203171456888,0.8596491228070176,0
+local_tol,v_frac_vertex_tol,0.6,>=,1009,285,0.6907829534192269,0.6526315789473685,0
+local_track_tol,v_frac_vertex_tol,0.8,>=,1141,269,0.9237510955302366,0.8029739776951673,0
+local_scatter,vertex_scatter,0.04,<=,1009,285,0.6630327056491576,0.4807017543859649,216
+local_track_scatter,vertex_scatter,0.04,<=,1141,269,0.803680981595092,0.7026022304832714,38
+local_robust,vertex_scatter,0.04,<=,1203,274,0.8204488778054863,0.7153284671532847,37

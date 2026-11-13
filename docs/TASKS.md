@@ -418,6 +418,11 @@ for confirmation (ask Rae first).
 ---
 
 ### T32. Make the cheap `local` comb solver robust to drifting ACF peaks (Rae, 2026-11-13; from T31, P40)
+- **Status: done, awaiting Rae's review** (`reports/2026-11-13_t32-local-drift/`, branch `claude/t32-local-drift-ca46ba`).
+  All five ideas are `COMB_VARIANTS` switches (+3 combos), scored on dev_medium both modes vs `_v7`. Recommended
+  `local_tol` (√n vertex tolerance): 2.5-2.9x faster production path than `local_screen2`, success -0.003 / -0.002,
+  wrong 0.088 -> 0.067 / 0.055 -> 0.048, check_goals PASS. Scatter gate (idea 5) fails the guard; ideas 3-4 ~neutral.
+  Default unchanged (Rae's call). Follow-up P41.
 - **Agent:** `method-improver`. Builds on T31 (merged to main 2026-11-13; baseline `_v7`; `SS_COMB_VARIANT=local`,
   `comb_fit._fit_comb_local`). Rae adopted `local_screen2` as the default; this task aims to make the ~6x-faster `local`
   usable on its own.
@@ -1110,3 +1115,9 @@ for confirmation (ask Rae first).
   fraction of windows whose free local vertex was accepted, or the scatter of vertices about the fitted line, and a
   robust (soft-L1 / Huber) per-window height fit. Then rescore. This could make `local` the fast default without the extra wrongs.
 
+### P41. Recover `local_tol`'s decayed-tail losses (from T32, 2026-11-13)
+- **Proposed by:** T32 report.
+- **Idea:** most of `local_tol`'s 30 lost stars are clean rotators with decaying ACFs whose late teeth have no free vertex,
+  so `frac_vertex_tol` drops below 0.6 (and the local per-window height fit lets those teeth go negative, failing
+  `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
+  (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs `_v7`.

@@ -11,3 +11,4 @@
 - full pytest 500 passed (niced).
 - 13:28 chained queue: harness (running) -> 8 dev_medium scorecards both modes -> serial profiles (2 rounds, 11 variants). Log runs/t32/queue.log
 - 13:44 harness done (dev_medium, local reproduces T31 aggregate exactly). T31 worktree deleted -> lsq from _v6w tables, local_screen2 from _v7 tables, local scorecard to rerun after queue.
+- 15:47 all scored; analysis, README, notebook, docs done. Recommendation local_tol.

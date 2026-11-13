@@ -582,3 +582,13 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   for ~170–300 stars and candidate-level features of screened-out candidates now come from the local fit.
   `info["wavelet_power"]` is gone by default; pass `cwt_variant="full"` for `plotting.py`'s 2D wavelet panel.
   dev_medium timing at 3 workers: 7.6 min full-year, 5.3 min assigned.
+- **2026-11-13 — T32: drift-robust `local` comb variants** (`reports/2026-11-13_t32-local-drift/`, branch
+  `claude/t32-local-drift-ca46ba`, not merged). Drift in `local`'s gains is mostly a seed-period error (peaks fan out
+  linearly from frozen n*P0 windows); its none->wrong stars scatter randomly. New `COMB_VARIANTS`: `local_track`,
+  `local_tol(_lin/_width)`, `local_quad` (drift `a` -> `drift_a_frac` diagnostic), `local_snrw`, `local_scatter`, and
+  combos; new opt-in gates `frac_vertex_tol` / `vertex_scatter` (`EXTRA_GATE_NAMES`, absent from default runs).
+  Recommended `local_tol`: success -0.003 / -0.002, wrong 0.088 -> 0.067 / 0.055 -> 0.048 vs `_v7`, 2.5-2.9x faster
+  production path than `local_screen2`. Default unchanged pending Rae. **Pitfalls:** the vertex-scatter separation
+  seen on dev_small (50 stars) vanished on dev_medium (flat purity curve). T31's worktree (and its runs) was deleted:
+  `lsq` / `local_screen2` per-star results now come from the `_v6w` / `_v7` baseline tables. Follow-up P41.
+
