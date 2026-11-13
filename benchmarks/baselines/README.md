@@ -1,6 +1,14 @@
 # Benchmark baselines
 
-**Use the `_v6` files for new work** (scorecard v6, current pipeline; T12's "before" run, 2026-11-12). Every v5 key of
+**Use the `_v7` files for new work** (2026-11-13, T31 merge). They are the current pipeline: reproducible wavelet
+(P4), default comb fit `local_screen2`, default CWT `lean` (Rae's decisions). Against `_v6w` (same code before the
+default flip), every metrics.json value is identical (1394 / 1817 / 724 values, 0 differ). All final answers and
+per-method results are identical too, except one full-year star (009530: P 1.82055 -> 1.82125, still correct). Per-star
+diagnostics of *declined* candidates (`decline_gates`, `best_success_*`, `n_success_candidates`) differ for ~170-300 stars:
+candidates failing > 2 gates under the cheap `local` screen keep the local fit's record instead of an lsq refit.
+`_v6w` replaced `_v6` (Rae, 2026-11-13); `_v6` and older stay as history.
+
+Earlier note: every v5 key of
 the `_v6` files is bit-identical to the `_t5` files on the same dataset string (checked with
 `tools/compare_scorecard_keys.py`: 1151 / 1439 / 724 values, 0 differ), so `_v6` = `_t5` + the v6 `detectable` keys
 (`final.detectable.*`, `final.undetectable.*`, `final.detectable_searchable.*`; per-star `detectability`/`detectable`).
@@ -9,10 +17,13 @@ test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_fullyear_v6.json` + `_v6_tables/` | **Current judging baseline** (T12 before run, 2026-11-12): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6. Success 0.251, wrong 0.088 (same as `_t5`). `per_candidate.csv` not committed (size). | `ss_openblas`, 4 workers, pipeline code of `9063c95` (= T5 pipeline, unchanged since) |
+| `dev_medium_fullyear_v7.json` + `_v7_tables/` | **Current judging baseline** (T31 merge, 2026-11-13): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6 keys, `config.comb_variant=local_screen2`, `config.cwt_variant=lean`. Success 0.251, wrong 0.088. `per_candidate.csv` not committed (size). | `ss_openblas`, 3 workers, `5d14f3f` |
+| `dev_medium_assigned_v7.json` + `_v7_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.147, wrong 0.055. | same |
+| `synth200_s0_v7.json` + `_v7_tables/` | `synthetic:n=200,seed=0` on the same code. Success 0.755, wrong 0. | same |
+| `dev_medium_fullyear_v6.json` + `_v6_tables/` | Previous judging baseline (T12 before run, 2026-11-12): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6. Success 0.251, wrong 0.088 (same as `_t5`). `per_candidate.csv` not committed (size). | `ss_openblas`, 4 workers, pipeline code of `9063c95` (= T5 pipeline, unchanged since) |
 | `dev_medium_assigned_v6.json` + `_v6_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.147, wrong 0.055. | same |
 | `synth200_s0_v6.json` + `_v6_tables/` | `synthetic:n=200,seed=0`, scorecard v6 (no detectability table rows for synthetic, so the v6 groups are empty). Success 0.755, wrong 0. | same |
-| `dev_medium_fullyear_v6w.json` + `_v6w_tables/` | **Candidate, pending Rae's OK** (T31 Part A, 2026-11-13): same dataset string as `_v6`, on code with the reproducible wavelet (P4). Identical to `_v6` in every metrics.json value; per star only `methods.wavelet.top1` differs (last ~10 digits, 884 stars). A rerun is bit-identical (0 of 1,007,054 values differ). | `ss_openblas`, 3 workers, `32531d8` |
+| `dev_medium_fullyear_v6w.json` + `_v6w_tables/` | Adopted by Rae as the `_v6` replacement (T31 Part A, 2026-11-13; superseded by `_v7` the same day): same dataset string as `_v6`, on code with the reproducible wavelet (P4). Identical to `_v6` in every metrics.json value; per star only `methods.wavelet.top1` differs (last ~10 digits, 884 stars). A rerun is bit-identical (0 of 1,007,054 values differ). | `ss_openblas`, 3 workers, `32531d8` |
 | `dev_medium_assigned_v6w.json` + `_v6w_tables/` | Same, assigned coverage (818 stars differ in `methods.wavelet.top1` only; rerun 0 of 863,445 differ). | same |
 | `dev_medium_fullyear_t5.json` + `_t5_tables/` | Previous judging baseline (T5, 2026-11-11): same dataset string as `_v5`, on the T5 pipeline (hybrid peak ranking in `lombscargle`/`acf_fft`). Success 0.251, wrong 0.088, <1 d union recall 0.698. Scorecard v5 keys (no `detectable`). | `ss_openblas`, run as `99c46ef-dirty` = pipeline code of `15c88d8` (checked: runs postdate the last code edit) |
 | `dev_medium_assigned_t5.json` + `_t5_tables/` | Same, assigned coverage. Success 0.147, wrong 0.055, <1 d union recall 0.779. | same |

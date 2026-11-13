@@ -574,3 +574,11 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   (`nice -n 15`, 3 workers, one heavy job at a time). T31 (`claude/t31-comb-fit-speed-e7e5bb`, unmerged): wavelet made
   bit-reproducible (P4 resolved); Rae adopts `local_screen2` as the default comb fit at merge. T32 (drift-robust `local`)
   logged. See `docs/HANDOFF.md`.
+- **2026-11-13 — T31 merged; new defaults; `_v7` baselines** (`fd6e716`, `5d14f3f`). Rae: default comb fit
+  `local_screen2`, default CWT `lean`, `_v6w` replaces `_v6`. dev_medium both modes + synth200 rerun on the new defaults
+  and committed as `_v7` (current judging baseline). Versus `_v6w`: 0 metric values differ; final answers identical
+  except 009530 (P moved 0.04%, still correct). **Pitfall for the ranker rebuild (P31):** declined candidates that fail
+  > 2 gates under the `local` screen keep the local fit's diagnostics, so `decline_gates` / `best_success_*` differ
+  for ~170–300 stars and candidate-level features of screened-out candidates now come from the local fit.
+  `info["wavelet_power"]` is gone by default; pass `cwt_variant="full"` for `plotting.py`'s 2D wavelet panel.
+  dev_medium timing at 3 workers: 7.6 min full-year, 5.3 min assigned.

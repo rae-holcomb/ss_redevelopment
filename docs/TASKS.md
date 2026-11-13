@@ -393,7 +393,9 @@ for confirmation (ask Rae first).
 
 ### T31. Wavelet determinism fix + result-changing speed-ups (comb fit, CWT) (Rae, 2026-11-13; from P4, P38)
 - **Agent:** `performance-optimizer` (with method-improver judgement for the comb-fit variants). **Run overnight, machine alone.**
-- **Status (2026-11-13): done, awaiting Rae's review** (`reports/2026-11-13_t31-comb-fit-speed/`, branch
+- **Status (2026-11-13): merged** (`fd6e716`). Rae: default comb fit `local_screen2`, default CWT `lean`, `_v6w`
+  replaces `_v6`; dev_medium rerun on the new defaults committed as `_v7` (the judging baseline). Follow-ups: P39, T32.
+- **Status before merge: done, awaiting Rae's review** (`reports/2026-11-13_t31-comb-fit-speed/`, branch
   `claude/t31-comb-fit-speed-e7e5bb`; Part A alone on `claude/t31-partA-wavelet-determinism`). Part A: wavelet
   bit-reproducible (np.exp + complex np.abs SIMD flips), candidate `_v6w` baselines. Part B: recommended comb variant
   `local_screen2` = main's answers at 2x production-path speed; `local` 6x but more assigned wrongs; CWT `lean` free 1.25x.
@@ -416,7 +418,7 @@ for confirmation (ask Rae first).
 ---
 
 ### T32. Make the cheap `local` comb solver robust to drifting ACF peaks (Rae, 2026-11-13; from T31, P40)
-- **Agent:** `method-improver`. Builds on T31 (`claude/t31-comb-fit-speed-e7e5bb`; `SS_COMB_VARIANT=local`,
+- **Agent:** `method-improver`. Builds on T31 (merged to main 2026-11-13; baseline `_v7`; `SS_COMB_VARIANT=local`,
   `comb_fit._fit_comb_local`). Rae adopted `local_screen2` as the default; this task aims to make the ~6x-faster `local`
   usable on its own.
 - **Problem:** `local` gains 33 dev_medium stars (29 are main's `frac_vertex_in_window` declines, many obvious rotators whose

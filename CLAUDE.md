@@ -36,7 +36,7 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
   figures; also the batch runner for any manifest, with per-method Stage-1
   results in `per_method.csv`), `check_goals.py` (grades against `goals.json`
-  and a baseline), `baselines/` (committed reference metrics; use the `_v6` files).
+  and a baseline), `baselines/` (committed reference metrics; use the `_v7` files).
 - `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
   `datasets/README.md`). Dev files are local in `data/smarts_dev/`; score them with
   `--data-root data/smarts_dev` (`--ignore-manifest-sectors` for full-year).
@@ -225,8 +225,8 @@ task from `docs/TASKS.md`:
 - Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks".
   **dev_medium full-year is the default judging set for method changes**
   (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
-  ~7 min at 4 workers since T12; Rae's standing OK, 2026-10-21; baseline
-  `benchmarks/baselines/dev_medium_fullyear_v6.json`; `_assigned_v6` for assigned). Use assigned coverage (no
+  ~7.5 min full-year / ~5.5 min assigned at 3 workers since T31; Rae's standing OK, 2026-10-21; baseline
+  `benchmarks/baselines/dev_medium_fullyear_v7.json`; `_assigned_v7` for assigned). Use assigned coverage (no
   `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
   without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go under "Proposed" in `docs/TASKS.md`.

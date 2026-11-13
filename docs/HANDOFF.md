@@ -6,7 +6,8 @@ handed off to keep turns cheap on Rae's Pro plan.
 **Start here:** read `CLAUDE.md`, the tail of the changelog in `docs/PROJECT_CONTEXT.md`, the statuses in
 `docs/TASKS.md`, and this note. Don't re-read whole reports unless a task needs them. Git history has the details.
 
-**Rae's plan for the new coordinator:** start the drift-robust `local` comb-solver agent (T32; see "First actions").
+**Update (2026-11-13, coordinator #2):** T31 merged with Rae's answers (`local_screen2` + CWT `lean` defaults, `_v6w`
+replaces `_v6`), dev_medium + synth200 rerun and committed as **`_v7`, the judging baseline**. Next: start T32 from main.
 
 ## Coordinator role (Rae, 2026-10-22)
 - Start focused fresh sessions, **≤ 2 parallel agents**, and **only one heavy-compute agent at a time** (see
@@ -45,7 +46,7 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - `request_keep_awake` was denied to the T31 agent. The app's in-turn keep-awake was enough. Tell Rae to keep the
   laptop plugged in with the lid open for overnight runs.
 
-## State of `main` (`ae93fa4` + this note)
+## State of `main`
 - **Merged 2026-11-12/13:**
   - T5 hybrid ranking + P30 docs diet;
   - headline card, with dev_medium as the default period population (Rae: *not* McQuillan+2014, which has
@@ -53,27 +54,13 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
   - WG6 scoping (`9063c95`);
   - **T12 speed-up** (`44768ec`): 1.5–1.6× faster per star, bit-identical, v6 baselines; keep 4 workers in code
     defaults (3 in briefs, for machine safety).
-- **Baselines:** use the `_v6` files (`benchmarks/baselines/`). `_t5` is kept for history.
+  - **T31** (`fd6e716` merge, `5d14f3f` default flip): wavelet reproducible; default comb fit `local_screen2`, CWT `lean`.
+- **Baselines:** use the `_v7` files (`benchmarks/baselines/`). `_v6w`, `_v6`, `_t5` are history.
 - **Env:** `ss_openblas` also has astroquery 0.4.11 (P27).
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
 ## Unmerged branches ready for Rae
-1. **T31 (wavelet determinism + comb-fit / CWT speed variants):** `claude/t31-comb-fit-speed-e7e5bb` (`8ac34d5`).
-   Report: `reports/2026-11-13_t31-comb-fit-speed/`. Part A also stands alone on `claude/t31-partA-wavelet-determinism`
-   (`222cbf2`).
-   - **Verified by me:** merges cleanly into `ae93fa4`; 474 passed, 1 skipped (drive); `scorecard.py` only adds the
-     variant names to the metrics `config`; no existing test changed; 11 figures.
-   - **Rae decided (in the T31 session): adopt `local_screen2` as the default comb fit.** Its answers match main (one
-     period moved by 0.04% and is still correct), and it is about 2× faster on the production path and 1.5× on the scorecard.
-     The branch keeps `DEFAULT_COMB_VARIANT="lsq"`, so flipping it to `local_screen2` is part of the merge. Then
-     run dev_medium both modes once to confirm the answers and commit the baselines that come out of it.
-   - **Still Rae's call before merging:**
-     - (a) Do the `_v6w` baselines (reproducible wavelet) replace `_v6`?
-     - (b) Should CWT `lean` be the default? It's bit-identical, 1.25× faster on the wavelet stage, and drops the
-       27 MB `wavelet_power` array per full-year star. The agent recommends yes.
-   - New backlog from T31: P39 (`guess_acf_fft` uses the same flaky complex `np.abs`; it feeds final answers) and
-     P40 (vertex gate for `local`, now T32).
-   - The T31 session is idle and can be archived on Rae's OK. Its 3 scratch worktrees were removed.
+1. ~~T31~~ merged 2026-11-13 (see State of main). Backlog from it: P39 (`guess_acf_fft` complex `np.abs`), T32.
 2. **P27 validation-set scoping:** `claude/p27-validation-scoping-4c1c1b` (`f6edf03`). Rae decided:
    - Q1: Zach's list is tagged `expected_undetectable`.
    - Q2: TESS-SPOC SAP is primary, QLP the fallback, and PDCSAP is also scored.
@@ -82,8 +69,7 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 
 ## First actions for the new coordinator
 1. **Start T32, the drift-robust `local` comb solver** (`docs/TASKS.md` T32). Get Rae's go-ahead in your own session.
-   - Fresh session, worktree cut from `claude/t31-comb-fit-speed-e7e5bb`, or from main if T31 is merged first, which
-     is cleaner.
+   - Fresh session, worktree cut from main (T31 is merged). Judge against `_v7`.
    - Role `method-improver`. Explore all five of Rae's ideas:
      1. sequential peak tracking;
      2. a tolerance that grows with n;
@@ -93,15 +79,15 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
    - First step, with no scorecards: plot vertex residual vs n for local's 29 gains, the 28 none→wrong stars, and
      shared-correct stars (`reports/2026-11-13_t31-comb-fit-speed/data/changed_stars_*`).
    - Each idea becomes an `SS_COMB_VARIANT` switch, scored on dev_medium full-year + assigned with
-     `check_goals --baseline _v6`, and timed with `profile_pipeline.py` on T12's 15 stars.
+     `check_goals --baseline _v7`, and timed with `profile_pipeline.py` on T12's 15 stars.
    - Figures: residual-vs-n; a success/wrong-vs-time frontier; by-bin; gate-statistic distributions with the
      threshold; ≥4 gained and ≥4 lost example LC + ACF plots; the distribution of `a` split by diffrot.
    - Machine-safety rules as above.
    - Report: `reports/2026-11-13_t32-local-drift/`.
-2. **Merge T31** when Rae OKs it: flip the default to `local_screen2`, apply her answers on `_v6w` and `lean`, then
-   run pytest and dev_medium.
+2. ~~Merge T31~~ done 2026-11-13.
 3. **Then rebuild the ranker tables (P31)** on the final comb fit and wavelet: about 2.5 h with the drive, at 3
-   workers maybe a little more. Tell Rae first. It waits on T31 (and on T32 if Rae wants `local` in the tables).
+   workers maybe a little more. Tell Rae first. T31 is merged; it waits on T32 only if Rae wants `local` in the tables. Note: screened-out candidates' diagnostics now
+   come from the `local` fit (changelog 2026-11-13), so candidate features shift for those.
 
 ## Open sessions (2026-11-13)
 - **T31 comb-fit speed** (`local_4149f809-…`): done; archive on Rae's OK after merge.
@@ -114,7 +100,6 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
   accident 2026-11-11, and Rae is to unarchive them.
 
 ## Waiting on Rae
-- T31 merge questions (`_v6w`, CWT `lean`), see above.
 - P27 validation-set Q3–5, Q7.
 - WG6 questions (`reports/2026-11-12_wg6-dataset-scoping/`):
   - ROT resampling: done by WG6 or by us?
