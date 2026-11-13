@@ -74,7 +74,9 @@ from guesses import InitialGuess
 #   solver      "lsq" (scipy least_squares on the joint comb), "local"
 #               (independent closed-form per-peak fits, combined afterwards;
 #               see _fit_comb_local) or "local_warm" (local, then lsq started
-#               from the local solution).
+#               from the local solution), or "local_screen" ("local" fit and
+#               gates for every candidate, then a cold "lsq" refit of each
+#               candidate failing <= screen_max_failed gates).
 #   tol         xtol = ftol = gtol for least_squares (default 1e-6).
 #   tr_solver   least_squares trust-region solver: "exact" (dense SVD) or
 #               "lsmr" (iterative, with a sparse Jacobian).
@@ -89,6 +91,10 @@ COMB_VARIANTS = {
     "local": dict(solver="local"),
     "local_warm": dict(solver="local_warm"),
     "local_warm_tol4": dict(solver="local_warm", tol=1e-4),
+    # screen with "local", refit with "lsq" every candidate failing <= k gates
+    # under the local fit (handled in fit_rotation_period, not _solve_comb)
+    "local_screen1": dict(solver="local_screen", screen_max_failed=1),
+    "local_screen2": dict(solver="local_screen", screen_max_failed=2),
 }
 DEFAULT_COMB_VARIANT = "lsq"
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -2234,65 +2240,79 @@ def fit_rotation_period(
         n_teeth = _teeth_in_range(guess.P0, t0, lag_max, n_peaks, window_frac)
         n_required = int(np.clip(n_teeth, 2, min_peaks_required))
         few = n_required < min_peaks_required
-        try:
-            fit = _fit_single_candidate(
-                acf_lags, acf, guess.P0, t0,
-                n_peaks=n_peaks, window_frac=window_frac,
-                allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
-                max_reject_iters=max_reject_iters,
-                reject_threshold_sigma=reject_threshold_sigma,
-                # few-peak regime: never let the MAD-based outlier rejection
-                # drop below the required count -- a robust-sigma estimate
-                # from 3 windows is meaningless (two near-identical RMS
-                # values give MAD ~ 0 and the third, genuine peak gets
-                # rejected; seen on clean P ~ B/6 stars).
-                min_peaks_required=n_required if few else min(min_peaks_required, 2),
-                weights=weights, min_keep_after_trim=n_required,
-                trim_decayed_tail=trim_decayed_tail,
-                max_points_per_window=comb_spec.get("max_points", max_points_per_window),
-                comb_spec=comb_spec,
-            )
-            diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
-            base_passed = bool(
-                fit.n_peaks_used >= n_required
-                and diag["frac_positive_heights"] >= min_frac_positive_heights
-                and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
-                and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
-            )
-            # T18 gates (step 4b), evaluated at the fitted period
-            terms = half_lag_contrast_terms(acf_lags, acf, fit.P)
-            hlc = float(np.mean(terms)) if terms.size else float("nan")
-            diag["acf_half_lag_contrast"] = hlc
-            diag["half_lag_min_term"] = float(np.min(terms)) if terms.size else float("nan")
-            diag["acf_height_at_P"] = acf_window_max(acf_lags, acf, fit.P, 0.1 * fit.P)
-            consistent = bool(terms.size and (np.min(terms) > 0 or hlc >= half_lag_strong_contrast))
-            few_ok = bool(
-                not few or few_peaks_min_acf_height is None
-                or diag["acf_height_at_P"] >= few_peaks_min_acf_height  # NaN -> False
-            )
-            diag["passes_half_lag_gate"] = consistent
-            diag["passes_few_peaks_height"] = few_ok
-            passed = base_passed and few_ok and (consistent or not half_lag_gate)
-            gates = _gate_results(
-                fit, diag, n_required, few, min_frac_positive_heights, min_mean_height_snr,
-                min_frac_vertex_in_window, half_lag_gate, half_lag_strong_contrast,
-                few_peaks_min_acf_height,
-            )
-            results.append(CandidateResult(
-                period=guess.P0, t0=t0, source_guess=guess, fit=fit,
-                diagnostics=diag, passed_gates=bool(passed),
-                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
-                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
-                passed_base_gates=base_passed, gate_results=gates,
-            ))
-        except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
-            results.append(CandidateResult(
-                period=guess.P0, t0=t0, source_guess=guess, fit=None,
-                diagnostics=None, passed_gates=False,
-                error=f"{type(exc).__name__}: {exc}",
-                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
-                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
-            ))
+        def _fit_and_gate(spec):
+            """Fit this candidate with comb solver `spec` and evaluate every gate -> CandidateResult."""
+            try:
+                fit = _fit_single_candidate(
+                    acf_lags, acf, guess.P0, t0,
+                    n_peaks=n_peaks, window_frac=window_frac,
+                    allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
+                    max_reject_iters=max_reject_iters,
+                    reject_threshold_sigma=reject_threshold_sigma,
+                    # few-peak regime: never let the MAD-based outlier rejection
+                    # drop below the required count -- a robust-sigma estimate
+                    # from 3 windows is meaningless (two near-identical RMS
+                    # values give MAD ~ 0 and the third, genuine peak gets
+                    # rejected; seen on clean P ~ B/6 stars).
+                    min_peaks_required=n_required if few else min(min_peaks_required, 2),
+                    weights=weights, min_keep_after_trim=n_required,
+                    trim_decayed_tail=trim_decayed_tail,
+                    max_points_per_window=spec.get("max_points", max_points_per_window),
+                    comb_spec=spec,
+                )
+                diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
+                base_passed = bool(
+                    fit.n_peaks_used >= n_required
+                    and diag["frac_positive_heights"] >= min_frac_positive_heights
+                    and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
+                    and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
+                )
+                # T18 gates (step 4b), evaluated at the fitted period
+                terms = half_lag_contrast_terms(acf_lags, acf, fit.P)
+                hlc = float(np.mean(terms)) if terms.size else float("nan")
+                diag["acf_half_lag_contrast"] = hlc
+                diag["half_lag_min_term"] = float(np.min(terms)) if terms.size else float("nan")
+                diag["acf_height_at_P"] = acf_window_max(acf_lags, acf, fit.P, 0.1 * fit.P)
+                consistent = bool(terms.size and (np.min(terms) > 0 or hlc >= half_lag_strong_contrast))
+                few_ok = bool(
+                    not few or few_peaks_min_acf_height is None
+                    or diag["acf_height_at_P"] >= few_peaks_min_acf_height  # NaN -> False
+                )
+                diag["passes_half_lag_gate"] = consistent
+                diag["passes_few_peaks_height"] = few_ok
+                passed = base_passed and few_ok and (consistent or not half_lag_gate)
+                gates = _gate_results(
+                    fit, diag, n_required, few, min_frac_positive_heights, min_mean_height_snr,
+                    min_frac_vertex_in_window, half_lag_gate, half_lag_strong_contrast,
+                    few_peaks_min_acf_height,
+                )
+                return (CandidateResult(
+                    period=guess.P0, t0=t0, source_guess=guess, fit=fit,
+                    diagnostics=diag, passed_gates=bool(passed),
+                    n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                    n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
+                    passed_base_gates=base_passed, gate_results=gates,
+                ))
+            except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
+                return (CandidateResult(
+                    period=guess.P0, t0=t0, source_guess=guess, fit=None,
+                    diagnostics=None, passed_gates=False,
+                    error=f"{type(exc).__name__}: {exc}",
+                    n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                    n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
+                ))
+
+        if comb_spec.get("solver") == "local_screen":
+            # T31 screen: cheap closed-form fit + gates for every candidate; a
+            # candidate failing at most screen_max_failed gates (or erroring)
+            # is refit with the unchanged joint least-squares fit, so every
+            # candidate that can be selected carries the pre-T31 fit.
+            cand = _fit_and_gate(COMB_VARIANTS["local"])
+            if cand.fit is None or len(cand.failed_gates) <= comb_spec.get("screen_max_failed", 1):
+                cand = _fit_and_gate(COMB_VARIANTS["lsq"])
+        else:
+            cand = _fit_and_gate(comb_spec)
+        results.append(cand)
 
     fit_ok = [r for r in results if r.fit is not None]
     failed = [r for r in results if r.fit is None]

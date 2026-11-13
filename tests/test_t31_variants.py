@@ -170,3 +170,17 @@ def test_decimated_gwps_close_to_full_at_long_periods(sine_lc):
     np.testing.assert_allclose(dec[near], full[near], rtol=0.05)
     short = periods < 16 * 2 * dt  # never decimated: equal up to the group's FFT-length rounding
     np.testing.assert_allclose(dec[short], full[short], rtol=1e-12)
+
+
+@pytest.mark.parametrize("variant", ["local_screen1", "local_screen2"])
+def test_local_screen_selects_the_lsq_fit(synth_star, variant):
+    """When the screen lets main's answer through, local_screen returns exactly the lsq fit of it."""
+    _, lags, acf, cnt, pooled = synth_star
+    ref = C.fit_rotation_period(lags, acf, pooled, acf_counts=cnt, comb_variant="lsq")
+    scr = C.fit_rotation_period(lags, acf, pooled, acf_counts=cnt, comb_variant=variant)
+    assert ref.success and scr.success
+    assert scr.best_fit.P == ref.best_fit.P
+    assert scr.best_fit.per_peak == ref.best_fit.per_peak
+    # candidates that were refit carry lsq's scipy result; screened-out ones the local record
+    kinds = {type(c.fit.fit_result).__name__ for c in scr.candidates}
+    assert "OptimizeResult" in kinds
