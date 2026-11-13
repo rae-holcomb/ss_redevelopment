@@ -145,6 +145,7 @@ import evaluation as ev  # noqa: E402
 import guesses  # noqa: E402
 from guesses import two_view_guesses  # noqa: E402
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf  # noqa: E402
+import comb_fit  # noqa: E402
 from comb_fit import fit_rotation_period  # noqa: E402
 
 SCORECARD_VERSION = 6  # v6 (2026-11-10, T26/P26): per-star detectability/detectable columns + final.detectable.*, final.undetectable.*, final.detectable_searchable.*; earlier keys unchanged. v5 v5 (2026-11-10): noise-source columns/breakdowns (T24, T25), beyond_reach candidate rows (P22b); v4: v2 (2026-10-13): diffrot outcome; recall/union_recall count success
@@ -1010,8 +1011,8 @@ def main(argv=None):
         detectability_table=str(args.detectability_table or DETECTABILITY_TABLE.relative_to(ROOT)),
         pipeline_methods=list(methods), n_guesses_default=N_GUESSES_DEFAULT, n_guesses_overrides=N_GUESSES,
         # T31: speed variants in effect (env-selected; defaults = the unchanged methods)
-        comb_variant=os.environ.get("SS_COMB_VARIANT") or "lsq",
-        cwt_variant=os.environ.get("SS_CWT_VARIANT") or "full",
+        comb_variant=comb_fit.resolve_comb_variant()[0],
+        cwt_variant=guesses.resolve_cwt_variant()[0],
         wall_seconds=time.time() - t0, created=time.strftime("%Y-%m-%d %H:%M:%S"),
     )
     (outdir / "metrics.json").write_text(json.dumps(metrics, indent=2, default=float))

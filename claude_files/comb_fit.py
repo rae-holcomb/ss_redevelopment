@@ -59,9 +59,10 @@ from guesses import InitialGuess
 # --------------------------------------------------------------------------
 #
 # Result-changing speed variants of the Stage 2 comb fit, kept behind a switch
-# so they can be scored side by side. "lsq" (the joint least-squares comb of
-# parabolae, unchanged) stays the default; adopting another one is Rae's call
-# (see reports/2026-11-13_t31-comb-fit-speed/). Every variant returns the same
+# so they can be scored side by side. "lsq" is the joint least-squares comb of
+# parabolae (the pre-T31 fit). Default since the T31 merge (Rae, 2026-11-13):
+# "local_screen2", which reproduces lsq's answers on dev_medium at ~2x the
+# production-path speed (see reports/2026-11-13_t31-comb-fit-speed/). Every variant returns the same
 # CombFitResult schema (P, P_err, t0, redchi, per_peak center/height/curvature/
 # residual_rms/n_points/vertex_in_window, n_peaks_*), so the gates, the
 # scorecard and ml_features read them unchanged.
@@ -96,7 +97,7 @@ COMB_VARIANTS = {
     "local_screen1": dict(solver="local_screen", screen_max_failed=1),
     "local_screen2": dict(solver="local_screen", screen_max_failed=2),
 }
-DEFAULT_COMB_VARIANT = "lsq"
+DEFAULT_COMB_VARIANT = "local_screen2"  # Rae, 2026-11-13 (T31 merge); was "lsq"
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
 
 
@@ -991,14 +992,15 @@ def _fit_single_candidate(
     gate and cost a few correct stars. per_peak residual_rms is unweighted.
 
     `comb_spec` (T31) is a COMB_VARIANTS entry choosing the solver for every
-    fit in steps 3-4b (None = "lsq" with pre-T31 settings); see
-    _solve_comb.
+    fit in steps 3-4b (None = "lsq" with pre-T31 settings, whatever
+    DEFAULT_COMB_VARIANT is: "local_screen" is not a _solve_comb solver; it
+    is handled in fit_rotation_period); see _solve_comb.
 
     Returns
     -------
     CombFitResult for this single candidate.
     """
-    spec = comb_spec or COMB_VARIANTS[DEFAULT_COMB_VARIANT]
+    spec = comb_spec or COMB_VARIANTS["lsq"]
     windows = _build_windows(acf_lags, P0, t0, n_peaks, window_frac=window_frac,
                              max_points_per_window=max_points_per_window)
     if len(windows) < min_peaks_required:
@@ -2068,7 +2070,7 @@ def fit_rotation_period(
         1/sqrt(pairs), and long lags (now reachable, ~0.7 B) have far fewer
         pairs. None = unweighted (the pre-2026-10-13 behavior).
     comb_variant : T31 comb-fit solver variant, a key of COMB_VARIANTS
-        (None = the SS_COMB_VARIANT environment variable, else "lsq", the
+        (None = the SS_COMB_VARIANT environment variable, else DEFAULT_COMB_VARIANT, "local_screen2"; "lsq" is the
         unchanged joint least-squares fit). A variant's "max_points" entry
         overrides max_points_per_window.
     max_points_per_window : forwarded to _build_windows (stride-decimate

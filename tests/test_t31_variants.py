@@ -1,6 +1,7 @@
 """T31 Part B: result-changing speed variants of the comb fit and the CWT.
 
-The defaults ("lsq", "full") must be the unchanged methods; the variants must
+"lsq" and "full" are the unchanged (pre-T31) methods; the defaults are
+"local_screen2" and "lean" since the T31 merge (Rae, 2026-11-13); the variants must
 keep the output schema downstream code reads, and the new pieces (local
 per-peak comb solver, sparse Jacobian, warm start, lean / decimated GWPS)
 must do what their docstrings say.
@@ -19,9 +20,9 @@ from synthetic import make_suite
 
 # ---------------------------------------------------------------- switches
 def test_resolve_comb_variant_default_env_and_unknown(monkeypatch):
-    """Default is lsq, the env var selects, unknown names raise."""
+    """Default is local_screen2 (Rae, T31 merge), the env var selects, unknown names raise."""
     monkeypatch.delenv(C.COMB_VARIANT_ENV, raising=False)
-    assert C.resolve_comb_variant()[0] == "lsq"
+    assert C.resolve_comb_variant()[0] == "local_screen2"
     monkeypatch.setenv(C.COMB_VARIANT_ENV, "local")
     assert C.resolve_comb_variant()[0] == "local"
     assert C.resolve_comb_variant("lsq_tol4")[1]["tol"] == 1e-4
@@ -30,9 +31,9 @@ def test_resolve_comb_variant_default_env_and_unknown(monkeypatch):
 
 
 def test_resolve_cwt_variant_default_env_and_unknown(monkeypatch):
-    """Default is full, the env var selects, unknown names raise."""
+    """Default is lean (Rae, T31 merge), the env var selects, unknown names raise."""
     monkeypatch.delenv(G.CWT_VARIANT_ENV, raising=False)
-    assert G.resolve_cwt_variant()[0] == "full"
+    assert G.resolve_cwt_variant()[0] == "lean"
     monkeypatch.setenv(G.CWT_VARIANT_ENV, "dec")
     assert G.resolve_cwt_variant()[0] == "dec"
     with pytest.raises(ValueError):
@@ -103,12 +104,12 @@ def synth_star():
     return lc, lags, acf, cnt, pooled
 
 
-def test_default_variant_is_explicit_lsq(synth_star, monkeypatch):
-    """No variant given == comb_variant='lsq': same period bytes and per-peak values."""
+def test_default_variant_is_explicit_default(synth_star, monkeypatch):
+    """No variant given == comb_variant=DEFAULT_COMB_VARIANT: same period bytes and per-peak values."""
     monkeypatch.delenv(C.COMB_VARIANT_ENV, raising=False)
     _, lags, acf, cnt, pooled = synth_star
     a = C.fit_rotation_period(lags, acf, pooled, acf_counts=cnt)
-    b = C.fit_rotation_period(lags, acf, pooled, acf_counts=cnt, comb_variant="lsq")
+    b = C.fit_rotation_period(lags, acf, pooled, acf_counts=cnt, comb_variant=C.DEFAULT_COMB_VARIANT)
     assert [c.fit.P for c in a.candidates] == [c.fit.P for c in b.candidates]
     assert [c.fit.per_peak for c in a.candidates] == [c.fit.per_peak for c in b.candidates]
 

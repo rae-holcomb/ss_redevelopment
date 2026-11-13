@@ -1025,7 +1025,9 @@ def _cwt_morlet(data: np.ndarray, scales: np.ndarray, w0: float) -> np.ndarray:
 
 
 # T31 (2026-11-13): result-changing CWT speed variants, behind a switch.
-# "full" (default) is the unchanged method. Select with
+# "full" is the pre-T31 method; "lean" is the default since the T31 merge
+# (Rae, 2026-11-13). Pass cwt_variant="full" to get info["wavelet_power"]
+# (e.g. for plotting.py's 2D wavelet panel). Select with
 # guess_wavelet(..., cwt_variant=NAME) or the SS_CWT_VARIANT env variable
 # (inherited by spawned scorecard / feature-table workers).
 #   lean      GWPS accumulated scale by scale; the 2D info["wavelet_power"]
@@ -1043,7 +1045,7 @@ CWT_VARIANTS = {
     "n100": dict(lean=True, decimate=False, n_periods=100),
     "dec_n100": dict(lean=True, decimate=True, n_periods=100),
 }
-DEFAULT_CWT_VARIANT = "full"
+DEFAULT_CWT_VARIANT = "lean"  # Rae, 2026-11-13 (T31 merge); was "full"
 CWT_VARIANT_ENV = "SS_CWT_VARIANT"
 # Decimated scales keep at least this many block-averaged samples per period
 # (block averaging over b samples attenuates a period-P sinusoid by
@@ -1054,7 +1056,7 @@ _DEC_MIN_LEN = 256
 
 
 def resolve_cwt_variant(name: Optional[str] = None) -> tuple:
-    """Return (variant_name, spec) for `name`, the SS_CWT_VARIANT env var, or "full"; unknown names raise."""
+    """Return (variant_name, spec) for `name`, the SS_CWT_VARIANT env var, or DEFAULT_CWT_VARIANT; unknown names raise."""
     import os
     name = name or os.environ.get(CWT_VARIANT_ENV) or DEFAULT_CWT_VARIANT
     if name not in CWT_VARIANTS:
@@ -1269,7 +1271,8 @@ def guess_wavelet(
         deviation of the once-peak-subtracted GWPS) for a Gaussian fit to
         be kept as a genuine candidate rather than noise.
     cwt_variant : T31 speed variant, a key of CWT_VARIANTS (None = the
-        SS_CWT_VARIANT env variable, else "full", the unchanged method).
+        SS_CWT_VARIANT env variable, else DEFAULT_CWT_VARIANT, "lean";
+        "full" is the pre-T31 method).
         Every variant except "full" omits info["wavelet_power"]; "n100"
         variants override n_periods with 100.
 
