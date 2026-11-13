@@ -1,0 +1,37 @@
+mode,variant,gate,fail_rate
+fullyear,main (lsq),n_peaks,0.011509197727053833
+fullyear,main (lsq),frac_positive_heights,0.44746219782336516
+fullyear,main (lsq),mean_height_snr,0.6649812193007801
+fullyear,main (lsq),frac_vertex_in_window,0.6002600404507368
+fullyear,main (lsq),half_lag_consistency,0.8854858903977656
+fullyear,main (lsq),few_peaks_height,0.11653664644129824
+fullyear,local,n_peaks,0.012761244341712441
+fullyear,local,frac_positive_heights,0.550515265337571
+fullyear,local,mean_height_snr,0.7592218048733507
+fullyear,local,frac_vertex_in_window,0.0899065780602909
+fullyear,local,half_lag_consistency,0.8779736107098142
+fullyear,local,few_peaks_height,0.11692189155350097
+fullyear,local_screen2,n_peaks,0.013339112010016363
+fullyear,local_screen2,frac_positive_heights,0.5482519503033805
+fullyear,local_screen2,mean_height_snr,0.7469902725609169
+fullyear,local_screen2,frac_vertex_in_window,0.31484156794760665
+fullyear,local_screen2,half_lag_consistency,0.8991139362419339
+fullyear,local_screen2,few_peaks_height,0.11783684869498223
+assigned,main (lsq),n_peaks,0.019045954918748942
+assigned,main (lsq),frac_positive_heights,0.455938027840876
+assigned,main (lsq),mean_height_snr,0.6350981420001165
+assigned,main (lsq),frac_vertex_in_window,0.6655017764575688
+assigned,main (lsq),half_lag_consistency,0.8945191915661949
+assigned,main (lsq),few_peaks_height,0.12930281320985493
+assigned,local,n_peaks,0.02026908963830154
+assigned,local,frac_positive_heights,0.5406255460422855
+assigned,local,mean_height_snr,0.718213058419244
+assigned,local,frac_vertex_in_window,0.0856194303686878
+assigned,local,half_lag_consistency,0.8878793173743375
+assigned,local,few_peaks_height,0.13169083813850546
+assigned,local_screen2,n_peaks,0.02044382316966631
+assigned,local_screen2,frac_positive_heights,0.5403343234900111
+assigned,local_screen2,mean_height_snr,0.7038849088473411
+assigned,local_screen2,frac_vertex_in_window,0.347777971926146
+assigned,local_screen2,half_lag_consistency,0.9069835168035413
+assigned,local_screen2,few_peaks_height,0.13268099481623852

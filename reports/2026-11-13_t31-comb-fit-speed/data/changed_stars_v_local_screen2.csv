@@ -1,0 +1,2 @@
+star_id,mode,true_period,period_bin,coverage_class,final_period_main,final_outcome_main,decline_gates_main,final_period_var,final_outcome_var,decline_gates_var,change
+smarts-tess-v1.0-009530,fullyear,1.8051,1-3d,gapped-6-12,1.8205526179486096,correct,,1.821250694699424,correct,,period_moved

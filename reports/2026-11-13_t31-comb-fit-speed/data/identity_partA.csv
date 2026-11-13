@@ -1,0 +1,9 @@
+check,before,after,verdict
+in-process: 10 guess_wavelet calls x 3 dev_small stars (assigned),GWPS variants per star 1 / 2 / 1 (031596 / 107369 / 419951),1 / 1 / 1,identical after
+fresh pytest processes (12): np.abs(2D CWT) vs np.abs(row),disagree in 4/12 processes (all 200 rows),_abs2: 0/12; wavelet digest 1 distinct in 12,identical after
+dev_medium full-year: main vs Part A (rows.jsonl),-,"1,007,054 values, 884 differ: methods.wavelet.top1 only (max rel 8.9e-09); 0 outcome/rank/count changes",wavelet last digits only
+dev_medium full-year: metrics.json,-,"1,394 values, 0 differ",identical
+dev_medium assigned: main vs Part A (rows.jsonl),-,"863,445 values, 818 differ: methods.wavelet.top1 only (max rel 1.0e-08); 0 outcome/rank/count changes",wavelet last digits only
+dev_medium assigned: metrics.json,-,"1,817 values, 0 differ",identical
+"rerun vs run, full-year (rows.jsonl + metrics)",T12: 21 wavelet values differ (main code),"Part A: 1,007,054 + 1,394 values, 0 differ",identical after
+"rerun vs run, assigned (rows.jsonl + metrics)",T12: 27 wavelet values differ (main code),"Part A: 863,445 + 1,817 values, 0 differ",identical after

@@ -393,6 +393,11 @@ for confirmation (ask Rae first).
 
 ### T31. Wavelet determinism fix + result-changing speed-ups (comb fit, CWT) (Rae, 2026-11-13; from P4, P38)
 - **Agent:** `performance-optimizer` (with method-improver judgement for the comb-fit variants). **Run overnight, machine alone.**
+- **Status (2026-11-13): done, awaiting Rae's review** (`reports/2026-11-13_t31-comb-fit-speed/`, branch
+  `claude/t31-comb-fit-speed-e7e5bb`; Part A alone on `claude/t31-partA-wavelet-determinism`). Part A: wavelet
+  bit-reproducible (np.exp + complex np.abs SIMD flips), candidate `_v6w` baselines. Part B: recommended comb variant
+  `local_screen2` = main's answers at 2x production-path speed; `local` 6x but more assigned wrongs; CWT `lean` free 1.25x.
+  Variant choice is Rae's.
 - **Part A (P4):** make `_morlet2_kernel` / the CWT bit-reproducible (deterministic Morlet envelope). Test: repeated
   in-process calls give identical bytes. One dev_medium run in both modes; only wavelet fields may move, no outcome change.
   New baselines `_v6w` (or similar) after Rae's OK.
@@ -729,6 +734,9 @@ for confirmation (ask Rae first).
   Fix options (each changes wavelet bits once, so Rae's call): build the kernel's Gaussian envelope from a
   deterministic path (e.g. `np.exp` on a fixed scratch buffer, or `math.exp` per element for the short
   kernels), or round the GWPS to ~1e-12 before peak fitting. See `reports/2026-11-12_t12-speed-up/`.
+  **Resolved by T31 (2026-11-13):** two SIMD loops, the float64 `np.exp` and the complex `np.abs`; the second one flipped
+  in 4 of 12 fresh processes. The kernel is now one complex exp, the power is re*re+im*im, and the Gaussian fits use a libm
+  exp. A dev_medium rerun is bit-identical. See `reports/2026-11-13_t31-comb-fit-speed/`.
 
 ### P5. Re-verify determinism and the default worker count on Apple Silicon
 - **Proposed by:** T14 report (2026-10-14)
@@ -1082,4 +1090,21 @@ for confirmation (ask Rae first).
      full-year star).
   3. Scorecard scheduling: submit tasks longest-expected-first (e.g. by number of sectors) to trim the 4-worker tail.
      Wall time only, no result change.
+  **T31 (2026-11-13) measured items 1-2** as switchable variants (`COMB_VARIANTS`, `CWT_VARIANTS`); see its report.
+
+### P39. Same SIMD-flip pattern in `guess_acf_fft` (from T31, 2026-11-13)
+- **Proposed by:** T31 report (`reports/2026-11-13_t31-comb-fit-speed/`).
+- **Idea:** `guesses.py` `guess_acf_fft` computes `np.abs(fft_vals) ** 2`. In T31 the complex `np.abs` SIMD loop (numpy
+  1.26.4, i5 AVX-512) returned different last bits in 4 of 12 fresh processes. acf_fft is pooled into the final answer,
+  and T14's 40-star cross-process test never caught a flip there. Switch it to `guesses._abs2` (one-time bit change of acf_fft
+  candidates; needs a before/after scorecard and new baselines), and grep for other `np.abs(complex)` / float64 `np.exp`
+  on per-star arrays that feed scored values.
+
+### P40. A vertex gate for the `local` comb solver (from T31, 2026-11-13)
+- **Proposed by:** T31 report.
+- **Idea:** the closed-form `local` comb variant is 6x faster on the production path and gains 33 stars on dev_medium
+  (29 of them declined by main's `frac_vertex_in_window`). But its own vertex gate is nearly vacuous (it fails on 9%
+  of candidates vs 60% under lsq), and assigned wrong rises 0.055 -> 0.066. Give it a meaningful equivalent, e.g. the
+  fraction of windows whose free local vertex was accepted, or the scatter of vertices about the fitted line, and a
+  robust (soft-L1 / Huber) per-window height fit. Then rescore. This could make `local` the fast default without the extra wrongs.
 

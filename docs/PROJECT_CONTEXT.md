@@ -321,9 +321,9 @@ Roughly in priority order as of this writing — re-prioritize freely.
    over-declines correct long-period answers. A perfect decline would add at most +0.106 of all stars full-year and
    +0.059 assigned (midway review, Fig. 1). Next step: ranker v1's star-level, period-aware decline model (P24).
    Hand-gate tuning (P1, P7, T16d) is paused.
-13. **Bit-reproducibility is verified only on the Intel i5 (T14).** Under
-   `ss_openblas`, runs are bit-identical, apart from a ~2e-11 wavelet-only residue
-   on one star (TASKS.md P4). numpy's and scipy's macOS arm64 wheels use Accelerate,
+13. **Bit-reproducibility is verified only on the Intel i5 (T14, T31).** Under
+   `ss_openblas`, runs are bit-identical. The wavelet residue (P4) is fixed on the T31 branch. `guess_acf_fft`
+   still uses the complex `np.abs` that flipped in T31 (P39). numpy's and scipy's macOS arm64 wheels use Accelerate,
    whose `ddot` was alignment-dependent here (on x86_64, so arm64 is untested).
    On Apple Silicon, build the env from conda-forge with `libblas=*=*openblas` and
    re-verify (TASKS.md P5).
@@ -557,6 +557,18 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   - Keep 4 workers. Ranker-table rebuild (9,708 stars) ≈ 2.5 h on the drive at 4 workers.
   - **Pitfall:** time before/after back to back on an idle machine. The first "before" runs ran ~1.9× slow under
     background load.
+- **2026-11-13 — T31: wavelet determinism + comb-fit / CWT speed variants** (`reports/2026-11-13_t31-comb-fit-speed/`,
+  draft, not merged).
+  - **Part A (P4):** numpy 1.26.4 SIMD float64 `np.exp` and complex `np.abs` gave process- and allocation-dependent
+    last bits. `guess_wavelet` now uses a complex-exp kernel, `_abs2` and `_det_exp`. A dev_medium rerun is bit-identical.
+    Candidate `_v6w` baselines are committed, pending Rae.
+  - **Part B:** `COMB_VARIANTS` / `SS_COMB_VARIANT` and `CWT_VARIANTS` / `SS_CWT_VARIANT` switches; defaults unchanged.
+    - `local_screen2` (local closed-form fit screens, lsq refits candidates failing ≤ 2 gates) gives main's answers
+      at 2x production-path speed.
+    - `local` is 6x faster but has a near-vacuous vertex gate (P40).
+    - CWT `lean` is bit-identical and 1.25x faster.
+  - **Pitfalls:** `taskpolicy -b` throttles to ~0.5 core; use `nice -n 15`. Time only on a quiet machine: after a
+    re-login, Spotlight slowed everything by ~40%.
 - **2026-11-13 — Machine safety; T31 done; T32 logged; coordinator handoff.** WindowServer watchdog hang logged Rae
   out overnight (not a reboot; moderate thermal, heavy memory compression). New standing rule in `CLAUDE.md` Hardware
   (`nice -n 15`, 3 workers, one heavy job at a time). T31 (`claude/t31-comb-fit-speed-e7e5bb`, unmerged): wavelet made

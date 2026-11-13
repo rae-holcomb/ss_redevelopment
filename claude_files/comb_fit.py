@@ -55,6 +55,65 @@ from guesses import InitialGuess
 
 
 # --------------------------------------------------------------------------
+# Comb-fit solver variants (T31, 2026-11-13)
+# --------------------------------------------------------------------------
+#
+# Result-changing speed variants of the Stage 2 comb fit, kept behind a switch
+# so they can be scored side by side. "lsq" (the joint least-squares comb of
+# parabolae, unchanged) stays the default; adopting another one is Rae's call
+# (see reports/2026-11-13_t31-comb-fit-speed/). Every variant returns the same
+# CombFitResult schema (P, P_err, t0, redchi, per_peak center/height/curvature/
+# residual_rms/n_points/vertex_in_window, n_peaks_*), so the gates, the
+# scorecard and ml_features read them unchanged.
+#
+# Select one with fit_rotation_period(..., comb_variant=NAME) or, for whole
+# runs (scorecard, feature tables, profile harness), the SS_COMB_VARIANT
+# environment variable, which spawned workers inherit.
+#
+# Keys of each spec:
+#   solver      "lsq" (scipy least_squares on the joint comb), "local"
+#               (independent closed-form per-peak fits, combined afterwards;
+#               see _fit_comb_local) or "local_warm" (local, then lsq started
+#               from the local solution), or "local_screen" ("local" fit and
+#               gates for every candidate, then a cold "lsq" refit of each
+#               candidate failing <= screen_max_failed gates).
+#   tol         xtol = ftol = gtol for least_squares (default 1e-6).
+#   tr_solver   least_squares trust-region solver: "exact" (dense SVD) or
+#               "lsmr" (iterative, with a sparse Jacobian).
+#   max_points  override for max_points_per_window (default 100).
+COMB_VARIANTS = {
+    "lsq": dict(solver="lsq"),
+    "lsq_tol4": dict(solver="lsq", tol=1e-4),
+    "lsq_tol3": dict(solver="lsq", tol=1e-3),
+    "lsq_lsmr": dict(solver="lsq", tr_solver="lsmr"),
+    "lsq_pts40": dict(solver="lsq", max_points=40),
+    "lsq_tol4_pts40": dict(solver="lsq", tol=1e-4, max_points=40),
+    "local": dict(solver="local"),
+    "local_warm": dict(solver="local_warm"),
+    "local_warm_tol4": dict(solver="local_warm", tol=1e-4),
+    # screen with "local", refit with "lsq" every candidate failing <= k gates
+    # under the local fit (handled in fit_rotation_period, not _solve_comb)
+    "local_screen1": dict(solver="local_screen", screen_max_failed=1),
+    "local_screen2": dict(solver="local_screen", screen_max_failed=2),
+}
+DEFAULT_COMB_VARIANT = "lsq"
+COMB_VARIANT_ENV = "SS_COMB_VARIANT"
+
+
+def resolve_comb_variant(name: Optional[str] = None) -> tuple:
+    """Return (variant_name, spec dict) for `name`, the SS_COMB_VARIANT env var, or the default.
+
+    Raises ValueError for an unknown name, so a typo in a run's environment
+    fails loudly instead of silently scoring the default.
+    """
+    import os
+    name = name or os.environ.get(COMB_VARIANT_ENV) or DEFAULT_COMB_VARIANT
+    if name not in COMB_VARIANTS:
+        raise ValueError(f"unknown comb variant {name!r}; choose from {sorted(COMB_VARIANTS)}")
+    return name, dict(COMB_VARIANTS[name])
+
+
+# --------------------------------------------------------------------------
 # Phase-seeding and sanity-filtering utilities
 # --------------------------------------------------------------------------
 #
@@ -528,9 +587,149 @@ def _comb_model_setup(
         J[rows_delta, col_delta] = dresid_dc[has_delta]
         return J
 
-    return dict(residual=residual, jacobian=jacobian, x0=x0, lb=lb, ub=ub,
+    # T31: the same Jacobian as a CSR sparse matrix (<= 5 nonzeros per row),
+    # for tr_solver="lsmr". Column order inside each row doesn't matter to CSR.
+    def jacobian_sparse(x):
+        from scipy.sparse import csr_matrix
+        centers = _centers(x)
+        A = x[idx_A0:idx_A0 + m][win_of_pt]
+        c = centers[win_of_pt]
+        diff = lag_all - c
+        dresid_dc = w2_all * A * diff
+        r = np.concatenate([rows, rows, rows, rows, rows_delta])
+        cidx = np.concatenate([col_A, col_h, np.full(total_pts, idx_P), np.full(total_pts, idx_t0), col_delta])
+        v = np.concatenate([neg_w_all * diff**2, w_all, dresid_dc * n_all, dresid_dc, dresid_dc[has_delta]])
+        return csr_matrix((v, (r, cidx)), shape=(total_pts, n_params))
+
+    return dict(residual=residual, jacobian=jacobian, jacobian_sparse=jacobian_sparse, x0=x0, lb=lb, ub=ub,
                 idx_P=idx_P, idx_t0=idx_t0, idx_A0=idx_A0, idx_h0=idx_h0,
-                ns=ns, centers=_centers, total_pts=total_pts, n_params=n_params)
+                ns=ns, centers=_centers, total_pts=total_pts, n_params=n_params,
+                idx_delta0=idx_delta0, delta_pos_of=delta_pos_of)
+
+
+def _warm_start_vector(st: dict, init: dict) -> np.ndarray:
+    """Starting vector for _fit_comb_core from a previous solution (`init`: P, t0, centers, A, h keyed by n).
+
+    st is _comb_model_setup's dict. Jitter terms are the init centers' offsets
+    from the comb t0 + n*P. Everything is clipped into [lb, ub].
+    """
+    x0 = st["x0"].copy()
+    P, t0 = float(init["P"]), float(init["t0"])
+    x0[st["idx_P"]], x0[st["idx_t0"]] = P, t0
+    for i, n in enumerate(st["ns"]):
+        if i in st["delta_pos_of"]:
+            x0[st["idx_delta0"] + st["delta_pos_of"][i]] = init["centers"][n] - (t0 + n * P)
+        x0[st["idx_A0"] + i] = init["A"][n]
+        x0[st["idx_h0"] + i] = init["h"][n]
+    return np.clip(x0, st["lb"], st["ub"])
+
+
+def _fit_comb_local(
+    windows: list,
+    acf_lags: np.ndarray,
+    acf: np.ndarray,
+    P0: float,
+    t0: float,
+    P_bounds_frac: float = 0.3,
+    allow_jitter: bool = True,
+    jitter_frac: float = 0.05,
+    weights: Optional[np.ndarray] = None,
+    n_irls: int = 4,
+) -> dict:
+    """Comb fit from independent per-peak fits (T31 comb variant "local").
+
+    Same idea as the joint fit -- evenly spaced, downward-opening parabolae on
+    the ACF's repeated peaks -- but solved in closed form, without an
+    iterative optimizer:
+
+    1. Each window gets its own weighted quadratic fit, y = a0 + a1 z + a2 z^2
+       (z = lag scaled to the window's half-width). A window whose parabola
+       opens downward (a2 < 0) with its vertex inside the window gives a
+       local peak location c_n.
+    2. P and t0 come from a robust weighted line fit c_n = t0 + n P over those
+       windows (iteratively reweighted with soft-L1 weights, residual scale
+       jitter_frac * P0 / 2, like the joint fit's soft_l1 loss), clipped to the
+       joint fit's bounds (P0 * (1 +/- P_bounds_frac), t0 +/- P0/2). With fewer
+       than two usable windows, P0 and t0 are kept.
+    3. Each window's center is the comb position t0 + n P plus its own offset
+       c_n - (t0 + n P), clipped to +/- jitter_frac * P0 (the joint fit's
+       jitter bound; none for n = 0 or allow_jitter=False, and none for windows
+       without a usable local vertex).
+    4. With the center fixed, height h and curvature A >= 0 are a 2-parameter
+       weighted linear least-squares problem per window (A < 0 -> A = 0 and h
+       = the weighted mean).
+
+    Returns the same dict as _fit_comb_core. redchi uses the same weighted
+    residuals and degrees of freedom as the joint model; P_err / t0_err come
+    from the line fit's covariance (None with only two usable windows).
+    `raw` is a small record (solver name, number of usable vertices), not a
+    scipy OptimizeResult.
+    """
+    from types import SimpleNamespace
+    m = len(windows)
+    ns = np.array([w.n for w in windows], dtype=float)
+    subs = []
+    c_loc = np.full(m, np.nan)
+    for i, w in enumerate(windows):
+        lag, y = acf_lags[w.mask], acf[w.mask]
+        wt = np.ones(len(lag)) if weights is None else np.asarray(weights, dtype=float)[w.mask]
+        subs.append((lag, y, wt))
+        mid = 0.5 * (w.lag_hi + w.lag_lo)
+        hw = max(0.5 * (w.lag_hi - w.lag_lo), 1e-12)
+        z = (lag - mid) / hw
+        X = np.column_stack([np.ones_like(z), z, z * z]) * wt[:, None]
+        coef = np.linalg.lstsq(X, y * wt, rcond=None)[0]
+        if coef[2] < 0:
+            zv = -coef[1] / (2.0 * coef[2])
+            if abs(zv) <= 1.0:
+                c_loc[i] = mid + zv * hw
+
+    P, t0f, P_err, t0_err = float(P0), float(t0), None, None
+    ok = np.isfinite(c_loc)
+    if ok.sum() >= 2 and np.unique(ns[ok]).size >= 2:
+        nn, cc = ns[ok], c_loc[ok]
+        X = np.column_stack([np.ones_like(nn), nn])
+        f = max(0.5 * jitter_frac * P0, 1e-12)
+        rw = np.ones(len(nn))
+        for _ in range(n_irls):
+            sw = np.sqrt(rw)
+            b0, b1 = np.linalg.lstsq(X * sw[:, None], cc * sw, rcond=None)[0]
+            r = cc - (b0 + b1 * nn)
+            rw_used = rw
+            rw = 1.0 / np.sqrt(1.0 + (r / f) ** 2)
+        P = float(np.clip(b1, P0 * (1 - P_bounds_frac), P0 * (1 + P_bounds_frac)))
+        if P != b1:  # clipped: re-derive t0 for the clipped slope
+            b0 = float(np.sum(rw_used * (cc - nn * P)) / np.sum(rw_used))
+        t0f = float(np.clip(b0, t0 - 0.5 * P0, t0 + 0.5 * P0))
+        if len(nn) > 2:
+            r = cc - (t0f + P * nn)
+            s2 = float(np.sum(rw_used * r**2) / (len(nn) - 2))
+            cov = s2 * np.linalg.pinv((X * rw_used[:, None]).T @ X)
+            P_err, t0_err = float(np.sqrt(cov[1, 1])), float(np.sqrt(cov[0, 0]))
+
+    centers, A_fit, h_fit, resid = {}, {}, {}, []
+    n_delta = 0
+    for i, w in enumerate(windows):
+        lag, y, wt = subs[i]
+        c = t0f + w.n * P
+        if allow_jitter and w.n > 0:
+            n_delta += 1
+            if ok[i]:
+                c += float(np.clip(c_loc[i] - c, -jitter_frac * P0, jitter_frac * P0))
+        d2 = (lag - c) ** 2
+        X = np.column_stack([np.ones_like(d2), -d2]) * wt[:, None]
+        h, A = np.linalg.lstsq(X, y * wt, rcond=None)[0]
+        if not A > 0:
+            A = 0.0
+            h = float(np.sum(wt**2 * y) / max(np.sum(wt**2), 1e-300))
+        centers[w.n], A_fit[w.n], h_fit[w.n] = float(c), float(A), float(h)
+        resid.append(wt * ((h - A * d2) - y))
+    resid = np.concatenate(resid) if resid else np.empty(0)
+    dof = len(resid) - (2 + n_delta + 2 * m)
+    redchi = float(np.sum(resid**2) / dof) if dof > 0 else float("nan")
+    return dict(P=P, P_err=P_err, t0=t0f, t0_err=t0_err, redchi=redchi, success=True,
+                centers=centers, A=A_fit, h=h_fit,
+                raw=SimpleNamespace(solver="local", n_vertices=int(ok.sum()), success=True))
 
 
 def _comb_model_functions(windows, acf_lags, acf, P0, t0, weights=None, **kwargs):
@@ -551,6 +750,9 @@ def _fit_comb_core(
     jitter_frac: float = 0.05,
     loss: str = "soft_l1",
     weights: Optional[np.ndarray] = None,
+    tol: float = 1e-6,
+    tr_solver: str = "exact",
+    init: Optional[dict] = None,
 ):
     """Fit the joint comb-of-parabolae model directly via
     scipy.optimize.least_squares with a hand-derived ANALYTIC Jacobian,
@@ -597,6 +799,13 @@ def _fit_comb_core(
     dict with keys: P, P_err, t0, t0_err, redchi, success, centers (dict
     n -> fitted center), A (dict n -> fitted curvature), h (dict n ->
     fitted height), raw (the scipy OptimizeResult).
+
+    T31 options (defaults reproduce the pre-T31 fit exactly): `tol` sets
+    xtol = ftol = gtol; `tr_solver="lsmr"` uses scipy's iterative trust-region
+    solver with the sparse Jacobian instead of a dense SVD per step; `init`
+    (a dict like this function's return value: P, t0, centers, A, h) replaces
+    the default starting vector, e.g. with _fit_comb_local's solution
+    (comb variant "local_warm"). Values are clipped into the bounds.
     """
     st = _comb_model_setup(windows, acf_lags, acf, P0, t0, P_bounds_frac=P_bounds_frac,
                            allow_jitter=allow_jitter, jitter_frac=jitter_frac, weights=weights)
@@ -604,7 +813,12 @@ def _fit_comb_core(
     idx_P, idx_t0, idx_A0, idx_h0 = st["idx_P"], st["idx_t0"], st["idx_A0"], st["idx_h0"]
     ns, _centers, total_pts, n_params = st["ns"], st["centers"], st["total_pts"], st["n_params"]
 
+    if init is not None:
+        x0 = _warm_start_vector(st, init)
     fit_kws = {"loss": loss} if loss != "linear" else {}
+    if tr_solver != "exact":
+        fit_kws["tr_solver"] = tr_solver
+        jacobian = st["jacobian_sparse"]
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         res = scipy_least_squares(
@@ -617,7 +831,7 @@ def _fit_comb_core(
             # trust-region iterations (each one a fresh SVD solve, the
             # single largest remaining cost per fit; see this project's
             # fitting-performance notes) for precision nothing consumes.
-            xtol=1e-6, ftol=1e-6, gtol=1e-6,
+            xtol=tol, ftol=tol, gtol=tol,
             **fit_kws,
         )
 
@@ -639,7 +853,8 @@ def _fit_comb_core(
             # the (pseudo-inverted) J^T J, scaled by the residual
             # variance. Only approximate under a robust loss, same
             # caveat as before.
-            JTJ = res.jac.T @ res.jac
+            jac_d = res.jac.toarray() if hasattr(res.jac, "toarray") else res.jac
+            JTJ = jac_d.T @ jac_d
             cov = np.linalg.pinv(JTJ) * (redchi if np.isfinite(redchi) else 1.0)
             stderrs = np.sqrt(np.diag(cov))
             if np.isfinite(stderrs[idx_P]):
@@ -658,6 +873,27 @@ def _fit_comb_core(
         h={n: float(res.x[idx_h0 + i]) for i, n in enumerate(ns)},
         raw=res,
     )
+
+
+def _solve_comb(spec: dict, windows, acf_lags, acf, P0, t0, allow_jitter=True, jitter_frac=0.05,
+                loss="soft_l1", weights=None) -> dict:
+    """Dispatch one comb fit to the solver named in `spec` (a COMB_VARIANTS entry).
+
+    "lsq" -> _fit_comb_core with spec's tol / tr_solver; "local" ->
+    _fit_comb_local; "local_warm" -> _fit_comb_local, then _fit_comb_core
+    started from its solution. Returns _fit_comb_core's dict.
+    """
+    solver = spec.get("solver", "lsq")
+    kw = dict(allow_jitter=allow_jitter, jitter_frac=jitter_frac, weights=weights)
+    if solver == "local":
+        return _fit_comb_local(windows, acf_lags, acf, P0, t0, **kw)
+    lsq_kw = dict(loss=loss, tol=spec.get("tol", 1e-6), tr_solver=spec.get("tr_solver", "exact"))
+    if solver == "local_warm":
+        init = _fit_comb_local(windows, acf_lags, acf, P0, t0, **kw)
+        return _fit_comb_core(windows, acf_lags, acf, P0, t0, init=init, **kw, **lsq_kw)
+    if solver != "lsq":
+        raise ValueError(f"unknown comb solver {solver!r}")
+    return _fit_comb_core(windows, acf_lags, acf, P0, t0, **kw, **lsq_kw)
 
 
 @dataclass
@@ -694,6 +930,7 @@ def _fit_single_candidate(
     trim_decayed_tail: bool = True,
     min_keep_after_trim: Optional[int] = None,
     max_points_per_window: Optional[int] = None,
+    comb_spec: Optional[dict] = None,
 ) -> CombFitResult:
     """Run the actual joint least-squares comb-of-parabolae fit for ONE
     candidate (P0, t0). This is the expensive, authoritative step that
@@ -753,10 +990,15 @@ def _fit_single_candidate(
     which then drag mean height SNR just under fit_rotation_period's 1.0
     gate and cost a few correct stars. per_peak residual_rms is unweighted.
 
+    `comb_spec` (T31) is a COMB_VARIANTS entry choosing the solver for every
+    fit in steps 3-4b (None = "lsq" with pre-T31 settings); see
+    _solve_comb.
+
     Returns
     -------
     CombFitResult for this single candidate.
     """
+    spec = comb_spec or COMB_VARIANTS[DEFAULT_COMB_VARIANT]
     windows = _build_windows(acf_lags, P0, t0, n_peaks, window_frac=window_frac,
                              max_points_per_window=max_points_per_window)
     if len(windows) < min_peaks_required:
@@ -770,8 +1012,8 @@ def _fit_single_candidate(
 
     for iteration in range(max_reject_iters + 1):
         # --- fit with the current set of windows ---
-        fit = _fit_comb_core(
-            windows, acf_lags, acf, P0, t0,
+        fit = _solve_comb(
+            spec, windows, acf_lags, acf, P0, t0,
             allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
             weights=weights,
         )
@@ -821,8 +1063,8 @@ def _fit_single_candidate(
         if k > 0:
             windows = ordered[:len(ordered) - k]
             n_trimmed = k
-            fit = _fit_comb_core(
-                windows, acf_lags, acf, P0, t0,
+            fit = _solve_comb(
+                spec, windows, acf_lags, acf, P0, t0,
                 allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
                 weights=weights,
             )
@@ -1656,6 +1898,7 @@ def fit_rotation_period(
     half_lag_fallback_min: Optional[float] = None,
     few_peaks_min_acf_height: Optional[float] = 0.4,
     max_period: Union[str, float, dict, None] = "auto",
+    comb_variant: Optional[str] = None,
 ) -> EnsembleResult:
     """Fit the joint comb model to EVERY candidate in `initial_guesses`,
     and pick whichever one produces the most convincing result -- or
@@ -1824,6 +2067,10 @@ def fit_rotation_period(
         weighted by sqrt(count / count[0]) -- the ACF's noise scales as
         1/sqrt(pairs), and long lags (now reachable, ~0.7 B) have far fewer
         pairs. None = unweighted (the pre-2026-10-13 behavior).
+    comb_variant : T31 comb-fit solver variant, a key of COMB_VARIANTS
+        (None = the SS_COMB_VARIANT environment variable, else "lsq", the
+        unchanged joint least-squares fit). A variant's "max_points" entry
+        overrides max_points_per_window.
     max_points_per_window : forwarded to _build_windows (stride-decimate
         windows larger than this; None = keep every point, the
         pre-2026-10-13 behavior). Speed only -- see _build_windows.
@@ -1970,6 +2217,7 @@ def fit_rotation_period(
         )
 
     # --- fit every surviving candidate ---
+    _, comb_spec = resolve_comb_variant(comb_variant)
     results = []
     for guess, group in zip(deduped, merged_groups):
         n_dup = len(group) - 1
@@ -1992,64 +2240,79 @@ def fit_rotation_period(
         n_teeth = _teeth_in_range(guess.P0, t0, lag_max, n_peaks, window_frac)
         n_required = int(np.clip(n_teeth, 2, min_peaks_required))
         few = n_required < min_peaks_required
-        try:
-            fit = _fit_single_candidate(
-                acf_lags, acf, guess.P0, t0,
-                n_peaks=n_peaks, window_frac=window_frac,
-                allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
-                max_reject_iters=max_reject_iters,
-                reject_threshold_sigma=reject_threshold_sigma,
-                # few-peak regime: never let the MAD-based outlier rejection
-                # drop below the required count -- a robust-sigma estimate
-                # from 3 windows is meaningless (two near-identical RMS
-                # values give MAD ~ 0 and the third, genuine peak gets
-                # rejected; seen on clean P ~ B/6 stars).
-                min_peaks_required=n_required if few else min(min_peaks_required, 2),
-                weights=weights, min_keep_after_trim=n_required,
-                trim_decayed_tail=trim_decayed_tail,
-                max_points_per_window=max_points_per_window,
-            )
-            diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
-            base_passed = bool(
-                fit.n_peaks_used >= n_required
-                and diag["frac_positive_heights"] >= min_frac_positive_heights
-                and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
-                and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
-            )
-            # T18 gates (step 4b), evaluated at the fitted period
-            terms = half_lag_contrast_terms(acf_lags, acf, fit.P)
-            hlc = float(np.mean(terms)) if terms.size else float("nan")
-            diag["acf_half_lag_contrast"] = hlc
-            diag["half_lag_min_term"] = float(np.min(terms)) if terms.size else float("nan")
-            diag["acf_height_at_P"] = acf_window_max(acf_lags, acf, fit.P, 0.1 * fit.P)
-            consistent = bool(terms.size and (np.min(terms) > 0 or hlc >= half_lag_strong_contrast))
-            few_ok = bool(
-                not few or few_peaks_min_acf_height is None
-                or diag["acf_height_at_P"] >= few_peaks_min_acf_height  # NaN -> False
-            )
-            diag["passes_half_lag_gate"] = consistent
-            diag["passes_few_peaks_height"] = few_ok
-            passed = base_passed and few_ok and (consistent or not half_lag_gate)
-            gates = _gate_results(
-                fit, diag, n_required, few, min_frac_positive_heights, min_mean_height_snr,
-                min_frac_vertex_in_window, half_lag_gate, half_lag_strong_contrast,
-                few_peaks_min_acf_height,
-            )
-            results.append(CandidateResult(
-                period=guess.P0, t0=t0, source_guess=guess, fit=fit,
-                diagnostics=diag, passed_gates=bool(passed),
-                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
-                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
-                passed_base_gates=base_passed, gate_results=gates,
-            ))
-        except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
-            results.append(CandidateResult(
-                period=guess.P0, t0=t0, source_guess=guess, fit=None,
-                diagnostics=None, passed_gates=False,
-                error=f"{type(exc).__name__}: {exc}",
-                n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
-                n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
-            ))
+        def _fit_and_gate(spec):
+            """Fit this candidate with comb solver `spec` and evaluate every gate -> CandidateResult."""
+            try:
+                fit = _fit_single_candidate(
+                    acf_lags, acf, guess.P0, t0,
+                    n_peaks=n_peaks, window_frac=window_frac,
+                    allow_jitter=allow_jitter, jitter_frac=jitter_frac, loss=loss,
+                    max_reject_iters=max_reject_iters,
+                    reject_threshold_sigma=reject_threshold_sigma,
+                    # few-peak regime: never let the MAD-based outlier rejection
+                    # drop below the required count -- a robust-sigma estimate
+                    # from 3 windows is meaningless (two near-identical RMS
+                    # values give MAD ~ 0 and the third, genuine peak gets
+                    # rejected; seen on clean P ~ B/6 stars).
+                    min_peaks_required=n_required if few else min(min_peaks_required, 2),
+                    weights=weights, min_keep_after_trim=n_required,
+                    trim_decayed_tail=trim_decayed_tail,
+                    max_points_per_window=spec.get("max_points", max_points_per_window),
+                    comb_spec=spec,
+                )
+                diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
+                base_passed = bool(
+                    fit.n_peaks_used >= n_required
+                    and diag["frac_positive_heights"] >= min_frac_positive_heights
+                    and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
+                    and diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
+                )
+                # T18 gates (step 4b), evaluated at the fitted period
+                terms = half_lag_contrast_terms(acf_lags, acf, fit.P)
+                hlc = float(np.mean(terms)) if terms.size else float("nan")
+                diag["acf_half_lag_contrast"] = hlc
+                diag["half_lag_min_term"] = float(np.min(terms)) if terms.size else float("nan")
+                diag["acf_height_at_P"] = acf_window_max(acf_lags, acf, fit.P, 0.1 * fit.P)
+                consistent = bool(terms.size and (np.min(terms) > 0 or hlc >= half_lag_strong_contrast))
+                few_ok = bool(
+                    not few or few_peaks_min_acf_height is None
+                    or diag["acf_height_at_P"] >= few_peaks_min_acf_height  # NaN -> False
+                )
+                diag["passes_half_lag_gate"] = consistent
+                diag["passes_few_peaks_height"] = few_ok
+                passed = base_passed and few_ok and (consistent or not half_lag_gate)
+                gates = _gate_results(
+                    fit, diag, n_required, few, min_frac_positive_heights, min_mean_height_snr,
+                    min_frac_vertex_in_window, half_lag_gate, half_lag_strong_contrast,
+                    few_peaks_min_acf_height,
+                )
+                return (CandidateResult(
+                    period=guess.P0, t0=t0, source_guess=guess, fit=fit,
+                    diagnostics=diag, passed_gates=bool(passed),
+                    n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                    n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
+                    passed_base_gates=base_passed, gate_results=gates,
+                ))
+            except Exception as exc:  # noqa: BLE001 -- keep trying other candidates
+                return (CandidateResult(
+                    period=guess.P0, t0=t0, source_guess=guess, fit=None,
+                    diagnostics=None, passed_gates=False,
+                    error=f"{type(exc).__name__}: {exc}",
+                    n_duplicate_guesses=n_dup, contributing_methods=contributing_methods,
+                    n_teeth_available=int(n_teeth), n_peaks_required=n_required, few_peaks=bool(few),
+                ))
+
+        if comb_spec.get("solver") == "local_screen":
+            # T31 screen: cheap closed-form fit + gates for every candidate; a
+            # candidate failing at most screen_max_failed gates (or erroring)
+            # is refit with the unchanged joint least-squares fit, so every
+            # candidate that can be selected carries the pre-T31 fit.
+            cand = _fit_and_gate(COMB_VARIANTS["local"])
+            if cand.fit is None or len(cand.failed_gates) <= comb_spec.get("screen_max_failed", 1):
+                cand = _fit_and_gate(COMB_VARIANTS["lsq"])
+        else:
+            cand = _fit_and_gate(comb_spec)
+        results.append(cand)
 
     fit_ok = [r for r in results if r.fit is not None]
     failed = [r for r in results if r.fit is None]
