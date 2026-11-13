@@ -183,7 +183,7 @@ Measured on a 524-star sample (30 per class, 100 ROT; `tools/audit/wg6_profile.p
 9. **Every file has V, H and K extensions of a few to a few hundred points.** UKIRT H/K come from 2015–2017 only. Ignore
    them for periods; they could feed colour-amplitude features.
 
-## 7. How to load one (until a `claude_files/wg6.py` exists)
+## 7. How to load one (`claude_files/wg6.load_wg6_raw` does this)
 
 ```python
 from astropy.io import fits
@@ -292,7 +292,9 @@ LS over 6 seasons on F146 (improved), sample of 12 per class:
 
 LPV can't be checked with a 300 d LS cap.
 
-### 8.5 Loading (until `claude_files/wg6.py` exists)
+### 8.5 Loading
+
+Use `claude_files/wg6.py` (`load_wg6_roman`, 2026-11-13, P35; manifest `datasets/wg6_roman_v0.csv`). The snippet below is the underlying recipe:
 
 ```python
 import io, zipfile, numpy as np

@@ -115,6 +115,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import time
@@ -212,6 +213,11 @@ def _load(task: dict):
         meta = {k: v for k, v in lc.params.items() if k not in ("spots", "period_range", "sectors")}
         sectors = lc.params.get("sectors") or list(range(1, int(lc.params.get("n_sectors", 1)) + 1))
         return lc.star_id, lc.time, lc.flux, lc.true_period, lc.params.get("period_range"), meta, sectors
+    if task["kind"] == "wg6r":
+        from wg6 import load_wg6_roman
+        lc = load_wg6_roman(task["path"], task["member"], band="F146", season=task["season"],
+                            true_period=task["true_period"])
+        return task["star_id"], lc.time, lc.flux, float(task["true_period"]), None, dict(task["meta"]), lc.sectors_used
     from astropy.io import fits
     from preprocessing import load_smarts_fits
     pre = load_smarts_fits(task["path"], **task.get("load_kwargs", {}))
@@ -545,6 +551,8 @@ def dataset_string(args) -> str:
     ",data_root=..." when a data root is used and ",sectors=manifest|ignored" when
     the manifest has a `sectors` column."""
     base = f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)
+    if not args.synthetic and parse_wg6_dataset(args.manifest) is not None:
+        return base  # WG6 dataset strings are self-describing (set, noise variant, season); data root is $WG6_RESAMPLED_ROOT
     if not args.synthetic:
         given, _ = manifest_data_root(args)
         if given:
@@ -565,6 +573,46 @@ def dataset_string(args) -> str:
     return base + extra
 
 
+WG6_DATASET_RE = re.compile(r"^wg6r_(fl|contam)_v0_improved_s([1-3])$")
+WG6_MANIFEST = ROOT / "datasets" / "wg6_roman_v0.csv"
+
+
+def parse_wg6_dataset(name):
+    """Parse a WG6 Roman dataset string -> (set, season), or None if `name` isn't one.
+
+    ``wg6r_fl_v0_improved_s<k>``: dev-side FL rotators (scored against the template rotation period).
+    ``wg6r_contam_v0_improved_s<k>``: dev-side non-rotators with a catalogue period (ECL, ELL, T2CEP, RRLYR, HB, DSCT,
+    LPV), scored against ``P_phot_expected`` (P_orb/2 for ECL/ELL), so a "correct" there means the pipeline locked onto the
+    contaminant's own period, i.e. a false positive. CV and FL-flat have no period and are left out. Season k is 1-3
+    (the early GBTDS seasons, assumption in claude_files/wg6.py). The holdout is never selected.
+    """
+    m = WG6_DATASET_RE.match(str(name))
+    return (m.group(1), int(m.group(2))) if m else None
+
+
+def build_wg6_tasks(name) -> list:
+    """Task dicts for a WG6 dataset string (see `parse_wg6_dataset`), read from datasets/wg6_roman_v0.csv.
+
+    Zips are read in place under $WG6_RESAMPLED_ROOT (default: the Data_Vault drive path); no data root flag needed.
+    """
+    from wg6 import resampled_root
+    which, season = parse_wg6_dataset(name)
+    man = pd.read_csv(WG6_MANIFEST, low_memory=False)
+    man = man[(man.eval_set == "dev") & (man.season == season)]
+    if which == "fl":
+        man = man[(man.cls == "FL") & man.is_rotator.astype(bool)]
+        man = man.assign(p_score=man.P_true)
+    else:
+        man = man[~man.is_rotator.astype(bool) & man.P_phot_expected.notna()]
+        man = man.assign(p_score=man.P_phot_expected)
+    root = resampled_root()
+    return [dict(kind="wg6r", path=str(root / r.zip), member=r.member, season=int(r.season), star_id=str(r.star_id),
+                 true_period=float(r.p_score), load_kwargs={},
+                 meta=dict(cls=r.cls, is_eb=bool(r.is_eb), is_rotator=bool(r.is_rotator), wfmag=r.wfmag,
+                           fl_template=r.fl_template, P_true=r.P_true, season=int(r.season), path=str(root / r.zip)))
+            for r in man.itertuples()]
+
+
 def build_tasks(args) -> list:
     """Translate CLI dataset arguments into a list of task dicts."""
     if args.synthetic:
@@ -573,6 +621,8 @@ def build_tasks(args) -> list:
         sectors = None if all(p is None for p in pats) else pats
         return [dict(kind="synthetic", lc=lc, star_id=lc.star_id)
                 for lc in make_suite(args.synthetic, seed=args.seed, sectors=sectors)]
+    if parse_wg6_dataset(args.manifest) is not None:
+        return build_wg6_tasks(args.manifest)
     man = pd.read_csv(args.manifest)
     if "path" not in man.columns:
         raise SystemExit(f"{args.manifest} needs a 'path' column")
@@ -964,7 +1014,7 @@ def main(argv=None):
         log.unlink()
 
     tasks = [t for t in build_tasks(args) if t["star_id"] not in done]
-    missing = [t["path"] for t in tasks if t["kind"] == "fits" and not Path(t["path"]).exists()]
+    missing = [t["path"] for t in tasks if t["kind"] in ("fits", "wg6r") and not Path(t["path"]).exists()]
     if missing:
         raise SystemExit(f"{len(missing)}/{len(tasks)} manifest files not found (first: {missing[0]}). "
                          "Pass --data-root (dev sets: data/smarts_dev) or set $SMARTS_DATA_ROOT; "

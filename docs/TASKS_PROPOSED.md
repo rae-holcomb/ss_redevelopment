@@ -370,6 +370,7 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Needs Rae:** (i) vs (ii), and the GP package.
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
+- **Status:** done 2026-11-13, awaiting Rae's review (`reports/2026-11-13_p35-wg6-loader/`, branch `claude/p35-wg6-loader-ef0d37`). CEP absent from the improved set; non-rotator scoring needs a decision (report Q1).
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
 - **Idea:**
   - Loader: `load_wg6_roman(zip_or_path, member=None, band="F146", season=None)` reads in place from the zips (no

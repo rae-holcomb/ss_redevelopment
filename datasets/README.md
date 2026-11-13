@@ -121,3 +121,14 @@ quota and count. The full tables and plots are in `reports/2026-10-15_t2-dev-set
 - It is resumable and writes everything atomically.
 - `tests/test_datasets.py::test_build_reproducible_from_seed` checks that a rebuild
   reproduces these files exactly.
+
+## WG6 Roman-resampled (P35)
+
+`wg6_roman_v0.csv` (14,253 rows; one per file x season 1-3, improved noise) is built by `tools/build_wg6_manifest.py`;
+`zip`/`member` are relative to `$WG6_RESAMPLED_ROOT` (default `/Volumes/Data_Vault/wg6_roman_data_resampled`). Split by FL
+template and by OGLE star (`eval_set` dev/holdout; **never score the holdout without Rae**). Score with dataset strings:
+
+```bash
+python benchmarks/scorecard.py --manifest wg6r_fl_v0_improved_s1 --outdir runs/wg6r_fl_s1       # FL rotators, dev
+python benchmarks/scorecard.py --manifest wg6r_contam_v0_improved_s1 --outdir runs/wg6r_contam_s1 # non-rotators (FP rate), dev
+```
