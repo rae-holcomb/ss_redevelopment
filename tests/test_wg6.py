@@ -180,6 +180,7 @@ def test_committed_manifest_is_consistent():
     assert list(man.columns) == b.COLUMNS and man.star_id.is_unique
     assert set(man.variant) == {"improved"} and set(man.season) == {1, 2, 3}
     b.check_split(man)
+    assert (man.beyond_reach.astype(bool) == (man.P_true > 35.5)).all()
     assert man[man.is_eb.astype(bool)].cls.isin(["ECL", "ELL"]).all()
     assert (man.is_rotator.astype(bool) <= (man.cls == "FL")).all()          # v0 rotators are FL only
     n = man.groupby("cls").obj_id.nunique()
@@ -195,12 +196,18 @@ def test_scorecard_wg6_dataset_strings():
     fl = sc.build_wg6_tasks("wg6r_fl_v0_improved_s2")
     co = sc.build_wg6_tasks("wg6r_contam_v0_improved_s2")
     man = pd.read_csv(MAN, low_memory=False)
-    assert len(fl) == ((man.cls == "FL") & man.is_rotator & (man.eval_set == "dev") & (man.season == 2)).sum()
+    assert len(fl) == ((man.cls == "FL") & man.is_rotator & ~man.beyond_reach & (man.eval_set == "dev") & (man.season == 2)).sum()
     assert all(t["kind"] == "wg6r" and t["season"] == 2 and t["true_period"] > 0 for t in fl + co)
     assert all(not t["meta"]["is_rotator"] for t in co) and {"ECL", "ELL"} <= {t["meta"]["cls"] for t in co}
     assert not ({t["star_id"] for t in fl} & {t["star_id"] for t in co})
     holdout = set(man[man.eval_set == "holdout"].star_id)
     assert not ({t["star_id"] for t in fl + co} & holdout)                   # never selects the holdout
+    be = sc.build_wg6_tasks("wg6r_beyond_v0_improved_s2")
+    assert be and all(t["meta"]["P_true"] > 35.5 for t in be)
+    assert not ({t["star_id"] for t in be} & {t["star_id"] for t in fl + co})          # disjoint from the main sets
+    assert all(t["meta"]["P_true"] <= 35.5 for t in fl + co)
+    assert {"HB", "LPV"} <= {t["meta"]["cls"] for t in be}
+    assert len(fl) + len([t for t in be if t["meta"]["is_rotator"]]) == ((man.cls == "FL") & man.is_rotator & (man.eval_set == "dev") & (man.season == 2)).sum()
     ell = next(t for t in co if t["meta"]["cls"] == "ELL")
     assert ell["true_period"] == pytest.approx(ell["meta"]["P_true"] / 2)    # EBs scored at P_orb/2
 

@@ -22,12 +22,14 @@ One row per (file, season). Columns:
     season            1-3
     is_rotator        True for FL objects with a literature rotation period
     is_eb             True for ECL and ELL (flagged class, not plain negatives)
+    beyond_reach      P_true > 35.5 d (= R/2 of a 71-d season): cannot be recovered from one season. Left out of the
+                      wg6r_fl_* / wg6r_contam_* strings; scored separately as wg6r_beyond_*
     in_raw            star is also in the raw archival WG6 set
     eval_set          dev | holdout. Split by FL template (and by OGLE star): nothing is on both sides.
                       The holdout is never evaluated without Rae's go-ahead.
 
 Selection (seeded, deterministic): ~300 stars per contaminant class (ECL, ELL, T2CEP, RRLYR; CEP has no improved
-files); all of HB/DSCT/LPV/CV up to ``--n-stress`` (100); every FL rotator object at ``--fl-mags`` (17 and 20); the 79 FL
+files: Rae is asking WG6 for it); all of HB/DSCT/LPV/CV up to ``--n-stress`` (100); every FL rotator object at ``--fl-mags`` (17 and 20); the 79 FL
 ``flat`` objects as non-rotator negatives. ~20% of templates / stars go to the holdout.
 
 Inputs: the scoping report's committed inventory + truth tables (``--inventory``, ``--truth``). If the inventory file is
@@ -53,11 +55,13 @@ sys.path.insert(0, str(REPO / "tools/audit"))
 
 SCOPING = REPO / "reports/2026-11-12_wg6-dataset-scoping/data/resampled"
 DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data_resampled"
+SEASON_DAYS = 71.0
+BEYOND_REACH_P = SEASON_DAYS / 2   # R/2 of one contiguous season (D4); P_true above it cannot be recovered from one season
 CONTAM_CLASSES = ("ECL", "ELL", "T2CEP", "RRLYR")      # ~n-per-class stars each (CEP: no improved files)
 STRESS_CLASSES = ("HB", "DSCT", "LPV", "CV")           # smaller stress sets
 EB_CLASSES = ("ECL", "ELL")
 COLUMNS = ["star_id", "obj_id", "zip", "member", "variant", "cls", "subtype", "P_true", "p_convention",
-           "P_phot_expected", "fl_template", "wfmag", "season", "is_rotator", "is_eb", "in_raw", "eval_set"]
+           "P_phot_expected", "fl_template", "wfmag", "season", "is_rotator", "is_eb", "beyond_reach", "in_raw", "eval_set"]
 
 
 def _h(key: str, salt: str) -> int:
@@ -119,7 +123,8 @@ def build(inv: pd.DataFrame, truth: pd.DataFrame, n_per_class: int = 300, n_stre
         for k in seasons:
             rows.append(dict(star_id=f"{base}_s{k}", obj_id=r.obj_id, zip=r.zip, member=r.member, variant="improved",
                              cls=cls, subtype=sub, P_true=P, p_convention=conv, P_phot_expected=pexp, fl_template=tmpl,
-                             wfmag=wf, season=k, is_rotator=rotator, is_eb=cls in EB_CLASSES, in_raw=in_raw,
+                             wfmag=wf, season=k, is_rotator=rotator, is_eb=cls in EB_CLASSES,
+                             beyond_reach=bool(np.isfinite(P) and P > BEYOND_REACH_P), in_raw=in_raw,
                              eval_set=eval_set))
 
     # --- FL: split by template (rotators) / by object (flat) -------------------------------------------------------

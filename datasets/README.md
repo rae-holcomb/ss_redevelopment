@@ -131,4 +131,6 @@ template and by OGLE star (`eval_set` dev/holdout; **never score the holdout wit
 ```bash
 python benchmarks/scorecard.py --manifest wg6r_fl_v0_improved_s1 --outdir runs/wg6r_fl_s1       # FL rotators, dev
 python benchmarks/scorecard.py --manifest wg6r_contam_v0_improved_s1 --outdir runs/wg6r_contam_s1 # non-rotators (FP rate), dev
+python benchmarks/scorecard.py --manifest wg6r_beyond_v0_improved_s1 --outdir runs/wg6r_beyond_s1 # stars with P_true > R/2 (35.5 d)
 ```
+On `contam`, "correct" = lock on the variable's own period = false positive; on ECL/ELL `double` = P_orb lock.

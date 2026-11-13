@@ -573,18 +573,24 @@ def dataset_string(args) -> str:
     return base + extra
 
 
-WG6_DATASET_RE = re.compile(r"^wg6r_(fl|contam)_v0_improved_s([1-3])$")
+WG6_DATASET_RE = re.compile(r"^wg6r_(fl|contam|beyond)_v0_improved_s([1-3])$")
 WG6_MANIFEST = ROOT / "datasets" / "wg6_roman_v0.csv"
 
 
 def parse_wg6_dataset(name):
     """Parse a WG6 Roman dataset string -> (set, season), or None if `name` isn't one.
 
-    ``wg6r_fl_v0_improved_s<k>``: dev-side FL rotators (scored against the template rotation period).
-    ``wg6r_contam_v0_improved_s<k>``: dev-side non-rotators with a catalogue period (ECL, ELL, T2CEP, RRLYR, HB, DSCT,
-    LPV), scored against ``P_phot_expected`` (P_orb/2 for ECL/ELL), so a "correct" there means the pipeline locked onto the
-    contaminant's own period, i.e. a false positive. CV and FL-flat have no period and are left out. Season k is 1-3
-    (the early GBTDS seasons, assumption in claude_files/wg6.py). The holdout is never selected.
+    ``wg6r_fl_v0_improved_s<k>``: dev FL rotators (reachable: P_true <= R/2), scored against the template rotation period.
+    ``wg6r_contam_v0_improved_s<k>``: dev non-rotators with a catalogue period and ``beyond_reach`` False (ECL, ELL, T2CEP,
+    RRLYR, DSCT, ...), scored against ``P_phot_expected`` (P_orb/2 for ECL/ELL). **On this set "correct" means the pipeline
+    locked onto the variable's own period: a false positive for rotation, to be reported as a per-class FP rate, not a
+    success.** For ECL/ELL the full orbital period is also an acceptable, EB-flagged lock: against P_orb/2 it shows up as
+    the ``double`` alias, so ``double`` on ECL/ELL = P_orb lock. (evaluation.py is unchanged.) CV and FL-flat have no
+    period and are left out.
+    ``wg6r_beyond_v0_improved_s<k>``: separate stress set of every dev star with ``beyond_reach`` (P_true > R/2 = 35.5 d: all
+    HB and LPV, ~1/3 of ELL, the 89 d FL template); cannot be recovered from one season, so read it as a decline/FP stress
+    test. Same true-period rule as above (FL rotators against P_true).
+    Season k is 1-3 (the early GBTDS seasons, assumption in claude_files/wg6.py). The holdout is never selected.
     """
     m = WG6_DATASET_RE.match(str(name))
     return (m.group(1), int(m.group(2))) if m else None
@@ -599,12 +605,15 @@ def build_wg6_tasks(name) -> list:
     which, season = parse_wg6_dataset(name)
     man = pd.read_csv(WG6_MANIFEST, low_memory=False)
     man = man[(man.eval_set == "dev") & (man.season == season)]
+    br = man.beyond_reach.astype(bool)
+    rot = man.is_rotator.astype(bool)
     if which == "fl":
-        man = man[(man.cls == "FL") & man.is_rotator.astype(bool)]
-        man = man.assign(p_score=man.P_true)
-    else:
-        man = man[~man.is_rotator.astype(bool) & man.P_phot_expected.notna()]
-        man = man.assign(p_score=man.P_phot_expected)
+        man = man[(man.cls == "FL") & rot & ~br]
+    elif which == "contam":
+        man = man[~rot & ~br & man.P_phot_expected.notna()]
+    else:  # beyond
+        man = man[br & man.P_phot_expected.notna()]
+    man = man.assign(p_score=np.where(man.is_rotator.astype(bool), man.P_true, man.P_phot_expected))
     root = resampled_root()
     return [dict(kind="wg6r", path=str(root / r.zip), member=r.member, season=int(r.season), star_id=str(r.star_id),
                  true_period=float(r.p_score), load_kwargs={},

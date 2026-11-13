@@ -6,7 +6,7 @@
 - Built `claude_files/wg6.py` (`load_wg6_roman`, `load_wg6_raw`), `tools/build_wg6_manifest.py`, `datasets/wg6_roman_v0.csv` (14,253 rows, 3,072 objects, improved noise, seasons 1–3, dev/holdout split by FL template and by OGLE star), and the dataset strings `wg6r_{fl,contam}_v0_improved_s{1,2,3}` in `benchmarks/scorecard.py`. 12 new tests; full pytest passes.
 - **Deviation: no CEP.** The improved set has no Cepheids (only the 24 simple-noise ones), so CEP is absent from v0. T2CEP is 100 stars, not 300.
 - Quick check (20 stars, `--n-workers 2`): 18/20 correct, ~1 s/star, nothing crashes. No full WG6 scorecard was run.
-- Needs your call: scoring of non-rotators (below), CEP, and how many FL magnitudes to keep.
+- **Rae's answers (2026-11-13, applied):** contaminant "correct" = lock on the variable's own period (a false positive, per-class FP rate); on ECL/ELL `double` = P_orb lock (EB-flagged, acceptable); CEP left out (Rae is asking WG6); FL stays at WFmag 17/20; stars with P_true > R/2 get a `beyond_reach` column, are excluded from `wg6r_fl_*`/`wg6r_contam_*` and scored in a new `wg6r_beyond_v0_improved_s<k>`; seasons 1–3 stay an assumption; manifest stays v0 (not frozen) until merged.
 
 ## Question / goal
 Task P35 (`docs/TASKS_PROPOSED.md`), part of T28: the WG6 Roman-resampled loader plus a first frozen-candidate manifest, so a later task can run the first WG6 scorecard. No goals in `benchmarks/goals.json` are touched. Rae's 2026-11-13 decisions are applied: improved noise only; three early seasons (assumption: seasons 1–3 of WG6's six consecutive seasons); EBs/ELLs flagged (`is_eb`); no rotators beyond FL here (the schema holds them later via `is_rotator`, `cls`, `variant`).
@@ -27,7 +27,7 @@ One season-1 F146 curve per class, read straight from the zips. FL shows the 2 d
 ### What periods the manifest holds
 ![P_true histogram](figures/p_true_hist.png)
 
-Dashed = 71-d season, dotted = R/2 = 35.5 d (the searchable limit, D4). **All 93 HB and 100 LPV stars, 110 of 300 ELL and 31 of 1,600 FL (the 89 d template) have P_true above R/2**, so a single season cannot recover them by construction. Keep them in the contaminant set but don't read their "correct" rate as a failure. The 54 FL templates cover 0.2–5 d plus 13 d and 89 d: this is the thin rotator coverage P34 is meant to fix.
+Dashed = 71-d season, dotted = R/2 = 35.5 d (the searchable limit, D4). **All 93 HB and 100 LPV stars, 110 of 300 ELL and 31 of 1,600 FL (the 89 d template) have P_true above R/2**, so a single season cannot recover them by construction. They are flagged `beyond_reach` and scored apart in `wg6r_beyond_*`. The 54 FL templates cover 0.2–5 d plus 13 d and 89 d: this is the thin rotator coverage P34 is meant to fix.
 
 ### Counts by class × season × dev/holdout
 ![counts](figures/counts_class_season_split.png)
@@ -40,17 +40,17 @@ Labels are dev/holdout rows. Seasons have identical counts by construction (one 
 10 FL rotators (distinct templates, WFmag 17) plus 10 contaminants (2 each of ECL, ELL, T2CEP, RRLYR, DSCT), season 1, `--n-workers 2` under `nice`, through the real `score_one_star` path (`data/quick_check.csv`). 18 of 20 are `correct`: 8/10 FL and all 10 contaminants (2/2 each of ECL/ELL vs P_orb/2, T2CEP, RRLYR, DSCT; the contaminant "correct" is a lock on the variable's own period, i.e. a false positive for rotation: see Q1). Misses: the 89 d FL template (beyond one season, no answer), and one FL star at 1.70 d where the pipeline returned 2.31 d (`wrong`). Roughly 1 s per star-season. This is a plumbing test, not a performance number: 10 stars, no baseline.
 
 ## What didn't work
-- **CEP.** Planned at ~300 stars; the improved folder has none and the 24 simple-noise CEP stars would break the "improved only" rule, so I left them out.
+- **CEP.** Planned at ~300 stars; the improved folder has none and the 24 simple-noise CEP stars would break the "improved only" rule, so they are left out (Rae is asking WG6).
 - The ECL/ELL/T2CEP/RRLYR/HB/LPV selection ends up with an unrepresentative quick-check sample because I took the first stars in manifest order (ECL/ELL in the check are the shortest-period ones). Use the full s1 scorecard for rates.
 
-## Open questions for Rae
-1. **How should non-rotators be scored?** On `wg6r_contam_*`, `classify_period(P, P_phot_expected)` says `correct` when the pipeline locks onto the contaminant's own period, which is a *false positive* for rotation. I did not change `evaluation.py`. Proposal: in the first WG6 scorecard, read `contam` outcomes as "locked on the variable's period" (FP) and report FP rate per class, plus the `eb_period` tag for ECL/ELL candidates near P_orb or P_orb/2 (P36/T29). CV and FL-flat have no period, so they are not in `contam` (they are in the manifest for ranker negatives); a star-level "declined = good" metric for them needs new logic.
-2. **ECL/ELL target:** scored at P_orb/2 only. Should P_orb count as an acceptable (flagged) answer too?
-3. **CEP:** wait for WG6 to ship an improved CEP set, or use the 24 simple-noise stars as a labelled stress set?
-4. **FL magnitudes:** v0 keeps WFmag 17 and 20 (the earlier compute budget). "All FL rotators" at all six copies (16–21) would be 4.8k objects × seasons; it is a one-flag change (`--fl-mags`) if you want it.
-5. **HB/LPV/ELL with P > R/2:** keep in `contam` as is, or move to a "beyond reach" stress subset so the FP rate is not confounded?
-6. **Seasons 1–3 as "early":** WG6's grid is six consecutive seasons with no early/late split; the loader/manifest assume the first three. If WG6's real early/late layout differs (non-consecutive), the season numbering has to be revisited.
-7. The manifest is v0 and frozen on your approval; its `holdout` side is never scored by these dataset strings.
+## Decisions (Rae, 2026-11-13, relayed by the coordinator) and how they are applied
+1. **Non-rotators:** `evaluation.py` unchanged. On `wg6r_contam_*`, `correct` means the pipeline locked onto the variable's own period: a **false positive for rotation**, reported as a per-class FP rate, not a success (also in the `parse_wg6_dataset` docstring). CV and FL-flat have no period and are not in `contam`.
+2. **ECL/ELL:** the full orbital period also counts as an acceptable, EB-flagged lock. Scored against P_orb/2 it is the `double` alias, so **`double` on ECL/ELL = P_orb lock**.
+3. **CEP:** left out; Rae is asking WG6 for an improved CEP set.
+4. **FL magnitudes:** WFmag 17 and 20 kept.
+5. **Beyond reach:** new manifest column `beyond_reach` (P_true > 35.5 d = R/2 of a 71-d season: all HB and LPV, 110 of 300 ELL, the 89 d FL template). These stars are excluded from `wg6r_fl_*` and `wg6r_contam_*`, and scored as the separate stress set `wg6r_beyond_v0_improved_s<k>` (test: `test_scorecard_wg6_dataset_strings`, plus a manifest consistency check).
+6. **Seasons 1–3 as "early":** kept, recorded as an assumption in `claude_files/wg6.py`.
+7. **Freeze:** not yet. The manifest stays v0 until merged; its holdout side is never scored by these strings.
 
 ## Reproduce
 ```bash
