@@ -410,6 +410,27 @@ for confirmation (ask Rae first).
 
 ---
 
+### T32. Make the cheap `local` comb solver robust to drifting ACF peaks (Rae, 2026-11-13; from T31, P40)
+- **Agent:** `method-improver`. Builds on T31 (`claude/t31-comb-fit-speed-e7e5bb`; `SS_COMB_VARIANT=local`,
+  `comb_fit._fit_comb_local`). Rae adopted `local_screen2` as the default; this task aims to make the ~6x-faster `local`
+  usable on its own.
+- **Problem:** `local` gains 33 dev_medium stars (29 are main's `frac_vertex_in_window` declines, many obvious rotators whose
+  later ACF peaks drift), but its vertex gate rejects 9% of candidates vs 60% under main, so wrong rises on assigned
+  coverage (0.055 -> 0.066; 28 stars none -> wrong).
+- **Explore all five (Rae's own ideas matched 1 and 2):**
+  1. sequential peak tracking (search near vertex_{n-1}+P, not n*P);
+  2. vertex tolerance growing with n (sqrt(n), n, or peak width);
+  3. a quadratic drift term in the closed-form line fit, with `a` as a candidate ranker feature;
+  4. height/SNR weighting of peaks in the IRLS fit;
+  5. replacing `frac_vertex_in_window` with a residual-scatter statistic.
+- **First step (no new scorecards):** plot vertex residual vs n for (a) the 29 gains, (b) the 28 none->wrong stars,
+  (c) shared-correct stars (`reports/2026-11-13_t31-comb-fit-speed/data/changed_stars_*`).
+- **Done when:** each idea is a `SS_COMB_VARIANT` switch scored on dev_medium full-year + assigned with `check_goals
+  --baseline`; a speed/success/wrong comparison against `lsq`, `local` and `local_screen2`; residual-vs-n and gained/lost
+  example figures; a recommendation. Machine-safety rules apply (`nice -n 15`, 3 workers, one heavy job at a time).
+
+---
+
 ## Phase 3: features
 
 *Done here (moved to `docs/TASKS_DONE.md`): T9.*
