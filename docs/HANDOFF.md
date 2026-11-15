@@ -1,4 +1,4 @@
-# Handoff note (2026-11-13, coordinator → fresh coordinator)
+# Handoff note (2026-11-13, updated 2026-11-15; coordinator → fresh coordinator)
 
 For a **fresh coordinator session.** The previous coordinator ran 2026-11-11 → 2026-11-13 (summarized twice) and was
 handed off to keep turns cheap on Rae's Pro plan.
@@ -108,13 +108,21 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
 - Midway review leftovers: validation sources; Roman scoping now vs later.
 
-## Overnight queue 2026-11-13 (coordinator; log `runs/overnight_2026-11-13/queue.log`)
-Script: the coordinator's scratchpad `overnight_2026-11-13.zsh` (all steps `--resume`; rerun it if interrupted).
-1. pytest on trial merges of T32 and P35. 2. RT2 profile baseline -> `runs/overnight_2026-11-13/profile15_fullyear_v7.json`
-(review, then commit to `benchmarks/baselines/`). 3. P39 (`claude/p39-acf-fft-abs2`, reproducible |c|^2 in acf_fft +
-ml_features) scorecards dev_medium fy/as + synth200 vs `_v7` -> candidate `_v8`. 4. P31 tables on P39 code:
-`runs/p31_dev_medium_{assigned,fullyear}`, drive `extracted/p31_tables/{train_3k,neg_dev_medium,neg_train}`.
-Default comb fit is still `local_screen2`. If Rae adopts T32's `local_tol`, the tables need another (overnight) rebuild.
+## Status 2026-11-15 (coordinator #2)
+- **Merged and pushed:** T32 (`ec03830`; its follow-up P41 is **P43** on main) and P39 (`80fa98c`). Rae (2026-11-15):
+  adopt `local_tol` as the default; try P43; add `drift_a_frac` as a ranker feature; **no threshold scans on dev_medium**.
+- **Branch `claude/local-tol-default`** (pushed, NOT merged): default -> `local_tol` + gate-test updates. 507 pass; the
+  one failure, `test_default_scorecard_rows_bit_identical_to_baseline`, needs the synth200 baseline regenerated on the new
+  default. Merge it together with the `_v8` refresh.
+- **Overnight queue 2026-11-13: cancelled** 2026-11-15 (the rest ran on `local_screen2`, now obsolete). It deadlocked
+  (a watcher's command line contained "pytest", matching the queue's own idle check; put follow-up jobs in script
+  files). Done before cancelling: P35 trial-merge pytest (487 passed); RT2 profile on `local_screen2` (stale, redo on
+  local_tol); P39 full-year scorecard = `_v7` on every guarded metric. Logs in `runs/overnight_2026-11-13/`.
+- **Still to test:** P34 (roman-rotators) trial-merge pytest, ~90 s.
+- **Plan:** (1) daytime session: P43 decayed-tail fix + `drift_a_frac` in `ml_features.py`, on top of
+  `claude/local-tol-default`, scored against `local_tol` runs; (2) one `_v8` refresh on the final default (dev_medium fy+as
+  + synth200, ~15 min) + RT2 profile baseline; merge; (3) P31 ranker-table rebuild overnight (~2.5 h, needs the drive).
+  Rae paused heavy compute 2026-11-15 ~02:00: wait for her go before any of these.
 
 ## Next up (after the above)
 - **Runtime baseline for goal RT2** (no Rae input needed): when the machine is idle (after T32), run
