@@ -17,7 +17,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "benchmarks"))
 
 from acf_utils import STAGE1_MAX_LAG_FRAC, compute_acf
-from comb_fit import (GATE_NAMES, InitialGuess, failed_gate_names, fit_rotation_period,
+from comb_fit import (EXTRA_GATE_NAMES, GATE_NAMES, InitialGuess, failed_gate_names, fit_rotation_period,
                       format_decline_reason)
 from guesses import gather_initial_guesses
 from synthetic import make_lightcurve
@@ -51,10 +51,13 @@ def _check_consistent(res, half_lag_gate=True):
     assert res.candidates
     for r in res.candidates:
         gr = r.gate_results
-        assert set(gr) == set(GATE_NAMES)
+        # T32 variants (default local_tol since 2026-11-15) add opt-in gates from EXTRA_GATE_NAMES
+        assert set(GATE_NAMES) <= set(gr) <= set(GATE_NAMES + EXTRA_GATE_NAMES)
         for name, d in gr.items():
             assert {"passed", "value", "threshold", "op", "enabled"} <= set(d)
-        assert r.passed_base_gates == all(gr[g]["passed"] for g in BASE_GATES)
+        # the active vertex gate is a base gate: frac_vertex_in_window, or (T32 variants) the extra gate replacing it
+        base = [g for g in BASE_GATES if gr[g]["enabled"]] + [g for g in EXTRA_GATE_NAMES if g in gr]
+        assert r.passed_base_gates == all(gr[g]["passed"] for g in base)
         assert r.passed_gates == (len(r.failed_gates) == 0)
         assert r.failed_gates == failed_gate_names(gr)
         assert gr["half_lag_consistency"]["enabled"] == half_lag_gate
@@ -74,7 +77,7 @@ def test_declined_star_names_rejecting_gates(red_noise_1s):
     reason = res.decline_reason
     assert reason["kind"] == "gates"
     assert reason["gates"], "a gate decline must name at least one gate"
-    assert set(reason["gates"]) <= set(GATE_NAMES)
+    assert set(reason["gates"]) <= set(GATE_NAMES + EXTRA_GATE_NAMES)
     best = reason["best_candidates"]
     assert 1 <= len(best) <= 3
     for b, r in zip(best, res.candidates):  # best_candidates follow the redchi order

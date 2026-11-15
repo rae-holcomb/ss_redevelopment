@@ -33,11 +33,11 @@ def _drift_acf(P=3.0, a=0.0, n=9, dt=0.01, noise=0.0, seed=0, jitter=None, heigh
 
 # ---------------------------------------------------------------- switches
 def test_t32_variants_registered_and_default_unchanged():
-    """Every T32 switch resolves, and the default comb variant is still local_screen2 (Rae's call)."""
+    """Every T32 switch resolves, and the default comb variant is local_tol (Rae, 2026-11-15)."""
     for name in ("local_track", "local_tol", "local_tol_lin", "local_tol_width", "local_quad", "local_snrw",
                  "local_scatter", "local_track_tol", "local_track_scatter", "local_robust"):
         assert C.resolve_comb_variant(name)[1]["solver"] == "local"
-    assert C.DEFAULT_COMB_VARIANT == "local_screen2"
+    assert C.DEFAULT_COMB_VARIANT == "local_tol"
 
 
 def test_local_variant_unchanged_by_t32_options():

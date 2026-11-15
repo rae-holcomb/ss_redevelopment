@@ -111,15 +111,21 @@ def test_clean_candidate_not_lost_to_noise_comb(params):
 
 @pytest.mark.slow
 def test_new_gates_can_be_switched_off():
-    """Backward compatibility: with the T18 gates disabled, the old answer comes back."""
-    res, Pm = _run(_red_noise(1, 901501), half_lag_gate=False, few_peaks_min_acf_height=None)
+    """Backward compatibility: with the T18 gates disabled, the old answer comes back.
+
+    Pinned to the pre-T32 comb fit: local_tol's vertex-tolerance gate (default since 2026-11-15)
+    declines this red-noise star on its own, which is not what this test is about."""
+    res, Pm = _run(_red_noise(1, 901501), half_lag_gate=False, few_peaks_min_acf_height=None,
+                   comb_variant="local_screen2")
     assert res.success and Pm < 0.5
 
 
 @pytest.mark.slow
 def test_gate_diagnostics_recorded():
-    """Every fitted candidate carries the contrast diagnostics and its base-gate verdict."""
-    res, _ = _run(_red_noise(1, 901501))
+    """Every fitted candidate carries the contrast diagnostics and its base-gate verdict.
+
+    Pinned to the pre-T32 comb fit, whose candidates on this star pass the base gates and fail a T18 gate."""
+    res, _ = _run(_red_noise(1, 901501), comb_variant="local_screen2")
     assert res.candidates
     for c in res.candidates:
         for k in ("acf_half_lag_contrast", "half_lag_min_term", "acf_height_at_P"):
