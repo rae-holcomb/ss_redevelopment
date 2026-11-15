@@ -13,7 +13,8 @@ import comb_fit as C
 from guesses import InitialGuess
 
 P43_VARIANTS = ("local_tol_pos", "local_tol_tail", "local_tol_norej", "local_tol_norej_tail",
-                "local_tol_norej_pos", "local_tol_tail_rh", "local_tol_norej_rh")
+                "local_tol_norej_pos", "local_tol_tail_rh", "local_tol_norej_rh", "local_tol_snr0",
+                "local_tol_tail_snr0", "local_tol_norej_snr0", "local_tol_norej_tail_snr0")
 
 
 def _decaying_cos_acf(P=3.0, tau=6.0, n_periods=8.6, dt=0.01, noise=0.01, seed=1):
@@ -47,7 +48,7 @@ def test_p43_variants_registered_with_local_tol_thresholds():
     """Every P43 variant resolves, is local_tol plus only its own new keys, and the default is unchanged."""
     base = C.COMB_VARIANTS["local_tol"]
     assert base == dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
-    new_keys = {"tol_count", "tol_tail", "reject", "height_fit"}
+    new_keys = {"tol_count", "tol_tail", "reject", "height_fit", "snr_skip_lag0"}
     for name in P43_VARIANTS:
         spec = C.resolve_comb_variant(name)[1]
         assert {k: v for k, v in spec.items() if k not in new_keys} == base, name
@@ -74,7 +75,8 @@ def test_local_tol_unchanged_by_p43_keys():
     lags, acf = _decaying_cos_acf(tau=12.0, noise=0.03)
     g = [InitialGuess(P0=3.05, method="t", t0=0.0)]
     a = C.fit_rotation_period(lags, acf, g, comb_variant="local_tol", max_period=None).candidates[0]
-    spec = dict(C.COMB_VARIANTS["local_tol"], tol_count="all", tol_tail=False, reject=True, height_fit="ls")
+    spec = dict(C.COMB_VARIANTS["local_tol"], tol_count="all", tol_tail=False, reject=True, height_fit="ls",
+                snr_skip_lag0=False)
     C.COMB_VARIANTS["_p43_test_explicit"] = spec
     try:
         b = C.fit_rotation_period(lags, acf, g, comb_variant="_p43_test_explicit", max_period=None).candidates[0]
@@ -226,3 +228,52 @@ def test_drift_a_frac_in_candidate_feature_table():
     assert "drift_a_frac" in df.columns
     assert np.isfinite(df["drift_a_frac"]).all()
     assert df["drift_a_frac"].iloc[0] == C.comb_drift_frac(res.candidates[0].fit)
+
+
+# ---------------------------------------------------------------- snr_skip_lag0
+def _lag0_dominated_acf(P=3.0, ripple=0.03, n_periods=8.6, dt=0.01):
+    """A tall lag-0 peak (white-noise-like decay) plus a faint comb of ripples at k P: the kind of noise comb
+    whose mean height SNR is carried by the lag-0 tooth alone."""
+    lags = np.arange(0, n_periods * P, dt)
+    acf = np.exp(-lags / 0.3) + ripple * np.cos(2 * np.pi * lags / P)
+    return lags, acf
+
+
+def test_mean_snr_without_lag0_drops_only_the_lag0_tooth():
+    """_mean_snr_without_lag0 averages height_snr over teeth with centre >= P/2."""
+    lags, acf = _lag0_dominated_acf()
+    fit = C._fit_single_candidate(lags, acf, 3.0, 0.0, comb_spec=C.COMB_VARIANTS["local_tol_norej"])
+    diag = C.assess_rotation_candidate(fit, acf, min_peaks=4)
+    ns = sorted(fit.per_peak)
+    assert ns[0] == 0 and fit.per_peak[0]["center"] < 1.5
+    full = float(np.nanmean(diag["height_snr"]))
+    no0 = C._mean_snr_without_lag0(fit, diag)
+    assert no0 == pytest.approx(float(np.nanmean(diag["height_snr"][1:])))
+    assert full > 1.0 > no0  # the lag-0 tooth alone lifts this comb over the gate
+
+
+def test_snr_skip_lag0_declines_a_lag0_propped_comb():
+    """Without rejection, a faint-ripple comb passes mean_height_snr only thanks to its lag-0 tooth;
+    snr_skip_lag0 declines it. The gate record shows the value actually gated."""
+    lags, acf = _lag0_dominated_acf()
+    g = [InitialGuess(P0=3.0, method="t", t0=0.0)]
+    kw = dict(max_period=None, half_lag_gate=False)
+    a = C.fit_rotation_period(lags, acf, g, comb_variant="local_tol_norej", **kw).candidates[0]
+    b = C.fit_rotation_period(lags, acf, g, comb_variant="local_tol_norej_snr0", **kw).candidates[0]
+    assert "mean_height_snr" not in a.failed_gates
+    assert "mean_height_snr" in b.failed_gates and not b.passed_gates
+    assert b.gate_results["mean_height_snr"]["value"] == b.diagnostics["mean_height_snr_gate"] < 1.0
+    np.testing.assert_array_equal(a.diagnostics["height_snr"], b.diagnostics["height_snr"])  # features unchanged
+
+
+def test_norej_snr0_still_recovers_the_decaying_rotator():
+    """The fix for the rejection cascade survives snr_skip_lag0 for coherence time tau = 8/3 P: local_tol
+    declines it (cascade drops 2 teeth), the snr0 variants pass. (At tau = 2 P the teeth after lag 0 average
+    SNR 0.86, so snr0 declines that one: the stricter gate is the price of dropping the lag-0 prop.)"""
+    lags, acf = _decaying_cos_acf(tau=8.0)
+    g0 = [InitialGuess(P0=3.0, method="t", t0=0.0)]
+    assert not C.fit_rotation_period(lags, acf, g0, comb_variant="local_tol", max_period=None).success
+    g = [InitialGuess(P0=3.0, method="t", t0=0.0)]
+    for v in ("local_tol_norej_snr0", "local_tol_norej_tail_snr0"):
+        r = C.fit_rotation_period(lags, acf, g, comb_variant=v, max_period=None)
+        assert r.success and r.best_fit.P == pytest.approx(3.0, rel=0.01), v

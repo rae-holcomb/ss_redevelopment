@@ -164,6 +164,14 @@ COMB_VARIANTS = {
     "local_tol_norej_pos": dict(_LOCAL_TOL, reject=False, tol_count="positive"),
     "local_tol_tail_rh": dict(_LOCAL_TOL, tol_tail=True, height_fit="robust"),
     "local_tol_norej_rh": dict(_LOCAL_TOL, reject=False, height_fit="robust"),
+    #   snr_skip_lag0  True: the mean_height_snr gate averages over every tooth except the lag-0 one (centre
+    #                  < P/2), whose height is ~ACF(0) = 1 whatever P is. Added after the screen showed that
+    #                  reject=False raises wrong answers because the kept lag-0 tooth props up mean SNR of
+    #                  noise combs (the MAD loop had been dropping it). Features (height_snr) are unchanged.
+    "local_tol_snr0": dict(_LOCAL_TOL, snr_skip_lag0=True),
+    "local_tol_tail_snr0": dict(_LOCAL_TOL, tol_tail=True, snr_skip_lag0=True),
+    "local_tol_norej_snr0": dict(_LOCAL_TOL, reject=False, snr_skip_lag0=True),
+    "local_tol_norej_tail_snr0": dict(_LOCAL_TOL, reject=False, tol_tail=True, snr_skip_lag0=True),
 }
 DEFAULT_COMB_VARIANT = "local_tol"  # Rae, 2026-11-15 (T32 merge); was "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -1901,7 +1909,7 @@ def _gate_results(
     guard switched on. `passed` is the measured outcome even for a disabled
     gate; failed_gate_names ignores disabled gates.
     """
-    mean_snr = float(np.nanmean(diag["height_snr"]))
+    mean_snr = float(diag.get("mean_height_snr_gate", np.nanmean(diag["height_snr"])))
     few_enabled = bool(few and few_peaks_min_acf_height is not None)
     return {
         "n_peaks": dict(passed=bool(fit.n_peaks_used >= n_required), value=int(fit.n_peaks_used),
@@ -2052,6 +2060,18 @@ def comb_drift_frac(fit: Optional[CombFitResult], jitter_frac: float = 0.05, n_i
         r = cc - Xq @ coef
         q = np.sqrt(1.0 / np.sqrt(1.0 + (r / f) ** 2))
     return float(coef[2]) / P
+
+
+def _mean_snr_without_lag0(fit: CombFitResult, diag: dict) -> float:
+    """Mean height SNR over the teeth except the lag-0 one (centre < P/2), as _vertex_stats counts teeth.
+
+    diag["height_snr"] is ordered by n (assess_rotation_candidate). With no tooth
+    left (only the lag-0 window), returns -inf so the gate fails.
+    """
+    ns = sorted(fit.per_peak)
+    keep = [i for i, n in enumerate(ns) if fit.per_peak[n]["center"] >= 0.5 * fit.P]
+    vals = np.asarray(diag["height_snr"], dtype=float)[keep]
+    return float(np.nanmean(vals)) if len(vals) else float("-inf")
 
 
 def failed_gate_names(gate_results: dict) -> list:
@@ -2630,10 +2650,14 @@ def fit_rotation_period(
                         raise ValueError(f"unknown vertex_gate {vgate!r}")
                 if vgate == "window" and fit.local_info:
                     diag.update(_vertex_stats(fit, spec))  # recorded (drift_a etc.), not gated
+                if spec.get("snr_skip_lag0"):
+                    # P43: the lag-0 tooth's height is ~ACF(0) by construction; leave it out of the SNR gate
+                    diag["mean_height_snr_gate"] = _mean_snr_without_lag0(fit, diag)
+                mean_snr_gate = diag.get("mean_height_snr_gate", float(np.nanmean(diag["height_snr"])))
                 base_passed = bool(
                     fit.n_peaks_used >= n_required
                     and diag["frac_positive_heights"] >= min_frac_positive_heights
-                    and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
+                    and mean_snr_gate >= min_mean_height_snr
                     and vertex_ok
                 )
                 # T18 gates (step 4b), evaluated at the fitted period

@@ -27,3 +27,23 @@
   3-10d -0.056 (just inside the 0.06 limit). This is the local_tol default itself, not P43 -- flag for the _v8 refresh.
 - Tests: tests/test_p43_decayed_tail.py, 18 pass.
 - 03:17 Harness screen (all 8 variants, both modes, rebuilds the Stage-1 cache) running.
+- 03:34 Harness (dev_medium, 8 variants; local_tol reproduces the scorecard exactly), success / wrong:
+  | variant | full-year | assigned |
+  |---|---|---|
+  | local_tol | 0.248 / 0.067 | 0.145 / 0.048 |
+  | local_tol_pos (a) | 0.249 / 0.070 | 0.145 / 0.050 |
+  | local_tol_tail (b) | 0.257 / 0.072 | 0.153 / 0.057 |
+  | local_tol_norej | 0.277 / 0.113 | 0.165 / 0.070 |
+  | local_tol_norej_tail | 0.288 / 0.133 | 0.175 / 0.088 |
+  | local_tol_norej_pos | 0.278 / 0.123 | 0.168 / 0.074 |
+  | local_tol_tail_rh (c) | 0.256 / 0.074 | 0.153 / 0.059 |
+  | local_tol_norej_rh (c) | 0.277 / 0.102 | 0.166 / 0.067 |
+  norej's 52 new full-year wrongs (all from none) are mostly long-P combs on short-P stars with mean SNR just
+  over 1: hypothesis -- the kept lag-0 tooth (height ~ ACF(0)) props up mean_height_snr of noise combs; the MAD
+  loop had been dropping it (its residual RMS is the largest), which was silently acting as a noise filter.
+- Added `snr_skip_lag0` (mean_height_snr gate over non-lag-0 teeth; no threshold change). Harness:
+  | local_tol_snr0 | 0.242 / 0.066 | 0.144 / 0.047 |
+  | local_tol_tail_snr0 | 0.250 / 0.068 | 0.150 / 0.049 |
+  | local_tol_norej_snr0 | 0.250 / 0.062 | 0.143 / 0.047 |
+  | local_tol_norej_tail_snr0 | 0.256 / 0.064 | 0.150 / 0.049 |
+  Hypothesis confirmed (norej wrong 0.113 -> 0.062). Scorecards next for norej_tail_snr0, norej_snr0, tail.
