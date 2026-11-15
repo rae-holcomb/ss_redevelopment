@@ -590,3 +590,12 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   `CLAUDE.md` (auto-loaded). Archive-at-merge rule restated in TASKS.md and AGENT_WORKFLOW.md; repo-curator gets a
   context-budget check. Untracked the gitignored `results_products/batch1/*.csv` (~100 MB, still on disk; history
   not rewritten) and tracked `.DS_Store` files.
+- **2026-11-15 — T32 merged: drift-robust `local` comb variants; default -> `local_tol`** (`reports/2026-11-13_t32-local-drift/`).
+  Drift in `local`'s gains is mostly a seed-period error (peaks fan out linearly from frozen n*P0 windows); its
+  none->wrong stars scatter randomly. New `COMB_VARIANTS`: `local_track`, `local_tol(_lin/_width)`, `local_quad` (drift
+  `a` -> `drift_a_frac` diagnostic), `local_snrw`, `local_scatter`, and combos; new gates `frac_vertex_tol` /
+  `vertex_scatter` (`EXTRA_GATE_NAMES`). `local_tol` vs `_v7`: success -0.003 / -0.002, wrong 0.088 -> 0.067 /
+  0.055 -> 0.048, 2.5-2.9x faster production path than `local_screen2`. Rae adopted it as the default (2026-11-15);
+  baselines need a `_v8` refresh and the ranker tables (P31) a rebuild on it. Follow-up P43 (decayed-tail losses;
+  P41 on the branch). **Pitfalls:** the vertex-scatter separation seen on dev_small (50 stars) vanished on dev_medium;
+  no threshold scans on dev_medium (Rae: keep the judging set clean).

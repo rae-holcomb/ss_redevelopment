@@ -417,6 +417,13 @@ for confirmation (ask Rae first).
 ---
 
 ### T32. Make the cheap `local` comb solver robust to drifting ACF peaks (Rae, 2026-11-13; from T31, P40)
+- **Status: merged 2026-11-15** (`reports/2026-11-13_t32-local-drift/`, branch `claude/t32-local-drift-ca46ba`).
+  All five ideas are `COMB_VARIANTS` switches (+3 combos), scored on dev_medium both modes vs `_v7`. `local_tol`
+  (√n vertex tolerance): 2.5-2.9x faster production path than `local_screen2`, success -0.003 / -0.002, wrong
+  0.088 -> 0.067 / 0.055 -> 0.048, check_goals PASS. Scatter gate (idea 5) fails the guard; ideas 3-4 ~neutral.
+  **Rae (2026-11-15):** adopt `local_tol` as the default; try the decayed-tail fix (P43); add `drift_a_frac` as a
+  ranker feature; **no threshold scan on dev_medium** (keep the judging set clean; thresholds stay at the
+  dev_small values unless a fresh dev set is drawn).
 - **Agent:** `method-improver`. Builds on T31 (merged to main 2026-11-13; baseline `_v7`; `SS_COMB_VARIANT=local`,
   `comb_fit._fit_comb_local`). Rae adopted `local_screen2` as the default; this task aims to make the ~6x-faster `local`
   usable on its own.

@@ -460,3 +460,11 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Caution (Rae):** don't tune N or the rankings tightly yet. Other telescopes (Roman, other training sets) differ in
   baseline, cadence and noise, which changes candidate ordering. For now, only a quick check for easy, robust gains
   (e.g. a method whose recall saturates by N=3 everywhere).
+
+### P43. Recover `local_tol`'s decayed-tail losses (from T32, 2026-11-13; numbered P41 on the T32 branch)
+- **Proposed by:** T32 report. **Rae (2026-11-15): yes, try it.**
+- **Idea:** most of `local_tol`'s 30 lost stars are clean rotators with decaying ACFs whose late teeth have no free vertex,
+  so `frac_vertex_tol` drops below 0.6 (and the local per-window height fit lets those teeth go negative, failing
+  `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
+  (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs the
+  `local_tol` baseline. No threshold tuning on dev_medium (Rae, 2026-11-15).
