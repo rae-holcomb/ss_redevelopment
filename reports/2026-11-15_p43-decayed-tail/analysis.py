@@ -32,11 +32,14 @@ MODES = (("fullyear", "dmfy"), ("assigned", "dmas"))
 BINS = ["<1d", "1-3d", "3-10d", "10-30d", ">30d"]
 SUCC = ("correct", "diffrot")
 REFS = ["local_screen2", "local_tol"]
-VARIANTS = ["local_tol_pos", "local_tol_tail", "local_tol_norej", "local_tol_norej_tail", "local_tol_norej_pos",
-            "local_tol_tail_rh", "local_tol_norej_rh"]
+VARIANTS = ["local_tol_tail", "local_tol_tail_snr0", "local_tol_norej_tail_snr0"]   # full scorecards
+HARNESS_ONLY = ["local_tol_pos", "local_tol_norej", "local_tol_norej_tail", "local_tol_norej_pos", "local_tol_tail_rh",
+                "local_tol_norej_rh", "local_tol_snr0", "local_tol_norej_snr0"]
 COLORS = {"local_screen2": "#2166ac", "local_tol": "#8073ac", "local_tol_pos": "#e08214",
           "local_tol_tail": "#7fbc41", "local_tol_norej": "#b2182b", "local_tol_norej_tail": "#1a1a1a",
-          "local_tol_norej_pos": "#c51b7d", "local_tol_tail_rh": "#35978f", "local_tol_norej_rh": "#f4a582"}
+          "local_tol_norej_pos": "#c51b7d", "local_tol_tail_rh": "#35978f", "local_tol_norej_rh": "#f4a582",
+          "local_tol_snr0": "#bababa", "local_tol_tail_snr0": "#e7298a", "local_tol_norej_snr0": "#66a61e",
+          "local_tol_norej_tail_snr0": "#d95f02"}
 LABEL = {"local_screen2": "_v7 (local_screen2)"}
 PROD_STAGES = ["load", "acf_long", "acf_short", "guess_pairwise_histogram", "guess_lombscargle", "guess_acf_fft", "fit"]
 
@@ -84,12 +87,13 @@ def timing() -> pd.DataFrame:
         v, r = Path(f).stem[len("prof_"):].rsplit("_", 1)
         d = pd.read_csv(f)
         prod = d[[c for c in PROD_STAGES if c in d.columns]].sum(axis=1)
-        rows.append(dict(variant=v, round=r, total=d.total.mean(), production=prod.mean(), fit=d.fit.mean()))
+        rows.append(dict(variant=v, round=r, total=d.total.mean(), production=prod.mean(), fit=d.fit.mean(),
+                         features=d.features.mean() if "features" in d else np.nan))
     if not rows:
         return pd.DataFrame(columns=["variant", "total", "production", "fit", "n_rounds"])
     t = pd.DataFrame(rows)
     g = t.groupby("variant")
-    out = g[["total", "production", "fit"]].median()
+    out = g[["total", "production", "fit", "features"]].median()
     out["n_rounds"] = g.size()
     return out.reset_index()
 
@@ -145,7 +149,7 @@ def harness_candidates() -> pd.DataFrame:
         if not p.exists():
             continue
         recs = pickle.loads(p.read_bytes())
-        for v in recs[0]["variants"]:
+        for v in ["local_tol"]:
             c = L.candidate_frame(recs, v)
             c["variant"], c["mode"] = v, mode
             out.append(c)
@@ -160,12 +164,13 @@ def harness_summary() -> pd.DataFrame:
     """Overall rates per variant and mode from the harness (screening numbers)."""
     rows = []
     for mode, _ in MODES:
-        p = ROOT / f"runs/p43/harness/dev_medium_{mode}.pkl"
-        if not p.exists():
-            continue
-        recs = pickle.loads(p.read_bytes())
-        for v in recs[0]["variants"]:
-            rows.append(dict(mode=mode, **L.summarize(recs, v)))
+        for suf in ("", "_snr0"):
+            p = ROOT / f"runs/p43/harness/dev_medium_{mode}{suf}.pkl"
+            if not p.exists():
+                continue
+            recs = pickle.loads(p.read_bytes())
+            for v in recs[0]["variants"]:
+                rows.append(dict(mode=mode, **L.summarize(recs, v)))
     return pd.DataFrame(rows)
 
 
@@ -402,7 +407,7 @@ def main():
     """Build every table and figure that its inputs allow."""
     FIG.mkdir(exist_ok=True)
     DATA.mkdir(exist_ok=True)
-    rec = sys.argv[1] if len(sys.argv) > 1 else "local_tol_norej"
+    rec = sys.argv[1] if len(sys.argv) > 1 else "local_tol_tail"
     per_star = load_per_star()
     tab = summary_table(per_star)
     tab.to_csv(DATA / "variant_metrics.csv", index=False)
@@ -412,20 +417,26 @@ def main():
     hs.to_csv(DATA / "harness_summary.csv", index=False)
     print(hs.round(4).to_string())
     c = harness_candidates()
+    c.to_csv(DATA / "cands_local_tol.csv.gz", index=False)
     fig_fvt(c)
     fig_drift(c)
-    lt = lost_table(per_star, c, rec)
-    lt.to_csv(DATA / f"local_tol_lost_vs_v7_{rec}.csv", index=False)
-    fig_lost_scatter(lt, rec)
+    for v in VARIANTS:
+        lt = lost_table(per_star, c, v)
+        lt.to_csv(DATA / f"local_tol_lost_vs_v7_{v}.csv", index=False)
+        fig_lost_scatter(lt, v)
     tim = timing()
     tim.to_csv(DATA / "timing_summary.csv", index=False)
     print(tim.round(4).to_string())
     fig_runtime(tim)
-    ch = changed_vs_tol(per_star, rec)
-    ch.to_csv(DATA / f"changed_stars_{rec}.csv", index=False)
-    fig_examples(ch, rec, ("gained",), f"fig_examples_{rec}_recovered.png", n=5)
-    fig_examples(ch, rec, ("lost", "other"), f"fig_examples_{rec}_lost_or_wrong.png", n=3)
-
+    for v in (rec, "local_tol_norej_tail_snr0"):
+        ch = changed_vs_tol(per_star, v)
+        ch.to_csv(DATA / f"changed_stars_{v}.csv", index=False)
+        print(v, ch.groupby(["mode", "change"]).size().to_dict())
+        fig_examples(ch, v, ("gained",), f"fig_examples_{v}_recovered.png", n=4)
+        bad = ch[(ch.change == "lost") | ((ch.change == "other") & (ch.final_outcome_var == "wrong"))].copy()
+        bad["change"] = np.where(bad.change == "lost", "lost", "newly wrong")
+        fig_examples(bad, v, ("lost", "newly wrong"), f"fig_examples_{v}_lost_or_wrong.png",
+                     n=2 if (bad.change == "lost").any() else 4)
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,13 @@
+subset,stat,group,n,kept
+all fitted candidates,fvt_all,correct/diffrot,3779,0.40142894945752844
+all fitted candidates,fvt_all,wrong,30211,0.18086127569428354
+all fitted candidates,fvt_all,alias,3945,0.2902408111533587
+all fitted candidates,fvt_pos,correct/diffrot,3779,0.5067478168827733
+all fitted candidates,fvt_pos,wrong,30211,0.3039621329979147
+all fitted candidates,fvt_pos,alias,3945,0.48694550063371356
+candidates passing every other gate,fvt_all,correct/diffrot,1009,0.6907829534192269
+candidates passing every other gate,fvt_all,wrong,285,0.6526315789473685
+candidates passing every other gate,fvt_all,alias,54,0.8703703703703703
+candidates passing every other gate,fvt_pos,correct/diffrot,1009,0.6947472745292369
+candidates passing every other gate,fvt_pos,wrong,285,0.6771929824561403
+candidates passing every other gate,fvt_pos,alias,54,0.8888888888888888

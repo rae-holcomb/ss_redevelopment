@@ -599,3 +599,12 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   baselines need a `_v8` refresh and the ranker tables (P31) a rebuild on it. Follow-up P43 (decayed-tail losses;
   P41 on the branch). **Pitfalls:** the vertex-scatter separation seen on dev_small (50 stars) vanished on dev_medium;
   no threshold scans on dev_medium (Rae: keep the judging set clean).
+- **2026-11-15 — P43: `local_tol`'s decayed-tail losses; `drift_a_frac` ranker feature** (`reports/2026-11-15_p43-decayed-tail/`,
+  branch `claude/p43-decayed-tail-22a749`, not merged). Main cause of the losses is NOT the vertex test: the MAD
+  residual-RMS window rejection (`_fit_single_candidate` step 4) under the local solver drops the TALLEST teeth of a
+  decaying ACF (n = 0 first, then a cascade), so mean height SNR falls below 1. The same loop drops the lag-0 tooth of
+  noise combs, which silently keeps the SNR gate honest (ACF(0) = 1 props up any comb's mean SNR). New variant keys
+  (`tol_count`, `tol_tail`, `reject`, `height_fit`, `snr_skip_lag0`); `local_tol_tail` +0.009 / +0.008 success,
+  +0.005 / +0.009 wrong, no stars lost; `local_tol_norej_tail_snr0` 0.256 / 0.064 full-year but fails the 10-30 d
+  guard vs `_v7`. Recommendation: keep `local_tol`. `drift_a_frac` (`comb_fit.comb_drift_frac`) added to
+  ml_features (NaN for lsq / < 4 vertices). Synthetic-200 `>30d` 1/8 regression vs `_v7` belongs to `local_tol` itself.

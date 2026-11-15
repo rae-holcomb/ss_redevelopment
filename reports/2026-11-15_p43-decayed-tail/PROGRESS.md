@@ -54,3 +54,8 @@
   kept (decayed late teeth now dilute the mean, and the lag-0 tooth no longer props it up).
 - Decision: stop adding variants (each new idea was coming from the dev_medium judging set). Killed the queued
   norej_snr0 scorecard after 30 s (dominated in the harness; same 10-30d guard failure); scoring tail_snr0 and tail.
+- 04:13-04:26 Scorecards local_tol_tail_snr0 and local_tol_tail (both modes + synthetic); all PASS vs local_tol;
+  vs _v7 both pass dev_medium, synthetic FAILs on the same >30d star as local_tol (synth-s0-00099).
+- 04:28-04:32 Profiles (2 rounds x 4 variants). 04:33 analysis, figures, notebook executed (0 errors).
+- Full pytest under nice: 544 passed, 1 failed = the known test_default_scorecard_rows_bit_identical_to_baseline.
+- README written; docs: PROJECT_CONTEXT changelog, TASKS_PROPOSED (P43 status, P44, P45), FEATURE_TABLE_SCHEMA.
