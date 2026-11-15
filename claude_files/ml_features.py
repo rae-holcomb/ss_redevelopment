@@ -44,7 +44,7 @@ from alias_metrics import (  # shared with comb_fit (T18); moved verbatim from h
     acf_harmonic_contrasts as _acf_harmonic_contrasts,
     fold_half_cycle_corr as _fold_half_cycle_corr,
 )
-from comb_fit import EnsembleResult
+from comb_fit import EnsembleResult, comb_drift_frac
 from coverage import GAP_SPLIT_DAYS, sampling_descriptors, searchable_range
 from guesses import _abs2, _peak_coverage_fraction
 
@@ -1077,6 +1077,9 @@ def extract_candidate_features(
             max_height_snr=float(np.nanmax(height_snr)) if len(height_snr) else np.nan,
             std_height_snr=float(np.nanstd(height_snr)) if len(height_snr) else np.nan,
             height_snr_slope=_height_snr_slope(height_snr),
+            # T32/P43 (2026-11-15): quadratic drift of the local solver's free
+            # tooth vertices, a / P (NaN for lsq fits or < 4 vertices)
+            drift_a_frac=comb_drift_frac(fit),
             mean_curvature=float(np.nanmean(curvatures)) if len(curvatures) else np.nan,
             std_curvature=float(np.nanstd(curvatures)) if len(curvatures) else np.nan,
 

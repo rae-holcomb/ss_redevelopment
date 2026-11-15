@@ -21,3 +21,9 @@
   norej_tail 16, tail_rh 8, norej_rh 15; T32 gains kept 25/25 except norej (24) and norej_rh (23).
 - drift_a_frac: under local_tol the solver never fits a drift term (drift_a is always 0), so the feature is a
   separate quadratic fit to the free vertices (`comb_fit.comb_drift_frac`), NaN for lsq / < 4 vertices.
+- 03:13 Reference runs done (runs/p43/sc/local_tol_{dmfy,dmas,syn}):
+  full-year 0.248 / wrong 0.067, assigned 0.145 / 0.048 -- identical to T32's local_tol; PASS vs _v7 both.
+  synthetic 200: 0.745 vs _v7 0.755, FAIL on the regression guard: >30d bin 1.000 -> 0.875 (1 of 8 stars), and
+  3-10d -0.056 (just inside the 0.06 limit). This is the local_tol default itself, not P43 -- flag for the _v8 refresh.
+- Tests: tests/test_p43_decayed_tail.py, 18 pass.
+- 03:17 Harness screen (all 8 variants, both modes, rebuilds the Stage-1 cache) running.

@@ -82,6 +82,8 @@ from guesses import InitialGuess
 #   tr_solver   least_squares trust-region solver: "exact" (dense SVD) or
 #               "lsmr" (iterative, with a sparse Jacobian).
 #   max_points  override for max_points_per_window (default 100).
+# local_tol's settings, shared by the P43 variants built on it
+_LOCAL_TOL = dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
 COMB_VARIANTS = {
     "lsq": dict(solver="lsq"),
     "lsq_tol4": dict(solver="lsq", tol=1e-4),
@@ -139,6 +141,29 @@ COMB_VARIANTS = {
     "local_track_scatter": dict(solver="local", track=True, vertex_gate="scatter", max_scatter=0.04, min_free=0.5),
     "local_robust": dict(solver="local", track=True, weight="height", drift=True, vertex_gate="scatter",
                          max_scatter=0.04, min_free=0.5),
+    # P43 (2026-11-15): recover local_tol's decayed-tail losses (reports/2026-11-15_p43-decayed-tail/).
+    # Same thresholds as local_tol (min_frac_tol 0.6, tol_base 0.05; nothing tuned). New keys:
+    #   tol_count    which teeth frac_vertex_tol counts: "all" (default) or "positive" -- only teeth whose
+    #                fitted height is > 0 (a non-positive tooth already fails frac_positive_heights; it
+    #                should not fail the vertex test a second time).
+    #   tol_tail     True: a TRAILING run of teeth failing the tolerance test is excused (left out of
+    #                frac_vertex_tol), keeping at least n_required windows -- the vertex analogue of
+    #                _fit_single_candidate's decayed-tail trim (which only trims non-positive fitted
+    #                heights, and so never fires when the comb-tied height of a vertex-less tooth is still
+    #                positive). Gate-only: the windows stay in the fit and in every other gate.
+    #   reject       False: no MAD residual-RMS window rejection (_fit_single_candidate step 4). That loop
+    #                protects the joint fit's shared P/t0 from one bad window; the local solver's soft-L1
+    #                IRLS line fit already does that, and on decaying ACFs the loop dropped the TALLEST
+    #                teeth (absolute residual RMS scales with peak height), cascading n = 0, 1, 2.
+    #   height_fit   "robust": per-window (h, A) fit by soft-L1 IRLS, residual scale 1.4826 * MAD of the
+    #                window's plain-LS residuals (self-calibrated; T31's suggestion for negative heights).
+    "local_tol_pos": dict(_LOCAL_TOL, tol_count="positive"),
+    "local_tol_tail": dict(_LOCAL_TOL, tol_tail=True),
+    "local_tol_norej": dict(_LOCAL_TOL, reject=False),
+    "local_tol_norej_tail": dict(_LOCAL_TOL, reject=False, tol_tail=True),
+    "local_tol_norej_pos": dict(_LOCAL_TOL, reject=False, tol_count="positive"),
+    "local_tol_tail_rh": dict(_LOCAL_TOL, tol_tail=True, height_fit="robust"),
+    "local_tol_norej_rh": dict(_LOCAL_TOL, reject=False, height_fit="robust"),
 }
 DEFAULT_COMB_VARIANT = "local_tol"  # Rae, 2026-11-15 (T32 merge); was "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -758,8 +783,14 @@ def _fit_comb_local(
     n_irls: int = 4,
     weight_mode: str = "none",
     drift: bool = False,
+    height_fit: str = "ls",
 ) -> dict:
     """Comb fit from independent per-peak fits (T31 comb variant "local").
+
+    P43 option: height_fit="robust" solves step 4's (h, A) problem by soft-L1
+    IRLS instead of plain least squares (residual scale 1.4826 * MAD of the
+    plain-LS residuals of that window, i.e. self-calibrated; 4 iterations), so a
+    few deviant lags in a decayed, noisy tooth pull its height less.
 
     T32 options (defaults reproduce T31's "local" exactly):
     weight_mode="height" multiplies each vertex's IRLS weight by its peak's
@@ -884,6 +915,16 @@ def _fit_comb_local(
         d2 = (lag - c) ** 2
         X = np.column_stack([np.ones_like(d2), -d2]) * wt[:, None]
         h, A = np.linalg.lstsq(X, y * wt, rcond=None)[0]
+        if height_fit == "robust":
+            r0 = wt * ((h - A * d2) - y)
+            sc = 1.4826 * float(np.median(np.abs(r0 - np.median(r0))))
+            if sc > 0:
+                for _ in range(n_irls):
+                    rr = wt * ((h - A * d2) - y)
+                    q = np.sqrt(1.0 / np.sqrt(1.0 + (rr / sc) ** 2))
+                    h, A = np.linalg.lstsq(X * q[:, None], y * wt * q, rcond=None)[0]
+        elif height_fit != "ls":
+            raise ValueError(f"unknown height_fit {height_fit!r}")
         if not A > 0:
             A = 0.0
             h = float(np.sum(wt**2 * y) / max(np.sum(wt**2), 1e-300))
@@ -1056,7 +1097,7 @@ def _solve_comb(spec: dict, windows, acf_lags, acf, P0, t0, allow_jitter=True, j
     kw = dict(allow_jitter=allow_jitter, jitter_frac=jitter_frac, weights=weights)
     if solver == "local":
         return _fit_comb_local(windows, acf_lags, acf, P0, t0, weight_mode=spec.get("weight", "none"),
-                               drift=bool(spec.get("drift", False)), **kw)
+                               drift=bool(spec.get("drift", False)), height_fit=spec.get("height_fit", "ls"), **kw)
     lsq_kw = dict(loss=loss, tol=spec.get("tol", 1e-6), tr_solver=spec.get("tr_solver", "exact"))
     if solver == "local_warm":
         init = _fit_comb_local(windows, acf_lags, acf, P0, t0, **kw)
@@ -1172,6 +1213,8 @@ def _fit_single_candidate(
     CombFitResult for this single candidate.
     """
     spec = comb_spec or COMB_VARIANTS["lsq"]
+    if not spec.get("reject", True):
+        max_reject_iters = 0  # P43 variant key reject=False (see COMB_VARIANTS)
     if spec.get("track"):
         windows = _build_windows_tracked(acf_lags, acf, P0, t0, n_peaks, window_frac=window_frac,
                                          max_points_per_window=max_points_per_window, weights=weights)
@@ -1884,7 +1927,7 @@ def _gate_results(
     }
 
 
-def _vertex_stats(fit: CombFitResult, spec: dict) -> dict:
+def _vertex_stats(fit: CombFitResult, spec: dict, n_keep: Optional[int] = None) -> dict:
     """T32 vertex statistics of a local-solver fit (NaN for fits without local_info, e.g. lsq).
 
     With m_n the comb centre the local solver placed tooth n on (linear, or
@@ -1906,22 +1949,33 @@ def _vertex_stats(fit: CombFitResult, spec: dict) -> dict:
                        MIN_FRAC_FREE_VERTICES);
       drift_a, drift_a_frac  the quadratic drift coefficient a (lag units)
                        and a / P (0 when no drift term was fit).
+
+    P43 spec keys change which teeth frac_vertex_tol counts (nothing else):
+      tol_count="positive"  only teeth with fitted height > 0;
+      tol_tail=True         a trailing run of teeth failing the tolerance test
+                            is left out, keeping at least `n_keep` windows
+                            (the candidate's n_required; lag-0 window included,
+                            as in the decayed-tail trim) -- but never all teeth.
+    frac_vertex_tol_all is always the plain local_tol value (every tooth).
     """
     nan = float("nan")
     li = fit.local_info
     if not li:
         return dict(frac_vertex_tol=nan, vertex_scatter=nan, drift_a=nan, drift_a_frac=nan,
-                    frac_free_vertices=nan)
+                    frac_free_vertices=nan, frac_vertex_tol_all=nan)
     P = float(fit.P)
     growth = spec.get("tol_growth", "sqrt")
     base, k = float(spec.get("tol_base", 0.05)), float(spec.get("tol_k", 0.5))
-    ok_tol, resid, n_teeth = [], [], 0
-    for n, pk in fit.per_peak.items():
+    ok_tol, resid, n_teeth, pos = [], [], 0, []
+    n_lag0 = 0
+    for n, pk in sorted(fit.per_peak.items()):
         v = li["free_vertex"].get(n, nan)
         m = li["model_t0"] + li["model_P"] * n + li["drift_a"] * n * n
         if m < 0.5 * P:
+            n_lag0 += 1
             continue  # lag-0 tooth
         n_teeth += 1
+        pos.append(bool(pk["height"] > 0))
         if growth == "sqrt":
             tol = base * P * np.sqrt(max(n, 1))
         elif growth == "linear":
@@ -1942,9 +1996,62 @@ def _vertex_stats(fit: CombFitResult, spec: dict) -> dict:
         scatter = 0.0
     else:
         scatter = float(np.sqrt(np.sum(np.square(resid)) / (len(resid) - p)))
-    return dict(frac_vertex_tol=float(np.mean(ok_tol)) if ok_tol else 0.0, vertex_scatter=scatter,
+    frac_all = float(np.mean(ok_tol)) if ok_tol else 0.0
+    keep = np.ones(len(ok_tol), dtype=bool)
+    if spec.get("tol_tail") and ok_tol:
+        # excuse a trailing run of failing teeth, keeping >= n_keep windows (lag-0 included) and >= 1 tooth
+        min_teeth = max(1, int(n_keep or 0) - n_lag0)
+        k = len(ok_tol)
+        while k > min_teeth and not ok_tol[k - 1]:
+            k -= 1
+        keep[k:] = False
+    tol_count = spec.get("tol_count", "all")
+    if tol_count == "positive":
+        keep &= np.array(pos, dtype=bool)
+    elif tol_count != "all":
+        raise ValueError(f"unknown tol_count {tol_count!r}")
+    counted = [o for o, kp in zip(ok_tol, keep) if kp]
+    return dict(frac_vertex_tol=float(np.mean(counted)) if counted else 0.0, vertex_scatter=scatter,
                 drift_a=float(li["drift_a"]), drift_a_frac=float(li["drift_a"]) / P if P else nan,
-                frac_free_vertices=frac_free)
+                frac_free_vertices=frac_free, frac_vertex_tol_all=frac_all)
+
+
+def comb_drift_frac(fit: Optional[CombFitResult], jitter_frac: float = 0.05, n_irls: int = 4) -> float:
+    """Quadratic drift coefficient of a local-family fit's free vertices, a / P (ranker feature drift_a_frac).
+
+    If the solver itself fit a drift term (COMB_VARIANTS key drift=True), that
+    `a` is returned. Otherwise the same quadratic, c_n = q0 + q1 n + a n^2, is
+    fit to the surviving teeth's free local vertices (local_info free_vertex,
+    lag-0 window excluded since it has none) by the solver's soft-L1 IRLS
+    (residual scale jitter_frac * P / 2), needing >= 4 vertices on >= 4
+    distinct n, as in _fit_comb_local. Diagnostic only: it never moves the comb.
+
+    Returns NaN for fits without local_info (lsq / local_screen refits) or with
+    too few vertices. T32 found |a/P| larger for differential rotators and
+    larger still for wrong candidates, with heavy overlap (weak signal).
+    """
+    nan = float("nan")
+    if fit is None or not fit.local_info or not (fit.P > 0):
+        return nan
+    li = fit.local_info
+    P = float(fit.P)
+    if li.get("drift_fit"):
+        return float(li["drift_a"]) / P
+    pairs = sorted((n, v) for n, v in li["free_vertex"].items() if n in fit.per_peak and np.isfinite(v))
+    if len(pairs) < 4:
+        return nan
+    nn = np.array([p[0] for p in pairs], dtype=float)
+    cc = np.array([p[1] for p in pairs], dtype=float)
+    if np.unique(nn).size < 4:
+        return nan
+    Xq = np.column_stack([np.ones_like(nn), nn, nn * nn])
+    f = max(0.5 * jitter_frac * P, 1e-12)
+    q = np.ones(len(nn))
+    for _ in range(n_irls):
+        coef = np.linalg.lstsq(Xq * q[:, None], cc * q, rcond=None)[0]
+        r = cc - Xq @ coef
+        q = np.sqrt(1.0 / np.sqrt(1.0 + (r / f) ** 2))
+    return float(coef[2]) / P
 
 
 def failed_gate_names(gate_results: dict) -> list:
@@ -2514,7 +2621,7 @@ def fit_rotation_period(
                 if vgate == "window":
                     vertex_ok = diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
                 else:
-                    diag.update(_vertex_stats(fit, spec))
+                    diag.update(_vertex_stats(fit, spec, n_keep=n_required))
                     if vgate == "tol":
                         vertex_ok = diag["frac_vertex_tol"] >= spec.get("min_frac_tol", min_frac_vertex_in_window)
                     elif vgate == "scatter":
