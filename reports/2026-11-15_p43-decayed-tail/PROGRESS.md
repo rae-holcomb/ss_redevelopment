@@ -47,3 +47,10 @@
   | local_tol_norej_snr0 | 0.250 / 0.062 | 0.143 / 0.047 |
   | local_tol_norej_tail_snr0 | 0.256 / 0.064 | 0.150 / 0.049 |
   Hypothesis confirmed (norej wrong 0.113 -> 0.062). Scorecards next for norej_tail_snr0, norej_snr0, tail.
+- 03:43-03:57 Scorecards local_tol_norej_tail_snr0: full-year 0.256 / wrong 0.064, but by-bin 10-30d 0.363 (_v7)
+  -> 0.287: FAILS the regression guard vs _v7 (-0.076 > 0.06); PASS vs local_tol (-0.053). Assigned and synthetic
+  see check_goals files. Harness by-bin: snr0 costs 10-30d (local_tol 0.339 -> snr0 0.316, norej_snr0 0.287);
+  the 13 full-year losses vs local_tol are 10/13 in 10-30d, failing mean_height_snr at 0.85-0.98 with all 8 teeth
+  kept (decayed late teeth now dilute the mean, and the lag-0 tooth no longer props it up).
+- Decision: stop adding variants (each new idea was coming from the dev_medium judging set). Killed the queued
+  norej_snr0 scorecard after 30 s (dominated in the harness; same 10-30d guard failure); scoring tail_snr0 and tail.
