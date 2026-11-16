@@ -210,7 +210,22 @@ Most of the trim's gains (8 of 13 full-year) are stars that neither `_v7` nor `l
    - The alternative is keeping `local_tol`. It has the best precision of anything here (0.902 / 0.833) but 0.013 / 0.010 lower success. Whether 4–5 extra wrong answers per 874 stars are worth 9–13 extra successes is your call.
 2. **Lag-0 tooth in the mean-height SNR gate.** Most remaining losses come from outlier rejection dropping the lag-0 tooth under `local`. But that tooth's height (≈ ACF(0)) says nothing about P, and under `lsq` it props up `mean_height_snr`. Should the SNR gate exclude the lag-0 tooth, as the vertex statistics already do? That would change the gate's meaning for every variant, so it needs your decision. Proposed as a follow-up.
 3. **synth200 >30 d regression** (synth-s0-00099, correct under `_v7` → wrong under `local_tol` and every variant). This blocks a clean `check_goals` PASS on synth for the `local_tol` family, independent of P43. It's one star of 8 in the bin, but the default change needs a decision: accept, or investigate the star.
-4. **Comparison with the earlier P43 attempt:** I haven't read it. Where the two disagree, the harness and the per-star tables here (`data/screen_*.csv`, `data/lost_*.csv`) should settle it.
+4. **Agreement with the earlier P43 attempt** (see the next section). Both runs find the same mechanism and a near-identical fix. Only the recommendation differs, which is your call.
+
+## Comparison with the earlier P43 attempt (read only after this report was pushed)
+The earlier attempt is `reports/2026-11-15_p43-decayed-tail/` on `claude/p43-decayed-tail-22a749`; I read its TL;DR and variant list only.
+
+**Agreement:**
+- **The brief's premise.** Both runs find it mostly wrong: the closest correct candidate fails `mean_height_snr` more often than the vertex test.
+- **The cause.** Both identify outlier rejection dropping the tallest teeth as the main cause.
+- **Positive-height counting.** Both find it does ~nothing.
+- **Robust height fit.** Both find it adds nothing (it built one and measured nothing; I didn't build it, for the reason above).
+- **The tail fix.** Its trailing vertex-less fix (`local_tol_tail`) is essentially my `local_tol_trim`. On clean stars `docs/PROJECT_CONTEXT.md` quotes it at success 0.262 / 0.152, wrong 0.023 / 0.029. Mine is 0.265 / 0.153, wrong 0.024 / 0.030.
+
+**Differences:**
+- My trim removes the teeth and refits, so heights and SNR are judged without them. Its variant excuses them in the tolerance count, as far as its name and spec show.
+- It also tested switching rejection off (`local_tol_norej*`). I tested the centre search instead.
+- It recommended keeping `local_tol`. Its wrong-rate comparison was on all stars, where the trim's wrong increase looked bigger against a noisier `_v7`. On clean stars I recommend the trim: full-year wrong stays well below `_v7` (0.024 vs 0.038), assigned is about equal (0.030 vs 0.029), and success beats `_v7` in both modes.
 
 ## Reproduce
 ```bash
