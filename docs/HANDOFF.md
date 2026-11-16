@@ -1,14 +1,102 @@
-# Handoff note (2026-11-13, updated 2026-11-16; coordinator → fresh coordinator)
+# Handoff note (2026-11-16, coordinator #2 → coordinator #3)
 
-For a **fresh coordinator session.** The previous coordinator ran 2026-11-11 → 2026-11-13 (summarized twice) and was
-handed off to keep turns cheap on Rae's Pro plan.
+For a **fresh coordinator session.** Coordinator #2 ran 2026-11-13 → 2026-11-16 (summarized once) and hands off to
+keep turns cheap on Rae's Pro plan.
 
-**Start here:** `CLAUDE.md` is already loaded; read the last few changelog entries in `docs/PROJECT_CONTEXT.md`,
-the Roadmap and statuses in `docs/TASKS.md`, and this note. Open `TASKS_PROPOSED.md` / `TASKS_DISCUSSIONS.md`
-only for the item you need (search by its `### P##.` / `### D##.` heading). Don't re-read whole reports unless a task needs them. Git history has the details.
+**Start here:** `CLAUDE.md` is already loaded. Read this note, the last few changelog entries in
+`docs/PROJECT_CONTEXT.md`, and the Roadmap/statuses in `docs/TASKS.md`. Open `TASKS_PROPOSED.md` /
+`TASKS_DISCUSSIONS.md` only for the item you need (search its `### P##.` / `### D##.` heading). Git history has details.
 
-**Update (2026-11-13, coordinator #2):** T31 merged with Rae's answers (`local_screen2` + CWT `lean` defaults, `_v6w`
-replaces `_v6`), dev_medium + synth200 rerun and committed as **`_v7`, the judging baseline**. Next: start T32 from main.
+## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
+
+**Why.** The decayed-tail fix agent (P43, session `local_f120e7df-…`, branch `claude/p43-decayed-tail-22a749`, report
+`reports/2026-11-15_p43-decayed-tail/` on that branch) did its diagnosis and scoring on all 1,000 dev_medium stars,
+including the 126 whose real-TESS noise source was contaminated before injection (`noise_exclude`). Those stars hold 55
+of the 88 full-year `_v7` wrongs, and the agent's reasoning about losses and wrong answers leaned on them. Rae wants
+**the same agent task run again from scratch on the clean stars only**, to see whether the reasoning and the
+recommendation end up in the same place as before (and as coordinator #2's quick re-score, below).
+
+**Set-up (keep it blind).**
+- Start ONE fresh session (Rae's go-ahead is already given for this activity; confirm with her in your session that she
+  still wants it started now, and check the machine is idle). Role `method-improver`. Opus (design/analysis work).
+- Worktree cut from **`claude/local-tol-default`** (pushed; default comb fit `local_tol`, gate-test updates, main's
+  noise-clean manifests and guard merged in at `db64668`; 517 pass, 1 expected failure:
+  `test_default_scorecard_rows_bit_identical_to_baseline`, which waits for the synth200 baseline refresh).
+- **Do not give the agent the earlier answers.** Its brief must say: do not open `reports/2026-11-15_p43-decayed-tail/`,
+  the branch `claude/p43-decayed-tail-22a749`, its worktree or `runs/p43/`, this HANDOFF note, or the 2026-11-16 entries of
+  the `PROJECT_CONTEXT.md` changelog, until its own report is written. It may read everything the first agent had: the
+  T32 report (`reports/2026-11-13_t32-local-drift/`), P43 in `docs/TASKS_PROPOSED.md`, `comb_fit.py`.
+- Brief = the original P43 brief, re-pointed at clean data:
+  - Reference runs of the branch default (`local_tol`) on `datasets/dev_medium_clean.csv` full-year
+    (`--ignore-manifest-sectors`) and assigned, plus `--synthetic 200 --seed 0`, each with `check_goals.py --baseline`
+    against `benchmarks/baselines/dev_medium_clean_{fullyear,assigned}_v7.json` (and `synth200_s0_v7.json`).
+  - Diagnose `local_tol`'s lost stars vs `_v7` (clean stars only) before fixing: which gate fails, and why.
+  - Try principled variants as new `SS_COMB_VARIANT` entries (the P43 ideas: count `frac_vertex_tol` over positive-height
+    teeth; apply the tolerance test after the decayed-tail trim; T31's robust per-window height fit; plus whatever its own
+    diagnosis suggests). **No new thresholds, no threshold scans or tuning on dev_medium** (Rae, 2026-11-15).
+  - Full scorecards for serious candidates, both modes, against the step-1 runs and the clean `_v7`; time the winner
+    with `benchmarks/profile_pipeline.py --manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev
+    --ignore-manifest-sectors --star-ids-file benchmarks/profile_stars.txt --features --repeats 3`.
+  - Leave out the `drift_a_frac` ranker feature: it is already implemented on the first P43 branch.
+  - Figures: success/alias/wrong by period bin (`_v7`, `local_tol`, each variant, both modes); the gate-failure breakdown
+    of the lost stars; `frac_vertex_tol` distributions for correct vs wrong candidates with the 0.6 threshold; ≥4 recovered
+    and ≥4 newly lost/wrong example LC + ACF plots with teeth, heights and tolerance windows; runtime bars.
+  - Report `reports/<date>_p43-clean-rerun/` via `write-report`; "Open questions for Rae" names the default it
+    recommends. Don't change `DEFAULT_COMB_VARIANT`, protected files, or baselines; commit + push its branch; don't merge.
+  - Machine-safety rules below, verbatim, and "end your turn only when done or genuinely blocked".
+- **After it reports, you compare** (not the agent): its diagnosis, variant ranking and recommendation vs (a) the first
+  P43 report and (b) coordinator #2's clean re-score below. Tell Rae in plain terms where they agree and differ, with a
+  figure or table, before any default decision.
+
+**Coordinator #2's clean re-score, for your comparison only** (per-star tables of the first P43 runs filtered by
+`~noise_exclude`; 874 stars; success / wrong, full-year | assigned):
+
+| variant | success fy | wrong fy | success as | wrong as |
+|---|---|---|---|---|
+| `_v7` (`local_screen2`) | 0.254 | 0.038 | 0.146 | 0.029 |
+| `local_tol` | 0.252 | 0.019 | 0.143 | 0.024 |
+| `local_tol_tail` | 0.262 | 0.023 | 0.152 | 0.029 |
+| `local_tol_tail_snr0` | 0.255 | 0.019 | 0.149 | 0.024 |
+| `local_tol_norej_tail_snr0` | 0.262 | 0.016 | 0.150 | 0.024 |
+
+The first P43 agent (all 1,000 stars) recommended keeping `local_tol` because `local_tol_tail` added about one wrong per
+recovered star. On clean stars coordinator #2 leaned to `local_tol_tail` (beats `_v7` on success in both modes with
+equal-or-lower wrong; vs `local_tol` +0.010 success for +0.004/+0.005 wrong). All `local_tol` variants lose 0.02-0.03
+success at 10-30 d vs `_v7` (`norej_tail_snr0` -0.066 full-year). Its first-run diagnosis: the step-4 window-rejection
+loop drops the tallest early teeth of decaying ACFs, so the mean-height-SNR gate (not the vertex gate) causes most losses.
+
+**Rae's default decision (`local_tol` vs `local_tol_tail` or another) waits for this rerun.**
+
+## After the rerun: the baseline-changing batch
+1. Rae picks the default. Merge `claude/local-tol-default` (and the chosen variant's branch: the first P43 branch also
+   carries `drift_a_frac`, which Rae wants as a ranker feature; merge it even if its variants are not adopted).
+   If the default is not `local_tol`, flip `DEFAULT_COMB_VARIANT` and the default-asserting tests in the same change.
+2. `_v8` baselines: `dev_medium_clean_{fullyear,assigned}_v8.json` (+ tables). If the rerun agent's runs of the chosen
+   default were made on code identical to merged main for the default path, derive them with `tools/rescore_subset.py`
+   (exact; see `benchmarks/baselines/README.md`); otherwise rerun the two scorecards (~13 min at 3 workers). Regenerate
+   `synth200_s0` tables on the new default (~2 min); that fixes the one failing test. RT2 runtime baseline:
+   `benchmarks/baselines/profile15_fullyear_v8.json` from the profile command above with `--summary-json` (~2 min);
+   point goal RT2 at it. Update `benchmarks/baselines/README.md`, CLAUDE.md's baseline names, changelog.
+3. **P31 ranker-table rebuild, overnight, Data_Vault drive plugged in** (~2.5 h): dev_medium tables from
+   `datasets/dev_medium_clean.csv` (both modes, `runs/p31_dev_medium_{assigned,fullyear}`), then on the drive
+   `extracted/p31_tables/{train_3k,neg_dev_medium,neg_train}` (`datasets/train_v0.csv`; `datasets/negatives_v0.csv
+   --nonrotator --only-set dev_medium|train`). Put any queue in a script FILE: the 2026-11-13 queue deadlocked because a
+   watcher's command line contained "pytest", matching the queue's own idle check (`pgrep -f`).
+4. Ranker v1 on the rebuilt tables (see "Next up").
+
+## Noise-clean rule (Rae, 2026-11-16; done on main `97a01c8`)
+- `datasets/dev_{small,medium}_clean.csv` (47 / 874 stars) = frozen manifests minus `noise_exclude` sim_ids
+  (`tools/build_clean_manifests.py`, `--check`). Frozen manifests untouched.
+- `scorecard.build_tasks` refuses manifests holding such stars (covers scorecard, `profile_pipeline.py`,
+  `build_feature_tables.py`, harnesses built on it); `--allow-noise-excluded` for audits, labelled in `config.dataset`.
+- `headline_card.py` defaults to the clean manifest and restricts systems to its stars (period-mix population still
+  from the full manifest's injected periods).
+- `goals.json` / `goals_proposed.json` dataset strings name the clean manifests (targets unchanged).
+- Judging baselines `dev_medium_clean_{fullyear,assigned}_v7.json` derived from the `_v7` tables (`tools/rescore_subset.py`;
+  unfiltered it reproduces `_v7` exactly). Three profile stars swapped for clean ones (`benchmarks/profile_stars.txt`).
+- `train_v0` and the negatives were already clean. **The holdout has no sim_id: filter it when Rae opens it.**
+- Old reports (T31, T32, first P43 and earlier) were scored on all 1,000 stars; their per-star tables can be re-scored on
+  the clean subset with `tools/rescore_subset.py` instead of rerunning.
 
 ## Coordinator role (Rae, 2026-10-22)
 - Start focused fresh sessions, **≤ 2 parallel agents**, and **only one heavy-compute agent at a time** (see
@@ -31,6 +119,9 @@ replaces `_v6`), dev_medium + synth200 rerun and committed as **`_v7`, the judgi
 - **Don't ask Rae for a decline precision target** (deferred 2026-11-10). Default: match hand arbitration's OOF
   precision, state the non-rotator mix, and plot the full purity–completeness curve.
 - Explain a decision in plain terms the first time it goes to Rae.
+- **Noise-clean rule (Rae, 2026-11-16):** every brief says: develop and judge only on `datasets/dev_{small,medium}_clean.csv`
+  (the frozen sets minus `noise_exclude` stars), and filter any per-star table by `~noise_exclude`. The scorecard refuses
+  the old manifests (`--allow-noise-excluded` only for audits of those stars).
 
 ## Machine safety (new, 2026-11-13; hard rules for every agent brief)
 On the night of 2026-11-12/13 the Mac's WindowServer hung, the watchdog killed it, and Rae was logged out. Rae says
@@ -47,113 +138,47 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - `request_keep_awake` was denied to the T31 agent. The app's in-turn keep-awake was enough. Tell Rae to keep the
   laptop plugged in with the lid open for overnight runs.
 
-## State of `main`
-- **Merged 2026-11-12/13:**
-  - T5 hybrid ranking + P30 docs diet;
-  - headline card, with dev_medium as the default period population (Rae: *not* McQuillan+2014, which has
-    almost no P < 1 d stars);
-  - WG6 scoping (`9063c95`);
-  - **T12 speed-up** (`44768ec`): 1.5–1.6× faster per star, bit-identical, v6 baselines; keep 4 workers in code
-    defaults (3 in briefs, for machine safety).
-  - **T31** (`fd6e716` merge, `5d14f3f` default flip): wavelet reproducible; default comb fit `local_screen2`, CWT `lean`.
-- **Baselines:** use the `_v7` files (`benchmarks/baselines/`). `_v6w`, `_v6`, `_t5` are history.
-- **Env:** `ss_openblas` also has astroquery 0.4.11 (P27).
+## State of `main` (2026-11-16, `97a01c8` + this note)
+- Merged 2026-11-15: T32 drift-robust `local` variants (`ec03830`; its follow-up "P41" is **P43** on main, since P41 is the
+  methodology reviewer); P39 reproducible |c|^2 in `guess_acf_fft` / `ml_features` (`80fa98c`; changed nothing measurable).
+- Default comb fit on main is still `local_screen2`; CWT `lean`. `celerite2==0.3.2` pinned (P34).
 - Untracked `docs/figures/` and `tools/build_status_flowchart.py` in main are Rae's; leave them.
 
-## Unmerged branches ready for Rae
-1. ~~T31~~ merged 2026-11-13 (see State of main). Backlog from it: P39 (`guess_acf_fft` complex `np.abs`), T32.
-2. **P27 validation-set scoping:** `claude/p27-validation-scoping-4c1c1b` (`f6edf03`). Rae decided:
-   - Q1: Zach's list is tagged `expected_undetectable`.
-   - Q2: TESS-SPOC SAP is primary, QLP the fallback, and PDCSAP is also scored.
-   - Q6: astroquery installed.
-   Q3–5 and Q7 wait on her review of the report.
+## Branches (pushed, not merged)
+- `claude/local-tol-default` — default -> `local_tol` + gate-test updates; base for the rerun.
+- `claude/p43-decayed-tail-22a749` — first P43 run: variants `local_tol_pos/_tail/_norej*/_snr0/_rh`, `drift_a_frac`
+  feature, report. Trial merge into main: 543 pass + the 1 expected failure. Merge after Rae's default decision.
+- `claude/p35-wg6-loader-ef0d37` — WG6 Roman loader; trial-merge pytest 487 pass. **Needs Rae's OK** (manifest freeze).
+- `claude/p34-roman-rotators-accd50` — Roman rotator scoping (celerite2 GP generator, proposed `romrot_v0` set of 3,375
+  stars, ~2-3 CPU-h as Rae's local job); trial-merge pytest 510 pass, changelog conflict only. **Needs Rae's OK.**
+- `claude/p27-validation-scoping-4c1c1b` — real-TESS validation-set scoping; Rae decided Q1, Q2, Q6, mix + `pulsation`
+  outcome; open: a 70-180 d block (options in P27), then freeze.
+- `runs/overnight_2026-11-13/` holds a stale RT2 profile on `local_screen2` and a P39 full-year scorecard (all 1,000
+  stars); ignore both.
 
-## First actions for the new coordinator
-1. **Start T32, the drift-robust `local` comb solver** (`docs/TASKS.md` T32). Get Rae's go-ahead in your own session.
-   - Fresh session, worktree cut from main (T31 is merged). Judge against `_v7`.
-   - Role `method-improver`. Explore all five of Rae's ideas:
-     1. sequential peak tracking;
-     2. a tolerance that grows with n;
-     3. a quadratic drift term, with `a` as a ranker feature;
-     4. height/SNR weighting;
-     5. a residual-scatter gate.
-   - First step, with no scorecards: plot vertex residual vs n for local's 29 gains, the 28 none→wrong stars, and
-     shared-correct stars (`reports/2026-11-13_t31-comb-fit-speed/data/changed_stars_*`).
-   - Each idea becomes an `SS_COMB_VARIANT` switch, scored on dev_medium full-year + assigned with
-     `check_goals --baseline _v7`, and timed with `profile_pipeline.py` on T12's 15 stars.
-   - Figures: residual-vs-n; a success/wrong-vs-time frontier; by-bin; gate-statistic distributions with the
-     threshold; ≥4 gained and ≥4 lost example LC + ACF plots; the distribution of `a` split by diffrot.
-   - Machine-safety rules as above.
-   - Report: `reports/2026-11-13_t32-local-drift/`.
-2. ~~Merge T31~~ done 2026-11-13.
-3. **Then rebuild the ranker tables (P31)** on the final comb fit and wavelet: about 2.5 h with the drive, at 3
-   workers maybe a little more. Tell Rae first. T31 is merged; it waits on T32 only if Rae wants `local` in the tables. Note: screened-out candidates' diagnostics now
-   come from the `local` fit (changelog 2026-11-13), so candidate features shift for those.
-
-## Open sessions (2026-11-13)
-- **T32 drift-robust local fit** (`local_d7e7d540-…`): running, started 2026-11-13 from main.
-- Archived 2026-11-13 (Rae): T31, T12, headline card, short-period sessions.
-- **WG6 scoping** (`local_5b376121-…`): merged; **don't archive** (Rae reviewing).
-- **Validation-set scoping** (`local_13645bab-…`): unmerged, see above.
-- **Midway review** (`local_d5a20966-…`): merged; **don't archive** (Rae reading).
-- **SMARTS contamination note + its review** (`local_2f338ed6-…`, `local_c656acac-…`): Rae drives these; archived by
-  accident 2026-11-11, and Rae is to unarchive them.
+## Open sessions
+- Idle, linked to coordinator #2 (archive only on Rae's OK): t32-local-drift `local_d7e7d540-…`, wg6-loader
+  `local_e1f3a83b-…`, roman-rotators `local_56d3fdb8-…`, p43-decayed-tail `local_f120e7df-…` (keep until the comparison
+  is done; Rae talked to it about the contamination).
+- Don't archive: WG6 scoping `local_5b376121-…`, midway review `local_d5a20966-…` (Rae reviewing); validation scoping
+  `local_13645bab-…` (unmerged). SMARTS contamination note + review (`local_2f338ed6-…`, `local_c656acac-…`) are Rae's.
 
 ## Waiting on Rae
-- Answered 2026-11-13 (recorded in the task files): P27 mix + `pulsation` outcome; WG6 (resample ROT ourselves,
-  improved noise, EBs flagged, more varied rotators than FL, dev uses the 3 early seasons); headline card (f = 0.1;
-  H1/H3/H4 active, H2/H5 guards); P29 70 d run deferred; 6 workers ruled out (4 already strains the machine).
-- P27: pick a long-period (70–180 d) block from the options in `TASKS_PROPOSED.md` P27; then freeze (Q7).
-- WG6: how to handle long ROT periods.
-- Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
-- Midway review leftovers: validation sources; Roman scoping now vs later.
+- Default comb fit after the clean rerun.
+- OK to merge P35 (WG6 loader) and P34 (Roman rotators).
+- P27: pick a long-period (70-180 d) block, then freeze. WG6: long ROT period handling (she pursues Cepheids herself).
+- Goals-proposal thresholds (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
+- Midway review leftovers: validation sources; Roman scoping timing.
+- Decided 2026-11-15/16: adopt `local_tol`-family default (variant pending); `drift_a_frac` becomes a ranker feature; no
+  threshold scans on dev_medium; noise-clean rule.
 
-## Status 2026-11-16 (coordinator #2)
-- **Noise-clean rule (Rae, 2026-11-16):** develop and judge only on `datasets/dev_{small,medium}_clean.csv` (the frozen
-  sets minus `noise_exclude` stars). The scorecard refuses the old manifests; judging baselines are
-  `dev_medium_clean_{fullyear,assigned}_v7.json`. Every brief must say: use `_clean` manifests, and filter any per-star
-  table by `~noise_exclude`.
-- **Merged:** T32 (`ec03830`; follow-up P41 -> **P43** on main), P39 (`80fa98c`).
-- **Branch `claude/local-tol-default`** (default -> `local_tol`, gate-test updates) and **`claude/p43-decayed-tail-22a749`**
-  (P43 variants `local_tol_tail` etc. + `drift_a_frac` feature; built on the former; report
-  `reports/2026-11-15_p43-decayed-tail/`, scored on all 1,000 stars). Both pushed, NOT merged. Trial merge of P43 into
-  main: 543 pass, 1 expected failure (synthetic bit-identical test, needs the synth200 baseline regenerated).
-- **P43 re-scored on clean stars** (no rerun; per-star tables in the P43 worktree `runs/p43/sc/`): `local_tol` 0.252 /
-  0.143 success, 0.019 / 0.024 wrong; `local_tol_tail` 0.262 / 0.152, 0.023 / 0.029; `_v7` 0.254 / 0.146, 0.038 /
-  0.029 (full-year / assigned). On clean stars `local_tol_tail` beats `_v7` on success in both modes with equal-or-lower
-  wrong, so P43's "keep local_tol" recommendation went back to Rae as a decision. All local_tol variants lose 0.02-0.03
-  at 10-30 d vs `_v7`.
-- **_v8 plan (no compute needed for dev_medium):** after Rae picks the default and the branches merge (rebase onto main
-  for the clean-manifest change), make `dev_medium_clean_*_v8` with `tools/rescore_subset.py` from the P43 session's
-  runs of the chosen variant (`runs/p43/sc/<variant>_dm{fy,as}`), only if that code equals merged main for the default
-  path; else rerun on `dev_medium_clean.csv`. Regenerate `synth200_s0` tables (~2 min) and the RT2 profile
-  (`--manifest datasets/dev_medium_clean.csv --star-ids-file benchmarks/profile_stars.txt`; 3 stars swapped 2026-11-16).
-- **Then:** P31 ranker-table rebuild overnight (drive needed); dev_medium tables from `dev_medium_clean.csv`.
-- **Overnight queue 2026-11-13** was cancelled 2026-11-15 (it deadlocked: a watcher's command line contained "pytest",
-  matching the queue's idle check; put follow-up jobs in script files). P34 (roman-rotators) trial-merge pytest: 510 pass.
-- **Awaiting Rae's OK to merge:** P35 WG6 loader, P34 Roman rotator scoping.
-
-## Next up (after the above)
-- **Runtime baseline for goal RT2** (no Rae input needed): when the machine is idle (after T32), run
-  `nice -n 15 $PY benchmarks/profile_pipeline.py --manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev
-  --ignore-manifest-sectors --star-ids-file benchmarks/profile_stars.txt --features --repeats 3
-  --summary-json benchmarks/baselines/profile15_fullyear_v7.json` (~2–3 min), and commit it. RT2 (≤ 10% slower) is
-  run only occasionally, before speed-relevant merges. RT1a/b are free draft checks on every scorecard.
-- **Batch the baseline-changing work** (Rae, 2026-11-13: avoid dead time): P39 and any adopted T32 variant go into one
-  baseline refresh (~15 min of scorecards), then the ranker-table rebuild (P31, ~2.5 h, needs the drive) runs
-  **overnight**. Neither is urgent.
-- **Ranker v1** on the rebuilt tables:
-  - T27 decline model (all 3 draws per negative source);
-  - per-bin thresholds;
-  - `train_3k`;
-  - `half_snr_min`;
-  - drop the persistent-weak-period "quiet" stacks from the negatives.
-
-  `runs/t11_ranker`, `runs/t27_ranker` are in main's `runs/`. Report <1 d success at matched precision, plus the
-  negatives' FP rate.
-- P25 noise-level features (step 1 with ranker v1 if cheap).
-- T5 follow-ups: P32 (`half_lag_consistency` gate vs sub-day success); P33 (low priority).
-- P39 (deterministic `np.abs` in `guess_acf_fft`): small; changes final-answer bits once, so it needs a new baseline.
+## Next up (after the batch above)
+- **Ranker v1** on the rebuilt tables: T27 decline model (all 3 draws per negative source), per-bin thresholds,
+  `train_3k`, `half_snr_min`, drop the persistent-weak-period "quiet" stacks from the negatives. `runs/t11_ranker`,
+  `runs/t27_ranker` are in main's `runs/`. Report <1 d success at matched precision plus the negatives' FP rate.
+- P44 (proposed on the first P43 branch; lands on main when it merges): joint redesign of window rejection + the SNR gate, judged on a fresh dev set, not
+  dev_medium. P25 noise-level features. P32 / P33 (T5 follow-ups). P41 (skeptical methodology reviewer) and P42
+  (top-N candidates per method) when Rae says.
 
 ## Pending, no decision needed
 - FFI check of three line-like noise peaks (TIC 10001638723 at 2.95 d, 10001717113 at 5.52 d, 10001695140 at 9.95 d):
