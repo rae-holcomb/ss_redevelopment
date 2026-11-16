@@ -1,5 +1,5 @@
 {
-  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only. G9-G12 (2026-10-21) are on real SMARTS dev_medium full-year, the default judging set for method changes (Rae); synthetic goals G1-G8 remain as regression checks. H1-H5 (2026-11-13, Rae: headline-card recommendations) grade tools/headline_card.py's headline.json; RT1a/b grade scorecard runtime (free, draft); RT2 grades benchmarks/profile_pipeline.py --summary-json, run occasionally.",
+  "_comment": "Owned by Rae. Agents: propose changes in your report, never edit. Baselines quoted are from benchmarks/baselines/synth200_s0.json (scorecard v2 + SMARTS-like differential rotation in synthetic.make_suite, 2026-10-13). 'success' = correct (within REL_TOL of P_eq) + diffrot (within the active-latitude-band period range). status: draft = reported only; active = enforced (check_goals exits 1 on FAIL); met = achieved, kept as a record. synth200_s0_v1_scorecard1.json is the pre-diffrot baseline (different synthetic population), kept for history only. G9-G12 (2026-10-21) are on real SMARTS dev_medium full-year, the default judging set for method changes (Rae); synthetic goals G1-G8 remain as regression checks. H1-H5 (2026-11-13, Rae: headline-card recommendations) grade tools/headline_card.py's headline.json; RT1a/b grade scorecard runtime (free, draft); RT2 grades benchmarks/profile_pipeline.py --summary-json, run occasionally. 2026-11-16 (Rae): every dev_medium/dev_small/headline dataset string now names the noise-clean manifests (datasets/*_clean.csv: frozen manifests minus noise_exclude stars, whose noise source was contaminated before injection). Goal targets unchanged; baseline numbers quoted in descriptions are on the old 1000-star set.",
   "goals": [
     {
       "id": "G1",
@@ -76,7 +76,7 @@
     {
       "id": "G9",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.overall.success",
       "op": ">=",
       "target": 0.35,
@@ -85,7 +85,7 @@
     {
       "id": "G10",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.overall.wrong",
       "op": "<=",
       "target": 0.04,
@@ -94,7 +94,7 @@
     {
       "id": "G11",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.by_bin.<1d.success",
       "op": ">=",
       "target": 0.3,
@@ -103,7 +103,7 @@
     {
       "id": "G12",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "union_recall.by_bin.<1d",
       "op": ">=",
       "target": 0.6,
@@ -112,7 +112,7 @@
     {
       "id": "H1",
       "status": "active",
-      "dataset": "headline:dev_medium:assigned,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:assigned,population=dev_medium",
       "system": "ranker",
       "metric": "R1_success_tess_cov_P30",
       "op": ">=",
@@ -122,7 +122,7 @@
     {
       "id": "H2",
       "status": "active",
-      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:fullyear,population=dev_medium",
       "system": "ranker",
       "metric": "R3_correct_pop",
       "relative": {
@@ -133,7 +133,7 @@
     {
       "id": "H3a",
       "status": "active",
-      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:fullyear,population=dev_medium",
       "system": "ranker",
       "target_system": "hand",
       "metric": "R4_precision.0.1",
@@ -143,7 +143,7 @@
     {
       "id": "H3b",
       "status": "active",
-      "dataset": "headline:dev_medium:assigned,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:assigned,population=dev_medium",
       "system": "ranker",
       "target_system": "hand",
       "metric": "R4_precision.0.1",
@@ -153,7 +153,7 @@
     {
       "id": "H4",
       "status": "active",
-      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:fullyear,population=dev_medium",
       "system": "ranker",
       "metric": "R5_within20_half",
       "op": ">=",
@@ -163,7 +163,7 @@
     {
       "id": "H5",
       "status": "active",
-      "dataset": "headline:dev_medium:fullyear,population=dev_medium",
+      "dataset": "headline:dev_medium_clean:fullyear,population=dev_medium",
       "system": "ranker",
       "metric": "R2_success_pop",
       "relative": {
@@ -174,7 +174,7 @@
     {
       "id": "RT1a",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "runtime.median_seconds",
       "relative": {
         "max_rise_frac": 0.25
@@ -184,7 +184,7 @@
     {
       "id": "RT1b",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
       "metric": "runtime.median_seconds",
       "relative": {
         "max_rise_frac": 0.25

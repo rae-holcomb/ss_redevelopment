@@ -18,7 +18,7 @@ Stages (columns of the output CSV, seconds):
 
 Usage
 -----
-    python benchmarks/profile_pipeline.py --manifest datasets/dev_medium.csv --data-root data/smarts_dev \
+    python benchmarks/profile_pipeline.py --manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev \
         --star-ids a,b,c [--ignore-manifest-sectors] --repeats 3 --out runs/profile/times.csv
     python benchmarks/profile_pipeline.py --synthetic 20 --seed 0 --out runs/profile/synth.csv
     ... --cprofile runs/profile/prof.txt     # cProfile of one pass over the stars, top 60 by tottime/cumtime

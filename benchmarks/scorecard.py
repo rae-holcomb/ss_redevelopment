@@ -367,6 +367,23 @@ def load_noise_table(path=None) -> dict:
     return {int(r["sim_id"]): r for r in t.to_dict("records")}
 
 
+def check_no_noise_excluded(man: pd.DataFrame, noise_tab: dict, name) -> None:
+    """Refuse a manifest holding stars whose SMARTS noise source is flagged noise_exclude (Rae, 2026-11-16).
+
+    Those noise light curves carried periodic contamination before the rotation signal was injected, so they must
+    never be used to develop or judge the pipeline. Use the *_clean manifests (tools/build_clean_manifests.py), or
+    pass allow_noise_excluded (scorecard --allow-noise-excluded) for an audit of the contaminated stars themselves.
+    """
+    bad = [str(r["star_id"]) if "star_id" in man.columns else str(r["sim_id"])
+           for _, r in man.iterrows()
+           if (n := noise_tab.get(int(r["sim_id"]))) is not None and bool(n["noise_exclude"])]
+    if bad:
+        stem = Path(str(name)).stem
+        raise SystemExit(f"{name}: {len(bad)} star(s) have noise_exclude=True (contaminated noise source; first: "
+                         f"{bad[0]}). Use datasets/{stem}_clean.csv, or pass --allow-noise-excluded only to "
+                         "audit those stars (Rae, 2026-11-16).")
+
+
 def in_noise_subset(noise: dict | None, subset: str) -> bool:
     """Is a star (its `noise` task dict) in the named subset: 'quiet' = noise_class quiet, not periodic,
     not excluded; 'quiet_strict' = quiet and not a coherent-quiet source (T25 / review of T20)."""
@@ -553,6 +570,8 @@ def dataset_string(args) -> str:
             base += ",sectors=" + ("ignored" if getattr(args, "ignore_manifest_sectors", False) else "manifest")
     if getattr(args, "noise_subset", "all") != "all":
         base += f",noise_subset={args.noise_subset}"
+    if getattr(args, "allow_noise_excluded", False):
+        base += ",noise_excluded=allowed"
     spec, seed, weighting, lib_path = _coverage_args(args)
     if spec == cov.FULL:
         return base
@@ -587,6 +606,8 @@ def build_tasks(args) -> list:
     if subset != "all" and not noise_tab:
         raise SystemExit("--noise-subset needs the noise table (benchmarks/noise_sources_dev.csv) and a manifest "
                          "with a sim_id column; the holdout has none by design.")
+    if noise_tab and not getattr(args, "allow_noise_excluded", False):
+        check_no_noise_excluded(man, noise_tab, args.manifest)
     tasks = []
     for (_, r), pat in zip(man.iterrows(), pats):
         noise = noise_tab.get(int(r["sim_id"])) if noise_tab else None
@@ -941,6 +962,10 @@ def main(argv=None):
                    help="score only stars on quiet noise sources: 'quiet' (T20 class quiet) or 'quiet_strict' "
                         "(also drops the ~34 coherent-quiet sources); default all. Metrics for both subsets "
                         "are always reported (final.quiet_noise*, v5) whatever this is. Changes config.dataset.")
+    p.add_argument("--allow-noise-excluded", action="store_true",
+                   help="allow manifest stars whose noise source is flagged noise_exclude (refused by default since "
+                        "2026-11-16, Rae: never develop on contaminated stars; use datasets/*_clean.csv). For audits "
+                        "of those stars only; adds ',noise_excluded=allowed' to config.dataset.")
     p.add_argument("--noise-table", type=Path, default=None,
                    help="per-star noise table (default benchmarks/noise_sources_dev.csv)")
     p.add_argument("--detectability-table", type=Path, default=None,

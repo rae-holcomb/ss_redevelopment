@@ -599,3 +599,13 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   baselines need a `_v8` refresh and the ranker tables (P31) a rebuild on it. Follow-up P43 (decayed-tail losses;
   P41 on the branch). **Pitfalls:** the vertex-scatter separation seen on dev_small (50 stars) vanished on dev_medium;
   no threshold scans on dev_medium (Rae: keep the judging set clean).
+- **2026-11-16 — Develop and judge only on noise-clean stars** (Rae). 126 of dev_medium's 1,000 stars (3 of dev_small's
+  50) sit on a SMARTS noise source flagged `noise_exclude` (T20 `exclude_from_training`: contaminated before the rotation
+  was injected); they hold 55 of the 88 full-year `_v7` wrongs. New `datasets/dev_{small,medium}_clean.csv
+  (`tools/build_clean_manifests.py`); `scorecard.build_tasks` refuses manifests with such stars (`--allow-noise-excluded`
+  for audits); goals.json dataset strings and the headline card now name the clean manifests; judging baselines
+  `dev_medium_clean_{fullyear,assigned}_v7.json`, derived from `_v7` tables with `tools/rescore_subset.py` (exact; no
+  rerun). Three profile stars swapped for clean ones. **Re-scoring T31/T32/P43 on the clean stars** (from their per-star
+  tables) keeps every variant's ranking; on clean stars `local_tol` is success 0.252 / 0.143, wrong 0.019 / 0.024 vs
+  `_v7` 0.254 / 0.146, 0.038 / 0.029 (full-year / assigned), and `local_tol_tail` 0.262 / 0.152, wrong 0.023 / 0.029.
+  No reruns needed. train_v0 and the negatives were already clean; the holdout (no sim_id) must be filtered when opened.

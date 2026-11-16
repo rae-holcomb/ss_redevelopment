@@ -1,4 +1,4 @@
-# Handoff note (2026-11-13, coordinator → fresh coordinator)
+# Handoff note (2026-11-13, updated 2026-11-16; coordinator → fresh coordinator)
 
 For a **fresh coordinator session.** The previous coordinator ran 2026-11-11 → 2026-11-13 (summarized twice) and was
 handed off to keep turns cheap on Rae's Pro plan.
@@ -108,17 +108,34 @@ and memory was heavily compressed (16 GB RAM). Our jobs starve the UI. Every bri
 - Goals proposal thresholds/conflicts (`reports/2026-11-10_goals-proposal/`, `benchmarks/goals_proposed.json`).
 - Midway review leftovers: validation sources; Roman scoping now vs later.
 
-## Overnight queue 2026-11-13 (coordinator; log `runs/overnight_2026-11-13/queue.log`)
-Script: the coordinator's scratchpad `overnight_2026-11-13.zsh` (all steps `--resume`; rerun it if interrupted).
-1. pytest on trial merges of T32 and P35. 2. RT2 profile baseline -> `runs/overnight_2026-11-13/profile15_fullyear_v7.json`
-(review, then commit to `benchmarks/baselines/`). 3. P39 (`claude/p39-acf-fft-abs2`, reproducible |c|^2 in acf_fft +
-ml_features) scorecards dev_medium fy/as + synth200 vs `_v7` -> candidate `_v8`. 4. P31 tables on P39 code:
-`runs/p31_dev_medium_{assigned,fullyear}`, drive `extracted/p31_tables/{train_3k,neg_dev_medium,neg_train}`.
-Default comb fit is still `local_screen2`. If Rae adopts T32's `local_tol`, the tables need another (overnight) rebuild.
+## Status 2026-11-16 (coordinator #2)
+- **Noise-clean rule (Rae, 2026-11-16):** develop and judge only on `datasets/dev_{small,medium}_clean.csv` (the frozen
+  sets minus `noise_exclude` stars). The scorecard refuses the old manifests; judging baselines are
+  `dev_medium_clean_{fullyear,assigned}_v7.json`. Every brief must say: use `_clean` manifests, and filter any per-star
+  table by `~noise_exclude`.
+- **Merged:** T32 (`ec03830`; follow-up P41 -> **P43** on main), P39 (`80fa98c`).
+- **Branch `claude/local-tol-default`** (default -> `local_tol`, gate-test updates) and **`claude/p43-decayed-tail-22a749`**
+  (P43 variants `local_tol_tail` etc. + `drift_a_frac` feature; built on the former; report
+  `reports/2026-11-15_p43-decayed-tail/`, scored on all 1,000 stars). Both pushed, NOT merged. Trial merge of P43 into
+  main: 543 pass, 1 expected failure (synthetic bit-identical test, needs the synth200 baseline regenerated).
+- **P43 re-scored on clean stars** (no rerun; per-star tables in the P43 worktree `runs/p43/sc/`): `local_tol` 0.252 /
+  0.143 success, 0.019 / 0.024 wrong; `local_tol_tail` 0.262 / 0.152, 0.023 / 0.029; `_v7` 0.254 / 0.146, 0.038 /
+  0.029 (full-year / assigned). On clean stars `local_tol_tail` beats `_v7` on success in both modes with equal-or-lower
+  wrong, so P43's "keep local_tol" recommendation went back to Rae as a decision. All local_tol variants lose 0.02-0.03
+  at 10-30 d vs `_v7`.
+- **_v8 plan (no compute needed for dev_medium):** after Rae picks the default and the branches merge (rebase onto main
+  for the clean-manifest change), make `dev_medium_clean_*_v8` with `tools/rescore_subset.py` from the P43 session's
+  runs of the chosen variant (`runs/p43/sc/<variant>_dm{fy,as}`), only if that code equals merged main for the default
+  path; else rerun on `dev_medium_clean.csv`. Regenerate `synth200_s0` tables (~2 min) and the RT2 profile
+  (`--manifest datasets/dev_medium_clean.csv --star-ids-file benchmarks/profile_stars.txt`; 3 stars swapped 2026-11-16).
+- **Then:** P31 ranker-table rebuild overnight (drive needed); dev_medium tables from `dev_medium_clean.csv`.
+- **Overnight queue 2026-11-13** was cancelled 2026-11-15 (it deadlocked: a watcher's command line contained "pytest",
+  matching the queue's idle check; put follow-up jobs in script files). P34 (roman-rotators) trial-merge pytest: 510 pass.
+- **Awaiting Rae's OK to merge:** P35 WG6 loader, P34 Roman rotator scoping.
 
 ## Next up (after the above)
 - **Runtime baseline for goal RT2** (no Rae input needed): when the machine is idle (after T32), run
-  `nice -n 15 $PY benchmarks/profile_pipeline.py --manifest datasets/dev_medium.csv --data-root data/smarts_dev
+  `nice -n 15 $PY benchmarks/profile_pipeline.py --manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev
   --ignore-manifest-sectors --star-ids-file benchmarks/profile_stars.txt --features --repeats 3
   --summary-json benchmarks/baselines/profile15_fullyear_v7.json` (~2–3 min), and commit it. RT2 (≤ 10% slower) is
   run only occasionally, before speed-relevant merges. RT1a/b are free draft checks on every scorecard.

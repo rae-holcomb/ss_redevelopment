@@ -4,7 +4,7 @@
     {
       "id": "G13",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
       "metric": "final.searchable.overall.none",
       "op": "<=",
       "target": 0.65,
@@ -13,7 +13,7 @@
     {
       "id": "G14",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
       "metric": "final.unsearchable.overall.none",
       "op": ">=",
       "target": 0.9,
@@ -22,7 +22,7 @@
     {
       "id": "G15",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
       "metric": "final.searchable.overall.wrong",
       "op": "<=",
       "target": 0.05,
@@ -31,7 +31,7 @@
     {
       "id": "G16",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.searchable.by_bin.*.success",
       "op": ">=",
       "target": 0.3,
@@ -40,7 +40,7 @@
     {
       "id": "G17",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=manifest",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
       "metric": "final.unsearchable.overall.wrong",
       "op": "<=",
       "target": 0.05,
@@ -49,7 +49,7 @@
     {
       "id": "G18",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.quiet_noise_strict.overall.success",
       "op": ">=",
       "target": 0.254,
@@ -58,7 +58,7 @@
     {
       "id": "G19",
       "status": "draft",
-      "dataset": "datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored",
+      "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
       "metric": "final.quiet_noise_strict.overall.wrong",
       "op": "<=",
       "target": 0.036,
