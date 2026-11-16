@@ -37,9 +37,12 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
   figures; also the batch runner for any manifest, with per-method Stage-1
   results in `per_method.csv`), `check_goals.py` (grades against `goals.json`
-  and a baseline), `baselines/` (committed reference metrics; use the `_v7` files).
+  and a baseline), `baselines/` (committed reference metrics; use the `dev_medium_clean_*_v7` files).
 - `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
-  `datasets/README.md`). Dev files are local in `data/smarts_dev/`; score them with
+  `datasets/README.md`). **Develop and judge only on the noise-clean copies `dev_small_clean.csv` /
+  `dev_medium_clean.csv`** (Rae, 2026-11-16): they drop stars whose real-TESS noise source is flagged
+  `noise_exclude` (contaminated before injection). The scorecard refuses a manifest holding such stars
+  (`--allow-noise-excluded` only to audit them); ad-hoc scripts must read the `_clean` files too. Dev files are local in `data/smarts_dev/`; score them with
   `--data-root data/smarts_dev` (`--ignore-manifest-sectors` for full-year).
   `datasets/coverage/`: real-star TESS sector-pattern libraries (see its README).
 - `reports/`: one folder per agent task (README + figures + notebook).
@@ -118,11 +121,11 @@ task from `docs/TASKS.md`:
   `datasets/holdout.csv` unless Rae says so.
 - Any claim of improvement needs a before/after `check_goals.py --baseline`
   on the same dataset string.
-- Synthetic scorecards (≤ ~200 stars) and `dev_small` are "quick checks".
-  **dev_medium full-year is the default judging set for method changes**
-  (`--manifest datasets/dev_medium.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
+- Synthetic scorecards (≤ ~200 stars) and `dev_small_clean` are "quick checks".
+  **dev_medium_clean full-year (874 stars) is the default judging set for method changes**
+  (`--manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
   ~7.5 min full-year / ~5.5 min assigned at 3 workers since T31; Rae's standing OK, 2026-10-21; baseline
-  `benchmarks/baselines/dev_medium_fullyear_v7.json`; `_assigned_v7` for assigned). Use assigned coverage (no
+  `benchmarks/baselines/dev_medium_clean_fullyear_v7.json`; `dev_medium_clean_assigned_v7` for assigned). Use assigned coverage (no
   `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
   without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go at the end of `docs/TASKS_PROPOSED.md`.

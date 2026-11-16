@@ -4,6 +4,8 @@
 |---|---|---|---|
 | `dev_small.csv` | 50 | `data/smarts_dev` | laptop: `data/smarts_dev/` (gitignored, ~8 MB) |
 | `dev_medium.csv` | 1,000 | `data/smarts_dev` | laptop: `data/smarts_dev/` (~156 MB together with dev_small) |
+| `dev_small_clean.csv` | 47 | `data/smarts_dev` | `dev_small.csv` minus its 3 `noise_exclude` stars |
+| `dev_medium_clean.csv` | 874 | `data/smarts_dev` | `dev_medium.csv` minus its 126 `noise_exclude` stars |
 | `holdout.csv` | 3,000 | the SMARTS data root (`$SMARTS_DATA_ROOT`, default `/Volumes/Data_Vault/smarts_data`) | drive: `extracted/holdout/` |
 | `train_v0.csv` (T10) | 3,000 | `$SMARTS_DATA_ROOT` | drive: `extracted/train_v0/` |
 
@@ -12,6 +14,14 @@ strict-quiet noise (T20 `quiet`, not `exclude_from_training`, not the 2026-11-09
 noise TIC shared with the >= 800k pool), stratified and coverage-assigned like dev_medium. The first 1,000 rows
 (`nested_1k`, `train_order` 0-999) are a balanced nested subset. Extra columns: `subset`, `nested_1k`,
 `train_order`, `noise_tic`, `noise_classification`, `noise_coherent_quiet`. Summary: `train_v0_build_summary.json`.
+
+**Use the `_clean` dev manifests** (Rae, 2026-11-16). The frozen dev sets predate the T20 noise flags; 126 of
+dev_medium's 1,000 stars (3 of dev_small's 50) sit on a noise source flagged `noise_exclude` (T20
+`exclude_from_training`: known variable, crowded contamination, or unexplained source-specific signal). They carry
+55 of the 88 full-year `_v7` wrong answers. `tools/build_clean_manifests.py` writes the `_clean` files (frozen rows
+minus those sim_ids, same columns and order; `--check` verifies them, and `tests/test_noise_exclusion.py` too). The
+scorecard refuses a manifest holding such stars unless `--allow-noise-excluded` (audits only). The holdout has no
+sim_id column; filter it the same way when Rae opens it. `train_v0` and the negatives were already built without them.
 
 **Never score `holdout.csv` unless Rae says so.** These manifests are frozen once Rae
 approves them. A change means a new versioned file (`dev_medium_v2.csv`), never an edit.

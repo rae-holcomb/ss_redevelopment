@@ -1,8 +1,9 @@
 # Fixed 15-star dev_medium set for runtime profiling (T12/T31; benchmarks/profile_pipeline.py --star-ids-file)
+# 2026-11-16: 004433, 008705, 311204 (noise_exclude) replaced by 003078, 010567, 285933 (same bin, outcome and ~runtime).
 smarts-tess-v1.0-001810
 smarts-tess-v1.0-002102
-smarts-tess-v1.0-004433
-smarts-tess-v1.0-008705
+smarts-tess-v1.0-003078
+smarts-tess-v1.0-010567
 smarts-tess-v1.0-009444
 smarts-tess-v1.0-014308
 smarts-tess-v1.0-029013
@@ -12,5 +13,5 @@ smarts-tess-v1.0-091212
 smarts-tess-v1.0-098694
 smarts-tess-v1.0-151481
 smarts-tess-v1.0-218521
-smarts-tess-v1.0-311204
+smarts-tess-v1.0-285933
 smarts-tess-v1.0-995392

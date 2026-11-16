@@ -30,7 +30,7 @@ Each number carries a bootstrap standard error (stars resampled with replacement
 
 Example
 -------
-    python tools/headline_card.py --mode assigned --manifest datasets/dev_medium.csv \\
+    python tools/headline_card.py --mode assigned --manifest datasets/dev_medium_clean.csv \\
         --hand "hand (T5)=benchmarks/baselines/dev_medium_assigned_t5_tables/per_star.csv" \\
         --ranker "ranker v0=/path/to/runs/t27_ranker/v0_assigned_top1.csv" \\
         --negatives /path/to/runs/t27_ranker/v0_assigned_top1.csv --out runs/headline_assigned
@@ -61,7 +61,7 @@ DEFAULT_PREVALENCES = (0.1, 0.3, 0.5)
 # Rae, 2026-11-12: default to the dev_medium period mix, NOT McQuillan+2014. Kepler's selection has almost no
 # P < 1 d stars (few M dwarfs), and we must stay sensitive to fast rotators; dev_medium has a good share in every bin.
 DEFAULT_POPULATION = "dev_medium"
-DEV_MEDIUM_MANIFEST = ROOT / "datasets" / "dev_medium.csv"
+DEV_MEDIUM_MANIFEST = ROOT / "datasets" / "dev_medium.csv"  # period mix only (injected P); scoring uses --manifest (clean)
 RANKER_V0_THRESHOLD = 1.3571535348892212   # runs/t27_ranker/results.json, models.v0.thresholds.v0_original
 N_BOOT = 200
 
@@ -144,6 +144,15 @@ def load_negatives(path, threshold: float = RANKER_V0_THRESHOLD) -> pd.DataFrame
         "hand_answered": df["final_period"].notna().to_numpy(),
         "ranker_answered": (df["top_score"] >= threshold).to_numpy(),
     })
+
+
+def restrict_to_stars(frame: pd.DataFrame, keep: set, source) -> pd.DataFrame:
+    """Rows of a system frame whose star_id is in the manifest; every manifest star must be present."""
+    ids = frame["star_id"].astype(str)
+    missing = keep - set(ids)
+    if missing:
+        raise SystemExit(f"{source}: {len(missing)} manifest stars missing (first: {sorted(missing)[0]})")
+    return frame[ids.isin(keep)].reset_index(drop=True)
 
 
 # ----------------------------------------------------------------------------- scoring
@@ -396,8 +405,9 @@ def main(argv=None):
     """CLI: compute the card for each --hand / --ranker system and write headline.json + headline.md."""
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--mode", required=True, choices=["assigned", "fullyear"])
-    ap.add_argument("--manifest", default=str(ROOT / "datasets" / "dev_medium.csv"),
-                    help="manifest with star_id + coverage_weight (used in assigned mode)")
+    ap.add_argument("--manifest", default=str(ROOT / "datasets" / "dev_medium_clean.csv"),
+                    help="manifest with star_id + coverage_weight (used in assigned mode); systems are restricted "
+                         "to its stars. Default: the noise-clean dev_medium (Rae, 2026-11-16)")
     ap.add_argument("--hand", action="append", help="LABEL=per_star.csv (repeatable)")
     ap.add_argument("--ranker", action="append", help="LABEL=top1.csv (repeatable)")
     ap.add_argument("--ranker-threshold", type=float, default=RANKER_V0_THRESHOLD)
@@ -409,12 +419,19 @@ def main(argv=None):
     args = ap.parse_args(argv)
 
     manifest = pd.read_csv(args.manifest) if args.manifest and os.path.exists(args.manifest) else None
+    if manifest is not None and "sim_id" in manifest:  # refuse contaminated-noise stars (Rae, 2026-11-16)
+        sys.path.insert(0, str(ROOT / "benchmarks"))
+        import scorecard as sc
+        sc.check_no_noise_excluded(manifest, sc.load_noise_table(), args.manifest)
     prevalences = tuple(float(x) for x in args.prevalences.split(","))
     neg = load_negatives(args.negatives, args.ranker_threshold) if args.negatives else None
     systems = [(lab, "hand", load_hand(p), p) for lab, p in _parse_pairs(args.hand)]
     systems += [(lab, "ranker", load_ranker(p, args.ranker_threshold), p) for lab, p in _parse_pairs(args.ranker)]
     if not systems:
         raise SystemExit("give at least one --hand or --ranker")
+    if manifest is not None and "star_id" in manifest:
+        keep = set(manifest["star_id"].astype(str))
+        systems = [(lab, kind, restrict_to_stars(frame, keep, path), path) for lab, kind, frame, path in systems]
     cards = {}
     for label, kind, frame, path in systems:
         fp = None if neg is None else negatives_fp_rate(

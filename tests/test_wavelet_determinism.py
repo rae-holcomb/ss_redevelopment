@@ -111,10 +111,10 @@ def _wavelet_digest(star: str) -> str:
     warnings.simplefilter("ignore")
     import pandas as pd
     import scorecard as sc
-    man = pd.read_csv(ROOT / "datasets" / "dev_small.csv")
+    man = pd.read_csv(ROOT / "datasets" / "dev_small_clean.csv")
     row = man[man["star_id"].str.endswith(star)].iloc[0]
     from types import SimpleNamespace
-    args = SimpleNamespace(synthetic=None, manifest=ROOT / "datasets" / "dev_small.csv", seed=0,
+    args = SimpleNamespace(synthetic=None, manifest=ROOT / "datasets" / "dev_small_clean.csv", seed=0,
                            data_root=str(DEV_DIR), ignore_manifest_sectors=False, coverage=sc.cov.FULL)
     task = next(t for t in sc.build_tasks(args) if t["star_id"] == row["star_id"])
     _, t, f, *_ = sc._load(task)
