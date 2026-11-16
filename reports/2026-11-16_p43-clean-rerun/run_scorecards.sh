@@ -23,7 +23,7 @@ for v in "$@"; do
     SS_COMB_VARIANT=$v nice -n 15 $PY benchmarks/scorecard.py $args --n-workers 3 --outdir $out --resume > $out.log 2>&1 || { echo "FAILED $v $mode"; tail -5 $out.log; continue; }
     $PY benchmarks/check_goals.py $out/metrics.json --baseline benchmarks/baselines/${base}.json > $REP/data/check_goals/${v}_${mode}.txt 2>&1
     cp $out/metrics.json $REP/data/metrics/${v}_${tag}.json
-    cp $out/per_star.csv $REP/data/per_star/${v}_${tag}.csv 2>/dev/null
+    gzip -9 -c $out/per_star.csv > $REP/data/per_star/${v}_${tag}.csv.gz 2>/dev/null
     grep -iE "success|OVERALL" $REP/data/check_goals/${v}_${mode}.txt | head -4
     echo "== $(date +%H:%M) done $v $mode; cooling 120 s"
     sleep 120

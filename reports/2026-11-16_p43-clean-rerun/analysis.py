@@ -116,7 +116,7 @@ def fig_fvt():
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.3), sharey=False)
     bins = np.linspace(0, 1, 12)
     for ax, v in zip(axes, ("local_tol", "local_tol_trim", "local_tol_cs_trim")):
-        frames = [pd.read_csv(D / f"cands_{m}.csv") for m in MODES]
+        frames = [pd.read_csv(D / f"cands_{m}.csv.gz") for m in MODES]
         c = pd.concat(frames)
         c = c[c.variant == v]
         okcols = [k for k in c.columns if k.startswith("ok_") and k != "ok_frac_vertex_tol"]

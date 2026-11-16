@@ -30,7 +30,7 @@ def main():
             df = L.candidate_frame(recs, v).drop(columns=["teeth"])
             df.insert(0, "variant", v)
             frames.append(df)
-        pd.concat(frames).to_csv(HERE / f"data/cands_{mode}.csv", index=False)
+        pd.concat(frames).to_csv(HERE / f"data/cands_{mode}.csv.gz", index=False)
 
         changed = {r["star_id"]: r for r in pickle.load(open(L.ROOT / f"runs/p43_clean/harness/changed_{mode}.pkl", "rb"))}
         rows = []

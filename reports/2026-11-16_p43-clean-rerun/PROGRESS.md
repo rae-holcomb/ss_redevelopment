@@ -8,3 +8,6 @@
 - Running full-dataset harness (all variants, both modes) -> runs/p43_clean/harness/all_{mode}.pkl
 - Full-dataset harness screen done (data/screen_summary.csv). trim variants lift success above _v7; pos ~no effect;
   cs small. Official scorecards next: local_tol_trim, local_tol_cs, local_tol_cs_trim (fy, assigned, synth).
+- Official scorecards done for local_tol_trim, local_tol_cs_trim, local_tol_cs (all PASS dev_medium vs _v7 and vs
+  local_tol; synth FAIL only on the >30d star local_tol already loses). Profiling done. Report written (README,
+  figures, executed notebook). Recommendation: local_tol_trim.
