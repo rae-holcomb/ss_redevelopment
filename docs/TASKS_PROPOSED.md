@@ -374,9 +374,25 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   install. Install into `ss_openblas` only when this task starts; check that it keeps numpy 1.26.4 and pin it in
   `environment.yml`. FL's 54 templates aren't enough. The rotator set needs a real spread of spectral types and periods
   (T28 decisions), so start with a short scoping pass on where those come from.
+- **Status:** scoping + prototype merged 2026-11-19 (`reports/2026-11-13_p34-roman-rotators/`). Recommends a celerite2 GP
+  generator (`tools/make_roman_rotators.py`) as `romrot_v0` (build ~1.6–2.8 CPU-h, Rae's local job).
+- **Rae's answers (2026-11-19) to the report's open questions:**
+  - Q4 giants: **keep the stratum.** The OGLE giants will be saturated, but the GBTDS will have many unsaturated giants.
+  - Q2 long periods: **both, single season first** (P46).
+  - Q3: Rae is asking Zach for his GBTDS synthetic population.
+  - Q5 Kepler realism check: **yes** (P47).
+  - Q6 τ_spot priors / "best-achievable" period: Rae wants it explained before deciding (coordinator, in chat 2026-11-19).
+  - The F146 amplitude factor (×0.7 from the Kepler band) is an open discussion (D5).
+  - Noise/systematics: look for existing work first (P49).
+- **Training-set philosophy for Roman (Rae, 2026-11-19):** `romrot_v0` only needs to be good enough for development. Once
+  GBTDS season-1 data are out, make SMARTS-like rotation-injected light curves from quiet GBTDS stars, and use them to
+  retrain the ranker and adjust, so the training method stays the same across surveys. If the TESS training approach
+  changes before then, the Roman one follows it.
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
-- **Status:** done 2026-11-13, awaiting Rae's review (`reports/2026-11-13_p35-wg6-loader/`, branch `claude/p35-wg6-loader-ef0d37`). CEP absent from the improved set; non-rotator scoring needs a decision (report Q1).
+- **Status:** merged 2026-11-19 (`reports/2026-11-13_p35-wg6-loader/`; Rae's scoring answers applied). The manifest stays
+  v0, not frozen. **CEP:** Rae added the improved-noise Cepheid zip to the drive on 2026-11-19 (it had been left out by a
+  copying mistake), so the manifest needs a rebuild that includes CEP before it is frozen.
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
 - **Idea:**
   - Loader: `load_wg6_roman(zip_or_path, member=None, band="F146", season=None)` reads in place from the zips (no
@@ -471,3 +487,31 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
   (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs the
   `local_tol` baseline. No threshold tuning on dev_medium (Rae, 2026-11-15).
+
+*P44 and P45 are taken by the two decayed-tail (P43) branches, which add them when they merge.*
+
+### P46. Multi-season (3 early seasons) rotation for long periods (from P34, 2026-11-13; was P43 on the P34 branch)
+- **Proposed by:** P34 report. Forecast Roman rotators (old bulge G/K dwarfs) have P_eq ~20–50 d, at or beyond one season's
+  R/3–R/2, and Rvar ≲ σ per point. Prototype a joint analysis of the 3 early seasons (per-season ACF/periodogram averaged,
+  or a joint GP likelihood with celerite2) on `romrot_beyond_v0`, and measure the gain vs single-season decline.
+- **Rae (2026-11-19): do both, single season first.** The first Roman paper will use season-1 data only, so single-season
+  performance (long periods scored as `beyond_reach`) is the immediate need. Do occasional 3-season checks so that
+  performance stays decent, and be ready to quote a 3-season yield estimate in the first paper. This task is the 3-season
+  side, lower priority than the single-season work.
+
+### P47. Kepler realism check for the Roman GP rotators (from P34, 2026-11-13; was P44 on the P34 branch)
+- **Proposed by:** P34 report. ~200 Kepler long-cadence stars with McQuillan/Santos periods, cut to 71 d, resampled to
+  12.1 min, scaled ×0.7 to F146 and given WG6 improved noise; compare pipeline outcomes vs `romrot_v0` GP stars at matched
+  (P, Rvar, σ).
+- **Rae (2026-11-19): yes** (OK to download the ~200 Kepler light curves + McQuillan/Santos tables from MAST). Ties into
+  P48. Rae is asking Zach Claytor for his GBTDS synthetic population (for `pop_weight`).
+
+### P48. Run the pipeline on Kepler data (Rae, 2026-11-19; logged, not scheduled)
+- **Proposed by:** Rae. Apply the rotation pipeline to Kepler light curves, beyond P47's 200-star realism check.
+  Scope (quarters vs full baseline, which catalogue to compare against, training data) to be worked out when scheduled.
+
+### P49. Survey existing Roman noise and systematics models (Rae, 2026-11-19)
+- **Proposed by:** Rae. WG6's improved noise is white Gaussian only (P34: optimistic). Before building our own, find what
+  other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
+  project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
+  deliverable is a short report on what can be reused.

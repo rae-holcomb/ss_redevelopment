@@ -617,3 +617,22 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   non-detections are the best negative pool. Draft manifest `datasets/proposed/p27_validation_draft.csv` (480 stars) and
   catalogue tools in `tools/validation_set/` (stdlib VizieR/MAST clients; Gaia IDs parsed as exact Int64, since float64
   silently corrupted 19-digit IDs). TGLC `cal_*` and QLP `KSPSAP` fluxes are 1-d detrended: read raw SAP/PSF flux only.
+- **2026-11-13 — P34 scoping: Roman-cadence rotators** (`reports/2026-11-13_p34-roman-rotators/`, branch
+  `claude/p34-roman-rotators-accd50`, unmerged). Forecast GBTDS rotators are old bulge F–late-K dwarfs at F146 ~18–23
+  (Claytor & Tayar 2026, ~1.7M periods); OGLE ROT is giant-dominated (~72% est. saturated in F146), so it is not the
+  Roman rotator truth. New `tools/make_roman_rotators.py`: celerite2 `RotationTerm` GP (exact numpy SHO fallback) on
+  WG6's season grid with improved σ(F146), two latitude bands so truth has P_eq + DIFFROT `period_range`; regenerated
+  from seed. celerite2 0.3.2 installed in ss_openblas (numpy/scipy unchanged); **`environment.yml` pin still to add**.
+  Prototype 30 star-seasons: 14 correct / 2 wrong / 14 declined; old G/K dwarfs (P 18–30 d, Rvar ≲ σ) decline, so
+  long periods are the central Roman design issue. Proposed `romrot_v0` (3,375 stars, ~2–3 CPU-h).
+- **2026-11-19 — Merged P35 (WG6 Roman loader + v0 manifest), P27 (real-TESS validation scoping), P34 (Roman rotator
+  scoping)** (Rae). Rae's decisions: P27 skips the 70–180 d block for now (freeze is next); P34 keeps the giants stratum
+  (many unsaturated GBTDS giants expected), does long periods both ways but **single season first** (the first Roman paper
+  uses season-1 data; occasional 3-season checks plus a 3-season yield estimate for that paper: P46), says yes to the
+  Kepler realism check (P47) and logs running the pipeline on Kepler (P48) and a survey of existing Roman
+  noise/systematics models (P49); the F146 ×0.7 amplitude factor is discussion D5; Rae is asking Zach for his GBTDS
+  synthetic population. **Roman training philosophy:** `romrot_v0` is "good enough" for development; once GBTDS season-1
+  data exist, inject rotation into quiet GBTDS stars SMARTS-style and retrain, so training stays consistent across
+  surveys (and follows any change to the TESS approach). **WG6 CEP:** Rae added the improved-noise Cepheid zip
+  (`improved noise/RGES_filters_CEP_lightcurves_final-*.zip`); the WG6 manifest needs a rebuild with CEP before freezing.
+  P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).

@@ -156,3 +156,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
     - **Completeness maps:** recovery vs (P/R, amplitude, coverage class) as a scorecard figure.
   - **Multi-season / clustered sectors (Rae's batch approach):** recorded as **T16h**.
 
+### D5. F146 amplitude factor for Roman rotators (Rae, 2026-11-19; from P34)
+- **Raised:** P34 scales Kepler-band variability amplitude by ×0.7 to F146 (spot contrast ~53% in F146 vs ~76% in the
+  optical; Claytor & Tayar 2026). Most forecast Roman rotators sit near σ per point, so this factor directly moves the
+  detectable fraction. Rae wants to discuss it further.
+- **To discuss:** where the factor comes from (spot temperature contrast, Teff dependence, faculae), whether it should vary
+  by type or be drawn from a distribution, and how a P47 Kepler check or real GBTDS data could calibrate it.
