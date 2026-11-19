@@ -218,6 +218,10 @@ def _load(task: dict):
         lc = load_wg6_roman(task["path"], task["member"], band="F146", season=task["season"],
                             true_period=task["true_period"])
         return task["star_id"], lc.time, lc.flux, float(task["true_period"]), None, dict(task["meta"]), lc.sectors_used
+    if task["kind"] == "tessval":
+        from tess_lc import load_tess_star
+        lc = load_tess_star(task["paths"], flux_column=task["flux_column"], true_period=task["true_period"], tic=task["meta"].get("tic"))
+        return task["star_id"], lc.time, lc.flux, float(task["true_period"]), None, dict(task["meta"]), lc.sectors_used
     from astropy.io import fits
     from preprocessing import load_smarts_fits
     pre = load_smarts_fits(task["path"], **task.get("load_kwargs", {}))
@@ -568,6 +572,8 @@ def dataset_string(args) -> str:
     ",data_root=..." when a data root is used and ",sectors=manifest|ignored" when
     the manifest has a `sectors` column."""
     base = f"synthetic:n={args.synthetic},seed={args.seed}" if args.synthetic else str(args.manifest)
+    if not args.synthetic and parse_tessval_dataset(args.manifest) is not None:
+        return base  # tessval dataset strings are self-describing (flux column, class); data root is $TESS_VALIDATION_ROOT
     if not args.synthetic and parse_wg6_dataset(args.manifest) is not None:
         return base  # WG6 dataset strings are self-describing (set, noise variant, season); data root is $WG6_RESAMPLED_ROOT
     if not args.synthetic:
@@ -641,6 +647,57 @@ def build_wg6_tasks(name) -> list:
             for r in man.itertuples()]
 
 
+TESSVAL_DATASET_RE = re.compile(r"^tessval_v0_(sap|pdcsap)(_eb)?$")
+TESSVAL_MANIFEST = ROOT / "datasets" / "tess_validation_v0.csv"
+
+
+def parse_tessval_dataset(name):
+    """Parse a P27 real-TESS dataset string -> (flux_column, label), or None if `name` isn't one.
+
+    ``tessval_v0_sap`` / ``tessval_v0_pdcsap``: the 268 literature rotators of ``datasets/tess_validation_v0.csv``, scored against
+    the literature period with the unchanged ``classify_period``. SAP reads TESS-SPOC ``SAP_FLUX`` (QLP ``SAP_FLUX`` for stars
+    with no TESS-SPOC file); PDCSAP reads TESS-SPOC ``PDCSAP_FLUX`` only, so it is the paired subset (stars with SPOC data).
+    ``tessval_v0_{sap,pdcsap}_eb``: the 50 Prsa+2022 EBs scored against P_orb: ``correct`` = P_orb lock, ``half``/``double`` =
+    the usual EB aliases (the report's "EB lock" = correct + half + double; not a rotation success).
+    The non-rotator blocks (``nonrotator``, ``nonrotator_candidate``, ``expected_undetectable``) and the ``pulsation`` outcome
+    need new metric definitions and are NOT scored here (see reports/2026-11-19_p27-freeze/). Files are read from
+    ``$TESS_VALIDATION_ROOT`` (or ``--data-root``) via ``files_index.csv``, written by ``tools/download_tess_validation.py``.
+    """
+    m = TESSVAL_DATASET_RE.match(str(name))
+    if not m:
+        return None
+    return ("SAP_FLUX" if m.group(1) == "sap" else "PDCSAP_FLUX"), ("contaminant_eb" if m.group(2) else "rotator")
+
+
+def build_tessval_tasks(name, data_root=None) -> list:
+    """Task dicts for a tessval dataset string (see `parse_tessval_dataset`); stars with no downloaded file are skipped."""
+    from tess_lc import tess_validation_root
+    flux_column, label = parse_tessval_dataset(name)
+    root = tess_validation_root(data_root)
+    idx_path = root / "files_index.csv"
+    if not idx_path.exists():
+        raise SystemExit(f"{idx_path} not found: run tools/download_tess_validation.py, or pass --data-root / set "
+                         "$TESS_VALIDATION_ROOT (is the Data_Vault drive plugged in?)")
+    idx = pd.read_csv(idx_path)
+    idx = idx[idx["status"].isin(["done", "skipped"])]
+    man = pd.read_csv(TESSVAL_MANIFEST)
+    man = man[man["label"] == label]
+    tasks = []
+    for r in man.itertuples():
+        f = idx[idx["tic"] == r.tic]
+        spoc = f[f["product"] == "spoc"]
+        use = spoc if len(spoc) else (f[f["product"] == "qlp"] if flux_column == "SAP_FLUX" else spoc)
+        if not len(use):
+            continue
+        paths = [str(root / p) for p in use["relpath"]]
+        tasks.append(dict(kind="tessval", path=paths[0], paths=paths, flux_column=flux_column, star_id=str(r.star_id),
+                          true_period=float(r.truth_period), load_kwargs={},
+                          meta=dict(tic=int(r.tic), label=r.label, source=r.source, pbin=r.pbin, star_type=r.star_type,
+                                    product=str(use["product"].iloc[0]), flux_column=flux_column, n_files=len(paths),
+                                    Tmag=float(r.Tmag), path=paths[0])))
+    return tasks
+
+
 def build_tasks(args) -> list:
     """Translate CLI dataset arguments into a list of task dicts."""
     if args.synthetic:
@@ -651,6 +708,8 @@ def build_tasks(args) -> list:
                 for lc in make_suite(args.synthetic, seed=args.seed, sectors=sectors)]
     if parse_wg6_dataset(args.manifest) is not None:
         return build_wg6_tasks(args.manifest)
+    if parse_tessval_dataset(args.manifest) is not None:
+        return build_tessval_tasks(args.manifest, getattr(args, "data_root", None))
     man = pd.read_csv(args.manifest)
     if "path" not in man.columns:
         raise SystemExit(f"{args.manifest} needs a 'path' column")
@@ -1048,7 +1107,8 @@ def main(argv=None):
         log.unlink()
 
     tasks = [t for t in build_tasks(args) if t["star_id"] not in done]
-    missing = [t["path"] for t in tasks if t["kind"] in ("fits", "wg6r") and not Path(t["path"]).exists()]
+    missing = [p for t in tasks if t["kind"] in ("fits", "wg6r", "tessval") for p in (t.get("paths") or [t["path"]])
+               if not Path(p).exists()]
     if missing:
         raise SystemExit(f"{len(missing)}/{len(tasks)} manifest files not found (first: {missing[0]}). "
                          "Pass --data-root (dev sets: data/smarts_dev) or set $SMARTS_DATA_ROOT; "

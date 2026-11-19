@@ -144,3 +144,34 @@ python benchmarks/scorecard.py --manifest wg6r_contam_v0_improved_s1 --outdir ru
 python benchmarks/scorecard.py --manifest wg6r_beyond_v0_improved_s1 --outdir runs/wg6r_beyond_s1 # stars with P_true > R/2 (35.5 d)
 ```
 On `contam`, "correct" = lock on the variable's own period = false positive; on ECL/ELL `double` = P_orb lock.
+
+## Real-TESS validation set (P27): `tess_validation_v0.csv`
+
+480 real TESS stars, frozen 2026-11-19 from `datasets/proposed/p27_validation_draft.csv`
+(`tools/build_tess_validation.py`; `--check` rebuilds in memory and fails on any difference;
+`tests/test_tess_lc.py` runs it). Rows are keyed by TIC, not file paths: the light curves are downloaded per sector by
+`tools/download_tess_validation.py` to `$TESS_VALIDATION_ROOT` (default `/Volumes/Data_Vault/tess_validation`), which writes
+`files_index.csv` (paths relative to that root). Product: TESS-SPOC `SAP_FLUX` (QLP `SAP_FLUX` as fallback); PDCSAP is scored
+on the same stars. Loader: `claude_files/tess_lc.py`. **Locked-holdout policy and first-score timing are Rae's call and
+undecided** (see the freeze report); until then treat the whole file as unscored, and don't tune on it.
+
+| `label` | n | `truth_period` | source blocks |
+|---|---|---|---|
+| `rotator` | 268 | literature P_rot, 0.18-65 d | clusters (Hyades, Praesepe, Pleiades, Rup 147, NGC 6811, Blanco 1, NGC 3532, NGC 2547) + Kepler field (McQuillan+2014) |
+| `nonrotator` | 100 | none | `kepler_rc_quiet` (50), `kepler_dwarf_nodetect` (50) |
+| `nonrotator_candidate` | 22 | none | `white_dwarf` |
+| `expected_undetectable` | 40 | none | `claytor_scvz_template` (Zach's list minus the 294 Gaia DR3 variables): scored by detection rate, never as FP |
+| `contaminant_eb` | 50 | orbital P (Prsa+2022), 0.1-60 d | `prsa2022_eb` |
+
+Columns: `star_id` (`TIC<tic>`), `tic`, `label`, `source`, `truth_period`, `truth_kind` (`spot_rotation` / `orbital` / `none`),
+`period_method`, `period_dataset`, `period_ref` (literature provenance for every period), `Tmag`, `Teff`, `logg`, `ra`, `dec`,
+`contratio` (TIC crowding), `gyro_flag`, `sectors` / `n_sectors` (TESSCut FFI sectors), `n_tess_spoc`, `n_qlp`, `n_tglc`,
+`n_cdips` (HLSP light-curve files at MAST when the draft was made), then the columns added at freeze: `pbin` (truth-period bin,
+rotators and EBs), `star_type` (`rc_giant` / `white_dwarf` / `hot_star` = Teff >= 6500 K / `giant` = logg < 3.5 / `dwarf`),
+`pulsation_eligible` (rc_giant, hot_star, giant: a detection may be scored `pulsation`), `gaia_variable` (audit, 0 for every
+`expected_undetectable` star), `product_primary` (`spoc` / `qlp` / `none`) and `scorable` (`product_primary != none`; 72 stars
+have no SPOC or QLP file at MAST and cannot be scored). Rotators and negatives satisfy Tmag <= 14 and TIC `contratio` < 0.2;
+EBs are exempt from the `contratio` cut. Nothing is drawn beyond 71 d (the 70-180 d block is skipped, Rae 2026-11-19).
+
+Scorecard dataset strings (rotators and EBs only; the non-rotator outcomes need metric definitions that are not written yet):
+`tessval_v0_sap`, `tessval_v0_pdcsap`, `tessval_v0_sap_eb`, `tessval_v0_pdcsap_eb`.

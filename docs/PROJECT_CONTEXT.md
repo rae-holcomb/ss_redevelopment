@@ -62,6 +62,7 @@ All files live in a single flat package (`claude_files/` in the
 | `guesses.py` | **Stage 1**: candidate-period generation. Every `guess_*` function. Never touches fitting or computes a phase. |
 | `comb_fit.py` | **Stage 2**: joint comb-of-parabolae fitting and multi-candidate arbitration. `fit_rotation_period` is the main entry point. Imports `InitialGuess` from `guesses.py`. |
 | `preprocessing.py` | Raw SMARTS FITS → pipeline-ready `(time, flux)`. Re-detects the original per-orbit gaps (SMARTS ships gap-*interpolated*), lets you drop bad orbits and/or degrade to a sparser TESS-like sector pattern, regrids to even cadence. `load_smarts_fits()` is the one-call entry point. |
+| `tess_lc.py` | Real-TESS loader (P27): per-sector TESS-SPOC / QLP FITS → `PreprocessedLightCurve` (zero-centred relative flux, 30-min grid with NaN slots). `load_tess_star(paths, flux_column="SAP_FLUX"\|"PDCSAP_FLUX", quality=...)`; refuses short-window-detrended columns (`KSPSAP_FLUX`, TGLC `cal_*`). |
 | `plotting.py` | Diagnostic plots mirroring every pipeline stage. |
 | `alias_metrics.py` | Shared ACF-window / phase-fold alias metrics (T9 features; moved out of `ml_features.py` in T18 so `comb_fit` can use them without a circular import). `half_lag_contrast_terms` drives the half-lag consistency gate. |
 | `ml_features.py` | Flattens a fitted `EnsembleResult` into a ~120-column-per-candidate feature table for ranking-model training. `extract_candidate_features()` is the entry point. Includes coverage-context features (T16e, Section H of FEATURE_DOCUMENTATION) computed from the light curve's own finite-flux sampling. |
@@ -638,3 +639,11 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).
 - **2026-11-19 — P34 Q6 decided** (Rae): Roman GP rotator truth stays P_eq; the "best-achievable" period (from a long
   noise-free draw of the same GP) becomes a diagnostic column in `romrot_v0.csv`, not a scored label.
+- **2026-11-19 — P27 real-TESS validation set frozen** (`reports/2026-11-19_p27-freeze/`, branch `claude/p27-freeze-27f7e1`):
+  `datasets/tess_validation_v0.csv` (480 stars; `tools/build_tess_validation.py --check`), loader `claude_files/tess_lc.py`
+  (+ `tests/test_tess_lc.py`, synthetic FITS), `tools/download_tess_validation.py` (resumable, atomic, `--dry-run`; destination
+  `$TESS_VALIDATION_ROOT`, default Data_Vault; the download itself is Rae's job), scorecard dataset strings
+  `tessval_v0_{sap,pdcsap}[_eb]` for rotators and EBs only (additive; non-rotator outcomes, `pulsation` and the
+  `expected_undetectable` detection rate need metric definitions, proposed in the report, protected files untouched).
+  72 of 480 stars have no SPOC or QLP file at MAST (`scorable` column). Holdout policy and first-score timing are Rae's
+  call: nothing decided, nothing scored.
