@@ -610,3 +610,10 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   `_v7` 0.254 / 0.146, 0.038 / 0.029 (full-year / assigned), and `local_tol_tail` 0.262 / 0.152, wrong 0.023 / 0.029.
   No reruns needed. train_v0 and the negatives were already clean; the holdout (no sim_id) must be filtered when opened.
 - **2026-11-13: P35 WG6 Roman loader + v0 manifest** (`reports/2026-11-13_p35-wg6-loader/`, branch `claude/p35-wg6-loader-ef0d37`). `claude_files/wg6.py` (`load_wg6_roman` reads zips in place, mag to NaN-safe relative flux, 1-indexed 71-d season cut, returns a `PreprocessedLightCurve` subclass with `flux_err`/`meta`; `load_wg6_raw`), `datasets/wg6_roman_v0.csv` (improved noise, seasons 1-3 assumed early, split by FL template/OGLE star, EBs flagged `is_eb`, no CEP in the improved set), builder `tools/build_wg6_manifest.py`, scorecard dataset strings `wg6r_fl_v0_improved_s<k>` / `wg6r_contam_v0_improved_s<k>` (dev only). Non-rotator outcome scoring is an open question (contaminant 'correct' = false positive). No full scorecard run yet.
+- **2026-11-12 — P27 real-TESS validation set scoped** (`reports/2026-11-12_validation-set-scoping/`). Zach's 23,332 TIC IDs
+  (`datasets/external/`) are exactly the Claytor+2024 SCVZ TASOC noise-template cut (TIC 5800–6000 K dwarfs, Tmag 6–15),
+  not red clump and not vetted non-rotators (14% of such Kepler stars rotate). Literature: CMD-only red clump has 2–15%
+  rotators + ~0.3 d oscillations; use seismic HeB + Kepler-quiet; WDs are a faint (157 at G < 14) control; Kepler
+  non-detections are the best negative pool. Draft manifest `datasets/proposed/p27_validation_draft.csv` (480 stars) and
+  catalogue tools in `tools/validation_set/` (stdlib VizieR/MAST clients; Gaia IDs parsed as exact Int64, since float64
+  silently corrupted 19-digit IDs). TGLC `cal_*` and QLP `KSPSAP` fluxes are 1-d detrended: read raw SAP/PSF flux only.
