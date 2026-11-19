@@ -7,6 +7,18 @@ keep turns cheap on Rae's Pro plan.
 `docs/PROJECT_CONTEXT.md`, and the Roadmap/statuses in `docs/TASKS.md`. Open `TASKS_PROPOSED.md` /
 `TASKS_DISCUSSIONS.md` only for the item you need (search its `### P##.` / `### D##.` heading). Git history has details.
 
+## Coordinator #3 progress (2026-11-19)
+- **P43 clean rerun done** (`local_dfcdea18-…`, branch `claude/p43-clean-rerun-1340c3`, report
+  `reports/2026-11-16_p43-clean-rerun/`; verified: trial merge into main 528 pass + the 1 expected failure, protected files
+  untouched, metrics match). Same mechanism as the first P43 run (rejection drops the misfit lag-0 / tallest teeth; SNR
+  gate, not vertex gate). Recommends `local_tol_trim` (fy 0.265 / wrong 0.024; as 0.153 / 0.030). Its branch and the
+  first P43 branch conflict in `comb_fit.py` + changelog (both add variants): resolve at merge.
+- **Rae (2026-11-19): before deciding, rerun T32 blind on clean stars** to see whether the P43 fixes are needed at all.
+  Base `claude/t32-clean-base` (pushed) = `aa6af76` (main just before the T32 merge) + `97a01c8`'s noise-clean changes,
+  minus its HANDOFF/changelog edits; 484 pass. Session `local_52307def-…` (`t32-clean-rerun`), report due at
+  `reports/2026-11-19_t32-clean-rerun/`. Compare it against the first T32 report and both P43 runs before the default
+  decision.
+
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
 **Why.** The decayed-tail fix agent (P43, session `local_f120e7df-…`, branch `claude/p43-decayed-tail-22a749`, report
