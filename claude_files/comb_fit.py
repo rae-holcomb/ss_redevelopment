@@ -116,6 +116,8 @@ COMB_VARIANTS = {
 #                `a`/P is recorded as raw.drift_a).
 #   peak_weight  "none" (default) or "snr": the vertex-line IRLS weights are
 #                multiplied by each window's free-parabola height SNR (idea 4).
+#   trim_unaccepted  True: the trailing decayed-tooth trim (_fit_single_candidate
+#                step 4b) also removes teeth whose free vertex was not accepted.
 # No new numeric thresholds: tolerances reuse jitter_frac (the joint fit's
 # jitter bound) and the gates keep their existing thresholds.
 _T32 = dict(solver="local")
@@ -137,6 +139,10 @@ COMB_VARIANTS.update({
     "local_seq_scatter": dict(_T32, track=True, vgate="scatter"),
     "local_seq_quad": dict(_T32, track=True, vgate="tol", tol_growth="const", line_model="quad"),
     "local_seq_snrw": dict(_T32, track=True, vgate="tol", tol_growth="const", peak_weight="snr"),
+    # step-6 fix for local_seq's lost stars: the trailing trim also drops teeth with no accepted
+    # free vertex (tracked windows otherwise keep decayed, peakless late teeth that sink mean_height_snr)
+    "local_seq_trim": dict(_T32, track=True, trim_unaccepted=True),
+    "local_trim": dict(_T32, trim_unaccepted=True),
 })
 DEFAULT_COMB_VARIANT = "local_screen2"  # Rae, 2026-11-13 (T31 merge); was "lsq"
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -1087,7 +1093,7 @@ def _solve_comb(spec: dict, windows, acf_lags, acf, P0, t0, allow_jitter=True, j
     if solver == "local":
         return _fit_comb_local(windows, acf_lags, acf, P0, t0, line_model=spec.get("line_model", "linear"),
                                peak_weight=spec.get("peak_weight", "none"), **kw)
-    if any(k in spec for k in ("track", "vgate", "line_model", "peak_weight")):
+    if any(k in spec for k in ("track", "vgate", "line_model", "peak_weight", "trim_unaccepted")):
         raise ValueError("T32 options (track, vgate, line_model, peak_weight) need solver='local'")
     lsq_kw = dict(loss=loss, tol=spec.get("tol", 1e-6), tr_solver=spec.get("tr_solver", "exact"))
     if solver == "local_warm":
@@ -1265,7 +1271,11 @@ def _fit_single_candidate(
         keep_min = max(min_peaks_required, min_keep_after_trim or 0)
         ordered = sorted(windows, key=lambda w: w.n)
         k = 0
-        while k < len(ordered) and fit["h"][ordered[len(ordered) - 1 - k].n] <= 0:
+        # T32 spec trim_unaccepted (solver "local"): a trailing tooth whose free vertex is
+        # not a maximum inside its window counts as decayed too (no local peak there)
+        acc = getattr(fit["raw"], "accepted", None) if spec.get("trim_unaccepted") else None
+        while k < len(ordered) and (fit["h"][ordered[len(ordered) - 1 - k].n] <= 0
+                                    or (acc is not None and not acc.get(ordered[len(ordered) - 1 - k].n, True))):
             k += 1
         k = min(k, len(ordered) - keep_min)
         if k > 0:
