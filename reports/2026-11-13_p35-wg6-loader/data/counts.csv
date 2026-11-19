@@ -1,4 +1,5 @@
 season,cls,dev,holdout
+1,CEP,19,5
 1,CV,80,20
 1,DSCT,80,20
 1,ECL,240,60
@@ -8,6 +9,7 @@ season,cls,dev,holdout
 1,LPV,80,20
 1,RRLYR,240,60
 1,T2CEP,80,20
+2,CEP,19,5
 2,CV,80,20
 2,DSCT,80,20
 2,ECL,240,60
@@ -17,6 +19,7 @@ season,cls,dev,holdout
 2,LPV,80,20
 2,RRLYR,240,60
 2,T2CEP,80,20
+3,CEP,19,5
 3,CV,80,20
 3,DSCT,80,20
 3,ECL,240,60

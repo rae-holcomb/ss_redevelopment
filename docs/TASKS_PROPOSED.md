@@ -391,8 +391,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
 - **Status:** merged 2026-11-19 (`reports/2026-11-13_p35-wg6-loader/`; Rae's scoring answers applied). The manifest stays
-  v0, not frozen. **CEP:** Rae added the improved-noise Cepheid zip to the drive on 2026-11-19 (it had been left out by a
-  copying mistake), so the manifest needs a rebuild that includes CEP before it is frozen.
+  v0, not frozen. **CEP added 2026-11-19** (branch `claude/wg6-cep-rebuild-b097cd`, not merged): Rae's improved-noise Cepheid zip
+  holds only 24 stars (not ~300), all taken; 19 dev / 5 holdout, 72 rows; every non-CEP row is byte-identical to the
+  previous manifest (14,325 rows now). Ready to freeze once Rae agrees.
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
 - **Idea:**
   - Loader: `load_wg6_roman(zip_or_path, member=None, band="F146", season=None)` reads in place from the zips (no

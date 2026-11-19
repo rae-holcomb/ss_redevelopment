@@ -11,7 +11,7 @@ One row per (file, season). Columns:
     obj_id            the star/object (OGLE id, or ``FL_<idx>``); seasons and magnitude copies share it
     zip, member       FITS location, relative to ``$WG6_RESAMPLED_ROOT`` (default /Volumes/Data_Vault/wg6_roman_data_resampled)
     variant           ``improved`` (only value in v0)
-    cls               ECL, ELL, T2CEP, RRLYR, HB, DSCT, LPV, CV, FL  (ROT/CEP reserved: absent from the improved set)
+    cls               ECL, ELL, T2CEP, CEP, RRLYR, HB, DSCT, LPV, CV, FL  (ROT reserved for P34)
     subtype           OCVS subtype (NC/C for ECL, RRab/RRc/..., ``flare``)
     P_true            catalogue period (OGLE OCVS, or the TESS template's literature rotation period for FL); NaN = none
     p_convention      what P_true means (orbital / pulsation / rotation / ...), from the truth join
@@ -28,8 +28,8 @@ One row per (file, season). Columns:
     eval_set          dev | holdout. Split by FL template (and by OGLE star): nothing is on both sides.
                       The holdout is never evaluated without Rae's go-ahead.
 
-Selection (seeded, deterministic): ~300 stars per contaminant class (ECL, ELL, T2CEP, RRLYR; CEP has no improved
-files: Rae is asking WG6 for it); all of HB/DSCT/LPV/CV up to ``--n-stress`` (100); every FL rotator object at ``--fl-mags`` (17 and 20); the 79 FL
+Selection (seeded, deterministic): ~300 stars per contaminant class (ECL, ELL, T2CEP, RRLYR, CEP; fewer if the class
+is smaller: T2CEP has 100, CEP 24, added 2026-11-19 from the late-arriving improved CEP zip); all of HB/DSCT/LPV/CV up to ``--n-stress`` (100); every FL rotator object at ``--fl-mags`` (17 and 20); the 79 FL
 ``flat`` objects as non-rotator negatives. ~20% of templates / stars go to the holdout.
 
 Inputs: the scoping report's committed inventory + truth tables (``--inventory``, ``--truth``). If the inventory file is
@@ -57,7 +57,7 @@ SCOPING = REPO / "reports/2026-11-12_wg6-dataset-scoping/data/resampled"
 DEFAULT_ROOT = "/Volumes/Data_Vault/wg6_roman_data_resampled"
 SEASON_DAYS = 71.0
 BEYOND_REACH_P = SEASON_DAYS / 2   # R/2 of one contiguous season (D4); P_true above it cannot be recovered from one season
-CONTAM_CLASSES = ("ECL", "ELL", "T2CEP", "RRLYR")      # ~n-per-class stars each (CEP: no improved files)
+CONTAM_CLASSES = ("ECL", "ELL", "T2CEP", "RRLYR", "CEP")   # up to n-per-class stars each (CEP: only 24 exist, all taken)
 STRESS_CLASSES = ("HB", "DSCT", "LPV", "CV")           # smaller stress sets
 EB_CLASSES = ("ECL", "ELL")
 COLUMNS = ["star_id", "obj_id", "zip", "member", "variant", "cls", "subtype", "P_true", "p_convention",
