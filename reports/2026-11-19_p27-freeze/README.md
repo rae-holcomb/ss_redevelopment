@@ -1,102 +1,112 @@
-# P27 freeze: real-TESS validation manifest, loader, download plan
+# P27 freeze: real-TESS validation manifest (v1), loader, download plan, outcomes
 
-**Date:** 2026-11-19 · **Author:** Claude (session started from the coordinator) · **Branch:** `claude/p27-freeze-27f7e1` · **Status:** draft
+**Date:** 2026-11-19 · **Author:** Claude (session started from the coordinator) · **Branch:** `claude/p27-freeze-27f7e1` · **Status:** draft (v1 applies Rae's answers of 2026-11-19)
 
 ## TL;DR
-- **Frozen:** `datasets/tess_validation_v0.csv` (480 stars). The draft already matched every P27 decision, so only two cosmetic fixes were made. `tools/build_tess_validation.py --check` reproduces it from committed inputs.
-- **72 of 480 stars have no SPOC or QLP light curve at MAST** and cannot be scored (15 of the 40 `expected_undetectable`, 32 of 100 `nonrotator`). A `scorable` column marks them. Replace them (new version) or accept?
-- **Download:** the real MAST listing gives **3,201 files, 1.69 GB** (SPOC 1.17 GB + QLP fallback 0.52 GB), ~35–55 min at 1–5 MB/s (assumed, not measured). Nothing was downloaded.
-- Loader `claude_files/tess_lc.py` and scorecard strings `tessval_v0_{sap,pdcsap}[_eb]` (rotators and EBs) are in. Non-rotator outcomes need new metric definitions, proposed below.
-- Holdout policy is Rae's call.
+- **v1 frozen:** `datasets/tess_validation_v1.csv`, 480 stars, every one scorable. 79 stars were replaced (72 with no SPOC/QLP light curve, 7 crowded EBs), strata counts unchanged. A seeded, stratified **30% holdout (144 stars) is locked**; no dataset string can select it. v0 stays as the superseded first freeze.
+- **The download grew:** 4,078 files, **2.06 GB** (SPOC 1.29 + QLP fallback 0.77), ~40–70 min at an assumed 1–5 MB/s, because the replacements have more sectors. Nothing was downloaded.
+- **New outcomes are in** (additive, `final.*` untouched): per-class FP rate, `pulsation`, `expected_undetectable` detection rate, EB lock, under `metrics['tessval']`. On `dev_small_clean` full-year (47 stars) metrics are identical to main's, `check_goals --baseline` PASS.
+- Pulsators now use the Gaia class: 6 stars (all NGC 6811 rotators), none among the negatives.
+- Open: ask Zach about a vetted subset.
 
 ## Question / goal
-P27 follow-up in `docs/TASKS_PROPOSED.md`: freeze the validation manifest, and build the download script, a SPOC/QLP loader and the scoring design. No goal in `benchmarks/goals.json` is touched.
+Implement Rae's 2026-11-19 answers to the seven open questions of the first P27 freeze report (relayed by the coordinator). No `benchmarks/goals.json` change.
 
-## What I did
-1. **Re-checked the draft** (`check_decisions` in the builder asserts all of this, so `--check` re-verifies it):
-   - labels and counts: 268 rotator, 100 nonrotator, 22 nonrotator_candidate, 40 expected_undetectable, 50 contaminant_eb; TIC unique;
-   - Zach's block: all 40 are in his list and carry the label `expected_undetectable`; **none of the 294 Gaia DR3 variables** is among them (the earlier TIC 349058011 is gone), and every one is covered by the Gaia table;
-   - provenance: every row has `period_method`, `period_dataset` and `period_ref`; all rotator periods are spot modulation, 0.18–65.3 d (nothing in 70–180 d, as decided); negatives have no truth period; EB truth is P_orb 0.1–60 d;
-   - cuts: Tmag ≤ 14 everywhere, `contratio` < 0.2 for rotators and negatives; `n_sectors` equals the length of `sectors`.
-2. **Fixes (the full list):**
-   - (a) `n_tess_spoc`, `n_qlp`, `n_tglc`, `n_cdips` were floats (`3.0`); cast to integers.
-   - (b) rows sorted by (label, source, TIC) so the file is stable.
-   - Not fixed, but noted: 7 EBs have `contratio` ≥ 0.2 (the cut was never applied to EBs; a blended EB can lock on a neighbour); TIC 358111274 (an EB) is also in Zach's list, which is fine for an EB test; 13 EBs/WDs have one more SPOC file in the draft counts than MAST lists today (`n_tess_spoc` is a draft-time count, so use the download index, not the column, for what is on disk).
-3. **Columns added:** `star_id`, `truth_kind`, `pbin`, `star_type`, `pulsation_eligible`, `gaia_variable` (audit, 0), `product_primary`, `scorable` (definitions in `datasets/README.md`). `star_type` rules (my proposal, in the builder): `rc_giant` = the `kepler_rc_quiet` block; `hot_star` = Teff ≥ 6500 K (δ Sct / γ Dor strips; 61 stars, mostly rotators in young clusters); `giant` = logg < 3.5.
-4. **Download script** `tools/download_tess_validation.py` (astroquery 0.4.11): metadata through `Observations.query_criteria` + `get_product_list`; resumable (skips files at the expected size), atomic (`.part` then rename), 3 retries with backoff, log at `<root>/download.log`, index `<root>/files_index.csv` with root-relative paths; mount check stops with "plug in the Data_Vault drive". `--qlp fallback` (default) fetches QLP only for stars with no SPOC file. I ran only `--dry-run` (metadata, no files): first on 5 stars, then on all 480 (≈ 20 min of queries).
-5. **Loader** `claude_files/tess_lc.py`: `load_tess_star(paths, flux_column, quality, sectors, timestep)` returns a `PreprocessedLightCurve` subclass (zero-centred per-sector-median relative flux, days from first cadence, 30-min grid, NaN for flagged/missing cadences; 10-min and 200-s sectors are averaged into 30-min bins). Quality: SPOC default bitmask 175, `hard`, `hardest`, `none` or an int; QLP default is any non-zero flag. `KSPSAP_FLUX`, TGLC `cal_*` and similar are refused. 14 tests in `tests/test_tess_lc.py` run on synthetic FITS fixtures; no network or drive.
-6. **Scorecard:** additive only (`parse_tessval_dataset`, `build_tessval_tasks`, a `_load` branch): see Results.
+## Rae's decisions and what I did
+| # | Decision | Done |
+|---|---|---|
+| 1 | Keep a 30% holdout | `split` column: per stratum (label × period bin; label × source for negatives) `round(0.3 n)` stars are `holdout`, seed 20261119. 144 holdout / 336 validation. Dataset strings read `split == "validation"` only; `tests/test_tess_lc.py` checks the holdout is never selected. EBs come out at 34% (9 per bin rounds to 3), rotators 29%. |
+| 2 | Replace the unscorable stars | 72 stars removed, 79 with the crowded EBs. Replacements drawn from the same pools with SPOC or QLP files at MAST (`tools/validation_set/draw_replacements.py`, seed 271, metadata only; committed as `datasets/proposed/p27_v1_replacements.csv`). Rotators match on period bin (a replacement may come from another cluster); other blocks on source. Cuts unchanged (Tmag ≤ 14, `contratio` < 0.2). |
+| 3 | New outcomes approved | `evaluation.py` (additive functions after the existing code) and `scorecard.py` (`metrics['tessval']`); see below. |
+| 4 | Gaia class for hot stars | `hot_star` removed. `gaia_class` (Gaia DR3 classifier via TIC Gaia id, `tools/validation_set/gaia_classes.py`), `gaia_pulsator` = class DSCT\|GDOR\|SXPHE or in the main-sequence-oscillator table, `pulsation_class` = `rc_giant` (Kepler red-clump block) / `gaia_pulsator` / empty. |
+| 5 | QLP fallback only | Kept (default `--qlp fallback`). |
+| 6 | Drop crowded EBs | The 7 EBs with `contratio` ≥ 0.2 are replaced by EBs in the same period bins with `contratio` < 0.2; the cut now holds for all 480. |
+| 7 | Zach | Still open (Rae will ask). |
+
+Fixes carried from the first freeze: integer count columns, stable sort. The replacement for the long-period rotators needed more stars than `rotators_all.csv` held (its 600-star McQuillan sample has no unused SPOC/QLP star at 20–71 d): 14 more McQuillan+2014 Kepler-field stars were drawn at 20–40 d (5) and 40–71 d (9).
 
 ## Results
 
-### The frozen mix
+### The final mix
 ![mix](figures/mix_class_by_period.png)
 
-Every period bin has 48 rotators and 9 EBs except 40–71 d (28 + 5): no cluster periods exist there. Only 6 of those 28 have SPOC data, so the SAP-vs-PDCSAP comparison is thin exactly where PDC attenuation should bite (SPOC-covered rotators per bin: 36, 38, 29, 34, 18, 6).
+Same counts as v0 (48 rotators and 9 EBs per period bin up to 40 d; 28 + 5 at 40–71 d).
 
-### Sector coverage
+### Replacements and Gaia pulsator flags
+![replacements](figures/replacements_and_pulsators.png)
+
+Left: rotators by source, draft vs v1 (Kepler field gains the long-period stars; small clusters lose a few). Right: `pulsation_class`. Only 6 stars carry a Gaia pulsator class and all are rotators in NGC 6811 (Teff 6700–6900 K, P 1–2.3 d); the Kepler dwarfs and WDs have none. Pulsation matters only on the no-truth blocks, so in v1 it applies to the 50 red-clump giants alone. Gaia's sparse sampling makes zero a lower bound.
+
+### The locked holdout
+![split](figures/holdout_split.png)
+
+Stratified by label × period bin: each bin keeps ~30% of its stars. Validation: 190 rotators, 70 nonrotators, 15 WD candidates, 28 expected-undetectable, 33 EBs.
+
+### Coverage and availability
 ![coverage](figures/sector_coverage.png)
-
-Rotators have a median of 6 FFI sectors and 28 have ≤ 2. Zach's stars (Tmag ~13, near the SPOC/QLP limit) have 40-45 FFI sectors but patchy product coverage.
-
-### SPOC vs QLP availability (from the real MAST listing)
 ![availability](figures/spoc_vs_qlp_availability.png)
 
-| label | n | SPOC | QLP only | none (unscorable) |
-|---|---|---|---|---|
-| rotator | 268 | 161 | 84 | 23 |
-| contaminant_eb | 50 | 50 | 0 | 0 |
-| nonrotator | 100 | 49 | 19 | 32 |
-| nonrotator_candidate | 22 | 17 | 3 | 2 |
-| expected_undetectable | 40 | 14 | 11 | 15 |
+| label | n | SPOC | QLP only |
+|---|---|---|---|
+| rotator | 268 | 177 | 91 |
+| contaminant_eb | 50 | 50 | 0 |
+| nonrotator | 100 | 59 | 41 |
+| nonrotator_candidate | 22 | 19 | 3 |
+| expected_undetectable | 40 | 20 | 20 |
 
-PDCSAP exists only where SPOC does: 161 of 268 rotators (the paired subset). All 50 EBs have SPOC (they were drawn from 2-min targets).
+PDCSAP exists only where SPOC does: 177 of 268 rotators (130 in the validation split). SPOC-covered rotators per bin: 37, 39, 31, 35, 22, 13 (the 40–71 d bin is better than v0's 6). 25 rotators have ≤ 2 FFI sectors; median 6.
 
 ### Download plan (MAST metadata, 2026-11-19; nothing downloaded)
 | product | files | stars | size |
 |---|---|---|---|
-| TESS-SPOC (`SAP_FLUX` + `PDCSAP_FLUX`) | 1,915 | 291 | 1.17 GB |
-| QLP, fallback only (stars with no SPOC) | 1,286 | 117 | 0.52 GB |
-| **total** | **3,201** | 408 | **1.69 GB** |
+| TESS-SPOC (`SAP_FLUX` + `PDCSAP_FLUX`) | 2,175 | 325 | 1.29 GB |
+| QLP fallback (stars with no SPOC) | 1,903 | 155 | 0.77 GB |
+| **total** | **4,078** | 480 | **2.06 GB** |
 
-`--qlp all` adds every QLP sector of the 291 SPOC stars; I did not re-query it (the scoping estimate for all QLP was 1.3 GB, so about 2.4 GB in total). Expect ~35–55 min for the default plan at an assumed 1–5 MB/s plus 0.5 s/file overhead (a guess). Run it with `nice -n 15`. The per-star table is `data/plan_per_star.csv`.
+Every star has files. At 1–5 MB/s plus 0.5 s/file: 41–68 min (assumed, not measured). Run `nice -n 15 python tools/download_tess_validation.py`. The download covers all 480 stars, holdout included (only scoring is gated). Per-star table: `data/plan_per_star.csv`.
 
-### Scoring design
-**Additive, implemented** (`benchmarks/scorecard.py`; no metric definition or `evaluation.py` change): dataset strings
-- `tessval_v0_sap`: the 268 rotators scored against the literature period with the existing `classify_period` (correct / diffrot / half / double / wrong / none). SAP from TESS-SPOC; QLP `SAP_FLUX` for the 84 stars that have no SPOC file.
-- `tessval_v0_pdcsap`: the same stars, SPOC `PDCSAP_FLUX` only (161 paired stars), so SAP vs PDCSAP is a paired comparison on that subset (compare against `tessval_v0_sap` restricted to those stars).
-- `tessval_v0_{sap,pdcsap}_eb`: the 50 EBs scored against P_orb. `correct` = P_orb lock, `half`/`double` = the usual EB aliases; "EB lock" is the sum of the three and is not a rotation success (same convention as the WG6 contaminants).
-Not run: no light curves exist locally yet.
+### Outcome definitions (implemented; `claude_files/evaluation.py`, `benchmarks/scorecard.py`)
+Existing metrics and every `final.*` key are unchanged; a `tessval` group appears in `metrics.json` only for `tessval_v1_*` runs.
+- **Rotators** (`tessval_v1_{sap,pdcsap}`): literature period with the unchanged `classify_period`.
+- **EB lock** (`..._eb`): `lock` = correct + half + double against P_orb, plus `other` (any unrelated period) and `decline`; by period bin, with a Wilson interval.
+- **Negatives** (`..._neg`: `nonrotator` + `nonrotator_candidate`): `classify_negative` gives `decline`, `pulsation` or `answer`. An `answer` is a false positive, reported per class and per `star_type` (`rc_giant` vs `dwarf`), with Wilson intervals. `pulsation` windows: `rc_giant` 0.2–0.5 d (Rae), `gaia_pulsator` 0.1–3 d (my choice: δ Sct to γ Dor).
+- **Expected undetectable** (`..._eu`): same fields; `answer` is the detection rate, never a false positive.
+- On `_neg` and `_eu` a 1 d placeholder truth is passed, so `final.*` there is meaningless; `tessval.note` says so. A 1-star end-to-end run through `score_one_star` on a synthetic FITS gave a sensible `answer`.
+- The holdout has no string at all.
 
-**Proposed, not implemented** (needs a change to metric definitions or `evaluation.py`; protected files left alone). The scorecard needs a `true_period` float per star, which negatives lack, so each negative block needs a "no truth" path in the scorer:
-1. **Per-class false-positive rate** on `nonrotator` (split `rc_giant` vs `dwarf`) and `nonrotator_candidate` (white dwarfs): FP = any answer that is not a decline. Report Wilson intervals per class, never pooled with the EB or `expected_undetectable` rows.
-2. **`pulsation` outcome:** a non-decline answer on a `pulsation_eligible` star is `pulsation` (not FP) when P is in 0.2–0.5 d for `rc_giant`, or in 0.1–3 d for `hot_star` (δ Sct ≲ 0.3 d, γ Dor 0.3–3 d). Everything else on those stars stays an FP. Window edges are my proposal.
-3. **`expected_undetectable`:** report the detection rate (answers / 40 scorable) in its own row, with an optional split by LS amplitude once light curves exist; never count it as an FP.
-4. **EB lock rate** as in the `_eb` strings above, plus the fraction of EB answers that fall at a rotation-like period unrelated to P_orb (neither alias).
-5. **Stratification:** rotators by period bin × number of contiguous SPOC sectors (a 20 d period needs ≥ 2 cycles); report decline and wrong rates separately.
+### No change to existing metrics
+Quick check: `datasets/dev_small_clean.csv`, full-year (`--ignore-manifest-sectors`), 3 workers, run once with main's code (commit 5519297, a scratch worktree) and once with this branch, then `check_goals.py new --baseline base`:
+
+```
+OVERALL: PASS   (all 11 guarded metrics delta +0.000; final.overall.success 0.277 vs 0.277)
+```
+`metrics.json` is identical apart from `config` and `runtime`, and has no `tessval` key. I did not rerun the dev_medium_clean `_v7` baselines (the coordinator is running them); `tests` still pass unchanged.
 
 ## What didn't work
-- First builder run failed my own assertion that no EB is in Zach's list: TIC 358111274 is in both. I relaxed the check for EBs (a fine EB test).
-- The 5-star dry run took ~1 min and the 480-star one ~20 min: MAST product-list calls dominate, so the plan is cached at `<root>/files_plan.csv` for the real run.
-- I could not confirm the QLP/SPOC FITS column layout on a real file (no download allowed). The loader assumes `LIGHTCURVE` HDU with `TIME`, `SAP_FLUX`, `PDCSAP_FLUX` (SPOC), `QUALITY`, header `SECTOR`; confirm on the first downloaded file of each product.
+- The first replacement draw came up 14 stars short, all long-period Kepler-field rotators (see above); fixed by drawing more McQuillan stars.
+- VizieR returns HTTP 404 for a `Source=` list with no matching rows, so `gaia_classes.py` treats that as an empty chunk (the main-sequence-oscillator table returned nothing for any star; the classifier gave 6 DSCT\|GDOR\|SXPHE).
+- Gaia DR2 ids from the TIC stand in for DR3 ids (equal for most stars): 3 of 559 TICs have no Gaia id.
 
 ## Open questions for Rae
-1. **Holdout policy (yours, not decided here):** the whole file is unscored and unlocked. Options: score all 480 as one fixed validation set, or lock a random fraction (stratified by label × period bin, e.g. 30%) untouched until the method is final. Also when first scoring may happen. Nothing in the manifest encodes a split.
-2. **72 unscorable stars** (no SPOC or QLP at MAST), concentrated in `expected_undetectable` (15 of 40) and `nonrotator` (32 of 100). Options: keep and report n scorable; or build `tess_validation_v1` with same-seed replacements that have products (needs a re-draw with MAST queries, ~1 h of my time and no download).
-3. **Outcome definitions** above (FP rate per class, `pulsation` windows, `expected_undetectable` detection rate, EB lock): OK to implement as new scorecard metric groups? That touches `scorecard.py` metrics and probably `evaluation.py`.
-4. **`hot_star` threshold (Teff ≥ 6500 K)** flags 61 stars, mostly young-cluster rotators with 0.2–3 d spot periods; a 0.5 d answer on one is ambiguous between a spot period and a pulsation. Tighter (≥ 7000 K) or by Gaia classification?
-5. **QLP policy:** fallback only (default, 1.69 GB) or `--qlp all` (~2.4 GB, more sectors per star)?
-6. **EBs with high `contratio`** (7 of 50): keep as is, or drop them?
-7. Ask Zach whether a vetted subset of his list exists (still open from the scoping report).
+1. **Zach:** is there a vetted subset of his list? (You said you will ask.) The 40 `expected_undetectable` are drawn from his unvetted list minus Gaia variables.
+2. **Download size:** v1 is 2.06 GB (4,078 files), not the 1.69 GB of the earlier plan, because replacements have more sectors. OK?
+3. **`gaia_pulsator` window (0.1–3 d)** and the 0.2–0.5 d `rc_giant` window: fine? The 6 Gaia pulsators are rotators, so v1 has no Gaia-pulsator negatives to apply it to. Do you want negatives drawn from Gaia DSCT/GDOR stars later (to test the `pulsation` outcome itself)?
+4. **EB share in the holdout is 34%** (per-bin rounding); acceptable, or a different stratification for EBs?
+5. The paired SAP-vs-PDCSAP set is 130 validation rotators; thin at 40–71 d (13 SPOC-covered stars in all, fewer in the validation split). Enlarge (needs a v2)?
 
 ## Reproduce
 ```bash
 # from the repo root, with /opt/anaconda3/envs/ss_openblas/bin/python
-python tools/build_tess_validation.py --check          # rebuild the manifest from committed inputs
-python tools/download_tess_validation.py --dry-run     # MAST metadata only (~20 min); writes runs/tess_validation_plan.csv
-nice -n 15 python tools/download_tess_validation.py    # Rae: the real download (needs the Data_Vault drive)
+python tools/build_tess_validation.py --check                 # v1 from committed inputs
+python tools/build_tess_validation.py --version v0 --check    # superseded v0 still reproduces
+python tools/validation_set/draw_replacements.py              # network (metadata); writes datasets/proposed/p27_v1_replacements.csv
+python tools/validation_set/gaia_classes.py                   # network (metadata); writes datasets/proposed/p27_v1_gaia_classes.csv
+python tools/download_tess_validation.py --dry-run            # MAST metadata only (~7 min); writes runs/tess_validation_plan.csv
+nice -n 15 python tools/download_tess_validation.py           # Rae: the real download (Data_Vault drive)
 python -m pytest -q tests/test_tess_lc.py
 python tools/run_notebook.py reports/2026-11-19_p27-freeze/notebook.ipynb
+# no-change check (scratch worktree of main's commit vs this branch):
+python benchmarks/scorecard.py --manifest datasets/dev_small_clean.csv --data-root data/smarts_dev --ignore-manifest-sectors --n-workers 3 --outdir runs/x
 # once downloaded:
-python benchmarks/scorecard.py --manifest tessval_v0_sap --outdir runs/tessval_sap
+python benchmarks/scorecard.py --manifest tessval_v1_sap --outdir runs/tessval_sap
 ```

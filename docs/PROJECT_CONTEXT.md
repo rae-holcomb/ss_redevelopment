@@ -639,11 +639,12 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).
 - **2026-11-19 — P34 Q6 decided** (Rae): Roman GP rotator truth stays P_eq; the "best-achievable" period (from a long
   noise-free draw of the same GP) becomes a diagnostic column in `romrot_v0.csv`, not a scored label.
-- **2026-11-19 — P27 real-TESS validation set frozen** (`reports/2026-11-19_p27-freeze/`, branch `claude/p27-freeze-27f7e1`):
-  `datasets/tess_validation_v0.csv` (480 stars; `tools/build_tess_validation.py --check`), loader `claude_files/tess_lc.py`
-  (+ `tests/test_tess_lc.py`, synthetic FITS), `tools/download_tess_validation.py` (resumable, atomic, `--dry-run`; destination
-  `$TESS_VALIDATION_ROOT`, default Data_Vault; the download itself is Rae's job), scorecard dataset strings
-  `tessval_v0_{sap,pdcsap}[_eb]` for rotators and EBs only (additive; non-rotator outcomes, `pulsation` and the
-  `expected_undetectable` detection rate need metric definitions, proposed in the report, protected files untouched).
-  72 of 480 stars have no SPOC or QLP file at MAST (`scorable` column). Holdout policy and first-score timing are Rae's
-  call: nothing decided, nothing scored.
+- **2026-11-19 — P27 real-TESS validation set frozen, v1** (`reports/2026-11-19_p27-freeze/`, branch `claude/p27-freeze-27f7e1`):
+  `datasets/tess_validation_v1.csv` (480 stars; `tools/build_tess_validation.py --check`; v0 superseded, never scored), loader
+  `claude_files/tess_lc.py`, `tools/download_tess_validation.py` (resumable, atomic, `--dry-run`; destination
+  `$TESS_VALIDATION_ROOT`, default Data_Vault; the 4,078-file, 2.06 GB download is Rae's job). Rae's answers applied: a seeded,
+  stratified **30% holdout is locked** (`split` column; no scorecard string selects it; never score without Rae); the 72
+  unscorable stars and 7 crowded EBs were replaced (strata unchanged); pulsators come from the Gaia DR3 class, not Teff;
+  QLP stays fallback-only. New additive outcomes in `evaluation.py` / `scorecard.py` (`metrics['tessval']`: per-class FP rate,
+  `pulsation`, `expected_undetectable` detection rate, EB lock); `final.*` unchanged (dev_small_clean full-year identical to
+  main, `check_goals` PASS). Scorecard strings `tessval_v1_{sap,pdcsap}[_eb|_neg|_eu]`. Zach vetted subset: open.

@@ -647,32 +647,38 @@ def build_wg6_tasks(name) -> list:
             for r in man.itertuples()]
 
 
-TESSVAL_DATASET_RE = re.compile(r"^tessval_v0_(sap|pdcsap)(_eb)?$")
-TESSVAL_MANIFEST = ROOT / "datasets" / "tess_validation_v0.csv"
+TESSVAL_DATASET_RE = re.compile(r"^tessval_v1_(sap|pdcsap)(_eb|_neg|_eu)?$")
+TESSVAL_MANIFEST = ROOT / "datasets" / "tess_validation_v1.csv"
+TESSVAL_GROUPS = {None: ("rotator",), "_eb": ("contaminant_eb",), "_neg": ("nonrotator", "nonrotator_candidate"),
+                  "_eu": ("expected_undetectable",)}
+TESSVAL_NO_TRUTH_PLACEHOLDER = 1.0  # days; negatives have no truth period, so outcome columns on them are meaningless
 
 
 def parse_tessval_dataset(name):
-    """Parse a P27 real-TESS dataset string -> (flux_column, label), or None if `name` isn't one.
+    """Parse a P27 real-TESS dataset string -> (flux_column, labels tuple), or None if `name` isn't one.
 
-    ``tessval_v0_sap`` / ``tessval_v0_pdcsap``: the 268 literature rotators of ``datasets/tess_validation_v0.csv``, scored against
-    the literature period with the unchanged ``classify_period``. SAP reads TESS-SPOC ``SAP_FLUX`` (QLP ``SAP_FLUX`` for stars
-    with no TESS-SPOC file); PDCSAP reads TESS-SPOC ``PDCSAP_FLUX`` only, so it is the paired subset (stars with SPOC data).
-    ``tessval_v0_{sap,pdcsap}_eb``: the 50 Prsa+2022 EBs scored against P_orb: ``correct`` = P_orb lock, ``half``/``double`` =
-    the usual EB aliases (the report's "EB lock" = correct + half + double; not a rotation success).
-    The non-rotator blocks (``nonrotator``, ``nonrotator_candidate``, ``expected_undetectable``) and the ``pulsation`` outcome
-    need new metric definitions and are NOT scored here (see reports/2026-11-19_p27-freeze/). Files are read from
-    ``$TESS_VALIDATION_ROOT`` (or ``--data-root``) via ``files_index.csv``, written by ``tools/download_tess_validation.py``.
+    Sets (all read ONLY the ``validation`` split of ``datasets/tess_validation_v1.csv``; the locked 30% holdout has no dataset
+    string and must never be scored without Rae's word):
+    ``tessval_v1_sap`` / ``tessval_v1_pdcsap``: literature rotators, scored against the literature period with the unchanged
+    ``classify_period``. SAP = TESS-SPOC ``SAP_FLUX`` (QLP ``SAP_FLUX`` for stars with no SPOC file); PDCSAP = TESS-SPOC
+    ``PDCSAP_FLUX`` only, i.e. the paired subset.
+    ``..._eb``: Prsa+2022 EBs against P_orb; ``metrics['tessval']['contaminant_eb']`` reports the EB lock rate
+    (correct + half + double against P_orb).
+    ``..._neg``: ``nonrotator`` (Kepler red clump + dwarfs) and ``nonrotator_candidate`` (white dwarfs): per-class false-positive
+    rate and ``pulsation`` rate. ``..._eu``: ``expected_undetectable``: detection rate, never a false positive.
+    On ``_neg``/``_eu`` there is no truth period (a 1 d placeholder is passed), so ``final.*`` outcome fractions are meaningless:
+    read ``metrics['tessval']`` only. Files come from ``$TESS_VALIDATION_ROOT`` (or ``--data-root``) via ``files_index.csv``.
     """
     m = TESSVAL_DATASET_RE.match(str(name))
     if not m:
         return None
-    return ("SAP_FLUX" if m.group(1) == "sap" else "PDCSAP_FLUX"), ("contaminant_eb" if m.group(2) else "rotator")
+    return ("SAP_FLUX" if m.group(1) == "sap" else "PDCSAP_FLUX"), TESSVAL_GROUPS[m.group(2)]
 
 
 def build_tessval_tasks(name, data_root=None) -> list:
     """Task dicts for a tessval dataset string (see `parse_tessval_dataset`); stars with no downloaded file are skipped."""
     from tess_lc import tess_validation_root
-    flux_column, label = parse_tessval_dataset(name)
+    flux_column, labels = parse_tessval_dataset(name)
     root = tess_validation_root(data_root)
     idx_path = root / "files_index.csv"
     if not idx_path.exists():
@@ -681,7 +687,7 @@ def build_tessval_tasks(name, data_root=None) -> list:
     idx = pd.read_csv(idx_path)
     idx = idx[idx["status"].isin(["done", "skipped"])]
     man = pd.read_csv(TESSVAL_MANIFEST)
-    man = man[man["label"] == label]
+    man = man[man["label"].isin(labels) & (man["split"] == "validation")]  # the locked holdout is never selected
     tasks = []
     for r in man.itertuples():
         f = idx[idx["tic"] == r.tic]
@@ -690,12 +696,58 @@ def build_tessval_tasks(name, data_root=None) -> list:
         if not len(use):
             continue
         paths = [str(root / p) for p in use["relpath"]]
+        has_truth = not pd.isna(r.truth_period)
         tasks.append(dict(kind="tessval", path=paths[0], paths=paths, flux_column=flux_column, star_id=str(r.star_id),
-                          true_period=float(r.truth_period), load_kwargs={},
-                          meta=dict(tic=int(r.tic), label=r.label, source=r.source, pbin=r.pbin, star_type=r.star_type,
-                                    product=str(use["product"].iloc[0]), flux_column=flux_column, n_files=len(paths),
-                                    Tmag=float(r.Tmag), path=paths[0])))
+                          true_period=float(r.truth_period) if has_truth else TESSVAL_NO_TRUTH_PLACEHOLDER, load_kwargs={},
+                          meta=dict(tic=int(r.tic), tessval_label=r.label, source=r.source, pbin=r.pbin, star_type=r.star_type,
+                                    pulsation_class="" if pd.isna(r.pulsation_class) else str(r.pulsation_class),
+                                    no_truth=not has_truth, split=r.split, product=str(use["product"].iloc[0]),
+                                    flux_column=flux_column, n_files=len(paths), Tmag=float(r.Tmag), path=paths[0])))
     return tasks
+
+
+def _frac_block(outs: list, n_errors: int = 0) -> dict:
+    """Counts and rates (with Wilson intervals) of decline / pulsation / answer for one group of negatives."""
+    n = len(outs)
+    k = {o: outs.count(o) for o in (ev.DECLINE, ev.PULSATION, ev.ANSWER)}
+    d = dict(n=n, n_errors=n_errors, **{o: (k[o] / n if n else float("nan")) for o in k})
+    d["n_answer"], d["n_pulsation"] = k[ev.ANSWER], k[ev.PULSATION]
+    d["answer_ci"] = list(ev.wilson_interval(k[ev.ANSWER], n))
+    return d
+
+
+def _tessval_block(per_star: pd.DataFrame) -> dict:
+    """P27 real-TESS outcomes (additive metrics group; empty for every non-tessval run).
+
+    tessval.nonrotator / nonrotator_candidate: ``overall`` and ``by_star_type`` blocks with ``answer`` = false-positive rate
+    (non-pulsation answers), ``pulsation``, ``decline`` and the Wilson interval ``answer_ci``.
+    tessval.expected_undetectable: same fields; ``answer`` = detection rate (never a false positive).
+    tessval.contaminant_eb: ``lock`` (P_orb, half, double), ``correct``/``half``/``double``, ``other``, ``decline``, by pbin.
+    Rows that failed to load (``error`` set) are excluded and counted in ``n_errors``.
+    """
+    if "meta_tessval_label" not in per_star.columns:
+        return {}
+    out: dict = {"note": "negative blocks have no truth period: final.* outcome fractions are meaningless there"}
+    ok = per_star["error"].isna()
+    for lab, g in per_star[per_star["meta_tessval_label"].notna()].groupby("meta_tessval_label"):
+        n_err = int((~g["error"].isna()).sum())
+        g = g[g["error"].isna()]
+        if lab == "contaminant_eb":
+            eo = [ev.eb_outcome(o) for o in g["final_outcome"]]
+            blk = lambda sub, e: dict(  # noqa: E731
+                n=len(e), lock=e.count("lock") / len(e) if e else float("nan"), decline=e.count(ev.DECLINE) / len(e) if e else float("nan"),
+                other=e.count("other") / len(e) if e else float("nan"),
+                **{o: (list(sub["final_outcome"]).count(o) / len(e) if e else float("nan")) for o in ev.EB_LOCK_OUTCOMES},
+                lock_ci=list(ev.wilson_interval(e.count("lock"), len(e))))
+            by = {b: blk(gb, [ev.eb_outcome(o) for o in gb["final_outcome"]]) for b, gb in g.groupby("meta_pbin")}
+            out[lab] = {"overall": blk(g, eo) | {"n_errors": n_err}, "by_pbin": by}
+            continue
+        outs = [ev.classify_negative(p, c if isinstance(c, str) and c else None)
+                for p, c in zip(g["final_period"], g["meta_pulsation_class"])]
+        g = g.assign(_out=outs)
+        out[lab] = {"overall": _frac_block(outs, n_err),
+                    "by_star_type": {t: _frac_block(list(gt["_out"])) for t, gt in g.groupby("meta_star_type")}}
+    return out
 
 
 def build_tasks(args) -> list:
@@ -821,6 +873,9 @@ def compute_metrics(per_star: pd.DataFrame, per_method: pd.DataFrame, rel_tol: f
     m["runtime"] = {"median_seconds": float(per_star["seconds"].median()),
                     "p90_seconds": float(per_star["seconds"].quantile(0.9))}
     m["errors"]["n_star_errors"] = int(per_star["error"].notna().sum())
+    tv = _tessval_block(per_star)  # P27 real-TESS outcomes; absent (key not added) on every other dataset
+    if tv:
+        m["tessval"] = tv
     return m
 
 

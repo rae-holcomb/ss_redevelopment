@@ -135,7 +135,7 @@ def test_pipeline_runs_on_loaded_star(tmp_path):
 # --- frozen manifest -------------------------------------------------------------------------------------------------
 
 def test_manifest_reproduces_and_matches_decisions():
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "build_tess_validation.py"), "--check"],
+    r = subprocess.run([sys.executable, str(ROOT / "tools" / "build_tess_validation.py"), "--version", "v0", "--check"],
                        capture_output=True, text=True)
     assert r.returncode == 0, r.stderr + r.stdout
     m = pd.read_csv(ROOT / "datasets" / "tess_validation_v0.csv")
@@ -193,24 +193,77 @@ def test_downloader_mount_check(tmp_path):
 def test_scorecard_tessval_strings_and_tasks(tmp_path, monkeypatch):
     sys.path.insert(0, str(ROOT / "benchmarks"))
     import scorecard as sc
-    assert sc.parse_tessval_dataset("tessval_v0_sap") == ("SAP_FLUX", "rotator")
-    assert sc.parse_tessval_dataset("tessval_v0_pdcsap_eb") == ("PDCSAP_FLUX", "contaminant_eb")
-    assert sc.parse_tessval_dataset("tessval_v1_sap") is None and sc.parse_tessval_dataset("dev_small.csv") is None
-    man = pd.DataFrame(dict(star_id=["TIC1", "TIC2", "TIC3"], tic=[1, 2, 3], label=["rotator"] * 3, source=["x"] * 3,
-                            truth_period=[3.0, 5.0, 7.0], pbin=["3-10"] * 3, star_type=["dwarf"] * 3, Tmag=[10.0] * 3))
+    assert sc.parse_tessval_dataset("tessval_v1_sap") == ("SAP_FLUX", ("rotator",))
+    assert sc.parse_tessval_dataset("tessval_v1_pdcsap_eb") == ("PDCSAP_FLUX", ("contaminant_eb",))
+    assert sc.parse_tessval_dataset("tessval_v1_sap_neg")[1] == ("nonrotator", "nonrotator_candidate")
+    assert sc.parse_tessval_dataset("tessval_v1_sap_eu")[1] == ("expected_undetectable",)
+    assert sc.parse_tessval_dataset("tessval_v0_sap") is None and sc.parse_tessval_dataset("dev_small.csv") is None
+    assert sc.parse_tessval_dataset("tessval_v1_sap_holdout") is None  # no dataset string selects the locked holdout
+    man = pd.DataFrame(dict(star_id=["TIC1", "TIC2", "TIC3", "TIC4"], tic=[1, 2, 3, 4], label=["rotator"] * 4, source=["x"] * 4,
+                            truth_period=[3.0, 5.0, 7.0, 9.0], pbin=["3-10"] * 4, star_type=["dwarf"] * 4,
+                            pulsation_class=[np.nan] * 4, Tmag=[10.0] * 4,
+                            split=["validation", "validation", "validation", "holdout"]))
     mp = tmp_path / "man.csv"
     man.to_csv(mp, index=False)
     monkeypatch.setattr(sc, "TESSVAL_MANIFEST", mp)
     rows = []
-    for tic, prod, tag in [(1, "spoc", "a_lc"), (2, "qlp", "b_llc")]:  # TIC3 has nothing downloaded
+    for tic, prod, tag in [(1, "spoc", "a_lc"), (2, "qlp", "b_llc"), (4, "spoc", "d_lc")]:  # TIC3: nothing downloaded
         rel = f"{prod}/TIC{tic}/{tag}.fits"
         (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
         write_lc(tmp_path / rel, 14, 1000.0, qlp=(prod == "qlp"))
         rows.append(dict(tic=tic, product=prod, relpath=rel, status="done"))
     pd.DataFrame(rows).to_csv(tmp_path / "files_index.csv", index=False)
-    sap = sc.build_tessval_tasks("tessval_v0_sap", tmp_path)
-    assert [t["star_id"] for t in sap] == ["TIC1", "TIC2"] and sap[1]["meta"]["product"] == "qlp"
-    pdc = sc.build_tessval_tasks("tessval_v0_pdcsap", tmp_path)
+    sap = sc.build_tessval_tasks("tessval_v1_sap", tmp_path)
+    assert [t["star_id"] for t in sap] == ["TIC1", "TIC2"]  # TIC4 is the holdout: never selected
+    assert sap[1]["meta"]["product"] == "qlp"
+    pdc = sc.build_tessval_tasks("tessval_v1_pdcsap", tmp_path)
     assert [t["star_id"] for t in pdc] == ["TIC1"]  # PDCSAP is SPOC-only (paired subset)
     sid, t, f, p, prange, meta, secs = sc._load(sap[0])
     assert sid == "TIC1" and p == 3.0 and prange is None and secs == [14] and np.isfinite(f).any()
+
+
+def test_real_manifest_holdout_never_in_tasks():
+    sys.path.insert(0, str(ROOT / "benchmarks"))
+    import scorecard as sc
+    m = pd.read_csv(sc.TESSVAL_MANIFEST)
+    hold = set(m.loc[m.split == "holdout", "star_id"])
+    assert hold and m.split.isin(["validation", "holdout"]).all()
+    assert "holdout" not in sc.TESSVAL_DATASET_RE.pattern
+
+
+# --- new outcomes (evaluation.py, additive) and the scorecard tessval metrics block --------------------------------------
+
+def test_classify_negative_and_eb_outcome():
+    import evaluation as ev
+    assert ev.classify_negative(None) == ev.DECLINE and ev.classify_negative(float("nan"), "rc_giant") == ev.DECLINE
+    assert ev.classify_negative(0.35, "rc_giant") == ev.PULSATION
+    assert ev.classify_negative(0.6, "rc_giant") == ev.ANSWER and ev.classify_negative(0.35, None) == ev.ANSWER
+    assert ev.classify_negative(2.0, "gaia_pulsator") == ev.PULSATION and ev.classify_negative(3.5, "gaia_pulsator") == ev.ANSWER
+    assert ev.classify_negative(12.0, "gaia_pulsator") == ev.ANSWER
+    assert [ev.eb_outcome(o) for o in ("correct", "half", "double", "wrong", "none")] == ["lock", "lock", "lock", "other", "decline"]
+    lo, hi = ev.wilson_interval(0, 40)
+    assert lo == 0.0 and 0.05 < hi < 0.12
+    assert np.isnan(ev.wilson_interval(0, 0)[0])
+
+
+def test_tessval_block_and_no_change_to_other_runs():
+    sys.path.insert(0, str(ROOT / "benchmarks"))
+    import scorecard as sc
+    base = pd.DataFrame(dict(star_id=list("abcd"), final_outcome=["correct", "wrong", "none", "correct"], period_bin=["<1d"] * 4,
+                             final_period=[1.0, 2.0, None, 1.0], error=[None] * 4, seconds=[1.0] * 4))
+    assert sc._tessval_block(base) == {}  # a non-tessval run gets no tessval key
+    neg = pd.DataFrame(dict(
+        star_id=list("abcdefg"), error=[None] * 6 + ["boom"],
+        meta_tessval_label=["nonrotator"] * 4 + ["expected_undetectable"] * 2 + ["nonrotator"],
+        meta_star_type=["rc_giant", "rc_giant", "dwarf", "dwarf", "dwarf", "dwarf", "dwarf"],
+        meta_pulsation_class=["rc_giant", "rc_giant", "", "", "", "", ""],
+        final_period=[0.3, 9.0, None, 5.0, 4.0, None, 1.0], final_outcome=["none"] * 7))
+    b = sc._tessval_block(neg)
+    nr = b["nonrotator"]["overall"]
+    assert nr["n"] == 4 and nr["n_errors"] == 1 and nr["pulsation"] == 0.25 and nr["answer"] == 0.5 and nr["decline"] == 0.25
+    assert b["nonrotator"]["by_star_type"]["rc_giant"]["pulsation"] == 0.5
+    assert b["expected_undetectable"]["overall"]["answer"] == 0.5
+    eb = pd.DataFrame(dict(star_id=list("abc"), error=[None] * 3, meta_tessval_label=["contaminant_eb"] * 3, meta_pbin=["1-3"] * 3,
+                           final_outcome=["half", "wrong", "none"], final_period=[1, 2, None]))
+    e = sc._tessval_block(eb)["contaminant_eb"]["overall"]
+    assert e["lock"] == pytest.approx(1 / 3) and e["half"] == pytest.approx(1 / 3) and e["other"] == pytest.approx(1 / 3)

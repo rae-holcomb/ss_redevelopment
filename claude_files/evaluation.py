@@ -355,3 +355,50 @@ def noise_alias_kind(measured, noise_period, rel_tol: float = REL_TOL) -> Option
     if _in_window(m, 2 * p, rel_tol):
         return DOUBLE
     return None
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# P27 real-TESS validation outcomes (added 2026-11-19, Rae-approved; purely additive: nothing above this line changed).
+#
+# The non-rotator blocks of datasets/tess_validation_v1.csv have no truth period, so they are not scored with
+# classify_period. A pipeline answer (or a decline) is classified by `classify_negative`:
+#   decline  : no period returned.
+#   pulsation: a period inside the pulsation window of the star's `pulsation_class` (a real signal that is not rotation):
+#              rc_giant (Kepler red-clump giants): 0.2-0.5 d (Rae, 2026-11-13); gaia_pulsator (Gaia DR3 classifier
+#              DSCT|GDOR|SXPHE or main-sequence-oscillator table): 0.1-3 d (delta Sct < ~0.3 d, gamma Dor 0.3-3 d).
+#   answer   : any other period. On a `nonrotator` block it is a false positive; on `expected_undetectable` it is a detection.
+# Eclipsing binaries have a truth period (P_orb) and use `eb_outcome` on the ordinary classify_period outcome.
+# ---------------------------------------------------------------------------------------------------------------------
+DECLINE = "decline"
+PULSATION = "pulsation"
+ANSWER = "answer"
+PULSATION_WINDOWS = {"rc_giant": (0.2, 0.5), "gaia_pulsator": (0.1, 3.0)}
+EB_LOCK_OUTCOMES = (CORRECT, HALF, DOUBLE)
+
+
+def classify_negative(final_period, pulsation_class=None, windows: dict = PULSATION_WINDOWS) -> str:
+    """``decline`` / ``pulsation`` / ``answer`` for a star with no truth period (see the block comment above)."""
+    if _is_missing(final_period):
+        return DECLINE
+    win = windows.get(pulsation_class) if pulsation_class else None
+    if win is not None and win[0] <= float(final_period) <= win[1]:
+        return PULSATION
+    return ANSWER
+
+
+def eb_outcome(final_outcome: str) -> str:
+    """``lock`` (P_orb, P_orb/2 or 2 P_orb: ``correct``/``half``/``double`` against P_orb), ``decline`` or ``other``."""
+    if final_outcome in EB_LOCK_OUTCOMES:
+        return "lock"
+    return DECLINE if final_outcome == NONE else "other"
+
+
+def wilson_interval(k: int, n: int, z: float = 1.96) -> tuple:
+    """Wilson score interval (lo, hi) for k successes in n trials; (nan, nan) when n == 0."""
+    if n <= 0:
+        return (float("nan"), float("nan"))
+    p = k / n
+    d = 1 + z * z / n
+    c = (p + z * z / (2 * n)) / d
+    h = z * np.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+    return (float(max(0.0, c - h)), float(min(1.0, c + h)))

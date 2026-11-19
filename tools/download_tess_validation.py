@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Download the TESS light curves for the frozen P27 validation manifest (``datasets/tess_validation_v0.csv``) from MAST.
+"""Download the TESS light curves for the frozen P27 validation manifest (``datasets/tess_validation_v1.csv``) from MAST.
 
 Rae runs this locally. Products (MAST HLSP, via ``astroquery.mast``):
   * TESS-SPOC FFI light curves (``*_lc.fits``): hold ``SAP_FLUX`` and ``PDCSAP_FLUX``, so one download serves both scores;
@@ -42,7 +42,7 @@ from pathlib import Path
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / "datasets" / "tess_validation_v0.csv"
+MANIFEST = ROOT / "datasets" / "tess_validation_v1.csv"
 DEFAULT_ROOT = "/Volumes/Data_Vault/tess_validation"
 ENV_ROOT = "TESS_VALIDATION_ROOT"
 PROVENANCE = {"spoc": "TESS-SPOC", "qlp": "QLP"}
