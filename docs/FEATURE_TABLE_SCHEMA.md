@@ -65,7 +65,7 @@ Joint fit and gates (Section C; NaN for unfit rows): `n_cycles_spanned`, `fitted
 `n_peaks_dropped`, `n_peaks_used_frac`, `n_teeth_available`, `n_peaks_required`,
 `few_peaks`, `P_over_lc_baseline`, `half_tooth_ratio`, `frac_positive_heights`,
 `frac_non_increasing_height`, `mean_height_snr`, `min_height_snr`, `max_height_snr`,
-`std_height_snr`, `height_snr_slope`, `mean_curvature`, `std_curvature`,
+`std_height_snr`, `height_snr_slope`, `drift_a_frac` (P43), `mean_curvature`, `std_curvature`,
 `passes_min_peaks`, `passes_redchi`, `passes_height_snr`, `passed_gates`,
 `mean/min/std_peak_trough_depth`, `mean/min/std_peak_trough_depth_snr`,
 `n_acf_peaks_found`, `coverage_at_fit`.

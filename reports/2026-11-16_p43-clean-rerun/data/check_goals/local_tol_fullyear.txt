@@ -1,0 +1,30 @@
+Run: runs/p43_clean/sc/local_tol_dmfy/metrics.json  (dataset datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored, commit db64668-dirty)
+Baseline: benchmarks/baselines/dev_medium_clean_fullyear_v7.json  (commit 5d14f3f-dirty)
+
+goal  status  result  value    target   base  metric
+G9    draft   FAIL    0.252 >= 0.35    0.254  final.overall.success
+                     Real-data overall success (baseline 0.248). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G10   draft   PASS    0.019 <= 0.04    0.038  final.overall.wrong
+                     Real-data confident-wrong rate (baseline 0.088; 0 on synthetic). Honest decline beats wrong. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G11   draft   FAIL    0.209 >= 0.3     0.196  final.by_bin.<1d.success
+                     Real-data success for P<1d (baseline 0.17). Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+G12   draft   PASS    0.716 >= 0.6     0.716  union_recall.by_bin.<1d
+                     Real-data Stage-1 recall for P<1d (baseline 0.44; 0.88 on synthetic). Relates to P16. Baseline from benchmarks/baselines/dev_medium_fullyear.json (T2, 2026-10-15). Real SMARTS noise; the achievable ceiling is unknown until T3 / T20 explain how much signal is recoverable, so these are first guesses.
+RT1a  draft   PASS    0.856 <= base*1.25  1.248  runtime.median_seconds
+                     Runtime, free on every scorecard: median s/star no more than 25% above the baseline's. Draft (reported only): parallel wall time moves with machine load.
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.254   0.252  -0.002  0.020  final.overall.success
+  0.228   0.235  +0.007  0.060  final.by_bin.1-3d.success
+  0.364   0.338  -0.026  0.060  final.by_bin.10-30d.success
+  0.291   0.285  -0.007  0.060  final.by_bin.3-10d.success
+  0.196   0.209  +0.014  0.060  final.by_bin.<1d.success
+  0.218   0.218  -0.000  0.060  final.by_bin.>30d.success
+  0.980   0.980  +0.000  0.060  union_recall.by_bin.1-3d
+  0.980   0.980  +0.000  0.060  union_recall.by_bin.10-30d
+  0.934   0.934  +0.000  0.060  union_recall.by_bin.3-10d
+  0.716   0.716  +0.000  0.060  union_recall.by_bin.<1d
+  0.916   0.916  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS

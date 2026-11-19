@@ -236,7 +236,7 @@ from the zips (`tools/audit/wg6r_profile.py`; root `$WG6_RESAMPLED_ROOT`). Profi
 
 | Class | simple | simple_shifted (+8 mag) | improved (`_final`) | FL non-final (improved folder) |
 |---|---|---|---|---|
-| CEP | 24 | 24 | — | |
+| CEP | 24 | 24 | 24 (same stars; zip added 2026-11-19) | |
 | DSCT | 1,000 | 1,000 | 1,000 | |
 | ECL | 1,000 | 1,000 | 1,000 | |
 | ELL | 1,000 | 1,000 | 1,000 | |

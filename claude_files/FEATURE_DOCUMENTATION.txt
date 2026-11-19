@@ -409,6 +409,32 @@ Description  : Since compute_acf now reaches ~0.7 of the baseline and the
 Stage        : 2/3 (joint comb fit + gating).
 
 --------------------------------------------------------------------------
+drift_a_frac   (added 2026-11-15, T32 / P43)
+--------------------------------------------------------------------------
+Definition   : a / fitted_P, where a is the quadratic coefficient of a
+               soft-L1 IRLS fit c_n = q0 + q1 n + a n^2 to the local comb
+               solver's free per-tooth vertices c_n (comb_fit.comb_drift_frac;
+               the solver's own `a` if the variant fit a drift term).
+               Needs >= 4 vertices on >= 4 distinct teeth.
+Missing      : NaN when the fit has no local-solver info (lsq fits, the
+               local_screen variants' lsq refits) or fewer than 4 vertices.
+               Under the default comb variant (local_tol_trim, since 2026-11-19) every fitted
+               candidate carries local info, so NaN means "too few teeth
+               with a vertex".
+Description  : How far the ACF's peaks bend away from an evenly spaced comb.
+               Differential rotation (several spot bands at slightly
+               different periods) can make the peak spacing drift with lag;
+               a seed-period error is linear in n and is absorbed by the
+               line fit, so it does not show up here. T32 (dev_medium):
+               median |a/P| 8.0e-3 for shear != 0 vs 5.1e-3 for shear = 0
+               among correct candidates, and 1.1e-2 for wrong candidates vs
+               7.2e-3 for correct ones -- heavy overlap, so a weak feature.
+               Typical values mostly reflect vertex noise (a n^2 ~ 0.25 P at
+               n = 7). Sign is kept; use |drift_a_frac| if the sign carries
+               nothing.
+Stage        : 2 (comb fit; diagnostic only, never moves the comb).
+
+--------------------------------------------------------------------------
 P_over_lc_baseline, lc_baseline_days   (added 2026-10-13)
 --------------------------------------------------------------------------
 Definition   : lc_baseline_days = time span of the finite-flux points of the

@@ -32,7 +32,7 @@ Dashed = 71-d season, dotted = R/2 = 35.5 d (the searchable limit, D4). **All 93
 ### Counts by class × season × dev/holdout
 ![counts](figures/counts_class_season_split.png)
 
-Labels are dev/holdout rows. Seasons have identical counts by construction (one row per file per season). Season-1 objects: FL rotators 1,271 dev / 329 holdout objects (43 / 11 templates), ECL and ELL 240 / 60 each, RRLYR 240 / 60, T2CEP 80 / 20, DSCT 80 / 20, LPV 80 / 20, CV 80 / 20, HB 74 / 19. Full table: `data/counts.csv`.
+Labels are dev/holdout rows. Seasons have identical counts by construction (one row per file per season). Season-1 objects: FL rotators 1,271 dev / 329 holdout objects (43 / 11 templates), ECL and ELL 240 / 60 each, RRLYR 240 / 60, T2CEP 80 / 20, CEP 19 / 5 (added 2026-11-19), DSCT 80 / 20, LPV 80 / 20, CV 80 / 20, HB 74 / 19. Full table: `data/counts.csv`.
 
 ### Quick check: pipeline vs truth on 20 stars
 ![quick check](figures/quick_check_found_vs_true.png)
@@ -40,13 +40,13 @@ Labels are dev/holdout rows. Seasons have identical counts by construction (one 
 10 FL rotators (distinct templates, WFmag 17) plus 10 contaminants (2 each of ECL, ELL, T2CEP, RRLYR, DSCT), season 1, `--n-workers 2` under `nice`, through the real `score_one_star` path (`data/quick_check.csv`). 18 of 20 are `correct`: 8/10 FL and all 10 contaminants (2/2 each of ECL/ELL vs P_orb/2, T2CEP, RRLYR, DSCT; the contaminant "correct" is a lock on the variable's own period, i.e. a false positive for rotation: see Q1). Misses: the 89 d FL template (beyond one season, no answer), and one FL star at 1.70 d where the pipeline returned 2.31 d (`wrong`). Roughly 1 s per star-season. This is a plumbing test, not a performance number: 10 stars, no baseline.
 
 ## What didn't work
-- **CEP.** Planned at ~300 stars; the improved folder has none and the 24 simple-noise CEP stars would break the "improved only" rule, so they are left out (Rae is asking WG6).
+- **CEP (superseded 2026-11-19, see "CEP added" below).** Originally left out because the improved folder had none.
 - The ECL/ELL/T2CEP/RRLYR/HB/LPV selection ends up with an unrepresentative quick-check sample because I took the first stars in manifest order (ECL/ELL in the check are the shortest-period ones). Use the full s1 scorecard for rates.
 
 ## Decisions (Rae, 2026-11-13, relayed by the coordinator) and how they are applied
 1. **Non-rotators:** `evaluation.py` unchanged. On `wg6r_contam_*`, `correct` means the pipeline locked onto the variable's own period: a **false positive for rotation**, reported as a per-class FP rate, not a success (also in the `parse_wg6_dataset` docstring). CV and FL-flat have no period and are not in `contam`.
 2. **ECL/ELL:** the full orbital period also counts as an acceptable, EB-flagged lock. Scored against P_orb/2 it is the `double` alias, so **`double` on ECL/ELL = P_orb lock**.
-3. **CEP:** left out; Rae is asking WG6 for an improved CEP set.
+3. **CEP:** left out at the time; added 2026-11-19 (see below).
 4. **FL magnitudes:** WFmag 17 and 20 kept.
 5. **Beyond reach:** new manifest column `beyond_reach` (P_true > 35.5 d = R/2 of a 71-d season: all HB and LPV, 110 of 300 ELL, the 89 d FL template). These stars are excluded from `wg6r_fl_*` and `wg6r_contam_*`, and scored as the separate stress set `wg6r_beyond_v0_improved_s<k>` (test: `test_scorecard_wg6_dataset_strings`, plus a manifest consistency check).
 6. **Seasons 1–3 as "early":** kept, recorded as an assumption in `claude_files/wg6.py`.
@@ -62,3 +62,17 @@ nice -n 15 python -m pytest -q
 # full WG6 scorecard (NOT run here; coordinator schedules):
 # nice -n 15 python benchmarks/scorecard.py --manifest wg6r_fl_v0_improved_s1 --outdir runs/wg6r_fl_s1 --n-workers 3
 ```
+
+## CEP added (2026-11-19)
+Rae copied the missing improved-noise Cepheid zip to the drive (`improved noise/RGES_filters_CEP_lightcurves_final-20261119T192815Z-1-001.zip`). Branch `claude/wg6-cep-rebuild-b097cd`; manifest still v0, not frozen.
+
+- **Layout matches the other classes.** All 24 members open with `load_wg6_roman`: F146 table, 6 seasons, 8,450 points per season, `JD` column, `VARTYPE=cep`, 0 NaNs. They are the same 24 `OGLE-BLG-CEP-###` stars as the simple-noise set (F146 ~ 15-17 mag).
+- **Only 24 stars exist, not ~300.** All are taken (the n-per-class cap of 300 does nothing here, as for T2CEP at 100).
+- **Periods.** The scoping `truth.csv.gz` already held all 24 CEP rows (OGLE OCVS `cep`: F, 1O, 1O/2O, F/1O; multimode stars use the longer period), so nothing new was derived. P_true is 0.25-4.5 d, so no CEP is `beyond_reach`. `P_phot_expected = P_true`, `is_eb` False.
+- **Counts** (objects, identical in each season 1-3; rows are x3): **19 dev / 5 holdout** (split by star, same hash rule as the other classes), 72 rows in total. `beyond_reach`: 0. The manifest grows 14,253 to 14,325 rows (3,096 objects).
+- **Other rows unchanged.** Asserted: the 14,253 non-CEP rows of the rebuilt manifest equal the previous committed manifest exactly. The refreshed inventory (`reports/2026-11-12_wg6-dataset-scoping/data/resampled/inventory.csv.gz`, names-only scan, written atomically) equals the old one plus the 24 new members. `--verify 12` passed.
+- **Effect on scorecards.** `wg6r_contam_v0_improved_s<k>` now includes 19 dev CEP stars per season (they were in none before); the earlier ECL/ELL/T2CEP/RRLYR numbers are unaffected.
+- **Figures.** `figures/counts_class_season_split.png` (table `data/counts.csv`), `p_true_hist.png` and `examples_per_class.png` regenerated with CEP (the example is `OGLE-BLG-CEP-019`, P = 0.287 d, F146 ~ 16.3 mag: short against the 12.1-min sampling, so it fills a band like RRLYR/DSCT). The grids are now 2x5.
+- **Tests.** `tests/test_wg6.py`: CEP in the toy-inventory builder test; committed manifest asserts 24 CEP stars (19/5), 72 rows, `P_phot_expected == P_true`, none EB, none beyond reach. T2CEP = 100 check unchanged.
+- **Checks run (after the first push).** Full `pytest -q`: 538 passed (it overlapped with the start of another session's stage-2 screening batch for ~2 min; tests only, no timing taken). Quick check: the first 5 dev CEP stars (CEP-019, 021, 043, 045, 048), season 1, through `scorecard.build_wg6_tasks("wg6r_contam_v0_improved_s1")` + `score_one_star`, serially (`--n-workers 1` equivalent) under `nice -n 15` with no scorecard running: **5/5 `correct`** (final periods within 1.0% of P_true, ~0.55 s each; `data/quick_check_cep.csv`). As for the other contaminants, `correct` is a lock on the Cepheid's own period, i.e. a false positive for rotation. Plumbing test only: 5 stars, no baseline.
+- **Identity with main.** The 14,253 non-CEP rows equal `main:datasets/wg6_roman_v0.csv` exactly.

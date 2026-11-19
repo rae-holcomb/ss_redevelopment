@@ -396,8 +396,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
 - **Status:** merged 2026-11-19 (`reports/2026-11-13_p35-wg6-loader/`; Rae's scoring answers applied). The manifest stays
-  v0, not frozen. **CEP:** Rae added the improved-noise Cepheid zip to the drive on 2026-11-19 (it had been left out by a
-  copying mistake), so the manifest needs a rebuild that includes CEP before it is frozen.
+  v0, not frozen. **CEP added 2026-11-19** (branch `claude/wg6-cep-rebuild-b097cd`, not merged): Rae's improved-noise Cepheid zip
+  holds only 24 stars (not ~300), all taken; 19 dev / 5 holdout, 72 rows; every non-CEP row is byte-identical to the
+  previous manifest (14,325 rows now). Ready to freeze once Rae agrees.
 - **Proposed by:** T28 scoping. Design in the report's Part 2 "Revised game plan".
 - **Idea:**
   - Loader: `load_wg6_roman(zip_or_path, member=None, band="F146", season=None)` reads in place from the zips (no
@@ -487,13 +488,37 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 
 ### P43. Recover `local_tol`'s decayed-tail losses (from T32, 2026-11-13; numbered P41 on the T32 branch)
 - **Proposed by:** T32 report. **Rae (2026-11-15): yes, try it.**
+- **Status (2026-11-16, blind clean rerun, `reports/2026-11-16_p43-clean-rerun/`, branch `claude/p43-clean-rerun-1340c3`):**
+  `local_tol_trim` (decayed-tail trim also drops trailing vertex-less teeth) lifts success to 0.265 / 0.153 (full-year /
+  assigned; `_v7` 0.254 / 0.146, `local_tol` 0.252 / 0.143), wrong 0.024 / 0.030; recommended as default, Rae to decide.
+  Positive-height-only counting does ~nothing; the main loss mechanism is outlier rejection dropping the lag-0 tooth.
 - **Idea:** most of `local_tol`'s 30 lost stars are clean rotators with decaying ACFs whose late teeth have no free vertex,
   so `frac_vertex_tol` drops below 0.6 (and the local per-window height fit lets those teeth go negative, failing
   `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
   (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs the
   `local_tol` baseline. No threshold tuning on dev_medium (Rae, 2026-11-15).
+- **Status (2026-11-15):** done, awaiting review: `reports/2026-11-15_p43-decayed-tail/` (branch
+  `claude/p43-decayed-tail-22a749`). (a)/(c) ~no effect; (b) `local_tol_tail` +0.009 / +0.008 success with +1 wrong
+  per gain; the real cause is the rejection cascade (see P44). Default unchanged; Rae to decide.
 
-*P44 and P45 are taken by the two decayed-tail (P43) branches, which add them when they merge.*
+### P44. Lag-0 tooth in the comb fit's mean-height SNR gate and outlier rejection (from P43 clean rerun, 2026-11-16)
+- **Proposed by:** P43 clean-rerun report (`reports/2026-11-16_p43-clean-rerun/`).
+- **Idea:** under the `local` solvers the lag-0 tooth has no free vertex, so it is pinned at the vertex line's intercept,
+  fits 2-5x worse than under `lsq`, and MAD outlier rejection drops it (13 of 26 lost star-modes vs `_v7`). Its height is
+  ~ACF(0) and says nothing about P, yet under `lsq` it props up `mean_height_snr`. Try excluding the lag-0 tooth from
+  rejection and from the SNR mean (as the vertex statistics already do), for every variant; needs Rae's OK since it
+  changes the gate's meaning. Rescore dev_medium_clean both modes.
+- **First P43 attempt's version (2026-11-15, `reports/2026-11-15_p43-decayed-tail/`):** under the local solver the MAD residual-RMS rejection drops the tallest teeth of a decaying ACF (RMS scales
+  with peak height), and separately keeps the SNR gate honest by dropping noise combs' lag-0 tooth (ACF(0) = 1 props
+  up mean SNR). Replace both with explicit rules: a height-relative (scale-free) rejection or a decayed-tail cut on the
+  vertex/height evidence, and a `mean_height_snr` over teeth n >= 1. The SNR threshold was calibrated with the lag-0
+  tooth inside, so this needs a fresh dev set from the drive (not dev_medium) to set it honestly.
+
+### P45. synth200 >30 d regression of the local_tol family (from P43 clean rerun, 2026-11-16)
+- **Proposed by:** P43 clean-rerun report.
+- **Idea:** synth-s0-00099 (P = 32.4 d) is correct under `_v7` and wrong under `local_tol` and every P43 variant, which
+  makes `check_goals` FAIL on synth (`final.by_bin.>30d.success` 1.000 -> 0.875, one star of 8). Diagnose it (one star)
+  and decide whether to accept it or refresh the synth baseline with the new default.
 
 ### P46. Multi-season (3 early seasons) rotation for long periods (from P34, 2026-11-13; was P43 on the P34 branch)
 - **Proposed by:** P34 report. Forecast Roman rotators (old bulge G/K dwarfs) have P_eq ~20–50 d, at or beyond one season's
@@ -520,3 +545,22 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
   project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
   deliverable is a short report on what can be reused.
+
+### P51. Long-period rotators lost to decayed late teeth (from the first P43 attempt, 2026-11-15; was P45 on its branch)
+- **Proposed by:** first P43 report. Not scheduled.
+- **Idea:** with every tooth kept and lag-0 excluded, 10-30 d rotators fail `mean_height_snr` at 0.85-0.98 because the
+  teeth past the spot coherence time dilute the mean. Weight teeth by expected coherence (e.g. an exponential envelope
+  fit to the tooth heights) or average only the teeth before the envelope reaches the noise floor. Depends on P44.
+
+### P50. Evaluate Toeplitz-LS fast periodogram (Rae, 2026-11-19)
+- **Proposed by:** Rae. Could Toeplitz-LS (Rutkowski & Poleski, arXiv 2611.20300; github.com/kkrutkowski/Toeplitz-LS)
+  replace or speed up `guess_lombscargle`'s astropy periodogram?
+- **Rae (2026-11-19): not adopted; parked.** Keep it in mind if the pipeline is ever adapted to **sparser surveys**
+  (heavily gapped / irregular sampling, where a denser frequency grid with Nf ≫ N or multiharmonic periodograms
+  would make `tls` pay off). Report merged to main.
+- **Status: evaluated** — [`reports/2026-11-19_toeplitz-ls-eval/`](../reports/2026-11-19_toeplitz-ls-eval/README.md).
+  Verdict: don't adopt for speed. LS is 1.0–1.6% of production per-star time; float64 `tls` is 0.84–0.92× astropy
+  on the main grid (production −0.1 to −0.3%). It is exact (≤4e-14 vs astropy's direct sum), whereas today's astropy
+  `fast` path errs up to 1e-4 (1/20 top-10 lists differ, 10th slot). Revisit if a grid with Nf ≫ N is ever needed (3.7–7×
+  at Nf = 100k–200k), or for cheap multiharmonic (nterms = 2–3) periodograms as a possible P vs P/2 ranker feature (idea only).
+  No pipeline code changed; nothing installed in `ss_openblas`.

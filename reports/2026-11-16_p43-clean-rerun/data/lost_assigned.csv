@@ -1,0 +1,9 @@
+star_id,true_period,period_bin,tol_outcome,best_P,best_failed,best_n_dropped,best_n_used,best_snr,best_fvt,lsq_n_dropped,lsq_snr,out_local_screen2,out_local_tol,out_local_tol_pos,out_local_tol_trim,out_local_tol_trim_pos,out_local_tol_cs,out_local_tol_cs_trim,out_local_tol_cs0,out_local_tol_cs0_trim
+smarts-tess-v1.0-001519,0.3665,<1d,none,0.37129885264087287,frac_vertex_tol,1,7,2.435540172811853,0.5714285714285714,1,2.44305976362956,correct,none,none,correct,correct,none,correct,none,correct
+smarts-tess-v1.0-010328,1.9521,1-3d,none,2.0067325313340025,mean_height_snr,2,6,0.7357864689323576,0.6666666666666666,1,1.0490110395342338,correct,none,none,none,none,none,none,none,none
+smarts-tess-v1.0-015438,2.8651,1-3d,none,2.830157179456114,mean_height_snr,3,5,0.38838096627324636,1.0,1,2.0310157770090926,correct,none,none,correct,correct,none,correct,none,correct
+smarts-tess-v1.0-021837,4.0005,3-10d,none,5.234106921078273,frac_positive_heights;mean_height_snr,1,6,0.41851489803776376,0.6666666666666666,0,1.0798556279727685,diffrot,none,none,none,none,none,none,none,none
+smarts-tess-v1.0-028773,5.2448,3-10d,none,4.847763240643538,mean_height_snr,3,5,0.6127729010781016,1.0,1,1.5969212878262584,correct,none,none,none,none,none,none,none,none
+smarts-tess-v1.0-043314,7.8797,3-10d,none,9.411718528689509,n_peaks,2,3,1.1494134970807768,1.0,0,1.0390863711811853,diffrot,none,none,none,none,diffrot,diffrot,diffrot,diffrot
+smarts-tess-v1.0-136454,24.6299,10-30d,none,24.4082799306541,half_lag_consistency,0,4,1.6116306114160481,1.0,0,1.2333386807274582,correct,none,wrong,wrong,wrong,none,wrong,none,wrong
+smarts-tess-v1.0-151481,27.3422,10-30d,none,31.7918044826516,mean_height_snr;frac_vertex_tol,0,4,0.8882970539641735,0.5,0,1.0113121947280659,diffrot,none,none,none,none,none,none,none,none

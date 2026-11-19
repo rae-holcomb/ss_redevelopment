@@ -610,6 +610,7 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   tables) keeps every variant's ranking; on clean stars `local_tol` is success 0.252 / 0.143, wrong 0.019 / 0.024 vs
   `_v7` 0.254 / 0.146, 0.038 / 0.029 (full-year / assigned), and `local_tol_tail` 0.262 / 0.152, wrong 0.023 / 0.029.
   No reruns needed. train_v0 and the negatives were already clean; the holdout (no sim_id) must be filtered when opened.
+- **2026-11-19: WG6 manifest gains CEP** (branch `claude/wg6-cep-rebuild-b097cd`; report section in `reports/2026-11-13_p35-wg6-loader/`). The improved-noise Cepheid zip Rae added to the drive holds only the same 24 OGLE-BLG-CEP stars as the simple-noise set (the ~300 planned in P35 do not exist), so all 24 are in `wg6_roman_v0.csv` as a contaminant class (19 dev / 5 holdout by star, seasons 1-3, `P_phot_expected = P_true`, 0.25-4.5 d so none `beyond_reach`; truth was already in the scoping `truth.csv.gz` from OGLE OCVS `cep`). The builder is seeded and hash-based: all 14,253 non-CEP rows are unchanged. Manifest still v0, not frozen. Note `wg6r_contam_*` now includes 19 dev CEP stars per season.
 - **2026-11-13: P35 WG6 Roman loader + v0 manifest** (`reports/2026-11-13_p35-wg6-loader/`, branch `claude/p35-wg6-loader-ef0d37`). `claude_files/wg6.py` (`load_wg6_roman` reads zips in place, mag to NaN-safe relative flux, 1-indexed 71-d season cut, returns a `PreprocessedLightCurve` subclass with `flux_err`/`meta`; `load_wg6_raw`), `datasets/wg6_roman_v0.csv` (improved noise, seasons 1-3 assumed early, split by FL template/OGLE star, EBs flagged `is_eb`, no CEP in the improved set), builder `tools/build_wg6_manifest.py`, scorecard dataset strings `wg6r_fl_v0_improved_s<k>` / `wg6r_contam_v0_improved_s<k>` (dev only). Non-rotator outcome scoring is an open question (contaminant 'correct' = false positive). No full scorecard run yet.
 - **2026-11-12 — P27 real-TESS validation set scoped** (`reports/2026-11-12_validation-set-scoping/`). Zach's 23,332 TIC IDs
   (`datasets/external/`) are exactly the Claytor+2024 SCVZ TASOC noise-template cut (TIC 5800–6000 K dwarfs, Tmag 6–15),
@@ -648,3 +649,34 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   QLP stays fallback-only. New additive outcomes in `evaluation.py` / `scorecard.py` (`metrics['tessval']`: per-class FP rate,
   `pulsation`, `expected_undetectable` detection rate, EB lock); `final.*` unchanged (dev_small_clean full-year identical to
   main, `check_goals` PASS). Scorecard strings `tessval_v1_{sap,pdcsap}[_eb|_neg|_eu]`. Zach vetted subset: open.
+- **2026-11-16 — P43 blind clean rerun: `local_tol_trim` recommended** (`reports/2026-11-16_p43-clean-rerun/`, branch
+  `claude/p43-clean-rerun-1340c3`, not merged). Judged on dev_medium_clean only. New switches on `local_tol` in
+  `COMB_VARIANTS`: `tol_teeth="positive"`, `trim_novertex` (decayed-tail trim also drops trailing vertex-less teeth,
+  then refits) and `center_search` (vertex-less teeth centred within the jitter bound). `local_tol_trim` success
+  0.265 / 0.153, wrong 0.024 / 0.030 (full-year / assigned) vs `local_tol` 0.252 / 0.143, 0.019 / 0.024 and `_v7`
+  0.254 / 0.146, 0.038 / 0.029; +0.5% runtime; check_goals PASS vs both. Main loss mechanism: under `local` the
+  lag-0 tooth (no free vertex) is pinned at the vertex-line intercept, fits 2-5x worse than under `lsq`, and MAD
+  rejection drops it, so `mean_height_snr` fails (13 of 26 lost star-modes); `frac_vertex_tol` blocks only 7.
+  Independently matches the earlier P43 attempt's mechanism and its `local_tol_tail` numbers; differs only in the
+  recommendation (Rae to decide). Follow-ups P44 (lag-0 tooth in SNR gate / rejection), P45 (synth >30 d star).
+- **2026-11-15 — P43: `local_tol`'s decayed-tail losses; `drift_a_frac` ranker feature** (`reports/2026-11-15_p43-decayed-tail/`,
+  branch `claude/p43-decayed-tail-22a749`, not merged). Main cause of the losses is NOT the vertex test: the MAD
+  residual-RMS window rejection (`_fit_single_candidate` step 4) under the local solver drops the TALLEST teeth of a
+  decaying ACF (n = 0 first, then a cascade), so mean height SNR falls below 1. The same loop drops the lag-0 tooth of
+  noise combs, which silently keeps the SNR gate honest (ACF(0) = 1 props up any comb's mean SNR). New variant keys
+  (`tol_count`, `tol_tail`, `reject`, `height_fit`, `snr_skip_lag0`); `local_tol_tail` +0.009 / +0.008 success,
+  +0.005 / +0.009 wrong, no stars lost; `local_tol_norej_tail_snr0` 0.256 / 0.064 full-year but fails the 10-30 d
+  guard vs `_v7`. Recommendation: keep `local_tol`. `drift_a_frac` (`comb_fit.comb_drift_frac`) added to
+  ml_features (NaN for lsq / < 4 vertices). Synthetic-200 `>30d` 1/8 regression vs `_v7` belongs to `local_tol` itself.
+- **2026-11-19 — P50 Toeplitz-LS evaluated** (`reports/2026-11-19_toeplitz-ls-eval/`, draft): not adopted. At our sizes
+  (30-min regrid, N ≈ 2k–16k, Nf ≤ 21k) float64 `tls` is no faster than astropy `autopower` (fast method); LS is only
+  1–3% of per-star time. Found that astropy's `fast` method is approximate (up to 1e-4 in power vs the exact sum;
+  `tls` is exact), harmless so far (1 of 20 top-10 lists differ in the 10th slot). **Rae: not adopted; kept as a note
+  for adapting the pipeline to sparser surveys** (dense grids or multiharmonic LS are where it would pay; P50).
+- **2026-11-19 — Default comb fit -> `local_tol_trim`; `_v8` baselines** (Rae, after the blind clean reruns of T32 and
+  P43). `local_tol` + the decayed-tail trim of trailing vertex-less teeth (`trim_novertex`). Clean dev_medium success
+  0.265 / 0.153, wrong 0.024 / 0.030 (full-year / assigned) vs `_v7` 0.254 / 0.146, 0.038 / 0.029; ~2.8x faster than
+  `_v7` on the production path. The T32 clean rerun (keeping the old 0.8 threshold) found the same trim independently;
+  `local_tol`'s 0.6 threshold predates the no-new-thresholds rule. `drift_a_frac` ranker feature merged from the first
+  P43 branch (its other variants not merged). Synth200 `>30d` loses one star (P45). Toeplitz-LS (P50) not adopted;
+  noted for sparser surveys. Baselines `benchmarks/baselines/*_v8*`.
