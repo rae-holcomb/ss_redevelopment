@@ -325,7 +325,7 @@ for confirmation (ask Rae first).
 
 ### T28. Roman GBTDS track: data, loader, first scorecard (roadmap step 3, 2026-11-09)
 - **Agent:** start with a scoping session with Rae, then `method-improver`
-- **Status:** scoping in review (`reports/2026-11-12_wg6-dataset-scoping/`). Raw WG6 set is archival; the WG6 Roman-resampled set (received 2026-11-11, improved noise recommended) is profiled in Part 2. It has no ROT; FL (TESS M-dwarf templates) are the only Roman-cadence rotators. Next steps: P34 (ROT), P35 (loader + manifest), P36 (negatives).
+- **Status:** scoping in review (`reports/2026-11-12_wg6-dataset-scoping/`). Raw WG6 set is archival; the WG6 Roman-resampled set (received 2026-11-11, improved noise recommended) is profiled in Part 2. It has no ROT; FL (TESS M-dwarf templates) are the only Roman-cadence rotators. P35 (loader + manifest `datasets/wg6_roman_v0.csv`, dataset strings `wg6r_{fl,contam}_v0_improved_s<k>`) done 2026-11-13, awaiting review. Next steps: first WG6 scorecard (coordinator), P34 (ROT), P36 (negatives).
 - **Rae's decisions (2026-11-13):**
   - ROT resampling to Roman cadence: **we do it ourselves** (P34).
   - Noise: the **improved** variant.
