@@ -13,7 +13,7 @@ the `docs/METHODOLOGY_NOTES.md` section for your method, and your own task's sec
 1. **Baseline.** Before touching code, run the scorecard on the task's
    dataset and save the result:
    `python benchmarks/scorecard.py --synthetic 200 --seed 0 --outdir runs/<task>_before`
-   (or `--manifest datasets/dev_small.csv` once it exists). Check it with
+   (or `--manifest datasets/dev_small_clean.csv`; never the non-`_clean` dev manifests, see CLAUDE.md). Check it with
    `benchmarks/check_goals.py`.
 2. **Diagnose before fixing.** Pick 5–10 stars your method misses. Plot
    each one (light curve, ACF, your method's spectrum with the true P and
@@ -43,7 +43,9 @@ the `docs/METHODOLOGY_NOTES.md` section for your method, and your own task's sec
 - Runtime matters at 1M-star scale. Report the median per-star seconds
   before and after. Profile before optimizing, and document reverted
   performance experiments in code comments.
-- Scorecard runs on synthetic data and `dev_small` are fine to run
+- Never develop or diagnose on stars with `noise_exclude=True` (contaminated noise source). Use the
+  `_clean` manifests, and filter any per-star table you analyse by `~noise_exclude`.
+- Scorecard runs on synthetic data and `dev_small_clean` are fine to run
   yourself. Ask Rae before `dev_medium`, and never run anything bigger.
 
 Finish with the `write-report` skill. The before/after `check_goals`

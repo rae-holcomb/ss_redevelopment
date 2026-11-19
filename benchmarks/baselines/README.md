@@ -1,5 +1,11 @@
 # Benchmark baselines
 
+**Judge on the noise-clean files `dev_medium_clean_{fullyear,assigned}_v7.json`** (Rae, 2026-11-16). They are the `_v7`
+tables restricted to `datasets/dev_medium_clean.csv` (874 stars: the 126 `noise_exclude` stars dropped) and recomputed
+with `tools/rescore_subset.py` (the same `scorecard.compute_metrics`; unrestricted, it reproduces `_v7` exactly: 0 of
+1396 / 1819 values differ). Full-year success 0.254, wrong 0.038; assigned 0.146 / 0.029. `config.rescored_from` names
+the source; `config.wall_seconds` is dropped. The full-set `_v7` files below are history.
+
 **Use the `_v7` files for new work** (2026-11-13, T31 merge). They are the current pipeline: reproducible wavelet
 (P4), default comb fit `local_screen2`, default CWT `lean` (Rae's decisions). Against `_v6w` (same code before the
 default flip), every metrics.json value is identical (1394 / 1817 / 724 values, 0 differ). All final answers and
@@ -17,7 +23,9 @@ test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_fullyear_v7.json` + `_v7_tables/` | **Current judging baseline** (T31 merge, 2026-11-13): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6 keys, `config.comb_variant=local_screen2`, `config.cwt_variant=lean`. Success 0.251, wrong 0.088. `per_candidate.csv` not committed (size). | `ss_openblas`, 3 workers, `5d14f3f` |
+| `dev_medium_clean_fullyear_v7.json` + `_tables/` | **Current judging baseline**: `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `_v7` restricted to the clean stars. Success 0.254, wrong 0.038. | from `_v7` via `tools/rescore_subset.py` |
+| `dev_medium_clean_assigned_v7.json` + `_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.146, wrong 0.029. | same |
+| `dev_medium_fullyear_v7.json` + `_v7_tables/` | Previous judging baseline, all 1,000 stars (T31 merge, 2026-11-13): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6 keys, `config.comb_variant=local_screen2`, `config.cwt_variant=lean`. Success 0.251, wrong 0.088. `per_candidate.csv` not committed (size). | `ss_openblas`, 3 workers, `5d14f3f` |
 | `dev_medium_assigned_v7.json` + `_v7_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.147, wrong 0.055. | same |
 | `synth200_s0_v7.json` + `_v7_tables/` | `synthetic:n=200,seed=0` on the same code. Success 0.755, wrong 0. | same |
 | `dev_medium_fullyear_v6.json` + `_v6_tables/` | Previous judging baseline (T12 before run, 2026-11-12): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6. Success 0.251, wrong 0.088 (same as `_t5`). `per_candidate.csv` not committed (size). | `ss_openblas`, 4 workers, pipeline code of `9063c95` (= T5 pipeline, unchanged since) |
