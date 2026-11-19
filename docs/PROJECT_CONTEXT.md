@@ -649,3 +649,12 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   rejection drops it, so `mean_height_snr` fails (13 of 26 lost star-modes); `frac_vertex_tol` blocks only 7.
   Independently matches the earlier P43 attempt's mechanism and its `local_tol_tail` numbers; differs only in the
   recommendation (Rae to decide). Follow-ups P44 (lag-0 tooth in SNR gate / rejection), P45 (synth >30 d star).
+- **2026-11-15 — P43: `local_tol`'s decayed-tail losses; `drift_a_frac` ranker feature** (`reports/2026-11-15_p43-decayed-tail/`,
+  branch `claude/p43-decayed-tail-22a749`, not merged). Main cause of the losses is NOT the vertex test: the MAD
+  residual-RMS window rejection (`_fit_single_candidate` step 4) under the local solver drops the TALLEST teeth of a
+  decaying ACF (n = 0 first, then a cascade), so mean height SNR falls below 1. The same loop drops the lag-0 tooth of
+  noise combs, which silently keeps the SNR gate honest (ACF(0) = 1 props up any comb's mean SNR). New variant keys
+  (`tol_count`, `tol_tail`, `reject`, `height_fit`, `snr_skip_lag0`); `local_tol_tail` +0.009 / +0.008 success,
+  +0.005 / +0.009 wrong, no stars lost; `local_tol_norej_tail_snr0` 0.256 / 0.064 full-year but fails the 10-30 d
+  guard vs `_v7`. Recommendation: keep `local_tol`. `drift_a_frac` (`comb_fit.comb_drift_frac`) added to
+  ml_features (NaN for lsq / < 4 vertices). Synthetic-200 `>30d` 1/8 regression vs `_v7` belongs to `local_tol` itself.

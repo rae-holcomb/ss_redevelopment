@@ -495,6 +495,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
   (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs the
   `local_tol` baseline. No threshold tuning on dev_medium (Rae, 2026-11-15).
+- **Status (2026-11-15):** done, awaiting review: `reports/2026-11-15_p43-decayed-tail/` (branch
+  `claude/p43-decayed-tail-22a749`). (a)/(c) ~no effect; (b) `local_tol_tail` +0.009 / +0.008 success with +1 wrong
+  per gain; the real cause is the rejection cascade (see P44). Default unchanged; Rae to decide.
 
 ### P44. Lag-0 tooth in the comb fit's mean-height SNR gate and outlier rejection (from P43 clean rerun, 2026-11-16)
 - **Proposed by:** P43 clean-rerun report (`reports/2026-11-16_p43-clean-rerun/`).
@@ -503,6 +506,11 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   ~ACF(0) and says nothing about P, yet under `lsq` it props up `mean_height_snr`. Try excluding the lag-0 tooth from
   rejection and from the SNR mean (as the vertex statistics already do), for every variant; needs Rae's OK since it
   changes the gate's meaning. Rescore dev_medium_clean both modes.
+- **First P43 attempt's version (2026-11-15, `reports/2026-11-15_p43-decayed-tail/`):** under the local solver the MAD residual-RMS rejection drops the tallest teeth of a decaying ACF (RMS scales
+  with peak height), and separately keeps the SNR gate honest by dropping noise combs' lag-0 tooth (ACF(0) = 1 props
+  up mean SNR). Replace both with explicit rules: a height-relative (scale-free) rejection or a decayed-tail cut on the
+  vertex/height evidence, and a `mean_height_snr` over teeth n >= 1. The SNR threshold was calibrated with the lag-0
+  tooth inside, so this needs a fresh dev set from the drive (not dev_medium) to set it honestly.
 
 ### P45. synth200 >30 d regression of the local_tol family (from P43 clean rerun, 2026-11-16)
 - **Proposed by:** P43 clean-rerun report.
@@ -535,3 +543,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
   project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
   deliverable is a short report on what can be reused.
+
+### P51. Long-period rotators lost to decayed late teeth (from the first P43 attempt, 2026-11-15; was P45 on its branch)
+- **Proposed by:** first P43 report. Not scheduled.
+- **Idea:** with every tooth kept and lag-0 excluded, 10-30 d rotators fail `mean_height_snr` at 0.85-0.98 because the
+  teeth past the spot coherence time dilute the mean. Weight teeth by expected coherence (e.g. an exponential envelope
+  fit to the tooth heights) or average only the teeth before the envelope reaches the noise floor. Depends on P44.

@@ -2059,6 +2059,45 @@ def _vertex_stats(fit: CombFitResult, spec: dict) -> dict:
                 frac_free_vertices=frac_free)
 
 
+
+def comb_drift_frac(fit: Optional[CombFitResult], jitter_frac: float = 0.05, n_irls: int = 4) -> float:
+    """Quadratic drift coefficient of a local-family fit's free vertices, a / P (ranker feature drift_a_frac).
+
+    If the solver itself fit a drift term (COMB_VARIANTS key drift=True), that
+    `a` is returned. Otherwise the same quadratic, c_n = q0 + q1 n + a n^2, is
+    fit to the surviving teeth's free local vertices (local_info free_vertex,
+    lag-0 window excluded since it has none) by the solver's soft-L1 IRLS
+    (residual scale jitter_frac * P / 2), needing >= 4 vertices on >= 4
+    distinct n, as in _fit_comb_local. Diagnostic only: it never moves the comb.
+
+    Returns NaN for fits without local_info (lsq / local_screen refits) or with
+    too few vertices. T32 found |a/P| larger for differential rotators and
+    larger still for wrong candidates, with heavy overlap (weak signal).
+    """
+    nan = float("nan")
+    if fit is None or not fit.local_info or not (fit.P > 0):
+        return nan
+    li = fit.local_info
+    P = float(fit.P)
+    if li.get("drift_fit"):
+        return float(li["drift_a"]) / P
+    pairs = sorted((n, v) for n, v in li["free_vertex"].items() if n in fit.per_peak and np.isfinite(v))
+    if len(pairs) < 4:
+        return nan
+    nn = np.array([p[0] for p in pairs], dtype=float)
+    cc = np.array([p[1] for p in pairs], dtype=float)
+    if np.unique(nn).size < 4:
+        return nan
+    Xq = np.column_stack([np.ones_like(nn), nn, nn * nn])
+    f = max(0.5 * jitter_frac * P, 1e-12)
+    q = np.ones(len(nn))
+    for _ in range(n_irls):
+        coef = np.linalg.lstsq(Xq * q[:, None], cc * q, rcond=None)[0]
+        r = cc - Xq @ coef
+        q = np.sqrt(1.0 / np.sqrt(1.0 + (r / f) ** 2))
+    return float(coef[2]) / P
+
+
 def failed_gate_names(gate_results: dict) -> list:
     """Enabled gates that failed in a _gate_results dict, in GATE_NAMES order
     (then any T32 EXTRA_GATE_NAMES present).
