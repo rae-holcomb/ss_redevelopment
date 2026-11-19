@@ -80,7 +80,7 @@ Quick check: `datasets/dev_small_clean.csv`, full-year (`--ignore-manifest-secto
 ```
 OVERALL: PASS   (all 11 guarded metrics delta +0.000; final.overall.success 0.277 vs 0.277)
 ```
-`metrics.json` is identical apart from `config` and `runtime`, and has no `tessval` key. I did not rerun the dev_medium_clean `_v7` baselines (the coordinator is running them); `tests` still pass unchanged.
+`metrics.json` is identical apart from `config` and `runtime`, and has no `tessval` key. **Re-checked after merging main (new default comb fit `local_tol_trim`, `_v8` baselines):** `dev_medium_clean` full-year (874 stars, 3 workers) on the merged branch vs `benchmarks/baselines/dev_medium_clean_fullyear_v8.json`: `check_goals --baseline` OVERALL PASS, every guarded delta +0.000 (success 0.265), `metrics.json` identical apart from `config`/`runtime` with no `tessval` key, and all 874 per-star `final_period` / `final_outcome` values identical to the committed `_v8_tables`. I did not run the assigned-coverage set.
 
 ## What didn't work
 - The first replacement draw came up 14 stars short, all long-period Kepler-field rotators (see above); fixed by drawing more McQuillan stars.
