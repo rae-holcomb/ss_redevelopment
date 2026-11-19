@@ -381,7 +381,10 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   - Q2 long periods: **both, single season first** (P46).
   - Q3: Rae is asking Zach for his GBTDS synthetic population.
   - Q5 Kepler realism check: **yes** (P47).
-  - Q6 τ_spot priors / "best-achievable" period: Rae wants it explained before deciding (coordinator, in chat 2026-11-19).
+  - Q6 τ_spot / "best-achievable" period: **truth stays P_eq; add the best-achievable period as a diagnostic column**
+    (e.g. `p_best_achievable`: the period an ideal method recovers from a long noise-free draw of the same GP, so it
+    differs from P_eq only through spot evolution). Diagnostic only, not scored; it separates pipeline failures from
+    intrinsically unrecoverable stars. Add it to `romrot_v0.csv` when the set is built (Rae, 2026-11-19).
   - The F146 amplitude factor (×0.7 from the Kepler band) is an open discussion (D5).
   - Noise/systematics: look for existing work first (P49).
 - **Training-set philosophy for Roman (Rae, 2026-11-19):** `romrot_v0` only needs to be good enough for development. Once

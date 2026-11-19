@@ -636,3 +636,5 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   surveys (and follows any change to the TESS approach). **WG6 CEP:** Rae added the improved-noise Cepheid zip
   (`improved noise/RGES_filters_CEP_lightcurves_final-*.zip`); the WG6 manifest needs a rebuild with CEP before freezing.
   P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).
+- **2026-11-19 — P34 Q6 decided** (Rae): Roman GP rotator truth stays P_eq; the "best-achievable" period (from a long
+  noise-free draw of the same GP) becomes a diagnostic column in `romrot_v0.csv`, not a scored label.
