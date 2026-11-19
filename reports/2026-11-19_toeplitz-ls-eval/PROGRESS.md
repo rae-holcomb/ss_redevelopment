@@ -11,6 +11,10 @@
   with Apple clang 13.1.6 in the scratchpad; loaded via PYTHONPATH, nothing installed in ss_openblas.
   Smoke test (synthetic N=1200, 323 freqs): tls vs astropy exact (cython) 3e-14; tlsf 3e-6; astropy `fast`
   (our current path) vs exact 2e-4.
-- [ ] Step 3 accuracy on ~5 dev_small_clean stars (assigned + full-year)
-- [ ] Step 3 speed vs N, vs Nf, end-to-end share
+- [x] Step 3 accuracy (5 dev_small_clean stars x assigned/full-year x LS/LS_short grids = 20 periodograms;
+  `accuracy.py` -> data/accuracy.csv, candidates_top10.csv): tls vs exact <= 4e-14; tlsf <= 7e-7; astropy fast
+  (today) vs exact 4e-7 .. 1e-4. Top-10 lists: tls == exact in 20/20; astropy fast == exact in 19/20 (201481
+  full-year LS_short differs). NOTE: this run started while the other session's stage2_harness was running
+  (my gate wasn't in place yet); it's a ~1 min light job and accuracy is timing-independent. Later runs gated.
+- [ ] (running, gated on idle machine) Step 3 speed vs N, vs Nf, end-to-end share
 - [ ] Report, P50 entry, push
