@@ -52,7 +52,7 @@ def test_p43_variants_registered_and_default_unchanged():
                         ("local_tol_cs0", dict(center_search="t0")),
                         ("local_tol_cs0_trim", dict(center_search="t0", trim_novertex=True))]:
         assert C.resolve_comb_variant(name)[1] == dict(base, **extra)
-    assert C.DEFAULT_COMB_VARIANT == "local_tol"
+    assert C.DEFAULT_COMB_VARIANT == "local_tol_trim"  # Rae, 2026-11-19
 
 
 def test_local_fit_unchanged_without_center_search():

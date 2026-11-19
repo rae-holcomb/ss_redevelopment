@@ -1,6 +1,16 @@
 # Benchmark baselines
 
-**Judge on the noise-clean files `dev_medium_clean_{fullyear,assigned}_v7.json`** (Rae, 2026-11-16). They are the `_v7`
+**Judge on the `_v8` files `dev_medium_clean_{fullyear,assigned}_v8.json`** (Rae, 2026-11-19: default comb fit
+`local_tol_trim`). Fresh scorecard runs of `datasets/dev_medium_clean.csv` on main after the decayed-tail merges
+(`ss_openblas`, 3 workers, code of `a111147` + the default flip). Full-year success 0.265, wrong 0.024; assigned
+0.153 / 0.030; `synth200_s0_v8` 0.755 / 0.005. Every per-star value is bit-identical to the P43 clean rerun's
+`local_tol_trim` runs (only `meta_path` differs: worktree vs main). Against `_v7`: dev_medium both modes PASS;
+synth200 flags `final.by_bin.>30d.success` 1.000 -> 0.875 (one star, synth-s0-00099; P45). `per_candidate.csv` not
+committed (size). `tests/test_coverage.py` now checks exact equivalence against `synth200_s0_v8_tables`.
+
+The `_v7` notes below are history (default `local_screen2`).
+
+**Previously (2026-11-16):** noise-clean files `dev_medium_clean_{fullyear,assigned}_v7.json`. They are the `_v7`
 tables restricted to `datasets/dev_medium_clean.csv` (874 stars: the 126 `noise_exclude` stars dropped) and recomputed
 with `tools/rescore_subset.py` (the same `scorecard.compute_metrics`; unrestricted, it reproduces `_v7` exactly: 0 of
 1396 / 1819 values differ). Full-year success 0.254, wrong 0.038; assigned 0.146 / 0.029. `config.rescored_from` names
@@ -23,7 +33,10 @@ test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_clean_fullyear_v7.json` + `_tables/` | **Current judging baseline**: `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `_v7` restricted to the clean stars. Success 0.254, wrong 0.038. | from `_v7` via `tools/rescore_subset.py` |
+| `dev_medium_clean_fullyear_v8.json` + `_tables/` | **Current judging baseline** (2026-11-19): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `config.comb_variant=local_tol_trim`. Success 0.265, wrong 0.024. | `ss_openblas`, 3 workers, main after `a111147` |
+| `dev_medium_clean_assigned_v8.json` + `_tables/` | Same, assigned coverage. Success 0.153, wrong 0.030. | same |
+| `synth200_s0_v8.json` + `_tables/` | `synthetic:n=200,seed=0`, same code. Success 0.755, wrong 0.005. Used by `tests/test_coverage.py`. | same |
+| `dev_medium_clean_fullyear_v7.json` + `_tables/` | Previous judging baseline (`local_screen2`): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `_v7` restricted to the clean stars. Success 0.254, wrong 0.038. | from `_v7` via `tools/rescore_subset.py` |
 | `dev_medium_clean_assigned_v7.json` + `_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.146, wrong 0.029. | same |
 | `dev_medium_fullyear_v7.json` + `_v7_tables/` | Previous judging baseline, all 1,000 stars (T31 merge, 2026-11-13): `datasets/dev_medium.csv,data_root=data/smarts_dev,sectors=ignored`, scorecard v6 keys, `config.comb_variant=local_screen2`, `config.cwt_variant=lean`. Success 0.251, wrong 0.088. `per_candidate.csv` not committed (size). | `ss_openblas`, 3 workers, `5d14f3f` |
 | `dev_medium_assigned_v7.json` + `_v7_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.147, wrong 0.055. | same |

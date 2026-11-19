@@ -38,6 +38,21 @@ keep turns cheap on Rae's Pro plan.
   `datasets/tess_validation_v0.csv` + `claude_files/tess_lc.py` + download script (1.69 GB) + `tessval_v0_*` strings;
   72 of 480 stars have no MAST product; 7 questions for Rae. Neither merged.
 
+- **Rae (2026-11-19): default comb fit = `local_tol_trim`.** Merged `claude/p43-clean-rerun-1340c3` (which carries
+  `claude/local-tol-default`) and, for the `drift_a_frac` ranker feature only, `claude/p43-decayed-tail-22a749`:
+  `comb_fit.comb_drift_frac` + ml_features + docs + `tests/test_drift_a_frac.py`; its `local_tol_tail`/`norej`/`snr0`
+  variants stay on its branch (report merged as history). Its P45 became P51; its P44 text folded into P44.
+  `DEFAULT_COMB_VARIANT = "local_tol_trim"`; default-asserting tests updated. **`_v8` baselines** installed
+  (`dev_medium_clean_{fullyear,assigned}_v8`, `synth200_s0_v8`; bit-identical to the rerun's runs; CLAUDE.md points
+  to them). `tests/test_coverage.py`'s exact synthetic check now reads `synth200_s0_v8_tables` (the old v2/v3 table only
+  matched `local_screen2`). 557 pass. T32 rerun branch not merged (report-only value; Rae can say if she wants it kept).
+- **Toeplitz-LS merged as a report** (Rae: not adopted; P50 notes it for sparser surveys).
+- **P27 freeze: Rae's answers sent to its session** (30% stratified locked holdout; replace the 72 unscorable stars;
+  new outcome definitions approved (additive, `_v7`/`_v8` numbers unchanged); hot stars by Gaia class; QLP fallback
+  only; drop the 7 crowded EBs; Zach question still open). Merge when it reports back.
+- **Next:** rebuild the P31 ranker tables under `local_tol_trim` (overnight, drive plugged in), refresh the RT2 profile
+  baseline, then ranker v1. Still to archive from the sidebar: 11/10 coordinator + WG6 scoping, CEP session.
+
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
 **Why.** The decayed-tail fix agent (P43, session `local_f120e7df-…`, branch `claude/p43-decayed-tail-22a749`, report

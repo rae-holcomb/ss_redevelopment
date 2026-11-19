@@ -663,3 +663,10 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   1–3% of per-star time. Found that astropy's `fast` method is approximate (up to 1e-4 in power vs the exact sum;
   `tls` is exact), harmless so far (1 of 20 top-10 lists differ in the 10th slot). **Rae: not adopted; kept as a note
   for adapting the pipeline to sparser surveys** (dense grids or multiharmonic LS are where it would pay; P50).
+- **2026-11-19 — Default comb fit -> `local_tol_trim`; `_v8` baselines** (Rae, after the blind clean reruns of T32 and
+  P43). `local_tol` + the decayed-tail trim of trailing vertex-less teeth (`trim_novertex`). Clean dev_medium success
+  0.265 / 0.153, wrong 0.024 / 0.030 (full-year / assigned) vs `_v7` 0.254 / 0.146, 0.038 / 0.029; ~2.8x faster than
+  `_v7` on the production path. The T32 clean rerun (keeping the old 0.8 threshold) found the same trim independently;
+  `local_tol`'s 0.6 threshold predates the no-new-thresholds rule. `drift_a_frac` ranker feature merged from the first
+  P43 branch (its other variants not merged). Synth200 `>30d` loses one star (P45). Toeplitz-LS (P50) not adopted;
+  noted for sparser surveys. Baselines `benchmarks/baselines/*_v8*`.

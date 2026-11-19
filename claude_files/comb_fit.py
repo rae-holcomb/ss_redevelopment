@@ -161,7 +161,7 @@ COMB_VARIANTS = {
     "local_tol_cs0": dict(_LOCAL_TOL, center_search="t0"),
     "local_tol_cs0_trim": dict(_LOCAL_TOL, center_search="t0", trim_novertex=True),
 }
-DEFAULT_COMB_VARIANT = "local_tol"  # Rae, 2026-11-15 (T32 merge); was "local_screen2" (T31), "lsq" before
+DEFAULT_COMB_VARIANT = "local_tol_trim"  # Rae, 2026-11-19 (P43 clean rerun); was "local_tol" (T32, 2026-11-15), "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
 
 
@@ -2467,7 +2467,7 @@ def fit_rotation_period(
         1/sqrt(pairs), and long lags (now reachable, ~0.7 B) have far fewer
         pairs. None = unweighted (the pre-2026-10-13 behavior).
     comb_variant : T31 comb-fit solver variant, a key of COMB_VARIANTS
-        (None = the SS_COMB_VARIANT environment variable, else DEFAULT_COMB_VARIANT, "local_tol"; "lsq" is the
+        (None = the SS_COMB_VARIANT environment variable, else DEFAULT_COMB_VARIANT, "local_tol_trim"; "lsq" is the
         unchanged joint least-squares fit). A variant's "max_points" entry
         overrides max_points_per_window.
     max_points_per_window : forwarded to _build_windows (stride-decimate
