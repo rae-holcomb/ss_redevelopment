@@ -658,3 +658,8 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   +0.005 / +0.009 wrong, no stars lost; `local_tol_norej_tail_snr0` 0.256 / 0.064 full-year but fails the 10-30 d
   guard vs `_v7`. Recommendation: keep `local_tol`. `drift_a_frac` (`comb_fit.comb_drift_frac`) added to
   ml_features (NaN for lsq / < 4 vertices). Synthetic-200 `>30d` 1/8 regression vs `_v7` belongs to `local_tol` itself.
+- **2026-11-19 — P50 Toeplitz-LS evaluated** (`reports/2026-11-19_toeplitz-ls-eval/`, draft): not adopted. At our sizes
+  (30-min regrid, N ≈ 2k–16k, Nf ≤ 21k) float64 `tls` is no faster than astropy `autopower` (fast method); LS is only
+  1–3% of per-star time. Found that astropy's `fast` method is approximate (up to 1e-4 in power vs the exact sum;
+  `tls` is exact), harmless so far (1 of 20 top-10 lists differ in the 10th slot). **Rae: not adopted; kept as a note
+  for adapting the pipeline to sparser surveys** (dense grids or multiharmonic LS are where it would pay; P50).
