@@ -486,13 +486,29 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 
 ### P43. Recover `local_tol`'s decayed-tail losses (from T32, 2026-11-13; numbered P41 on the T32 branch)
 - **Proposed by:** T32 report. **Rae (2026-11-15): yes, try it.**
+- **Status (2026-11-16, blind clean rerun, `reports/2026-11-16_p43-clean-rerun/`, branch `claude/p43-clean-rerun-1340c3`):**
+  `local_tol_trim` (decayed-tail trim also drops trailing vertex-less teeth) lifts success to 0.265 / 0.153 (full-year /
+  assigned; `_v7` 0.254 / 0.146, `local_tol` 0.252 / 0.143), wrong 0.024 / 0.030; recommended as default, Rae to decide.
+  Positive-height-only counting does ~nothing; the main loss mechanism is outlier rejection dropping the lag-0 tooth.
 - **Idea:** most of `local_tol`'s 30 lost stars are clean rotators with decaying ACFs whose late teeth have no free vertex,
   so `frac_vertex_tol` drops below 0.6 (and the local per-window height fit lets those teeth go negative, failing
   `frac_positive_heights` / `half_lag_consistency`). Count `frac_vertex_tol` only over teeth with positive fitted height
   (or after the decayed-tail trim), and try T31's robust per-window height fit. Rescore dev_medium both modes vs the
   `local_tol` baseline. No threshold tuning on dev_medium (Rae, 2026-11-15).
 
-*P44 and P45 are taken by the two decayed-tail (P43) branches, which add them when they merge.*
+### P44. Lag-0 tooth in the comb fit's mean-height SNR gate and outlier rejection (from P43 clean rerun, 2026-11-16)
+- **Proposed by:** P43 clean-rerun report (`reports/2026-11-16_p43-clean-rerun/`).
+- **Idea:** under the `local` solvers the lag-0 tooth has no free vertex, so it is pinned at the vertex line's intercept,
+  fits 2-5x worse than under `lsq`, and MAD outlier rejection drops it (13 of 26 lost star-modes vs `_v7`). Its height is
+  ~ACF(0) and says nothing about P, yet under `lsq` it props up `mean_height_snr`. Try excluding the lag-0 tooth from
+  rejection and from the SNR mean (as the vertex statistics already do), for every variant; needs Rae's OK since it
+  changes the gate's meaning. Rescore dev_medium_clean both modes.
+
+### P45. synth200 >30 d regression of the local_tol family (from P43 clean rerun, 2026-11-16)
+- **Proposed by:** P43 clean-rerun report.
+- **Idea:** synth-s0-00099 (P = 32.4 d) is correct under `_v7` and wrong under `local_tol` and every P43 variant, which
+  makes `check_goals` FAIL on synth (`final.by_bin.>30d.success` 1.000 -> 0.875, one star of 8). Diagnose it (one star)
+  and decide whether to accept it or refresh the synth baseline with the new default.
 
 ### P46. Multi-season (3 early seasons) rotation for long periods (from P34, 2026-11-13; was P43 on the P34 branch)
 - **Proposed by:** P34 report. Forecast Roman rotators (old bulge G/K dwarfs) have P_eq ~20–50 d, at or beyond one season's

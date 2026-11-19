@@ -639,3 +639,13 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).
 - **2026-11-19 — P34 Q6 decided** (Rae): Roman GP rotator truth stays P_eq; the "best-achievable" period (from a long
   noise-free draw of the same GP) becomes a diagnostic column in `romrot_v0.csv`, not a scored label.
+- **2026-11-16 — P43 blind clean rerun: `local_tol_trim` recommended** (`reports/2026-11-16_p43-clean-rerun/`, branch
+  `claude/p43-clean-rerun-1340c3`, not merged). Judged on dev_medium_clean only. New switches on `local_tol` in
+  `COMB_VARIANTS`: `tol_teeth="positive"`, `trim_novertex` (decayed-tail trim also drops trailing vertex-less teeth,
+  then refits) and `center_search` (vertex-less teeth centred within the jitter bound). `local_tol_trim` success
+  0.265 / 0.153, wrong 0.024 / 0.030 (full-year / assigned) vs `local_tol` 0.252 / 0.143, 0.019 / 0.024 and `_v7`
+  0.254 / 0.146, 0.038 / 0.029; +0.5% runtime; check_goals PASS vs both. Main loss mechanism: under `local` the
+  lag-0 tooth (no free vertex) is pinned at the vertex-line intercept, fits 2-5x worse than under `lsq`, and MAD
+  rejection drops it, so `mean_height_snr` fails (13 of 26 lost star-modes); `frac_vertex_tol` blocks only 7.
+  Independently matches the earlier P43 attempt's mechanism and its `local_tol_tail` numbers; differs only in the
+  recommendation (Rae to decide). Follow-ups P44 (lag-0 tooth in SNR gate / rejection), P45 (synth >30 d star).
