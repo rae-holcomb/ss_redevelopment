@@ -138,13 +138,14 @@ def fig_end_to_end():
     y = np.arange(len(e))
     ax.barh(y, e.total_ms, color="#e6e5e0", height=0.55, label="rest of the per-star pipeline")
     ax.barh(y, e.ls_ms, color=BLUE, height=0.55, label="Lomb-Scargle today")
-    ax.barh(y, e.ls_ms_tls, color=ORANGE, height=0.3, label="Lomb-Scargle with tls (native)")
+    ax.barh(y + 0.14, e.ls_ms_tls, color=ORANGE, height=0.2, label="LS with tls (float64, native)")
+    ax.barh(y - 0.14, e.ls_ms_tlsf, color=AQUA, height=0.2, label="LS with tlsf (float32, native)")
     for i, r in e.iterrows():
-        ax.text(r.total_ms * 1.01, i, f"LS = {100 * r.ls_ms / r.total_ms:.1f}% → saves {100 * r.saved_frac:.1f}%",
-                va="center", fontsize=7.5, color="#0b0b0b")
+        ax.text(r.total_ms * 1.01, i, f"LS = {100 * r.ls_share:.1f}%;  saved: tls {100 * r.saved_frac_tls:+.2f}%, "
+                f"tlsf {100 * r.saved_frac_tlsf:+.2f}%", va="center", fontsize=7.5, color="#0b0b0b")
     ax.set_yticks(y, e.label, fontsize=8)
     ax.set_xlabel("serial ms per star")
-    ax.set_xlim(0, e.total_ms.max() * 1.45)
+    ax.set_xlim(0, e.total_ms.max() * 1.75)
     ax.legend(fontsize=7, loc="lower right")
     ax.set_title("End-to-end: Lomb-Scargle is a small slice of per-star time", fontsize=9)
     fig.tight_layout()
