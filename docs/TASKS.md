@@ -417,6 +417,7 @@ for confirmation (ask Rae first).
 ---
 
 ### T32. Make the cheap `local` comb solver robust to drifting ACF peaks (Rae, 2026-11-13; from T31, P40)
+- **Status (2026-11-19, blind clean rerun):** done on branch `claude/t32-clean-rerun-2c0779`, report `reports/2026-11-19_t32-clean-rerun/` (draft). Leader `local_seq_trim` (fewer wrongs, −0.003/−0.005 success, 2.8× faster than `_v7`); recommends keeping `local_screen2` pending P44/P45.
 - **Agent:** `method-improver`. Builds on T31 (merged to main 2026-11-13; baseline `_v7`; `SS_COMB_VARIANT=local`,
   `comb_fit._fit_comb_local`). Rae adopted `local_screen2` as the default; this task aims to make the ~6x-faster `local`
   usable on its own.

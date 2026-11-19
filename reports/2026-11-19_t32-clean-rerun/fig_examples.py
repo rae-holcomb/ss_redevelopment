@@ -20,7 +20,9 @@ from style import plt, C, INK2  # noqa: E402
 
 
 def run(rec, variant):
-    """fit_rotation_period on a cached star -> (result, candidate shown: selected or best declined)."""
+    """fit_rotation_period on a cached star -> (result, candidate shown: selected or best declined).
+
+    For a variant that declines a star _v7 answered, main() swaps in the candidate with _v7's seed."""
     res = cf.fit_rotation_period(rec["lags"], rec["acf"], rec["pooled"], acf_counts=rec["counts"],
                                  comb_variant=variant)
     cand = res.candidates[0] if res.candidates else None
@@ -59,14 +61,20 @@ def main():
         lags, acf = rec["lags"], rec["acf"]
         a1.plot(lags, acf, color="#8a8984", lw=0.8)
         txt = []
-        for k, (v, col, lab) in enumerate([("local_screen2", C[1], "_v7"), (variant, C[0], variant)]):
+        for k, (v, col, lab) in enumerate([("local_screen2", C[1], "v7 (local_screen2)"), (variant, C[0], variant)]):
             res, cand = run(rec, v)
+            if k == 0:
+                p0_v7 = cand.period if (res.success and cand is not None) else None
+            elif not res.success and p0_v7 is not None:
+                # declined: show the candidate seeded like _v7's answer, so its failing gates are visible
+                same = [r for r in res.candidates if abs(r.period - p0_v7) < 1e-9]
+                cand = same[0] if same else cand
             if cand is not None and cand.fit is not None:
                 draw_comb(a1, rec, cand, col, lab, 0.02 + 0.07 * k)
             P = res.best_fit.P if res.success else None
             o = ev.classify_period(P, Pt, ev.REL_TOL, rec["prange"])
             fg = "" if res.success else ",".join(g[:12] for g in (cand.failed_gates if cand else []))
-            txt.append(f"{lab}: {o}" + (f" P={P:.3g}" if P else f" (best P={cand.fit.P:.3g} fails {fg})"
+            txt.append(f"{lab}: {o}" + (f" P={P:.3g}" if P else f" (cand. P={cand.fit.P:.3g} fails {fg})"
                                           if cand and cand.fit else ""))
         top = max(cand.fit.P if cand and cand.fit else Pt, Pt) * 8.5
         for j in range(1, 9):

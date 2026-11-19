@@ -14,3 +14,4 @@
   synthetic flags a 3-of-36-star 3-10d drop for local_seq_trim (local itself flags >30d, 1 of 8).
 - Lost-star diagnosis: mean_height_snr on marginal long-period combs (data/leader_lost_stars.csv, fig_leader_lost_gates.png).
 - Next: profiling (runs/t32_clean/prof/), example figures, speed figure, README.
+- Profiling, figures, README, notebook (executed), docs updated. Report done 2026-11-19.

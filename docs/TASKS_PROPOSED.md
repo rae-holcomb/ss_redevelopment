@@ -460,3 +460,12 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Caution (Rae):** don't tune N or the rankings tightly yet. Other telescopes (Roman, other training sets) differ in
   baseline, cadence and noise, which changes candidate ordering. For now, only a quick check for easy, robust gains
   (e.g. a method whose recall saturates by N=3 everywhere).
+
+### P44. Robust heights for the tracked `local` solver (from the T32 rerun, 2026-11-19; number provisional)
+- **Proposed by:** T32 clean-rerun report.
+- **Idea:** `local_seq_trim` loses `_v7` successes (26 full-year / 12 assigned) on marginal long-period combs whose mean height SNR falls under 1.0. Its fixed-centre plain least-squares heights, and the decayed late teeth it keeps, sit below `lsq`'s soft-L1 fit. Try a soft-L1 per-window height fit, or heights at the free vertex, and/or a running slope that ignores vertices beyond `jitter_frac` of the prediction. No new thresholds. Then rescore on dev_medium_clean.
+
+### P45. Near-lag-0 guard for tracked combs, or a `local_seq_trim` screen (from the T32 rerun, 2026-11-19; number provisional)
+- **Proposed by:** T32 clean-rerun report.
+- **Idea:** most of `local_seq_trim`'s new wrongs are ~0.37 d combs fit on the ACF's lag-0 decay envelope of long-period stars, which `_v7`'s frame vertex gate rejected. Either add a decay-envelope check, or use `local_seq_trim` as the screen in a `local_screen2`-style hybrid (refit `lsq` only for near-miss candidates). That would keep most of its speed and its avoided wrongs.
+
