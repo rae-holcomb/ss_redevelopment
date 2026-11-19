@@ -127,7 +127,7 @@ def test_load_wg6_raw_hjd_fix(tmp_path):
 def _toy_inventory_truth():
     inv, tr = [], []
     for i in range(40):
-        for cls in ("ECL", "ELL", "T2CEP", "RRLYR", "HB", "DSCT", "LPV"):
+        for cls in ("ECL", "ELL", "T2CEP", "RRLYR", "CEP", "HB", "DSCT", "LPV"):
             sid = f"OGLE-BLG-{cls}-{i:04d}"
             inv.append(dict(variant="improved", cls=cls, zip="z.zip", member=f"{sid}.fits", star_id=sid, cv_ind=np.nan,
                             fl_template=np.nan, fl_k=np.nan, wfmag=np.nan))
@@ -157,6 +157,9 @@ def test_build_manifest_schema_split_and_eb_flags():
     assert ecl.is_eb.all() and np.allclose(ecl.P_phot_expected, ecl.P_true / 2)
     assert np.allclose(man[man.cls == "T2CEP"].P_phot_expected, man[man.cls == "T2CEP"].P_true) and not man[man.cls == "T2CEP"].is_eb.any()
     assert man[man.cls == "ELL"].obj_id.nunique() == 30
+    cep = man[man.cls == "CEP"]
+    assert cep.obj_id.nunique() == 30 and not cep.is_eb.any() and np.allclose(cep.P_phot_expected, cep.P_true)
+    assert set(cep.eval_set) == {"dev", "holdout"}
     # deterministic
     again = b.build(inv.sample(frac=1, random_state=3), tr, n_per_class=30, n_stress=20)   # row order must not matter
     pd.testing.assert_frame_equal(again, man)
@@ -185,6 +188,9 @@ def test_committed_manifest_is_consistent():
     assert (man.is_rotator.astype(bool) <= (man.cls == "FL")).all()          # v0 rotators are FL only
     n = man.groupby("cls").obj_id.nunique()
     assert n[["ECL", "ELL", "RRLYR"]].eq(300).all() and n["T2CEP"] == 100      # T2CEP has only 100 improved stars
+    cep = man[man.cls == "CEP"]                                              # added 2026-11-19: the improved set has only 24
+    assert n["CEP"] == 24 and cep.groupby("eval_set").obj_id.nunique().to_dict() == {"dev": 19, "holdout": 5}
+    assert len(cep) == 24 * 3 and np.allclose(cep.P_phot_expected, cep.P_true) and not cep.is_eb.any() and not cep.beyond_reach.any()
 
 
 def test_scorecard_wg6_dataset_strings():

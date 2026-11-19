@@ -14,8 +14,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "claude_files"))
 FIG = HERE / "figures"
-ORDER = ["FL", "ECL", "ELL", "T2CEP", "RRLYR", "HB", "DSCT", "LPV", "CV"]
-COL = {"FL": "#1b9e77", "ECL": "#d95f02", "ELL": "#e6ab02", "T2CEP": "#7570b3", "RRLYR": "#e7298a",
+ORDER = ["FL", "ECL", "ELL", "T2CEP", "CEP", "RRLYR", "HB", "DSCT", "LPV", "CV"]
+COL = {"FL": "#1b9e77", "ECL": "#d95f02", "ELL": "#e6ab02", "T2CEP": "#7570b3", "CEP": "#984ea3", "RRLYR": "#e7298a",
        "HB": "#66a61e", "DSCT": "#a6761d", "LPV": "#666666", "CV": "#1f78b4"}
 SEASON_DAYS = 71.0
 
@@ -29,7 +29,7 @@ def fig_examples(man: pd.DataFrame) -> Path:
     """One loader-produced season-1 F146 light curve per class (first dev star of each; FL: a ~2 d rotator). Needs the drive."""
     from wg6 import load_wg6_roman, resampled_root
     root = resampled_root()
-    fig, axes = plt.subplots(3, 3, figsize=(13, 8.5))
+    fig, axes = plt.subplots(2, 5, figsize=(21, 7.5))
     for ax, cls in zip(axes.ravel(), ORDER):
         g = man[(man.cls == cls) & (man.eval_set == "dev") & (man.season == 1)]
         if cls == "FL":
@@ -50,7 +50,7 @@ def fig_examples(man: pd.DataFrame) -> Path:
 
 def fig_period_hist(man: pd.DataFrame) -> Path:
     """Histogram of P_true per class (one entry per object) with the 71-d season span marked."""
-    fig, axes = plt.subplots(3, 3, figsize=(13, 8.5))
+    fig, axes = plt.subplots(2, 5, figsize=(21, 7.5))
     bins = np.logspace(-2, 3, 46)
     for ax, cls in zip(axes.ravel(), ORDER):
         g = man[man.cls == cls].drop_duplicates("obj_id")
@@ -75,7 +75,7 @@ def fig_counts(man: pd.DataFrame) -> Path:
     """Star-season counts per class, per season, stacked dev/holdout (the table of record is data/counts.csv)."""
     c = man.groupby(["season", "cls", "eval_set"]).size().unstack("eval_set", fill_value=0)
     c.to_csv(HERE / "data/counts.csv")
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4), sharey=True)
     for ax, s in zip(axes, (1, 2, 3)):
         d = c.loc[s].reindex(ORDER)
         ax.bar(d.index, d["dev"], color="#4c78a8", label="dev")
