@@ -26,6 +26,18 @@ keep turns cheap on Rae's Pro plan.
   archived: the app keeps its side session WG6 scoping `local_5b376121-…` (pinned or in use); Rae can archive both from the
   sidebar. Branches `claude/{p27-validation-scoping-4c1c1b,t28-wg6-scoping-43bfaa,midway-review-d397c3,smarts-note-review-2d28d8}` pushed first.
 
+- **T32 clean rerun done** (`claude/t32-clean-rerun-2c0779`, `reports/2026-11-19_t32-clean-rerun/`; protected files
+  untouched; `local_screen2` reproduces clean `_v7` exactly). Kept every existing threshold (0.8), so its √n-tolerance
+  variant scored only 0.215 fy; the first T32's `local_tol` uses `min_frac_tol=0.6`, set on dev_small. Leader
+  `local_seq_trim` (tracking + a trailing-tooth trim, found independently): 0.251/0.021 fy, 0.142/0.026 as; recommends
+  keeping `local_screen2`. `local_tol_trim` (P43 rerun) 0.265/0.024, 0.153/0.030 remains the best balance.
+  Rae's default decision pending.
+- **CEP rebuild merged** (`480c90a`; 24 CEP stars, only that many exist). Session archive blocked (pinned/open).
+- **Toeplitz-LS (P50)** `claude/toeplitz-ls-eval-975317`: don't adopt for speed (LS is 1-3% of per-star time; no gain at
+  our grid sizes), exact where astropy `fast` is ~1e-4. **P27 freeze** `claude/p27-freeze-27f7e1`:
+  `datasets/tess_validation_v0.csv` + `claude_files/tess_lc.py` + download script (1.69 GB) + `tessval_v0_*` strings;
+  72 of 480 stars have no MAST product; 7 questions for Rae. Neither merged.
+
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
 **Why.** The decayed-tail fix agent (P43, session `local_f120e7df-…`, branch `claude/p43-decayed-tail-22a749`, report
