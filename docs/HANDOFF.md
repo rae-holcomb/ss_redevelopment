@@ -19,6 +19,13 @@ keep turns cheap on Rae's Pro plan.
   `reports/2026-11-19_t32-clean-rerun/`. Compare it against the first T32 report and both P43 runs before the default
   decision.
 
+- **Rae (2026-11-19): merged P35, P27, P34** (decisions in TASKS_PROPOSED P27/P34/P35, P46-P49, D5 and the changelog).
+  WG6 manifest needs a CEP rebuild before freezing (zip added to the drive 2026-11-19). P27 freeze is next (70-180 d block
+  skipped). Explained "best-achievable period" (P34 Q6) to Rae in chat; her decision pending.
+- **Archived 2026-11-19 (Rae):** P35, P34, P27 and midway-review sessions. The 11/10 coordinator `local_ba4679a3-…` could not be
+  archived: the app keeps its side session WG6 scoping `local_5b376121-…` (pinned or in use); Rae can archive both from the
+  sidebar. Branches `claude/{p27-validation-scoping-4c1c1b,t28-wg6-scoping-43bfaa,midway-review-d397c3,smarts-note-review-2d28d8}` pushed first.
+
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
 **Why.** The decayed-tail fix agent (P43, session `local_f120e7df-…`, branch `claude/p43-decayed-tail-22a749`, report
