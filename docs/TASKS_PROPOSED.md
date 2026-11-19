@@ -518,3 +518,13 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
   project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
   deliverable is a short report on what can be reused.
+
+### P50. Evaluate Toeplitz-LS fast periodogram (Rae, 2026-11-19)
+- **Proposed by:** Rae. Could Toeplitz-LS (Rutkowski & Poleski, arXiv 2611.20300; github.com/kkrutkowski/Toeplitz-LS)
+  replace or speed up `guess_lombscargle`'s astropy periodogram?
+- **Status: evaluated, draft report awaiting Rae** — [`reports/2026-11-19_toeplitz-ls-eval/`](../reports/2026-11-19_toeplitz-ls-eval/README.md).
+  Verdict: don't adopt for speed. LS is 1.0–1.6% of production per-star time; float64 `tls` is 0.84–0.92× astropy
+  on the main grid (production −0.1 to −0.3%). It is exact (≤4e-14 vs astropy's direct sum), whereas today's astropy
+  `fast` path errs up to 1e-4 (1/20 top-10 lists differ, 10th slot). Revisit if a grid with Nf ≫ N is ever needed (3.7–7×
+  at Nf = 100k–200k), or for cheap multiharmonic (nterms = 2–3) periodograms as a possible P vs P/2 ranker feature (idea only).
+  No pipeline code changed; nothing installed in `ss_openblas`.

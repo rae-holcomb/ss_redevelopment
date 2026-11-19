@@ -17,4 +17,4 @@
   full-year LS_short differs). NOTE: this run started while the other session's stage2_harness was running
   (my gate wasn't in place yet); it's a ~1 min light job and accuracy is timing-independent. Later runs gated.
 - [x] Step 3 speed (timing.py, rerun clean after run 1 was flagged; run 1 kept as data/timing_run1.csv) and end-to-end (profile_pipeline, 5 stars x 3 repeats, both modes; end_to_end.py)
-- [ ] Report, P50 entry, push
+- [x] Report (README + executed notebook), P50 entry in TASKS_PROPOSED, PROJECT_CONTEXT changelog, pushed. Optional prototype skipped (no speed gain).

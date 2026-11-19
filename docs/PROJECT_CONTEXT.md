@@ -638,3 +638,7 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   P34's proposals renumbered P43/P44 -> P46/P47 (P44/P45 are taken by the two decayed-tail branches).
 - **2026-11-19 — P34 Q6 decided** (Rae): Roman GP rotator truth stays P_eq; the "best-achievable" period (from a long
   noise-free draw of the same GP) becomes a diagnostic column in `romrot_v0.csv`, not a scored label.
+- **2026-11-19 — P50 Toeplitz-LS evaluated** (`reports/2026-11-19_toeplitz-ls-eval/`, draft): not adopted. At our sizes
+  (30-min regrid, N ≈ 2k–16k, Nf ≤ 21k) float64 `tls` is no faster than astropy `autopower` (fast method); LS is only
+  1–3% of per-star time. Found that astropy's `fast` method is approximate (up to 1e-4 in power vs the exact sum;
+  `tls` is exact), harmless so far (1 of 20 top-10 lists differ in the 10th slot).
