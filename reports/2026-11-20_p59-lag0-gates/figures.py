@@ -39,7 +39,8 @@ def per_star(set_name, mode, run):
     if run == "old":
         return pd.read_csv(ROOT / f"benchmarks/baselines/{set_name}_{mode}_v9_tables/per_star.csv")
     tag = {"dev_medium_clean": "dm", "dev_medium_b_clean": "b"}[set_name] + {"fullyear": "fy", "assigned": "as"}[mode]
-    return pd.read_csv(DATA / f"per_star/{NEW}_{tag}.csv.gz")
+    v = NEW if run == "new" else NEW + "b"  # 'alt' = the declared alternative local_tol_trim_l0x2b
+    return pd.read_csv(DATA / f"per_star/{v}_{tag}.csv.gz")
 
 
 def envelope(t):
@@ -73,6 +74,10 @@ def fig_frontier(chosen):
                    & np.isclose(sw.snr, c["snr"])].iloc[0]
             ax.plot(p.wrong, p.success, "*", ms=15, color=COL[NEW], mec="k",
                     label=f"pick ({c['mp']}, {c['fp']:g}, {c['snr']:g}): {p.success:.3f} / {p.wrong:.3f}")
+            q = sw[(sw["mode"] == mode) & (sw.variant == NEW) & (sw.mp == 3) & np.isclose(sw.fp, 0.6)
+                   & np.isclose(sw.snr, 1.06)].iloc[0]
+            ax.plot(q.wrong, q.success, "P", ms=10, color="gold", mec="k",
+                    label=f"declared alternative l0x2b (3, 0.6, 1.06): {q.success:.3f} / {q.wrong:.3f}")
             ob = chosen[mode]["old_best"]
             ax.plot(ob["wrong"], ob["success"], "D", ms=7, color="0.6", mec="k",
                     label=f"old gates re-tuned ({ob['mp']}, {ob['fp']:g}, {ob['snr']:g}): "
@@ -94,13 +99,15 @@ def fig_frontier(chosen):
 def _map(ax, t, xcol, ycol, val, target, title, fmt="{:d}"):
     piv = t.pivot_table(index=ycol, columns=xcol, values=val)
     wr = t.pivot_table(index=ycol, columns=xcol, values="wrong")
-    im = ax.imshow(piv.values, origin="lower", aspect="auto", cmap="viridis" if val == "n_success" else "magma_r")
+    im = ax.imshow(np.ma.masked_invalid(piv.values), origin="lower", aspect="auto", cmap="viridis" if val == "n_success" else "magma_r")
     ax.set_xticks(range(len(piv.columns)))
     ax.set_xticklabels([f"{x:g}" for x in piv.columns], fontsize=7)
     ax.set_yticks(range(len(piv.index)))
     ax.set_yticklabels([f"{y:g}" for y in piv.index], fontsize=7)
     for i in range(piv.shape[0]):
         for j in range(piv.shape[1]):
+            if not np.isfinite(piv.values[i, j]):
+                continue  # combination not in the coarse or fine grid
             ok = wr.values[i, j] <= target + 1e-12
             ax.text(j, i, fmt.format(int(piv.values[i, j])), ha="center", va="center", fontsize=6.5,
                     color="w" if not ok else "k",
@@ -182,16 +189,18 @@ def summary():
     rows = []
     for set_name in ("dev_medium_clean", "dev_medium_b_clean"):
         for mode in ("fullyear", "assigned"):
-            for run in ("old", "new"):
+            for run in ("old", "new", "alt"):
                 o = per_star(set_name, mode, run).final_outcome
                 rows.append(dict(set=set_name, mode=mode, run=run, n=len(o), success=o.isin(S).mean(),
                                  wrong=(o == "wrong").mean(), alias=o.isin(A).mean(), none=(o == "none").mean(),
                                  precision=o.isin(S).sum() / max((o != "none").sum(), 1)))
-            a = per_star(set_name, mode, "old").set_index("star_id").final_outcome
-            b = per_star(set_name, mode, "new").set_index("star_id").final_outcome.reindex(a.index)
-            rows[-1].update(gained=int((b.isin(S) & ~a.isin(S)).sum()), lost=int((a.isin(S) & ~b.isin(S)).sum()),
-                            new_wrong=int(((b == "wrong") & (a != "wrong")).sum()),
-                            fixed_wrong=int(((a == "wrong") & (b != "wrong")).sum()))
+                if run == "old":
+                    continue
+                a = per_star(set_name, mode, "old").set_index("star_id").final_outcome
+                b = per_star(set_name, mode, run).set_index("star_id").final_outcome.reindex(a.index)
+                rows[-1].update(gained=int((b.isin(S) & ~a.isin(S)).sum()), lost=int((a.isin(S) & ~b.isin(S)).sum()),
+                                new_wrong=int(((b == "wrong") & (a != "wrong")).sum()),
+                                fixed_wrong=int(((a == "wrong") & (b != "wrong")).sum()))
     out = pd.DataFrame(rows)
     out.to_csv(DATA / "summary.csv", index=False)
     return out

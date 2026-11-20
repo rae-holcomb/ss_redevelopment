@@ -1,0 +1,22 @@
+Run: runs/p59/sc/local_tol_trim_l0x2_dmas/metrics.json  (dataset datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest, commit f5817b4)
+Baseline: benchmarks/baselines/dev_medium_clean_assigned_v9.json  (commit 773754e-dirty)
+
+goal  status  result  value    target   base  metric
+RT1b  draft   PASS    0.421 <= base*1.25  0.480  runtime.median_seconds
+                     Same as RT1a, assigned coverage.
+
+Regression guard (fail if a metric drops by more than its limit):
+   base     new   delta  limit  metric
+  0.154   0.175  +0.021  0.020  final.overall.success
+  0.208   0.221  +0.013  0.060  final.by_bin.1-3d.success
+  0.179   0.199  +0.020  0.060  final.by_bin.10-30d.success
+  0.212   0.252  +0.040  0.060  final.by_bin.3-10d.success
+  0.223   0.223  +0.000  0.060  final.by_bin.<1d.success
+  0.044   0.069  +0.025  0.060  final.by_bin.>30d.success
+  0.926   0.926  +0.000  0.060  union_recall.by_bin.1-3d
+  0.874   0.874  +0.000  0.060  union_recall.by_bin.10-30d
+  0.921   0.921  +0.000  0.060  union_recall.by_bin.3-10d
+  0.777   0.777  +0.000  0.060  union_recall.by_bin.<1d
+  0.502   0.502  +0.000  0.060  union_recall.by_bin.>30d
+
+OVERALL: PASS
