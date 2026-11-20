@@ -418,7 +418,7 @@ Definition   : a / fitted_P, where a is the quadratic coefficient of a
                Needs >= 4 vertices on >= 4 distinct teeth.
 Missing      : NaN when the fit has no local-solver info (lsq fits, the
                local_screen variants' lsq refits) or fewer than 4 vertices.
-               Under the default comb variant (local_tol_trim, since 2026-11-19) every fitted
+               Under the default comb variant (local_tol_trim_l0x since 2026-11-20; local_tol_trim before) every fitted
                candidate carries local info, so NaN means "too few teeth
                with a vertex".
 Description  : How far the ACF's peaks bend away from an evenly spaced comb.

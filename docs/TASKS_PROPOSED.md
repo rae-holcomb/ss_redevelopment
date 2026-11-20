@@ -463,6 +463,8 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   ~ACF(0) and says nothing about P, yet under `lsq` it props up `mean_height_snr`. Try excluding the lag-0 tooth from
   rejection and from the SNR mean (as the vertex statistics already do), for every variant; needs Rae's OK since it
   changes the gate's meaning. Rescore dev_medium_clean both modes.
+- **Done, merged and adopted as default (Rae, 2026-11-20):** `local_tol_trim_l0x`, cutoff 1.02 (full-year rule kept;
+  Rae fine with full-year). `_v9` baselines. Report `reports/2026-11-20_p44-lag0-out/`. Follow-up P59 approved.
 - **Rae (2026-11-19): yes, leave the lag-0 tooth out** of both the window rejection and the `mean_height_snr` mean.
   The gate's 1.0 cutoff was calibrated with the tooth inside, so set the new cutoff on a **fresh dev set drawn from the
   drive** (noise-clean stars, disjoint from dev_small/dev_medium/holdout/train_v0), not on dev_medium; then judge on
@@ -602,3 +604,6 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   out of every gate statistic would make the comb gates consistent; it needs a joint re-set of `frac_positive_heights`
   0.8 / `min_peaks_required` 4 on dev_medium_b_clean (sweep harness `reports/2026-11-20_p44-lag0-out/p44lib.py`),
   judged on dev_medium_clean. Needs Rae's OK (changes gate meanings).
+- **Rae (2026-11-20): approved.** Leave the lag-0 tooth out of `n_peaks`, `frac_positive_heights` (and
+  `frac_vertex_in_window` where a variant uses it). Re-set the affected thresholds on dev_medium_b_clean (full-year rule,
+  as in P44), judge on dev_medium_clean vs `_v9`.

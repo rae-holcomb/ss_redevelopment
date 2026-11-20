@@ -1,5 +1,15 @@
 # Benchmark baselines
 
+**Judge on the `_v9` files `dev_medium_clean_{fullyear,assigned}_v9.json`** (Rae, 2026-11-20: default comb fit
+`local_tol_trim_l0x`, P44: lag-0 tooth out of rejection and the SNR gate, cutoff 1.02). Fresh runs on main after the P44
+merge + default flip. dev_medium_clean full-year 0.270 / 0.019, assigned 0.154 / 0.030; dev_medium_b_clean full-year
+0.272 / 0.032, assigned 0.168 / 0.019; `synth200_s0_v9` 0.750 / 0.005. All match the P44 report's runs; `check_goals
+--baseline` vs `_v8` PASS on all five. Note: the dev_medium full-year run's median runtime was 0.93 s/star (machine
+busier than the P44 runs' 0.715), so `RT1a` judged against `_v9` is lenient. `tests/test_coverage.py` checks exact
+equivalence against `synth200_s0_v9_tables`. Tune on one of dev_medium / dev_medium_b, judge on the other.
+
+The `_v8` notes below are history (default `local_tol_trim`).
+
 **Judge on the `_v8` files `dev_medium_clean_{fullyear,assigned}_v8.json`** (Rae, 2026-11-19: default comb fit
 `local_tol_trim`). Fresh scorecard runs of `datasets/dev_medium_clean.csv` on main after the decayed-tail merges
 (`ss_openblas`, 3 workers, code of `a111147` + the default flip). Full-year success 0.265, wrong 0.024; assigned
@@ -33,7 +43,11 @@ test or tool cites them.
 
 | File | What | Env / commit |
 |---|---|---|
-| `dev_medium_clean_fullyear_v8.json` + `_tables/` | **Current judging baseline** (2026-11-19): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `config.comb_variant=local_tol_trim`. Success 0.265, wrong 0.024. | `ss_openblas`, 3 workers, main after `a111147` |
+| `dev_medium_clean_fullyear_v9.json` + `_tables/` | **Current judging baseline** (2026-11-20): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `config.comb_variant=local_tol_trim_l0x`. Success 0.270, wrong 0.019. | `ss_openblas`, 3 workers, main after the P44 merge |
+| `dev_medium_clean_assigned_v9.json` + `_tables/` | Same, assigned coverage. Success 0.154, wrong 0.030. | same |
+| `dev_medium_b_clean_{fullyear,assigned}_v9.json` + `_tables/` | Second dev set, same code. Full-year 0.272 / 0.032, assigned 0.168 / 0.019. | same |
+| `synth200_s0_v9.json` + `_tables/` | `synthetic:n=200,seed=0`, same code. Success 0.750, wrong 0.005. Used by `tests/test_coverage.py`. | same |
+| `dev_medium_clean_fullyear_v8.json` + `_tables/` | Previous judging baseline (2026-11-19): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `config.comb_variant=local_tol_trim`. Success 0.265, wrong 0.024. | `ss_openblas`, 3 workers, main after `a111147` |
 | `dev_medium_clean_assigned_v8.json` + `_tables/` | Same, assigned coverage. Success 0.153, wrong 0.030. | same |
 | `dev_medium_b_clean_fullyear_v8.json` + `_tables/` | **Second dev set** (P57, 2026-11-20): `datasets/dev_medium_b_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `local_tol_trim`. Success 0.274, wrong 0.034 (n=1000). Tune on one of A/B, judge on the other. No `detectable` split (B stars are not in `benchmarks/detectability_dev.csv`). | `ss_openblas`, 3 workers, `97cc3bb` |
 | `dev_medium_b_clean_assigned_v8.json` + `_tables/` | Same, assigned coverage. Success 0.167, wrong 0.020. | same |

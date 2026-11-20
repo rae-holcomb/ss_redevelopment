@@ -69,7 +69,10 @@ keep turns cheap on Rae's Pro plan.
   (3) done: TESS validation downloaded and the unlocked 70% scored (numbers in P52); local copy `data/tess_validation/`.
   Drive dropped a third time under 3-worker reads: run drive-reading jobs with 1 worker until the connection is fixed.
   (4) done: P57 `dev_medium_b_clean` merged (1,000 stars; `_v8` 0.274 / 0.034 full-year, 0.167 / 0.020 assigned; no
-  overtuning sign). Next: (5) P44 lag-0 cutoff tuned on B, judged on dev_medium_clean vs `_v8`.
+  overtuning sign). (5) done: P44 merged, default now `local_tol_trim_l0x` (cutoff 1.02); `_v9` baselines.
+- **Next:** P59 (lag-0 out of `n_peaks`/`frac_positive_heights`, approved) -> fold P58 noise-table refresh into its baseline
+  change if Rae agrees -> rebuild ranker tables ONCE under the post-P59 default (last night's are `local_tol_trim`, now
+  stale; drive reads 1 worker) -> ranker v1 -> `romrot_v0`. Rescore TESS validation 70% on the new default (~8 min, local).
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 

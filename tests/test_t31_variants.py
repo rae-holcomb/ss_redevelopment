@@ -1,7 +1,7 @@
 """T31 Part B: result-changing speed variants of the comb fit and the CWT.
 
 "lsq" and "full" are the unchanged (pre-T31) methods; the defaults are
-"local_tol_trim" (Rae 2026-11-19; "local_tol" from the T32 merge, 2026-11-15) and "lean" (T31 merge); the variants must
+"local_tol_trim_l0x" (Rae 2026-11-20; "local_tol_trim" 2026-11-19; "local_tol" from the T32 merge, 2026-11-15) and "lean" (T31 merge); the variants must
 keep the output schema downstream code reads, and the new pieces (local
 per-peak comb solver, sparse Jacobian, warm start, lean / decimated GWPS)
 must do what their docstrings say.
@@ -22,7 +22,7 @@ from synthetic import make_suite
 def test_resolve_comb_variant_default_env_and_unknown(monkeypatch):
     """Default is local_tol (Rae, T32 merge 2026-11-15), the env var selects, unknown names raise."""
     monkeypatch.delenv(C.COMB_VARIANT_ENV, raising=False)
-    assert C.resolve_comb_variant()[0] == "local_tol_trim"
+    assert C.resolve_comb_variant()[0] == "local_tol_trim_l0x"  # Rae, 2026-11-20 (P44)
     monkeypatch.setenv(C.COMB_VARIANT_ENV, "local")
     assert C.resolve_comb_variant()[0] == "local"
     assert C.resolve_comb_variant("lsq_tol4")[1]["tol"] == 1e-4

@@ -37,7 +37,7 @@ ultimately feeding a supervised ranking model. Codes primarily in Python.
 - `benchmarks/`: `scorecard.py` (standard benchmark → `metrics.json` +
   figures; also the batch runner for any manifest, with per-method Stage-1
   results in `per_method.csv`), `check_goals.py` (grades against `goals.json`
-  and a baseline), `baselines/` (committed reference metrics; use the `dev_medium_clean_*_v8` files).
+  and a baseline), `baselines/` (committed reference metrics; use the `dev_medium_clean_*_v9` files).
 - `datasets/`: frozen dev/holdout manifests (`dev_small`, `dev_medium`, `holdout`; see
   `datasets/README.md`). **Develop and judge only on the noise-clean copies `dev_small_clean.csv` /
   `dev_medium_clean.csv`** (Rae, 2026-11-16): they drop stars whose real-TESS noise source is flagged
@@ -125,7 +125,7 @@ task from `docs/TASKS.md`:
   **dev_medium_clean full-year (874 stars) is the default judging set for method changes**
   (`--manifest datasets/dev_medium_clean.csv --data-root data/smarts_dev --ignore-manifest-sectors`,
   ~7.5 min full-year / ~5.5 min assigned at 3 workers since T31; Rae's standing OK, 2026-10-21; baseline
-  `benchmarks/baselines/dev_medium_clean_fullyear_v8.json`; `dev_medium_clean_assigned_v8` for assigned). Use assigned coverage (no
+  `benchmarks/baselines/dev_medium_clean_fullyear_v9.json`; `dev_medium_clean_assigned_v9` for assigned). Use assigned coverage (no
   `--ignore-manifest-sectors`) for coverage-robustness work. Never run the holdout
   without Rae; anything larger than dev_medium is Rae's local job.
 - New follow-up ideas go at the end of `docs/TASKS_PROPOSED.md`.

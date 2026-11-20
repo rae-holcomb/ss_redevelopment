@@ -24,7 +24,7 @@ def test_l0x_variants_registered_and_default_unchanged():
     for name, sp in C.COMB_VARIANTS.items():
         if not name.endswith("_l0x"):
             assert "lag0_tooth" not in sp and "min_mean_height_snr" not in sp, name
-    assert C.DEFAULT_COMB_VARIANT == "local_tol_trim"
+    assert C.DEFAULT_COMB_VARIANT == "local_tol_trim_l0x"  # Rae, 2026-11-20
     assert C.DEFAULT_MIN_MEAN_HEIGHT_SNR == 1.0
 
 

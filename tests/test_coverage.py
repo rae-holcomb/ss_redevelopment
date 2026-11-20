@@ -372,7 +372,7 @@ def test_default_suite_bit_identical_to_pre_t16a():
 
 def test_default_suite_matches_baseline_population():
     """The default suite reproduces the baseline per_star.csv star parameters exactly."""
-    base = pd.read_csv(ROOT / "benchmarks/baselines/synth200_s0_v8_tables/per_star.csv",
+    base = pd.read_csv(ROOT / "benchmarks/baselines/synth200_s0_v9_tables/per_star.csv",
                        float_precision="round_trip").set_index("star_id")
     for lc in make_suite(10, seed=0):
         row = base.loc[lc.star_id]
@@ -385,7 +385,7 @@ def test_default_suite_matches_baseline_population():
 def test_default_scorecard_rows_bit_identical_to_baseline():
     """score_one_star on default (full) synthetic stars reproduces the committed
     baseline's final periods and outcomes exactly (3 stars; the full 200-star
-    check is in the T16a report via tools/compare_runs.py). Baseline: the _v8
+    check is in the T16a report via tools/compare_runs.py). Baseline: the _v9
     synth200 tables (default comb fit local_tol_trim, Rae 2026-11-19); until
     then this read the v2/v3 synth200_s0_tables, which only local_screen2 matched."""
     import determinism
@@ -393,7 +393,7 @@ def test_default_scorecard_rows_bit_identical_to_baseline():
         pytest.xfail("baseline was produced under OpenBLAS (ss_openblas); other BLAS differ in the last bits")
     import scorecard
     from threadpoolctl import threadpool_limits  # 1 BLAS thread, as in the scorecard workers (T14)
-    base = pd.read_csv(ROOT / "benchmarks/baselines/synth200_s0_v8_tables/per_star.csv",
+    base = pd.read_csv(ROOT / "benchmarks/baselines/synth200_s0_v9_tables/per_star.csv",
                        float_precision="round_trip").set_index("star_id")
     args = types.SimpleNamespace(synthetic=3, seed=0, coverage="full")
     for task in scorecard.build_tasks(args):

@@ -65,7 +65,8 @@ def _check_consistent(res, half_lag_gate=True):
         # values match the diagnostics the gates were computed from
         assert gr["n_peaks"]["value"] == r.fit.n_peaks_used
         assert gr["n_peaks"]["threshold"] == r.n_peaks_required
-        assert gr["mean_height_snr"]["value"] == pytest.approx(np.nanmean(r.diagnostics["height_snr"]))
+        # P44 (Rae, 2026-11-20): the gate reads diag["mean_height_snr"] (lag-0 tooth excluded under *_l0x)
+        assert gr["mean_height_snr"]["value"] == pytest.approx(r.diagnostics["mean_height_snr"])
         assert gr["half_lag_consistency"]["contrast"] == r.diagnostics["acf_half_lag_contrast"] or (
             np.isnan(gr["half_lag_consistency"]["contrast"]))
 

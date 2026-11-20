@@ -1,6 +1,6 @@
 # P44: lag-0 tooth out of the comb fit's rejection and SNR gate
 
-**Date:** 2026-11-20 · **Author:** method-improver session · **Branch:** `claude/p44-lag0-out-f25a41` · **Status:** draft
+**Date:** 2026-11-20 · **Author:** method-improver session · **Branch:** `claude/p44-lag0-out-f25a41` · **Status:** merged; adopted as default (Rae, 2026-11-20)
 
 ## TL;DR
 - **Small, consistent gain on the judging set; neutral on the tuning set.** The new variant is `local_tol_trim_l0x`, with the cutoff re-set to **1.02** on dev_medium_b_clean full-year. On dev_medium_clean full-year, success goes 0.265 → **0.270** and wrong 0.024 → **0.019**. Assigned is unchanged (0.153 / 0.030 → 0.154 / 0.030). B moves within ±2 stars of `_v8`. Synth200 is unchanged except one star.
@@ -132,6 +132,8 @@ P43's diagnosis ("rejection drops the lag-0 tooth, so SNR fails") was literally 
 - **Mode agreement:** the rule's cutoff differs between modes (1.02 full-year, 1.00 assigned). With the 0.02 grid the full-year curve crosses the 0.034 target between those two values.
 
 ## Open questions for Rae
+
+**Rae (2026-11-20):** (1) adopt as default: yes; (2) `_v9` baselines: yes; (3) P59 approved; (4) keep the full-year cutoff.
 1. **Adopt `local_tol_trim_l0x` (cutoff 1.02) as the default?** For: on the judging set, full-year success is +0.005, wrong −0.005 and precision 0.889 → 0.908; assigned is flat; B is flat (−0.002 / −0.002 full-year); all `check_goals` PASS. The gate also now means what it says ("are the period's own teeth tall?"). Against: the gain is ~4 stars and inside per-bin noise, and the 10–30 d bin dips on both sets (−0.013 dev_medium, −0.035 B full-year). I lean **yes**, on meaning more than on numbers. If adopted, the default switches by setting `DEFAULT_COMB_VARIANT = "local_tol_trim_l0x"`; nothing else needs to change.
 2. **New `_v9` baselines?** If you adopt it, yes: refresh dev_medium_clean, dev_medium_b_clean (both modes) and synth200_s0. The per-star tables are already in `data/per_star/` and `runs/p44/sc/`. Fold in P58's noise-table refresh if that lands first. If you don't adopt, `_v8` stands.
 3. **The lag-0 tooth still counts in `n_peaks` and `frac_positive_heights`** (and in `frac_vertex_in_window` for window-gate variants). Now that rejection keeps it, it is an always-positive tooth in `frac_positive_heights`, which blocks 10–33 fewer stars (gate figure). Your OK covered rejection and the SNR mean only, so I left these alone. Leaving it out everywhere would be consistent (P59 proposed). It would need its own sweep, because `frac_positive_heights` 0.8 and `min_peaks_required` 4 were also set with the tooth (sometimes) inside.

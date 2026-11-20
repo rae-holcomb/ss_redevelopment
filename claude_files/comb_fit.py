@@ -175,7 +175,7 @@ COMB_VARIANTS = {
     "local_tol_trim_l0x": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
     "lsq_l0x": dict(solver="lsq", lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
 }
-DEFAULT_COMB_VARIANT = "local_tol_trim"  # Rae, 2026-11-19 (P43 clean rerun); was "local_tol" (T32, 2026-11-15), "local_screen2" (T31), "lsq" before
+DEFAULT_COMB_VARIANT = "local_tol_trim_l0x"  # Rae, 2026-11-20 (P44); was "local_tol_trim" (P43 clean rerun, 2026-11-19), "local_tol" (T32, 2026-11-15), "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
 
 
