@@ -83,6 +83,10 @@ from guesses import InitialGuess
 #               "lsmr" (iterative, with a sparse Jacobian).
 #   max_points  override for max_points_per_window (default 100).
 # local_tol's spec (T32), shared by the P43 variants built on it
+# P44: mean_height_snr cutoff for the lag-0-free variants (*_l0x), set on dev_medium_b_clean full-year
+# (matching its _v8 wrong rate, maximizing success); see reports/2026-11-20_p44-lag0-out/.
+P44_SNR_CUTOFF = 1.02  # B full-year: 0.272 success / 0.032 wrong (_v8 0.274 / 0.034); assigned alone would pick 1.00
+DEFAULT_MIN_MEAN_HEIGHT_SNR = 1.0  # the gate's cutoff for variants that don't set their own
 _LOCAL_TOL = dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
 COMB_VARIANTS = {
     "lsq": dict(solver="lsq"),
@@ -160,6 +164,16 @@ COMB_VARIANTS = {
     #                  lsq's own t0 bound (seed +/- P0/2), cut at the first lag (the ACF is symmetric about 0).
     "local_tol_cs0": dict(_LOCAL_TOL, center_search="t0"),
     "local_tol_cs0_trim": dict(_LOCAL_TOL, center_search="t0", trim_novertex=True),
+    # P44 (2026-11-20, reports/2026-11-20_p44-lag0-out/; Rae's OK 2026-11-19): leave the lag-0 tooth out.
+    #   lag0_tooth     "include" (default, the old behaviour) | "exclude": the lag-0 tooth (comb centre
+    #                  < P/2, as in _vertex_stats) takes no part in the per-window MAD outlier rejection
+    #                  (neither as a drop candidate nor in the median/MAD) and is left out of the
+    #                  mean_height_snr gate's mean. Works with every solver.
+    #   min_mean_height_snr  this variant's mean_height_snr cutoff, used when fit_rotation_period's
+    #                  min_mean_height_snr is left at None (an explicit argument wins). The old 1.0 was
+    #                  calibrated with the lag-0 tooth inside the mean; P44 re-sets it on dev_medium_b_clean.
+    "local_tol_trim_l0x": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
+    "lsq_l0x": dict(solver="lsq", lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
 }
 DEFAULT_COMB_VARIANT = "local_tol_trim"  # Rae, 2026-11-19 (P43 clean rerun); was "local_tol" (T32, 2026-11-15), "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -176,6 +190,41 @@ def resolve_comb_variant(name: Optional[str] = None) -> tuple:
     if name not in COMB_VARIANTS:
         raise ValueError(f"unknown comb variant {name!r}; choose from {sorted(COMB_VARIANTS)}")
     return name, dict(COMB_VARIANTS[name])
+
+
+def _lag0_mode(spec: Optional[dict]) -> bool:
+    """True if comb spec `spec` leaves the lag-0 tooth out (P44 key lag0_tooth="exclude")."""
+    mode = (spec or {}).get("lag0_tooth", "include")
+    if mode not in ("include", "exclude"):
+        raise ValueError(f"unknown lag0_tooth {mode!r}; choose 'include' or 'exclude'")
+    return mode == "exclude"
+
+
+def _is_lag0_tooth(center: float, P: float) -> bool:
+    """Whether a tooth centred at lag `center` on a comb of period `P` is the lag-0 tooth.
+
+    Same rule as _vertex_stats: the comb centre lies below P/2, i.e. the
+    tooth sits on the ACF's trivial lag-0 peak (ACF(0) = 1), whose height says
+    nothing about P and whose vertex is pinned against the domain edge.
+    """
+    return bool(np.isfinite(center) and np.isfinite(P) and center < 0.5 * P)
+
+
+def gate_mean_height_snr(fit: "CombFitResult", diag: dict, spec: Optional[dict] = None) -> float:
+    """The mean_height_snr gate's statistic: mean of diag["height_snr"] over the fit's surviving teeth.
+
+    With spec lag0_tooth="exclude" (P44) the lag-0 tooth (_is_lag0_tooth) is
+    left out of the mean; NaN if no other tooth survives (the gate then fails).
+    diag["height_snr"] is ordered by harmonic index n (assess_rotation_candidate).
+    """
+    snr = np.asarray(diag["height_snr"], dtype=float)
+    if not _lag0_mode(spec):
+        return float(np.nanmean(snr)) if snr.size else float("nan")
+    ns = sorted(fit.per_peak)
+    keep = np.array([not _is_lag0_tooth(fit.per_peak[n]["center"], fit.P) for n in ns], dtype=bool)
+    sel = snr[keep] if keep.size == snr.size else snr
+    sel = sel[np.isfinite(sel)]
+    return float(np.mean(sel)) if sel.size else float("nan")
 
 
 # --------------------------------------------------------------------------
@@ -1277,6 +1326,7 @@ def _fit_single_candidate(
 
     n_dropped_total = 0
     fit = None
+    exclude_lag0 = _lag0_mode(spec)
 
     for iteration in range(max_reject_iters + 1):
         # --- fit with the current set of windows ---
@@ -1304,7 +1354,13 @@ def _fit_single_candidate(
             break  # out of iterations, or can't afford to drop any more
 
         # robust (MAD-based) outlier threshold across the current windows'
-        # residual RMS values
+        # residual RMS values. P44 (lag0_tooth="exclude"): the lag-0 tooth is
+        # neither a drop candidate nor part of the median/MAD.
+        if exclude_lag0:
+            per_peak_rms = {n: r for n, r in per_peak_rms.items()
+                            if not _is_lag0_tooth(fit["centers"][n], fit["P"])}
+            if len(per_peak_rms) < 2:
+                break
         rms_vals = np.array(list(per_peak_rms.values()))
         med = np.median(rms_vals)
         mad = np.median(np.abs(rms_vals - med))
@@ -1961,7 +2017,7 @@ def _gate_results(
     guard switched on. `passed` is the measured outcome even for a disabled
     gate; failed_gate_names ignores disabled gates.
     """
-    mean_snr = float(np.nanmean(diag["height_snr"]))
+    mean_snr = float(diag["mean_height_snr"]) if "mean_height_snr" in diag else float(np.nanmean(diag["height_snr"]))
     few_enabled = bool(few and few_peaks_min_acf_height is not None)
     return {
         "n_peaks": dict(passed=bool(fit.n_peaks_used >= n_required), value=int(fit.n_peaks_used),
@@ -2282,7 +2338,7 @@ def fit_rotation_period(
     reject_threshold_sigma: float = 4.0,
     min_peaks_required: int = 4,
     min_frac_positive_heights: float = 0.8,
-    min_mean_height_snr: float = 1.0,
+    min_mean_height_snr: Optional[float] = None,
     min_frac_vertex_in_window: float = 0.8,
     dedup_rel_tol: float = 0.03,
     short_period_cap_n: Optional[int] = 3,
@@ -2459,6 +2515,10 @@ def fit_rotation_period(
         _fit_single_candidate for every candidate.
     min_peaks_required, min_frac_positive_heights, min_mean_height_snr,
     min_frac_vertex_in_window : the four reliability gates described above.
+        min_mean_height_snr=None (default) takes the comb variant's own
+        "min_mean_height_snr" entry, else DEFAULT_MIN_MEAN_HEIGHT_SNR (1.0).
+        With a variant's lag0_tooth="exclude" (P44) the mean leaves out the
+        lag-0 tooth (gate_mean_height_snr).
     dedup_rel_tol : relative-difference tolerance for treating two
         candidate periods as duplicates.
     acf_counts : optional per-lag valid-pair counts aligned with acf_lags
@@ -2617,6 +2677,8 @@ def fit_rotation_period(
 
     # --- fit every surviving candidate ---
     _, comb_spec = resolve_comb_variant(comb_variant)
+    if min_mean_height_snr is None:  # P44: a variant may carry its own cutoff
+        min_mean_height_snr = float(comb_spec.get("min_mean_height_snr", DEFAULT_MIN_MEAN_HEIGHT_SNR))
     results = []
     for guess, group in zip(deduped, merged_groups):
         n_dup = len(group) - 1
@@ -2660,6 +2722,8 @@ def fit_rotation_period(
                     comb_spec=spec,
                 )
                 diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
+                # P44: the gate's statistic (lag-0 tooth out of the mean with lag0_tooth="exclude")
+                diag["mean_height_snr"] = gate_mean_height_snr(fit, diag, spec)
                 # T32: which vertex test applies (default: frozen-window test)
                 vgate = spec.get("vertex_gate", "window")
                 if vgate == "window":
@@ -2677,7 +2741,7 @@ def fit_rotation_period(
                 base_passed = bool(
                     fit.n_peaks_used >= n_required
                     and diag["frac_positive_heights"] >= min_frac_positive_heights
-                    and np.nanmean(diag["height_snr"]) >= min_mean_height_snr
+                    and diag["mean_height_snr"] >= min_mean_height_snr
                     and vertex_ok
                 )
                 # T18 gates (step 4b), evaluated at the fitted period
@@ -2792,7 +2856,7 @@ def fit_rotation_period(
                 f"{few_peaks_min_acf_height}). The closest attempt was P="
                 f"{best.fit.P:.4g} (n_peaks_used={best.fit.n_peaks_used}, "
                 f"frac_positive_heights={best.diagnostics['frac_positive_heights']:.2f}, "
-                f"mean_height_snr={np.nanmean(best.diagnostics['height_snr']):.2f}, "
+                f"mean_height_snr={best.diagnostics['mean_height_snr']:.2f}, "
                 f"frac_vertex_in_window={best.diagnostics['frac_vertex_in_window']:.2f}) "
                 "-- attached for inspection, but should NOT be treated as a "
                 "reliable rotation period measurement. "

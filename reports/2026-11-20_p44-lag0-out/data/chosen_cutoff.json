@@ -1,0 +1,20 @@
+{
+ "fullyear": {
+  "target_wrong": 0.034,
+  "v8_success": 0.274,
+  "cutoff": 1.02,
+  "success": 0.272,
+  "wrong": 0.032,
+  "alias": 0.009
+ },
+ "assigned": {
+  "target_wrong": 0.02,
+  "v8_success": 0.167,
+  "cutoff": 1.0,
+  "success": 0.171,
+  "wrong": 0.02,
+  "alias": 0.002
+ },
+ "chosen": 1.02,
+ "modes_agree": false
+}

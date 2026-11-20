@@ -1,0 +1,14 @@
+mode,star_id,true_period,v7,v8,l0x
+fullyear,smarts-tess-v1.0-015438,2.8651,correct,correct,correct
+fullyear,smarts-tess-v1.0-026704,4.8744,correct,correct,correct
+fullyear,smarts-tess-v1.0-046873,8.5139,correct,none,correct
+fullyear,smarts-tess-v1.0-103059,18.6404,correct,correct,correct
+fullyear,smarts-tess-v1.0-125098,22.5725,correct,none,none
+fullyear,smarts-tess-v1.0-157549,28.4289,correct,none,none
+fullyear,smarts-tess-v1.0-273135,49.2379,correct,none,none
+fullyear,smarts-tess-v1.0-315124,56.7553,correct,none,none
+assigned,smarts-tess-v1.0-010328,1.9521,correct,none,none
+assigned,smarts-tess-v1.0-015438,2.8651,correct,correct,correct
+assigned,smarts-tess-v1.0-021837,4.0005,diffrot,none,none
+assigned,smarts-tess-v1.0-028773,5.2448,correct,none,none
+assigned,smarts-tess-v1.0-043314,7.8797,diffrot,none,none

@@ -467,6 +467,10 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   The gate's 1.0 cutoff was calibrated with the tooth inside, so set the new cutoff on a **fresh dev set drawn from the
   drive** (noise-clean stars, disjoint from dev_small/dev_medium/holdout/train_v0), not on dev_medium; then judge on
   dev_medium_clean vs `_v8`. Queued for the next drive session.
+- **Status (2026-11-20): done, report draft** (`reports/2026-11-20_p44-lag0-out/`, branch `claude/p44-lag0-out-f25a41`):
+  variant `local_tol_trim_l0x` (spec key `lag0_tooth="exclude"`, cutoff 1.02 set on dev_medium_b_clean full-year).
+  dev_medium_clean full-year 0.265/0.024 -> 0.270/0.019, assigned 0.153/0.030 -> 0.154/0.030; B flat; all check_goals PASS.
+  Only 1 more of P43's 13 lag-0 star-modes returns (their real teeth are < 1 sigma). Rae to decide default + `_v9`.
 - **First P43 attempt's version (2026-11-15, `reports/2026-11-15_p43-decayed-tail/`):** under the local solver the MAD residual-RMS rejection drops the tallest teeth of a decaying ACF (RMS scales
   with peak height), and separately keeps the SNR gate honest by dropping noise combs' lag-0 tooth (ACF(0) = 1 props
   up mean SNR). Replace both with explicit rules: a height-relative (scale-free) rejection or a decayed-tail cut on the
@@ -591,3 +595,10 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Do (if Rae wants it):** rebuild the table without `--keep-existing`, write `dev_{small,medium}_clean_v2.csv`
   (never edit the frozen files), rerun the `_v8` baselines on them. Needs Rae's OK: it changes the judging set.
 - **Rae (2026-11-20): deferred** to the next baseline-changing batch (not before P44).
+
+### P59. Lag-0 tooth out of `n_peaks` and `frac_positive_heights` too (from P44, 2026-11-20)
+- **Proposed by:** P44 report. With `lag0_tooth="exclude"` the rejection now keeps the lag-0 tooth, so it is an
+  always-positive tooth in `frac_positive_heights` (blocks 10-33 fewer stars) and counts toward `n_peaks`. Leaving it
+  out of every gate statistic would make the comb gates consistent; it needs a joint re-set of `frac_positive_heights`
+  0.8 / `min_peaks_required` 4 on dev_medium_b_clean (sweep harness `reports/2026-11-20_p44-lag0-out/p44lib.py`),
+  judged on dev_medium_clean. Needs Rae's OK (changes gate meanings).
