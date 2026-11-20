@@ -55,11 +55,12 @@ keep turns cheap on Rae's Pro plan.
 
 - **Later 2026-11-19:** merged the P27 freeze (validation set v1), the T32 rerun as a report only, and the P49 Roman noise
   survey (Rae's decisions in P34/P49/P56/D5). `check_goals` guard ignores one-star drops. **Rae: leave the lag-0 tooth out
-  (P44)**, with the cutoff set on a fresh drive dev set.
+  (P44)**, with the cutoff set on `dev_medium_b` (P57).
 - **Queue for when Rae plugs the drive in (she will say so):** (1) rebuild the P31 ranker feature tables under
   `local_tol_trim` (overnight); (2) refresh the RT2 profile baseline; (3) P52: download the TESS validation light curves
-  (1.69 GB, ~35-55 min, to the drive) and score the unlocked 70%; (4) P44: draw a fresh noise-clean dev set from the drive,
-  set the lag-0-free height-SNR cutoff there, judge on dev_medium_clean vs `_v8`. One heavy job at a time. Then ranker v1,
+  (1.69 GB, ~35-55 min, to the drive) and score the unlocked 70%; (4) P57: build `dev_medium_b`, a second ~1,000-star noise-clean dev set
+  disjoint from the others, with its own `_v8` baselines; (5) P44: set the lag-0-free height-SNR cutoff on `dev_medium_b`,
+  judge on dev_medium_clean vs `_v8`. One heavy job at a time. Then ranker v1,
   and the `romrot_v0` build (P34 decisions: 1.3 ppt floor, blend fraction, ×0.7, `p_best_achievable`).
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task

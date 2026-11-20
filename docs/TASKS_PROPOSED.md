@@ -553,3 +553,16 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   Wilson+2023 / Penny+2019 source densities) that scales Rvar(F146) down, and record it as a column. Could move the
   detectable fraction as much as the D5 ×0.7 factor.
 - **Rae (2026-11-19): yes.** Do it as part of the `romrot_v0` build (P34).
+
+### P57. Second ~1,000-star noise-clean dev set, `dev_medium_b` (coordinator, 2026-11-19)
+- **Why:** dev_medium_clean has judged every method change since mid-October (comb default ×3, gate cutoffs, rejection
+  window, `_v8` baselines), so the pipeline has adapted to those 874 stars by an unknown amount, and the holdout must
+  stay locked. A second, independent set measures and limits that.
+- **Build (dev-set-builder, drive plugged in):** ~1,000 stars, noise-clean (no `noise_exclude`), same stratification as
+  dev_medium, disjoint from dev_small, dev_medium and holdout; frozen manifest `datasets/dev_medium_b_clean.csv`, files
+  to `data/smarts_dev/` (~170 MB). Fresh `_v8` baselines on it, full-year and assigned, with the default `local_tol_trim`.
+- **Use:** tune thresholds on one set, judge on the other; adopt a method change only if it does not regress on either;
+  alternate the tuning set between tasks. First use: P44's lag-0-free cutoff is set on `dev_medium_b`, judged on
+  dev_medium_clean vs `_v8` (this replaces P44's "fresh drive dev set"). Report `_v8` on B vs dev_medium (0.265 / 0.024
+  full-year) as the overfit check.
+- **Rae (2026-11-19): yes, queue it** for the drive session, before P44.
