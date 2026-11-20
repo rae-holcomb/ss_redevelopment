@@ -308,8 +308,10 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
 - **Status:** scoping merged 2026-11-19 (`reports/2026-11-12_validation-set-scoping/`; draft manifest
   `datasets/proposed/p27_validation_draft.csv`, 480 stars). **Rae (2026-11-19): skip the 70–180 d block for now.**
-  Next: freeze the manifest (Q7 is unblocked), then downloads (Rae, local, ≈ 2.4 GB), a SPOC/QLP loader and a
-  scorecard dataset string.
+  **Frozen 2026-11-19, v1** (`reports/2026-11-19_p27-freeze/`, branch `claude/p27-freeze-27f7e1`): `datasets/tess_validation_v1.csv`
+  with a locked 30% holdout (`split`), unscorable/crowded stars replaced, Gaia-class pulsators; loader `claude_files/tess_lc.py`,
+  `tools/download_tess_validation.py`, additive outcomes (`metrics['tessval']`) and strings `tessval_v1_{sap,pdcsap}[_eb|_neg|_eu]`.
+  Next: Rae runs the download (2.06 GB), then first scores on the validation split only; Zach's vetted subset is open.
 - **Rae's decisions (2026-11-13), on the report's Q3–5:**
   - Q3 mix (268 rotators / 122 negatives / 40 expected-undetectable / 50 EBs): about right.
   - Q5 long periods: **not OK to have nothing at 70–180 d.** Add a small long-period block; options in the coordinator's

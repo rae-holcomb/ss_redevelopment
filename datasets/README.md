@@ -144,3 +144,47 @@ python benchmarks/scorecard.py --manifest wg6r_contam_v0_improved_s1 --outdir ru
 python benchmarks/scorecard.py --manifest wg6r_beyond_v0_improved_s1 --outdir runs/wg6r_beyond_s1 # stars with P_true > R/2 (35.5 d)
 ```
 On `contam`, "correct" = lock on the variable's own period = false positive; on ECL/ELL `double` = P_orb lock.
+
+## Real-TESS validation set (P27): `tess_validation_v1.csv`
+
+480 real TESS stars; **v1 frozen 2026-11-19** (`tools/build_tess_validation.py`; `--check` rebuilds in memory and fails on any
+difference; `tests/test_tess_lc.py` runs it). `tess_validation_v0.csv` is the superseded first freeze (never scored; still
+reproducible with `--version v0`). v1 applies Rae's answers to v0's open questions:
+
+- **Locked 30% holdout** (`split == "holdout"`, 144 stars; the other 336 are `validation`): stratified by label x period bin (by
+  source for the negative blocks), seeded (20261119), rounded per stratum. **Never score the holdout without Rae's word.** No scorecard
+  dataset string selects it, and `tests/test_tess_lc.py` checks that.
+- **Replacements:** the 72 stars with no TESS-SPOC or QLP light curve at MAST and the 7 EBs with `contratio` >= 0.2 were replaced
+  from the same pools with stars that have SPOC or QLP files, strata counts unchanged (`proposed/p27_v1_replacements.csv`, drawn by
+  `tools/validation_set/draw_replacements.py`, seed 271). Every v1 star is scorable and every star (EBs now included) has
+  `contratio` < 0.2.
+- **Gaia class instead of Teff for pulsators:** `gaia_class` / `gaia_pulsator` from the Gaia DR3 classifier and
+  main-sequence-oscillator tables (`proposed/p27_v1_gaia_classes.csv`, `tools/validation_set/gaia_classes.py`); the `hot_star` flag
+  is gone.
+- **QLP stays fallback-only:** the downloader fetches QLP only for stars with no SPOC file.
+
+Rows are keyed by TIC, not file paths: light curves are downloaded per sector by `tools/download_tess_validation.py` to
+`$TESS_VALIDATION_ROOT` (default `/Volumes/Data_Vault/tess_validation`), which writes `files_index.csv` (paths relative to that
+root). Product: TESS-SPOC `SAP_FLUX` (QLP `SAP_FLUX` fallback); PDCSAP is scored on the same stars. Loader: `claude_files/tess_lc.py`.
+
+| `label` | n | `truth_period` | source blocks |
+|---|---|---|---|
+| `rotator` | 268 | literature P_rot, 0.18-65 d | clusters (Hyades, Praesepe, Pleiades, Rup 147, NGC 6811, Blanco 1, NGC 3532, NGC 2547) + Kepler field (McQuillan+2014) |
+| `nonrotator` | 100 | none | `kepler_rc_quiet` (50), `kepler_dwarf_nodetect` (50) |
+| `nonrotator_candidate` | 22 | none | `white_dwarf` |
+| `expected_undetectable` | 40 | none | `claytor_scvz_template` (Zach's list minus the 294 Gaia DR3 variables): scored by detection rate, never as FP |
+| `contaminant_eb` | 50 | orbital P (Prsa+2022), 0.1-60 d | `prsa2022_eb` |
+
+Columns: `star_id` (`TIC<tic>`), `tic`, `label`, `source`, `truth_period`, `truth_kind` (`spot_rotation` / `orbital` / `none`),
+`period_method`, `period_dataset`, `period_ref` (literature provenance for every period), `Tmag`, `Teff`, `logg`, `ra`, `dec`,
+`contratio` (TIC crowding), `gyro_flag`, `sectors` / `n_sectors` (TESSCut FFI sectors), `n_tess_spoc`, `n_qlp`, `n_tglc`,
+`n_cdips` (HLSP files at MAST when drawn), then: `pbin` (truth-period bin, rotators and EBs), `star_type` (`rc_giant` / `white_dwarf`
+/ `giant` = logg < 3.5 / `dwarf`), `gaia_class`, `gaia_pulsator`, `pulsation_class` (`rc_giant` = the Kepler red-clump block,
+`gaia_pulsator`, or empty: picks the pulsation window of `evaluation.classify_negative`), `gaia_variable` (Zach-block audit, 0),
+`product_primary` (`spoc` / `qlp`), `scorable` (all True in v1) and `split`. Nothing is drawn beyond 71 d (the 70-180 d block is
+skipped, Rae 2026-11-19).
+
+Scorecard dataset strings (validation split only): `tessval_v1_{sap,pdcsap}` (rotators), `..._eb` (EB lock rate against P_orb),
+`..._neg` (per-class false-positive and `pulsation` rates for `nonrotator` / `nonrotator_candidate`), `..._eu` (detection rate of
+`expected_undetectable`). The outcomes are in `metrics.json` under `tessval` (see `evaluation.classify_negative`, `eb_outcome`);
+`pulsation` windows: `rc_giant` 0.2-0.5 d, `gaia_pulsator` 0.1-3 d.
