@@ -581,3 +581,19 @@ board phase they were filed under, in board order. Statuses for T1, T16e, T21, T
   - Whatever the source, a 70–180 d star needs ~2 cycles, i.e. 140–360 d of near-contiguous coverage (CVZ). In most
     cases the honest outcome on TESS is a decline. So this block mainly measures decline honesty and SAP-vs-PDCSAP
     attenuation, plus recovery for the few CVZ stars. Target ~20–40 stars.
+
+### P49. Survey existing Roman noise and systematics models (Rae, 2026-11-19)
+- **Proposed by:** Rae. WG6's improved noise is white Gaussian only (P34: optimistic). Before building our own, find what
+  other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
+  project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
+  deliverable is a short report on what can be reused.
+- **Status: done 2026-11-19** (report merged). Surveyed — [`reports/2026-11-19_roman-noise-survey/`](../reports/2026-11-19_roman-noise-survey/README.md)
+  (branch `claude/p49-roman-noise-survey-2e5f2d`). Nobody has a time-correlated GBTDS noise model: Penny+2019,
+  Tamburo+2023, Wilson+2023 (RImTimSim, MIT), Weiss+2025 all use white noise + a ~1 mmag (1.3 ppt) floor. WG6 improved
+  σ is the same kind of budget; the literature budget is 1.06–1.24× it at F146 16–20. Nothing covers 1–50 d systematics
+  (drifts, roll, snapshot gaps, season offsets): build a parametric stress layer ourselves (P55). D5: ×0.7 is consistent
+  with blackbody spot contrasts (0.65–0.80); Weiss+2025 use 0.54–0.60 for oscillations. No pipeline code changed.
+- **Rae (2026-11-19), merged:** (1) raise the white floor in `romrot_v0`: σ² = σ_WG6² + (0.9 mmag)², i.e. Wilson+2023's
+  1.3 ppt (coordinator's pick within option b; 0.3 mmag = Penny's 1 mmag is the lighter alternative); (2) 1–50 d
+  systematics: **wait for season-1 data** (P55 parked; no guessing ahead of the data); (3) **yes to a per-star blend
+  fraction** (P56); (4) **keep ×0.7** (D5 closed); (5)-(6) not answered (RGES-PIT/Wilson ask; low-cadence seasons).

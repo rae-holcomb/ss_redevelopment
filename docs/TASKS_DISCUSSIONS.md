@@ -162,3 +162,5 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   detectable fraction. Rae wants to discuss it further.
 - **To discuss:** where the factor comes from (spot temperature contrast, Teff dependence, faculae), whether it should vary
   by type or be drawn from a distribution, and how a P47 Kepler check or real GBTDS data could calibrate it.
+- **Decided (Rae, 2026-11-19): keep ×0.7.** P49 found it consistent with blackbody spot contrasts (0.65–0.80);
+  Weiss+2025 use 0.54–0.60 for oscillations. Season-1 F087/F213 colours can measure it directly later.

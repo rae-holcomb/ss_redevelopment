@@ -346,6 +346,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   retrain the ranker and adjust, so the training method stays the same across surveys. If the TESS training approach
   changes before then, the Roman one follows it.
 
+- **`romrot_v0` build decisions (Rae, 2026-11-19, from P49):** white floor raised to σ² = σ_WG6² + (0.9 mmag)²
+  (Wilson's 1.3 ppt); a per-star blend fraction scaling Rvar down, recorded as a column (P56); F146 factor stays ×0.7
+  (D5 closed); no 1–50 d systematics layer until season-1 data (P55 parked); plus the `p_best_achievable` diagnostic column.
 ### P35. `claude_files/wg6.py` loader + `datasets/wg6_roman_v0.csv` manifest (from T28 scoping, revised 2026-11-12)
 - **Status:** merged 2026-11-19 (`reports/2026-11-13_p35-wg6-loader/`; Rae's scoring answers applied). The manifest stays
   v0, not frozen. **CEP added 2026-11-19** (branch `claude/wg6-cep-rebuild-b097cd`, not merged): Rae's improved-noise Cepheid zip
@@ -460,6 +463,10 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   ~ACF(0) and says nothing about P, yet under `lsq` it props up `mean_height_snr`. Try excluding the lag-0 tooth from
   rejection and from the SNR mean (as the vertex statistics already do), for every variant; needs Rae's OK since it
   changes the gate's meaning. Rescore dev_medium_clean both modes.
+- **Rae (2026-11-19): yes, leave the lag-0 tooth out** of both the window rejection and the `mean_height_snr` mean.
+  The gate's 1.0 cutoff was calibrated with the tooth inside, so set the new cutoff on a **fresh dev set drawn from the
+  drive** (noise-clean stars, disjoint from dev_small/dev_medium/holdout/train_v0), not on dev_medium; then judge on
+  dev_medium_clean vs `_v8`. Queued for the next drive session.
 - **First P43 attempt's version (2026-11-15, `reports/2026-11-15_p43-decayed-tail/`):** under the local solver the MAD residual-RMS rejection drops the tallest teeth of a decaying ACF (RMS scales
   with peak height), and separately keeps the SNR gate honest by dropping noise combs' lag-0 tooth (ACF(0) = 1 props
   up mean SNR). Replace both with explicit rules: a height-relative (scale-free) rejection or a decayed-tail cut on the
@@ -493,18 +500,6 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 ### P48. Run the pipeline on Kepler data (Rae, 2026-11-19; logged, not scheduled)
 - **Proposed by:** Rae. Apply the rotation pipeline to Kepler light curves, beyond P47's 200-star realism check.
   Scope (quarters vs full baseline, which catalogue to compare against, training data) to be worked out when scheduled.
-
-### P49. Survey existing Roman noise and systematics models (Rae, 2026-11-19)
-- **Proposed by:** Rae. WG6's improved noise is white Gaussian only (P34: optimistic). Before building our own, find what
-  other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
-  project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
-  deliverable is a short report on what can be reused.
-- **Status: surveyed 2026-11-19** — [`reports/2026-11-19_roman-noise-survey/`](../reports/2026-11-19_roman-noise-survey/README.md)
-  (branch `claude/p49-roman-noise-survey-2e5f2d`, not merged). Nobody has a time-correlated GBTDS noise model: Penny+2019,
-  Tamburo+2023, Wilson+2023 (RImTimSim, MIT), Weiss+2025 all use white noise + a ~1 mmag (1.3 ppt) floor. WG6 improved
-  σ is the same kind of budget; the literature budget is 1.06–1.24× it at F146 16–20. Nothing covers 1–50 d systematics
-  (drifts, roll, snapshot gaps, season offsets): build a parametric stress layer ourselves (P55). D5: ×0.7 is consistent
-  with blackbody spot contrasts (0.65–0.80); Weiss+2025 use 0.54–0.60 for oscillations. No pipeline code changed.
 
 ### P51. Long-period rotators lost to decayed late teeth (from the first P43 attempt, 2026-11-15; was P45 on its branch)
 - **Proposed by:** first P43 report. Not scheduled.
@@ -549,10 +544,12 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   slow trend (polynomial or long-τ GP), an hours-scale dither/pointing term, snapshot-pass gaps (start/mid/end), and
   optionally a raised white floor (σ² + (0.3–0.9 mmag)², Penny/Wilson). Score as a separate stress set, not the default
   training noise; amplitudes bounded by STScI/Wilson numbers (0.1% burn-in, ≲0.5% CRNL, <0.5 ppt on ≲12 h target).
-  Depends on Rae's answers to the P49 open questions.
+  **Rae (2026-11-19): parked until GBTDS season-1 data exist** ("no point trying to guess what they are ahead of
+  time"). The raised white floor is not part of this any more: it goes into the `romrot_v0` build (P34).
 
 ### P56. Blend dilution of rotator amplitudes in `romrot_v0` (from P49, 2026-11-19)
 - **Proposed by:** P49 report. WG6 "improved" applies crowding to σ only, never to the signal amplitude; Penny+2019 find
   most bulge sources heavily blended (f_s < 0.5). Draw a per-star blend fraction (from a GBTDS crowding model, e.g.
   Wilson+2023 / Penny+2019 source densities) that scales Rvar(F146) down, and record it as a column. Could move the
   detectable fraction as much as the D5 ×0.7 factor.
+- **Rae (2026-11-19): yes.** Do it as part of the `romrot_v0` build (P34).
