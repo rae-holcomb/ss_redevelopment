@@ -282,54 +282,6 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
      dominate. That's a method change, so it goes through the dev_medium scorecard with `check_goals.py --baseline`.
 - Step 1 can ride along with ranker v1; step 2 is its own task.
 
-### P27. Real-TESS validation set: known rotators and known non-rotators (from the midway review, 2026-11-11)
-- **Proposed by:** midway review (`reports/2026-11-11_midway-review/`, rec. 1).
-- **Why:** nothing has been scored on real TESS light curves yet. SMARTS noise comes from faint "galaxies" reduced closer to
-  SAP, while real rotation work uses PDCSAP/QLP/TESS-SPOC (long-period attenuation, real stellar noise). The non-rotator
-  false-positive rate on real stars (pulsators, EBs, blends) is the number a Roman/TESS catalogue depends on.
-- **Idea:** a small (≤ 500 stars), frozen manifest of FFI light curves: known rotators (Kepler-field overlap with
-  McQuillan+2014, cluster members with K2 periods, an independent TESS CVZ catalogue), plus known non-rotators/variables
-  (Prša+2022 EBs, Gaia DR3 classes). Add a scorecard dataset string, with correct-within-10%/20%, alias and FP rates
-  per period bin. Rae picks the sources (review open question 1). The downloads are Rae's local job.
-- **Rae's initial direction (2026-11-11; fuller answer to come):**
-  - **Known rotators:** start with members of young open clusters. Their light curves are well studied, and each period can
-    be sanity-checked against the gyrochronology expected for the cluster's age (isochrone).
-  - **Known non-rotators** are harder. Options: white dwarfs, or follow Claytor+2025 and use red clump stars (slow rotators).
-    Zach Claytor shared the TIC IDs of the 2025 paper's training stars; retrieve them and check that they are quiet.
-
-- **Rae's additions (2026-11-12):**
-  - Check the white-dwarf / red-clump instinct against the literature, and note the problems other papers report with
-    each as a "non-rotator" sample.
-  - Keep a running list of useful papers and report it as a citation list.
-  - For every literature period, record the method (photometric spot modulation, v sin i / rotational broadening,
-    spectroscopic activity, …) and the data set (ground-based survey, K2, Kepler, TESS, …).
-  - Zach's TIC list is committed at `datasets/external/claytor2025_nonrotator_ticids.txt` (23,332 IDs; provenance and
-    caveat in `datasets/external/README.md`).
-  - Consider other light-curve sources too, e.g. TGLC and CDIPS, alongside QLP / TESS-SPOC / eleanor.
-- **Status:** scoping merged 2026-11-19 (`reports/2026-11-12_validation-set-scoping/`; draft manifest
-  `datasets/proposed/p27_validation_draft.csv`, 480 stars). **Rae (2026-11-19): skip the 70–180 d block for now.**
-  **Frozen 2026-11-19, v1** (`reports/2026-11-19_p27-freeze/`, branch `claude/p27-freeze-27f7e1`): `datasets/tess_validation_v1.csv`
-  with a locked 30% holdout (`split`), unscorable/crowded stars replaced, Gaia-class pulsators; loader `claude_files/tess_lc.py`,
-  `tools/download_tess_validation.py`, additive outcomes (`metrics['tessval']`) and strings `tessval_v1_{sap,pdcsap}[_eb|_neg|_eu]`.
-  Next: Rae runs the download (2.06 GB), then first scores on the validation split only; Zach's vetted subset is open.
-- **Rae's decisions (2026-11-13), on the report's Q3–5:**
-  - Q3 mix (268 rotators / 122 negatives / 40 expected-undetectable / 50 EBs): about right.
-  - Q5 long periods: **not OK to have nothing at 70–180 d.** Add a small long-period block; options in the coordinator's
-    note below. Rae picks.
-  - Q4: a 0.2–0.5 d detection on a red-clump giant is its own outcome, named **`pulsation`** rather than `seismic`
-    (coordinator agreed). `pulsation` also covers δ Sct / γ Dor hits on hot stars, and the star's class
-    tells the mechanisms apart.
-  - Q7 (freeze): after the long-period block is settled.
-- **Long-period block options (coordinator, 2026-11-13; to quantify before Rae picks):**
-  - (a) Ground-based M-dwarf periods independent of TESS: MEarth (Newton+2016, 2018; periods to ≳ 100 d) and ASAS
-    (Kiraga & Stępień 2007; Suárez Mascareño+2016). Pick the stars TESS covered with ≥ 10 sectors in a year (CVZs).
-  - (b) Kepler-field stars at 50–100 d (Santos+2019/2021 extend past McQuillan+2014's ~70 d ceiling). Few reach > 70 d
-    with TESS coverage.
-  - (c) Gaia DR3 `vari_rotation_modulation`, but its periods are mostly short; check how many exceed 70 d.
-  - Whatever the source, a 70–180 d star needs ~2 cycles, i.e. 140–360 d of near-contiguous coverage (CVZ). In most
-    cases the honest outcome on TESS is a decline. So this block mainly measures decline honesty and SAP-vs-PDCSAP
-    attenuation, plus recovery for the few CVZ stars. Target ~20–40 stars.
-
 ### P29. Roman-season proxy on SMARTS (from the midway review, 2026-11-11)
 - **Proposed by:** midway review (rec. 2).
 - **Status:** first cut done (2026-11-12, `reports/2026-11-12_headline-card/`): `consecutive-3-5`, P ≤ 30 d =
@@ -564,3 +516,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   `fast` path errs up to 1e-4 (1/20 top-10 lists differ, 10th slot). Revisit if a grid with Nf ≫ N is ever needed (3.7–7×
   at Nf = 100k–200k), or for cheap multiharmonic (nterms = 2–3) periodograms as a possible P vs P/2 ranker feature (idea only).
   No pipeline code changed; nothing installed in `ss_openblas`.
+
+### P52. Download the TESS validation light curves and score the unlocked 70% (Rae, 2026-11-19)
+- **Proposed by:** coordinator after the P27 freeze merge. Needs the Data_Vault drive (download goes to the drive, resumable;
+  ~1.69 GB, ~35-55 min; Rae's go-ahead given for the overnight batch). Then score the unlocked 70% of
+  `datasets/tess_validation_v0.csv` with the default comb fit (and the ranker once it exists), using the new outcome
+  definitions. Never score the locked 30% without Rae.
