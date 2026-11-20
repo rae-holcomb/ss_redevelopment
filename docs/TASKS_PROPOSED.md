@@ -499,6 +499,12 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   other groups use for GBTDS noise and systematics (red noise, detector effects, crowding, inter-season offsets): Roman
   project / science-team simulations, microlensing pipelines, published GBTDS simulations. Literature/web search;
   deliverable is a short report on what can be reused.
+- **Status: surveyed 2026-11-19** — [`reports/2026-11-19_roman-noise-survey/`](../reports/2026-11-19_roman-noise-survey/README.md)
+  (branch `claude/p49-roman-noise-survey-2e5f2d`, not merged). Nobody has a time-correlated GBTDS noise model: Penny+2019,
+  Tamburo+2023, Wilson+2023 (RImTimSim, MIT), Weiss+2025 all use white noise + a ~1 mmag (1.3 ppt) floor. WG6 improved
+  σ is the same kind of budget; the literature budget is 1.06–1.24× it at F146 16–20. Nothing covers 1–50 d systematics
+  (drifts, roll, snapshot gaps, season offsets): build a parametric stress layer ourselves (P55). D5: ×0.7 is consistent
+  with blackbody spot contrasts (0.65–0.80); Weiss+2025 use 0.54–0.60 for oscillations. No pipeline code changed.
 
 ### P51. Long-period rotators lost to decayed late teeth (from the first P43 attempt, 2026-11-15; was P45 on its branch)
 - **Proposed by:** first P43 report. Not scheduled.
@@ -537,3 +543,16 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   stars. A decay-envelope check may also matter for the default `local_tol_trim` (and the low-SNR 0.2-0.5 d wrongs of T6);
   check whether any of the default's wrongs are of this kind before building it.
 
+### P55. Roman systematics stress layer for `romrot_v0` (from P49, 2026-11-19)
+- **Proposed by:** P49 report (`reports/2026-11-19_roman-noise-survey/`). No published model covers 1–50 d GBTDS
+  systematics. Add an optional, parametric layer to `tools/make_roman_rotators.py`: per-season zero-point offset and
+  slow trend (polynomial or long-τ GP), an hours-scale dither/pointing term, snapshot-pass gaps (start/mid/end), and
+  optionally a raised white floor (σ² + (0.3–0.9 mmag)², Penny/Wilson). Score as a separate stress set, not the default
+  training noise; amplitudes bounded by STScI/Wilson numbers (0.1% burn-in, ≲0.5% CRNL, <0.5 ppt on ≲12 h target).
+  Depends on Rae's answers to the P49 open questions.
+
+### P56. Blend dilution of rotator amplitudes in `romrot_v0` (from P49, 2026-11-19)
+- **Proposed by:** P49 report. WG6 "improved" applies crowding to σ only, never to the signal amplitude; Penny+2019 find
+  most bulge sources heavily blended (f_s < 0.5). Draw a per-star blend fraction (from a GBTDS crowding model, e.g.
+  Wilson+2023 / Penny+2019 source densities) that scales Rvar(F146) down, and record it as a column. Could move the
+  detectable fraction as much as the D5 ×0.7 factor.

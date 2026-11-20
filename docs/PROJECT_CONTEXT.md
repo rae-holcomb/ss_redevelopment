@@ -687,4 +687,7 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   (30% stratified locked holdout; unscorable stars replaced; Gaia-class hot stars; QLP fallback only; crowded EBs
   dropped; additive outcome definitions); download + first scoring of the 70% is P52. T32 clean rerun kept as a report
   only (P53/P54). P49 (survey of existing Roman noise/systematics models) running.
-
+- **2026-11-19 — P49 Roman noise/systematics survey** (`reports/2026-11-19_roman-noise-survey/`, branch
+  `claude/p49-roman-noise-survey-2e5f2d`, not merged). All published GBTDS forecasts use white noise + ~1 mmag floor;
+  that budget is 1.06–1.24× WG6 improved σ at F146 16–20. No model covers 1–50 d systematics; proposed P55
+  (stress layer) and P56 (blend dilution). D5's ×0.7 is consistent with blackbody spot contrasts.
