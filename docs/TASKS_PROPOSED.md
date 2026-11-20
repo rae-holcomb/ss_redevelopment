@@ -522,3 +522,16 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   ~1.69 GB, ~35-55 min; Rae's go-ahead given for the overnight batch). Then score the unlocked 70% of
   `datasets/tess_validation_v0.csv` with the default comb fit (and the ranker once it exists), using the new outcome
   definitions. Never score the locked 30% without Rae.
+
+### P53. Robust heights for the tracked `local` solver (from the T32 clean rerun, 2026-11-19; was P44 on its branch)
+- **Proposed by:** `reports/2026-11-19_t32-clean-rerun/`. Not scheduled; code on branch `claude/t32-clean-rerun-2c0779`.
+- **Idea:** `local_seq_trim` loses `_v7` successes on marginal long-period combs whose mean height SNR falls under 1.0
+  (fixed-centre plain-LS heights and kept decayed teeth sit below `lsq`'s soft-L1 fit). Try a soft-L1 per-window height
+  fit or heights at the free vertex. Overlaps P44; relevant only if the tracked solver is revived.
+
+### P54. Near-lag-0 decay-envelope guard (from the T32 clean rerun, 2026-11-19; was P45 on its branch)
+- **Proposed by:** `reports/2026-11-19_t32-clean-rerun/`. Not scheduled.
+- **Idea:** most of `local_seq_trim`'s new wrongs are ~0.37 d combs fit on the ACF's lag-0 decay envelope of long-period
+  stars. A decay-envelope check may also matter for the default `local_tol_trim` (and the low-SNR 0.2-0.5 d wrongs of T6);
+  check whether any of the default's wrongs are of this kind before building it.
+
