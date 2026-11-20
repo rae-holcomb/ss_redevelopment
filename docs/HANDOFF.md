@@ -66,6 +66,8 @@ keep turns cheap on Rae's Pro plan.
   {assigned,fullyear}` (874 stars each) and drive `extracted/p31_tables/{train_3k (3000), neg_dev_medium (1736),
   neg_train (2972)}`. The drive dropped twice mid-run (USB; Rae reseated it); `--resume` recovered. (2) done:
   `benchmarks/baselines/profile15_fullyear_v8.json`, mean 0.739 s/star (repeat 0.738).
+  (3) done: TESS validation downloaded and the unlocked 70% scored (numbers in P52); local copy `data/tess_validation/`.
+  Drive dropped a third time under 3-worker reads: run drive-reading jobs with 1 worker until the connection is fixed.
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 

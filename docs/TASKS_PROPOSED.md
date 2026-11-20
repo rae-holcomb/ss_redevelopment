@@ -525,6 +525,15 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   ~1.69 GB, ~35-55 min; Rae's go-ahead given for the overnight batch). Then score the unlocked 70% of
   `datasets/tess_validation_v0.csv` with the default comb fit (and the ranker once it exists), using the new outcome
   definitions. Never score the locked 30% without Rae.
+- **2026-11-20, first scoring done** (default `local_tol_trim`, no ranker; `runs/tessval_v1_*`, gitignored). Files: 4,078
+  (480 stars, 2.06 GB) on the drive at `tess_validation/`, copied to `data/tess_validation/` (gitignored; Rae OK) because the
+  drive drops under parallel reads. Validation split only:
+  - Rotators SAP (n=190): success 25.3%, half 1.6%, wrong 8.9%, decline 64.2%. PDCSAP (n=130): success 44.6%, double 5.4%,
+    wrong 8.5%, decline 40.8%. On the same 130 paired stars SAP gets 45 correct / 2 wrong, PDCSAP 58 correct / 11 wrong
+    + 6 double. 15 of SAP's 17 wrongs are on the 60 QLP-only stars. Nothing above 20 d is recovered in either flux.
+  - EBs (n=33): lock 33% (correct 12%, half 21%), all at P_orb < 10 d.
+  - Non-rotators: dwarfs answer 29% (10/35), red-clump giants 6% (2/34), white dwarfs 0/15. Expected-undetectable: 18% (5/28).
+  - Open: score with the ranker once v1 exists; look at the QLP wrongs and the dwarf non-rotator answers.
 
 ### P53. Robust heights for the tracked `local` solver (from the T32 clean rerun, 2026-11-19; was P44 on its branch)
 - **Proposed by:** `reports/2026-11-19_t32-clean-rerun/`. Not scheduled; code on branch `claude/t32-clean-rerun-2c0779`.
