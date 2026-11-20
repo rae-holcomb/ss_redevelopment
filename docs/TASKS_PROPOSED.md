@@ -575,3 +575,15 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   dev_medium_clean vs `_v8` (this replaces P44's "fresh drive dev set"). Report `_v8` on B vs dev_medium (0.265 / 0.024
   full-year) as the overfit check.
 - **Rae (2026-11-19): yes, queue it** for the drive session, before P44.
+- **Status (2026-11-20): built, report draft** (`reports/2026-11-20_p57-dev-medium-b/`, branch `claude/p57-dev-medium-b-16ebac`):
+  `datasets/dev_medium_b_clean.csv` (1,000 stars), baselines `dev_medium_b_clean_{fullyear,assigned}_v8` (0.274 / 0.034
+  full-year, 0.167 / 0.020 assigned; consistent with dev_medium_clean, no overtuning sign). Noise TICs are shared with the
+  other sets (pool has too few) and the < 1 d bin is all solar shear (anti/none cells exhausted); see the report's open questions.
+
+### P58. Refresh the noise table to the 2026-11-10 flags (`_v2` clean dev manifests) (dev-set-builder, P57 follow-up)
+- **Why:** the drive's T20 flags were updated 2026-11-10: the 24 `noise_quiet_coherent` dev stars are now class
+  `periodic_low_amplitude` and `exclude_from_training`, and 229 dev_medium stars' class is `systematic_common_mode`
+  (the committed `benchmarks/noise_sources_dev.csv` still says `quiet`). dev_medium_clean keeps 22 of those 24;
+  dev_medium_b_clean (current flags) has none, and the scorecard's `quiet_noise` breakdowns use stale classes.
+- **Do (if Rae wants it):** rebuild the table without `--keep-existing`, write `dev_{small,medium}_clean_v2.csv`
+  (never edit the frozen files), rerun the `_v8` baselines on them. Needs Rae's OK: it changes the judging set.

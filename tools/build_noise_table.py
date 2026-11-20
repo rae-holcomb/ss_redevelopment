@@ -2,7 +2,7 @@
 """
 build_noise_table.py -- per-star noise-source table for scorecard v5 (tasks T24/T25).
 
-Joins each star of the dev_small and dev_medium manifests (never the holdout) to its SMARTS
+Joins each star of the dev_small, dev_medium and dev_medium_b_clean (P57) manifests (never the holdout) to its SMARTS
 noise-source light curve via SIM_ID -> noise TIC, using the T20 flags file
 
     <SMARTS_DATA_ROOT>/extracted/galaxy_ids/noise_source_flags.csv.gz
@@ -13,7 +13,7 @@ so the scorecard never needs the external drive. Columns:
     sim_id, tic, noise_class (T20 `classification`), noise_periodic, noise_exclude
     (`exclude_from_training`), noise_P_ref (days; pipeline period on the noise stack, else LS
     peak; present even for `quiet` sources, where it is a weak LS peak), noise_amp_ppm,
-    noise_persist, noise_near_lmc, noise_quiet_coherent, in_dev_small, in_dev_medium.
+    noise_persist, noise_near_lmc, noise_quiet_coherent, in_dev_small, in_dev_medium, in_dev_medium_b.
 
 `noise_quiet_coherent` marks the ~34 `quiet` sources that carry coherent short-period signals
 (0.1-2.2 d, ~300 ppm, S/N > 20 in both halves of the year) that T20's `periodic` cut misses.
@@ -21,6 +21,12 @@ The list is `benchmarks/noise_quiet_coherent.csv`, copied verbatim from
 `reports/2026-11-09_smarts-note-review/checks/quiet_coherent.csv` on branch
 claude/smarts-note-review-2d28d8 (commit fd543bf, 2026-11-09; generator c07c_quiet_coherent.py).
 It is matched by TIC.
+
+P57 note (2026-11-20): the drive's flags file was updated on 2026-11-10 after this table was first
+built: the 24 dev stars marked `noise_quiet_coherent` are now class `periodic_low_amplitude` with
+`exclude_from_training` True. A plain rebuild would flip their `noise_exclude` to True and make
+dev_small_clean / dev_medium_clean (frozen, and the `_v8` baselines) fail the scorecard guard, so the
+P57 rebuild used `--keep-existing` (old rows unchanged, dev_medium_b rows added from the current flags).
 
 Usage
 -----
@@ -42,7 +48,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = "/Volumes/Data_Vault/smarts_data"
 FLAGS_REL = "extracted/galaxy_ids/noise_source_flags.csv.gz"
 MANIFESTS = {"in_dev_small": ROOT / "datasets" / "dev_small.csv",
-             "in_dev_medium": ROOT / "datasets" / "dev_medium.csv"}
+             "in_dev_medium": ROOT / "datasets" / "dev_medium.csv",
+             "in_dev_medium_b": ROOT / "datasets" / "dev_medium_b_clean.csv"}  # P57 (2026-11-20)
 
 
 def build(flags: pd.DataFrame, coherent_tics, manifests: dict) -> pd.DataFrame:
@@ -76,6 +83,9 @@ def main(argv=None):
     ap.add_argument("--root", default=os.environ.get("SMARTS_DATA_ROOT", DEFAULT_ROOT))
     ap.add_argument("--coherent", type=Path, default=ROOT / "benchmarks" / "noise_quiet_coherent.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "benchmarks" / "noise_sources_dev.csv")
+    ap.add_argument("--keep-existing", action="store_true",
+                    help="keep the flag values of sim_ids already in --out (only add new stars and refresh the "
+                         "in_* columns); see the P57 note in the module docstring")
     a = ap.parse_args(argv)
     flags_path = Path(a.root) / FLAGS_REL
     if not flags_path.exists():
@@ -83,6 +93,13 @@ def main(argv=None):
     flags = pd.read_csv(flags_path)
     table = build(flags, pd.read_csv(a.coherent)["tic"],
                   {k: pd.read_csv(v) for k, v in MANIFESTS.items()})
+    if a.keep_existing and a.out.exists():
+        old = pd.read_csv(a.out)
+        member = [c for c in MANIFESTS if c in table.columns]
+        keep = old.drop(columns=[c for c in old.columns if c.startswith("in_")]).merge(
+            table[["sim_id"] + member], on="sim_id", how="left")
+        table = pd.concat([keep, table[~table.sim_id.isin(old.sim_id)]], ignore_index=True)[table.columns]
+        table = table.sort_values("sim_id").reset_index(drop=True)
     tmp = a.out.with_suffix(".tmp")
     table.to_csv(tmp, index=False)
     tmp.replace(a.out)

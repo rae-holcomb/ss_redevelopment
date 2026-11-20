@@ -6,6 +6,7 @@
 | `dev_medium.csv` | 1,000 | `data/smarts_dev` | laptop: `data/smarts_dev/` (~156 MB together with dev_small) |
 | `dev_small_clean.csv` | 47 | `data/smarts_dev` | `dev_small.csv` minus its 3 `noise_exclude` stars |
 | `dev_medium_clean.csv` | 874 | `data/smarts_dev` | `dev_medium.csv` minus its 126 `noise_exclude` stars |
+| `dev_medium_b_clean.csv` (P57) | 1,000 | `data/smarts_dev` | laptop: `data/smarts_dev/` (second independent dev set; no unclean twin) |
 | `holdout.csv` | 3,000 | the SMARTS data root (`$SMARTS_DATA_ROOT`, default `/Volumes/Data_Vault/smarts_data`) | drive: `extracted/holdout/` |
 | `train_v0.csv` (T10) | 3,000 | `$SMARTS_DATA_ROOT` | drive: `extracted/train_v0/` |
 
@@ -131,6 +132,35 @@ quota and count. The full tables and plots are in `reports/2026-10-15_t2-dev-set
 - It is resumable and writes everything atomically.
 - `tests/test_datasets.py::test_build_reproducible_from_seed` checks that a rebuild
   reproduces these files exactly.
+
+## Second dev set: `dev_medium_b_clean.csv` (P57, 2026-11-20)
+
+An independent ~1,000-star set drawn exactly like dev_medium, so thresholds can be **tuned on one set and judged on the
+other**, and a method change is adopted only if it does not regress on either (Rae, 2026-11-19). Built by
+`tools/build_dev_medium_b.py` (reuses `build_dev_sets.py`'s strata, quotas, checks, coverage and weights unchanged;
+seed **20261120**; same columns as dev_medium). Score with `--data-root data/smarts_dev`, like the other dev sets.
+
+- **Pool:** SIM_ID >= 800k (so disjoint from `train_v0` by construction), minus every dev_small / dev_medium / holdout
+  row (4,050), minus the 455 rows T2 found corrupt, minus every `exclude_from_training` row of the drive's current T20
+  flags file (27,171; the file was updated 2026-11-10 and now also excludes class `periodic_low_amplitude`, the 24
+  `noise_quiet_coherent` dev stars that dev_small_clean / dev_medium_clean still keep). 168,324 eligible rows.
+- **Noise TICs are shared** with the other sets: the >= 800k pool has only 719 noise TICs (620 clean) and the
+  existing sets already use 658, so excluding shared TICs would leave 10 stars < 1 d (`--exclude-shared-noise-tic`
+  exists but can't fill the strata). The stars (rows, sim_ids, files) are fully disjoint.
+- **Result:** 1,000 rows, no bin shortfall; 1,301 candidates checked, 112 corrupt-noise rejections
+  (`dev_medium_b_exclusions_log.csv`); per-stratum counts in `dev_medium_b_strata_counts.csv`; parameters in
+  `dev_medium_b_build_summary.json`. The noise table (`benchmarks/noise_sources_dev.csv`, column `in_dev_medium_b`)
+  was extended with `build_noise_table.py --keep-existing`, so the scorecard's noise guard covers these stars.
+- **Rebuild / verify** (drive needed; ~20 min from scratch at 2 workers, `--n-workers 1` default because the drive
+  dropped under parallel reads on 2026-11-20; check cache in `extracted/p57_build/`):
+
+  ```bash
+  python tools/build_dev_medium_b.py --plan-only   # filters and quotas only
+  python tools/build_dev_medium_b.py               # build (resumable, atomic writes)
+  python tools/build_dev_medium_b.py --check       # rebuild in memory from the cache; exit 1 on any difference
+  ```
+  `tests/test_dev_medium_b.py` checks disjointness (dev_small, dev_medium, holdout, train_v0), noise-cleanliness,
+  the schema and (slow, drive) `--check`. Baselines: `benchmarks/baselines/dev_medium_b_clean_{fullyear,assigned}_v8`.
 
 ## WG6 Roman-resampled (P35)
 
