@@ -199,7 +199,7 @@
       "relative": {
         "max_rise_frac": 0.1
       },
-      "description": "Runtime, occasional (idle machine, serial, ~2 min): profile_pipeline.py --star-ids-file benchmarks/profile_stars.txt --ignore-manifest-sectors --features --repeats 3 --summary-json; no more than 10% slower than benchmarks/baselines/profile15_fullyear_v7.json. Run before merging speed-relevant changes, not on every update."
+      "description": "Runtime, occasional (idle machine, serial, ~2 min): profile_pipeline.py --star-ids-file benchmarks/profile_stars.txt --ignore-manifest-sectors --features --repeats 3 --summary-json; no more than 10% slower than benchmarks/baselines/profile15_fullyear_v8.json. Run before merging speed-relevant changes, not on every update."
     }
   ],
   "regression_guard": {

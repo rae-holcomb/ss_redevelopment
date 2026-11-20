@@ -1,0 +1,31 @@
+{
+ "config": {
+  "dataset": "profile:benchmarks/profile_stars.txt:fullyear,features=1",
+  "git_commit": "ab859e4",
+  "n_stars": 15,
+  "repeats": 3,
+  "comb_variant": "local_tol_trim",
+  "cwt_variant": "lean",
+  "created": "2026-11-20 10:25:54"
+ },
+ "runtime": {
+  "mean_total_s": 0.7390049727323155,
+  "median_total_s": 0.7621341310441494,
+  "mean_stage_s": {
+   "load": 0.03842952001529435,
+   "descriptors": 0.011570578184910118,
+   "acf_long": 0.015275319277619322,
+   "acf_short": 0.0003525902594750126,
+   "guess_acf_fft": 0.012187657683777312,
+   "guess_acf_fft_highpass": 0.08190225552922735,
+   "guess_acf_fft_short": 0.020749636413529515,
+   "guess_lombscargle": 0.012295912392437458,
+   "guess_lombscargle_short": 0.02553835353658845,
+   "guess_pairwise_histogram": 0.0033139803213998674,
+   "guess_wavelet": 0.27044704580524315,
+   "fit": 0.10878498669092854,
+   "gate_records": 0.00037653192412108184,
+   "features": 0.13478534320990246
+  }
+ }
+}

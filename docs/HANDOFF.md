@@ -62,6 +62,10 @@ keep turns cheap on Rae's Pro plan.
   disjoint from the others, with its own `_v8` baselines; (5) P44: set the lag-0-free height-SNR cutoff on `dev_medium_b`,
   judge on dev_medium_clean vs `_v8`. One heavy job at a time. Then ranker v1,
   and the `romrot_v0` build (P34 decisions: 1.3 ppt floor, blend fraction, ×0.7, `p_best_achievable`).
+- **2026-11-20 drive session:** (1) done: P31 tables rebuilt under `local_tol_trim`, 0 errors: `runs/p31_dev_medium_
+  {assigned,fullyear}` (874 stars each) and drive `extracted/p31_tables/{train_3k (3000), neg_dev_medium (1736),
+  neg_train (2972)}`. The drive dropped twice mid-run (USB; Rae reseated it); `--resume` recovered. (2) done:
+  `benchmarks/baselines/profile15_fullyear_v8.json`, mean 0.739 s/star (repeat 0.738).
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 

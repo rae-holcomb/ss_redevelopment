@@ -35,6 +35,7 @@ test or tool cites them.
 |---|---|---|
 | `dev_medium_clean_fullyear_v8.json` + `_tables/` | **Current judging baseline** (2026-11-19): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `config.comb_variant=local_tol_trim`. Success 0.265, wrong 0.024. | `ss_openblas`, 3 workers, main after `a111147` |
 | `dev_medium_clean_assigned_v8.json` + `_tables/` | Same, assigned coverage. Success 0.153, wrong 0.030. | same |
+| `profile15_fullyear_v8.json` | RT2 runtime baseline (2026-11-20): `profile_pipeline.py --star-ids-file benchmarks/profile_stars.txt --ignore-manifest-sectors --features --repeats 3`, `local_tol_trim`. Mean 0.739 s/star. | `ss_openblas`, serial, `ab859e4` |
 | `synth200_s0_v8.json` + `_tables/` | `synthetic:n=200,seed=0`, same code. Success 0.755, wrong 0.005. Used by `tests/test_coverage.py`. | same |
 | `dev_medium_clean_fullyear_v7.json` + `_tables/` | Previous judging baseline (`local_screen2`): `datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored`, `_v7` restricted to the clean stars. Success 0.254, wrong 0.038. | from `_v7` via `tools/rescore_subset.py` |
 | `dev_medium_clean_assigned_v7.json` + `_tables/` | Same, assigned coverage (`sectors=manifest`). Success 0.146, wrong 0.029. | same |
