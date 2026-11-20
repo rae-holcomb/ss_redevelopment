@@ -85,7 +85,7 @@ from guesses import InitialGuess
 # local_tol's spec (T32), shared by the P43 variants built on it
 # P44: mean_height_snr cutoff for the lag-0-free variants (*_l0x), set on dev_medium_b_clean full-year
 # (matching its _v8 wrong rate, maximizing success); see reports/2026-11-20_p44-lag0-out/.
-P44_SNR_CUTOFF = 1.0  # placeholder until the sweep
+P44_SNR_CUTOFF = 1.02  # B full-year: 0.272 success / 0.032 wrong (_v8 0.274 / 0.034); assigned alone would pick 1.00
 DEFAULT_MIN_MEAN_HEIGHT_SNR = 1.0  # the gate's cutoff for variants that don't set their own
 _LOCAL_TOL = dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
 COMB_VARIANTS = {
