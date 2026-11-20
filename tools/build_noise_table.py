@@ -2,7 +2,7 @@
 """
 build_noise_table.py -- per-star noise-source table for scorecard v5 (tasks T24/T25).
 
-Joins each star of the dev_small and dev_medium manifests (never the holdout) to its SMARTS
+Joins each star of the dev_small, dev_medium and dev_medium_b_clean (P57) manifests (never the holdout) to its SMARTS
 noise-source light curve via SIM_ID -> noise TIC, using the T20 flags file
 
     <SMARTS_DATA_ROOT>/extracted/galaxy_ids/noise_source_flags.csv.gz
@@ -13,7 +13,7 @@ so the scorecard never needs the external drive. Columns:
     sim_id, tic, noise_class (T20 `classification`), noise_periodic, noise_exclude
     (`exclude_from_training`), noise_P_ref (days; pipeline period on the noise stack, else LS
     peak; present even for `quiet` sources, where it is a weak LS peak), noise_amp_ppm,
-    noise_persist, noise_near_lmc, noise_quiet_coherent, in_dev_small, in_dev_medium.
+    noise_persist, noise_near_lmc, noise_quiet_coherent, in_dev_small, in_dev_medium, in_dev_medium_b.
 
 `noise_quiet_coherent` marks the ~34 `quiet` sources that carry coherent short-period signals
 (0.1-2.2 d, ~300 ppm, S/N > 20 in both halves of the year) that T20's `periodic` cut misses.
@@ -42,7 +42,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_ROOT = "/Volumes/Data_Vault/smarts_data"
 FLAGS_REL = "extracted/galaxy_ids/noise_source_flags.csv.gz"
 MANIFESTS = {"in_dev_small": ROOT / "datasets" / "dev_small.csv",
-             "in_dev_medium": ROOT / "datasets" / "dev_medium.csv"}
+             "in_dev_medium": ROOT / "datasets" / "dev_medium.csv",
+             "in_dev_medium_b": ROOT / "datasets" / "dev_medium_b_clean.csv"}  # P57 (2026-11-20)
 
 
 def build(flags: pd.DataFrame, coherent_tics, manifests: dict) -> pd.DataFrame:
