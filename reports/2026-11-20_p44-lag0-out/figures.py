@@ -49,32 +49,37 @@ def per_star(set_name, mode, run):
 
 def fig_sweep(chosen):
     sw = pd.read_csv(DATA / "sweep_B.csv")
-    fig, axes = plt.subplots(1, 2, figsize=(11, 4.6))
-    for ax, mode in zip(axes, ["fullyear", "assigned"]):
-        for v, lab, col in [("local_tol_trim", "old: lag-0 tooth in", COL["old"]),
-                            (VNEW, "new: lag-0 tooth out", COL["new"])]:
-            t = sw[(sw["mode"] == mode) & (sw.variant == v)].sort_values("cutoff")
-            ax.plot(t.wrong, t.success, "-o", ms=2.5, color=col, label=lab)
-            for cut in (0.5, 1.0, 1.5, 2.0):
-                r = t[np.isclose(t.cutoff, cut)]
-                if len(r):
-                    ax.annotate(f"{cut:g}", (r.wrong.iloc[0], r.success.iloc[0]), fontsize=7, color=col,
-                                xytext=(3, -9), textcoords="offset points")
-        o = sw[(sw["mode"] == mode) & (sw.variant == "local_tol_trim") & np.isclose(sw.cutoff, 1.0)].iloc[0]
-        ax.plot(o.wrong, o.success, "s", ms=9, mfc="none", mec="k", label=f"_v8 (old, 1.0): {o.success:.3f} / {o.wrong:.3f}")
-        c = chosen[mode]
-        ax.plot(c["wrong"], c["success"], "*", ms=15, color=COL["new"], mec="k",
-                label=f"rule's pick ({mode}): {c['cutoff']:g} -> {c['success']:.3f} / {c['wrong']:.3f}")
-        if mode == "assigned":
-            f = sw[(sw["mode"] == mode) & (sw.variant == VNEW) & np.isclose(sw.cutoff, chosen["chosen"])].iloc[0]
-            ax.plot(f.wrong, f.success, "D", ms=8, color="gold", mec="k",
-                    label=f"chosen (full-year) {chosen['chosen']:g}: {f.success:.3f} / {f.wrong:.3f}")
-        ax.axvline(c["target_wrong"], color="k", ls=":", lw=0.8)
-        ax.set_xlabel("wrong fraction (all stars)")
-        ax.set_ylabel("success fraction (all stars)")
-        ax.set_title(f"dev_medium_b_clean {mode}: mean_height_snr cutoff sweep", fontsize=10)
-        ax.legend(fontsize=7, loc="lower right")
-        ax.grid(alpha=0.3)
+    fig, axes2 = plt.subplots(2, 2, figsize=(11, 9))
+    zoom = {"fullyear": ((0.015, 0.06), (0.24, 0.29)), "assigned": ((0.01, 0.035), (0.14, 0.185))}
+    for row, axes in enumerate(axes2):
+      for ax, mode in zip(axes, ["fullyear", "assigned"]):
+          for v, lab, col in [("local_tol_trim", "old: lag-0 tooth in", COL["old"]),
+                              (VNEW, "new: lag-0 tooth out", COL["new"])]:
+              t = sw[(sw["mode"] == mode) & (sw.variant == v)].sort_values("cutoff")
+              ax.plot(t.wrong, t.success, "-o", ms=2.5, color=col, label=lab)
+              for cut in (0.5, 1.0, 1.5, 2.0):
+                  r = t[np.isclose(t.cutoff, cut)]
+                  if len(r):
+                      ax.annotate(f"{cut:g}", (r.wrong.iloc[0], r.success.iloc[0]), fontsize=7, color=col,
+                                  xytext=(3, -9), textcoords="offset points")
+          o = sw[(sw["mode"] == mode) & (sw.variant == "local_tol_trim") & np.isclose(sw.cutoff, 1.0)].iloc[0]
+          ax.plot(o.wrong, o.success, "s", ms=9, mfc="none", mec="k", label=f"v8 baseline (old, 1.0): {o.success:.3f} / {o.wrong:.3f}")
+          c = chosen[mode]
+          ax.plot(c["wrong"], c["success"], "*", ms=15, color=COL["new"], mec="k",
+                  label=f"rule's pick ({mode}): {c['cutoff']:g} -> {c['success']:.3f} / {c['wrong']:.3f}")
+          if mode == "assigned":
+              f = sw[(sw["mode"] == mode) & (sw.variant == VNEW) & np.isclose(sw.cutoff, chosen["chosen"])].iloc[0]
+              ax.plot(f.wrong, f.success, "D", ms=8, color="gold", mec="k",
+                      label=f"chosen (full-year) {chosen['chosen']:g}: {f.success:.3f} / {f.wrong:.3f}")
+          ax.axvline(c["target_wrong"], color="k", ls=":", lw=0.8)
+          ax.set_xlabel("wrong fraction (all stars)")
+          ax.set_ylabel("success fraction (all stars)")
+          ax.set_title(f"dev_medium_b_clean {mode}: mean_height_snr cutoff sweep", fontsize=10)
+          ax.legend(fontsize=7, loc="lower right")
+          ax.grid(alpha=0.3)
+          if row == 1:
+              ax.set_xlim(*zoom[mode][0]); ax.set_ylim(*zoom[mode][1])
+              ax.set_title(ax.get_title() + " (zoom)", fontsize=10)
     fig.tight_layout()
     fig.savefig(FIG / "fig_sweep.png", dpi=130)
     plt.close(fig)
@@ -131,7 +136,7 @@ def fig_bins():
                 lo, hi = np.array([wilson(k, n) for k, n in zip(ks, ns)]).T
                 x = np.arange(len(BINS)) + off
                 axes[i, j].errorbar(x, p, yerr=[p - lo, hi - p], fmt="o", color=COL[run], ms=4, capsize=2,
-                                    label="_v8 (local_tol_trim)" if run == "old" else VNEW)
+                                    label="v8 baseline (local_tol_trim)" if run == "old" else VNEW)
                 axes[i, j].set_ylabel(lab)
                 for b, k, n in zip(BINS, ks, ns):
                     rows.append(dict(set=set_name, mode=mode, run=run, metric=lab, bin=b, k=k, n=n))
@@ -159,7 +164,7 @@ def fig_gates():
             blocked = d[~d.final_outcome.isin(S) & d.best_success_failed_gates.notna()]
             cnt = [blocked.best_success_failed_gates.str.split(";").apply(lambda g: gt in g).sum() for gt in gates]
             ax.barh(np.arange(len(gates)) + off, cnt, height=0.4, color=COL[run],
-                    label=("_v8" if run == "old" else VNEW) + f" ({len(blocked)} stars)")
+                    label=("v8 baseline" if run == "old" else VNEW) + f" ({len(blocked)} stars)")
         ax.set_yticks(range(len(gates)))
         ax.set_yticklabels(gates, fontsize=8)
         ax.set_title(f"{set_name} {mode}", fontsize=9)
