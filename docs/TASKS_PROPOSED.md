@@ -471,6 +471,8 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Idea:** synth-s0-00099 (P = 32.4 d) is correct under `_v7` and wrong under `local_tol` and every P43 variant, which
   makes `check_goals` FAIL on synth (`final.by_bin.>30d.success` 1.000 -> 0.875, one star of 8). Diagnose it (one star)
   and decide whether to accept it or refresh the synth baseline with the new default.
+- **Rae (2026-11-19): deferred.** Wait until there are more long-period failures, then study them as a group. The synth
+  baseline is now `synth200_s0_v8` (new default), and `check_goals` no longer fails a bin on a one-star drop.
 
 ### P46. Multi-season (3 early seasons) rotation for long periods (from P34, 2026-11-13; was P43 on the P34 branch)
 - **Proposed by:** P34 report. Forecast Roman rotators (old bulge G/K dwarfs) have P_eq ~20–50 d, at or beyond one season's

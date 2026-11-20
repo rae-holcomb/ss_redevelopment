@@ -142,3 +142,24 @@ def test_profile_summary_is_check_goals_readable(tmp_path):
     assert s["config"]["dataset"] == "profile:benchmarks/profile_stars.txt:fullyear,features=1"
     assert s["runtime"]["mean_total_s"] == 3.0 and s["runtime"]["mean_stage_s"]["fit"] == 2.0
     assert json.loads((tmp_path / "s.json").read_text()) == s
+
+
+def _guard_run(tmp_path, base_bin, new_bin, max_drop=0.06):
+    goals = {"goals": [], "regression_guard": {"max_drop": 0.02, "metrics": [
+        {"pattern": "final.by_bin.*.success", "max_drop": max_drop}]}}
+    for name, b in (("base", base_bin), ("new", new_bin)):
+        (tmp_path / f"{name}.json").write_text(json.dumps({"final": {"by_bin": {">30d": b}}}))
+    (tmp_path / "g.json").write_text(json.dumps(goals))
+    return check_goals.main([str(tmp_path / "new.json"), "--baseline", str(tmp_path / "base.json"),
+                             "--goals", str(tmp_path / "g.json")])
+
+
+def test_guard_ignores_a_one_star_drop(tmp_path, capsys):
+    """Rae, 2026-11-19: one star can't fail a whole bin (synth200 >30 d: n = 8, 1.000 -> 0.875)."""
+    assert _guard_run(tmp_path, {"n": 8, "success": 1.0}, {"n": 8, "success": 0.875}) == 0
+    assert "not a regression" in capsys.readouterr().out
+
+
+def test_guard_trips_on_two_stars_or_without_n(tmp_path):
+    assert _guard_run(tmp_path, {"n": 8, "success": 1.0}, {"n": 8, "success": 0.75}) == 1
+    assert _guard_run(tmp_path, {"success": 1.0}, {"success": 0.875}) == 1  # no n: old rule

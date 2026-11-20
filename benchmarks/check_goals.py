@@ -27,7 +27,9 @@ goal passes only if *every* expanded metric meets the target; the table
 shows the worst value. A guard entry may be a plain
 pattern (uses the global max_drop) or {"pattern": ..., "max_drop": ...}
 -- per-bin metrics need looser limits because each bin holds few stars
-(one star in a 50-star bin = 0.02). Only Rae changes goals.json --
+(one star in a 50-star bin = 0.02). A guard also never trips on a drop of
+fewer than MIN_STARS_TO_TRIP (2) stars, counted from the group's ``n``
+(Rae, 2026-11-19), so one star cannot fail a whole bin. Only Rae changes goals.json --
 agents may propose changes in their report but must not edit it.
 
 Metric groups added in scorecard v4 (T22/T23) are addressable the same way:
@@ -75,6 +77,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+# Regression guard: a drop that amounts to fewer than this many stars never trips (Rae, 2026-11-19). A
+# one-star change in a small bin (e.g. synth200 >30 d, n = 8: one star = 0.125) is reported, not failed.
+# Needs the group's "n" next to the metric (every final.* group has it); without it the old rule applies.
+MIN_STARS_TO_TRIP = 2
 OPS = {">=": operator.ge, "<=": operator.le, ">": operator.gt, "<": operator.lt}
 
 
@@ -155,6 +161,15 @@ def goal_root(data: dict | None, g: dict, overrides: dict | None):
     if "system" in g and "cards" in data:
         return card_values(data, g["system"], overrides)
     return None, data
+
+
+def _stars_lost(m: dict, base: dict, path: str, v: float, b: float):
+    """Stars behind a guarded rate's drop, from the sibling "n" of each run; None if either lacks it."""
+    parent = path.rsplit(".", 1)[0]
+    nv, nb = get_path(m, parent + ".n"), get_path(base, parent + ".n")
+    if not isinstance(nv, (int, float)) or not isinstance(nb, (int, float)):
+        return None
+    return int(round(b * nb - v * nv))
 
 
 def _fmt(x) -> str:
@@ -257,7 +272,11 @@ def main(argv=None) -> int:
                 delta = v - b
                 flag = ""
                 if delta < -max_drop:
-                    flag, failed = "  <-- REGRESSION", True
+                    lost = _stars_lost(m, base, path, v, b)
+                    if lost is not None and lost < MIN_STARS_TO_TRIP:
+                        flag = f"  (drop = {lost} star; under {MIN_STARS_TO_TRIP}, not a regression)"
+                    else:
+                        flag, failed = "  <-- REGRESSION", True
                 print(f"{b:7.3f} {v:7.3f} {delta:+7.3f} {max_drop:6.3f}  {path}{flag}")
 
     print("\nOVERALL:", "FAIL" if failed else "PASS")
