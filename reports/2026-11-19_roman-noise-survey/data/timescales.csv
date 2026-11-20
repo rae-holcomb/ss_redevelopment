@@ -1,0 +1,15 @@
+effect,t_lo_d,t_hi_d,kind,modelled_in
+Photon + sky + read noise (per 66 s exposure),0.0007639,0.008403,white,"WG6, Penny, Wilson, Tamburo, rimtimsim"
+1/f read noise (ms-s; row banding within a read),1.157e-08,0.0007639,white,none (white across exposures)
+"Burn-in (~20 s exponential, ~0.1%)",5.787e-05,0.0006944,correlated,none
+"Persistence after saturation (1/t, 20 s - 30 min)",0.0002315,0.02083,correlated,romanisim (Sanchez+23)
+Dither: 36 mosaics/season; 12-tile cycle ~3 h,0.008403,0.3025,correlated,none (pixel-phase/flat errors)
+"F087/F213 interleave (every 3 h, each 6 h)",0.125,0.25,gap,WG6 (F146 grid unaffected)
+Instrumental red-noise limit discussed (<~12 h),0.02083,0.5,correlated,Wilson+23 (as depth floor only)
+Granulation / oscillation (giants),0.04167,2,correlated,"Weiss+25, gadfly (signal, not noise)"
+Snapshot passes (start/mid/end; ~35 d apart),30,40,gap,none
+Slow sky / thermal / zero-point drift in a season,5,70.5,correlated,none (Penny: time-dependent sky only)
+Season (~70.5 d high cadence),70.5,72,gap,WG6 grid (71 d)
+"Spring/fall 180 deg roll: different pixels, PSF, blend mix",180,190,step,none
+Inter-season gap (~110 d) and early/late gap (years),109,1500,step,WG6 grid (109-115 d only)
+Blend geometry change from proper motion,365,3000,correlated,none (pipeline re-runs positions)
