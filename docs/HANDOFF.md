@@ -68,6 +68,8 @@ keep turns cheap on Rae's Pro plan.
   `benchmarks/baselines/profile15_fullyear_v8.json`, mean 0.739 s/star (repeat 0.738).
   (3) done: TESS validation downloaded and the unlocked 70% scored (numbers in P52); local copy `data/tess_validation/`.
   Drive dropped a third time under 3-worker reads: run drive-reading jobs with 1 worker until the connection is fixed.
+  (4) done: P57 `dev_medium_b_clean` merged (1,000 stars; `_v8` 0.274 / 0.034 full-year, 0.167 / 0.020 assigned; no
+  overtuning sign). Next: (5) P44 lag-0 cutoff tuned on B, judged on dev_medium_clean vs `_v8`.
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 

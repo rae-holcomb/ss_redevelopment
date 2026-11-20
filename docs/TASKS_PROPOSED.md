@@ -579,6 +579,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   `datasets/dev_medium_b_clean.csv` (1,000 stars), baselines `dev_medium_b_clean_{fullyear,assigned}_v8` (0.274 / 0.034
   full-year, 0.167 / 0.020 assigned; consistent with dev_medium_clean, no overtuning sign). Noise TICs are shared with the
   other sets (pool has too few) and the < 1 d bin is all solar shear (anti/none cells exhausted); see the report's open questions.
+- **Merged 2026-11-20 (Rae).** Decisions on the report's questions: (1) leave the 24 coherent-quiet stars in the `_clean`
+  sets for now; fold the cleanup into the next baseline change (P58); (2) shared noise TICs accepted; (3) all-solar < 1 d
+  bin accepted; (4) no detectability split for B (P44 doesn't need it). Done; move to `TASKS_DONE.md` at the next tidy.
 
 ### P58. Refresh the noise table to the 2026-11-10 flags (`_v2` clean dev manifests) (dev-set-builder, P57 follow-up)
 - **Why:** the drive's T20 flags were updated 2026-11-10: the 24 `noise_quiet_coherent` dev stars are now class
@@ -587,3 +590,4 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   dev_medium_b_clean (current flags) has none, and the scorecard's `quiet_noise` breakdowns use stale classes.
 - **Do (if Rae wants it):** rebuild the table without `--keep-existing`, write `dev_{small,medium}_clean_v2.csv`
   (never edit the frozen files), rerun the `_v8` baselines on them. Needs Rae's OK: it changes the judging set.
+- **Rae (2026-11-20): deferred** to the next baseline-changing batch (not before P44).

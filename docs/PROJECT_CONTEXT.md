@@ -694,11 +694,10 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   decisions:** `romrot_v0` white floor raised to Wilson's 1.3 ppt (σ_WG6² + 0.9² mmag²); per-star blend fraction (P56);
   keep ×0.7 (D5 closed); no 1–50 d systematics model until season-1 data (P55 parked). **Lag-0 tooth (P44): Rae says
   leave it out** of window rejection and the height-SNR mean; new cutoff to be set on a fresh drive dev set.
-- **2026-11-20 — P57 second dev set `dev_medium_b_clean`** (`reports/2026-11-20_p57-dev-medium-b/`, draft; branch
-  `claude/p57-dev-medium-b-16ebac`): 1,000 noise-clean stars, seed 20261120, T2 stratification, disjoint from dev_small /
+- **2026-11-20 — P57 second dev set `dev_medium_b_clean`** (`reports/2026-11-20_p57-dev-medium-b/`; merged, Rae): 1,000 noise-clean stars, seed 20261120, T2 stratification, disjoint from dev_small /
   dev_medium / holdout / train_v0 (`tools/build_dev_medium_b.py`, `--check`; `tests/test_dev_medium_b.py`); files in
   `data/smarts_dev/`. Baselines `dev_medium_b_clean_{fullyear,assigned}_v8`: 0.274 / 0.034 and 0.167 / 0.020 vs
   dev_medium_clean 0.265 / 0.024 and 0.153 / 0.030, all within CIs: **no sign of overtuning**. Use: tune on one set, judge
   on the other. Caveats: noise TICs are shared (the >= 800k pool has 719); the < 1 d bin is all solar shear; the drive's
   flags (updated 2026-11-10) exclude the 24 coherent-quiet stars that dev_medium_clean keeps (noise table extended with
-  `--keep-existing`; refresh proposed as P58).
+  `--keep-existing`; refresh P58 deferred to the next baseline change). Rae accepted the shared TICs and solar < 1 d bin.

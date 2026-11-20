@@ -1,6 +1,6 @@
 # P57: second noise-clean dev set dev_medium_b
 
-**Date:** 2026-11-20 · **Author:** dev-set-builder session · **Branch:** `claude/p57-dev-medium-b-16ebac` · **Status:** draft
+**Date:** 2026-11-20 · **Author:** dev-set-builder session · **Branch:** `claude/p57-dev-medium-b-16ebac` · **Status:** merged (Rae, 2026-11-20)
 
 ## TL;DR
 
@@ -142,6 +142,9 @@ the clean cut.
   and left that decision to Rae.
 
 ## Open questions for Rae
+
+**Rae (2026-11-20):** (1) leave as is for now, cleanup with the next baseline change (P58); (2) accept shared
+noise TICs; (3) accept the all-solar < 1 d bin; (4) no detectability split needed.
 
 1. **The 24 coherent-quiet stars in dev_small_clean / dev_medium_clean.**
    - **Situation:** the current flags exclude them; the committed table and both `_clean` sets still keep them.
