@@ -27,8 +27,11 @@ def test_l0x2_variants_registered_default_unchanged():
                         min_mean_height_snr=C.P59_SNR_CUTOFF, min_peaks_required=C.P59_MIN_PEAKS,
                         min_frac_positive_heights=C.P59_MIN_FRAC_POS)
     assert C.resolve_comb_variant("lsq_l0x2")[1]["lag0_gates"] is True
+    assert C.resolve_comb_variant("local_tol_trim_l0x2b")[1] == dict(
+        spec, min_mean_height_snr=C.P59B_SNR_CUTOFF, min_peaks_required=C.P59B_MIN_PEAKS,
+        min_frac_positive_heights=C.P59B_MIN_FRAC_POS)
     for name, sp in C.COMB_VARIANTS.items():
-        if not name.endswith("_l0x2"):
+        if not name.endswith(("_l0x2", "_l0x2b")):
             assert "lag0_gates" not in sp and "min_peaks_required" not in sp, name
     assert C.DEFAULT_COMB_VARIANT == "local_tol_trim_l0x"
     assert (C.DEFAULT_MIN_PEAKS_REQUIRED, C.DEFAULT_MIN_FRAC_POSITIVE_HEIGHTS) == (4, 0.8)
@@ -92,7 +95,7 @@ def test_teeth_available_excludes_lag0_tooth():
     _, c0 = _cand("local_tol_trim_l0x", lags, acf)
     _, c2 = _cand("local_tol_trim_l0x2", lags, acf)
     assert c2.n_teeth_available == c0.n_teeth_available - 1
-    assert c2.n_peaks_required == min(c2.n_teeth_available, 4)
+    assert c2.n_peaks_required == int(np.clip(c2.n_teeth_available, 2, C.P59_MIN_PEAKS))
 
 
 def test_window_vertex_gate_lag0_free_for_lsq():

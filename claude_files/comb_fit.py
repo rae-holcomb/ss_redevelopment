@@ -89,9 +89,12 @@ P44_SNR_CUTOFF = 1.02  # B full-year: 0.272 success / 0.032 wrong (_v8 0.274 / 0
 DEFAULT_MIN_MEAN_HEIGHT_SNR = 1.0  # the gate's cutoff for variants that don't set their own
 # P59: thresholds of the fully lag-0-free variants (*_l0x2), set on dev_medium_b_clean full-year
 # (highest success with wrong <= its _v9 wrong); see reports/2026-11-20_p59-lag0-gates/.
-P59_MIN_PEAKS = 4  # placeholder until the sweep
-P59_MIN_FRAC_POS = 0.8  # placeholder until the sweep
-P59_SNR_CUTOFF = 1.02  # placeholder until the sweep
+# Full-year rule pick (B: 0.284 / 0.032 fy; but 0.188 / 0.029 assigned vs _v9 0.168 / 0.019):
+P59_MIN_PEAKS = 2  # = no peak-count gate beyond the 2-tooth floor
+P59_MIN_FRAC_POS = 0.6  # every value <= 0.6 gives identical results on B
+P59_SNR_CUTOFF = 1.06
+# Alternative declared from B before judging: within B's wrong budget in both modes (0.274 / 0.032 fy, 0.176 / 0.017 as)
+P59B_MIN_PEAKS, P59B_MIN_FRAC_POS, P59B_SNR_CUTOFF = 3, 0.6, 1.06
 DEFAULT_MIN_PEAKS_REQUIRED = 4
 DEFAULT_MIN_FRAC_POSITIVE_HEIGHTS = 0.8
 _LOCAL_TOL = dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
@@ -192,6 +195,9 @@ COMB_VARIANTS = {
     "local_tol_trim_l0x2": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", lag0_gates=True,
                                 min_mean_height_snr=P59_SNR_CUTOFF, min_peaks_required=P59_MIN_PEAKS,
                                 min_frac_positive_heights=P59_MIN_FRAC_POS),
+    "local_tol_trim_l0x2b": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", lag0_gates=True,
+                                 min_mean_height_snr=P59B_SNR_CUTOFF, min_peaks_required=P59B_MIN_PEAKS,
+                                 min_frac_positive_heights=P59B_MIN_FRAC_POS),
     "lsq_l0x2": dict(solver="lsq", lag0_tooth="exclude", lag0_gates=True, min_mean_height_snr=P59_SNR_CUTOFF,
                      min_peaks_required=P59_MIN_PEAKS, min_frac_positive_heights=P59_MIN_FRAC_POS),
 }
