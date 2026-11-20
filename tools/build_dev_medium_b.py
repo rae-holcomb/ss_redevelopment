@@ -24,15 +24,17 @@ What differs:
 - seed 20261120 (dev_medium: 20261015);
 - the pool first drops every row in dev_small, dev_medium and the holdout, every row the
   T2 build already found corrupt (datasets/exclusions_log.csv), every row whose noise
-  source is ``exclude_from_training`` in the T20 flags (the ``noise_exclude`` stars), and,
-  by default, every row whose noise TIC also serves a dev_small / dev_medium / holdout star
-  (``--allow-shared-noise-tic`` keeps them), so no galaxy-noise light curve is shared;
+  source is ``exclude_from_training`` in the T20 flags (the ``noise_exclude`` stars).
+  Noise TICs *are* shared with the other sets by default: the SIM_ID >= 800k pool has only
+  719 noise TICs (620 clean), each reused ~280 times, and dev_small + dev_medium + holdout
+  already use 658 of them, so dropping shared TICs leaves 10 stars < 1 d and 110 at 1-3 d
+  (``--exclude-shared-noise-tic`` does it anyway; dev_medium itself puts 874 stars on 447 TICs);
 - a bin whose remaining capacity is below its target gets its capacity, not an error
   (the < 1 d bin is nearly used up by T2), so the set can come out slightly under 1,000;
 - one output, already clean, so no unclean twin exists.
 
-Drive I/O runs with ONE worker by default (the drive dropped under parallel reads on
-2026-11-20); checks are cached per bundle on the drive under
+Drive I/O runs with one worker by default (the drive dropped under parallel reads on
+2026-11-20; the P57 build used --n-workers 2 with Rae's OK on an idle machine); checks are cached per bundle on the drive under
 ``extracted/p57_build/checks/`` (atomic writes), staged files under
 ``extracted/p57_build/candidates/``, so an interrupted build resumes where it stopped. The
 drive mount is re-checked after every bundle.
@@ -255,8 +257,9 @@ def main(argv=None) -> int:
     ap.add_argument("--n-workers", type=int, default=1,
                     help="parallel bundle passes (default 1: the drive drops under parallel reads)")
     ap.add_argument("--out-dir", type=Path, default=DATASETS)
-    ap.add_argument("--allow-shared-noise-tic", action="store_true",
-                    help="keep rows whose noise TIC also serves a dev_small/dev_medium/holdout star")
+    ap.add_argument("--exclude-shared-noise-tic", action="store_true",
+                    help="drop rows whose noise TIC also serves a dev_small/dev_medium/holdout star "
+                         "(infeasible for the short-period bins; see the docstring)")
     ap.add_argument("--plan-only", action="store_true", help="pool filters and quotas only (reads the catalog)")
     ap.add_argument("--check", action="store_true",
                     help="rebuild in memory from the drive's check cache and compare with the committed files")
@@ -267,7 +270,7 @@ def main(argv=None) -> int:
     if args.check:
         configure_bds()
         bds.run_checks = check_only_run_checks
-    out = build(root, args.seed, args.n_workers, args.allow_shared_noise_tic, plan_only=args.plan_only)
+    out = build(root, args.seed, args.n_workers, not args.exclude_shared_noise_tic, plan_only=args.plan_only)
     if out is None:
         return 0
     text = render(out)

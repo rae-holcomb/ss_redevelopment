@@ -22,6 +22,12 @@ The list is `benchmarks/noise_quiet_coherent.csv`, copied verbatim from
 claude/smarts-note-review-2d28d8 (commit fd543bf, 2026-11-09; generator c07c_quiet_coherent.py).
 It is matched by TIC.
 
+P57 note (2026-11-20): the drive's flags file was updated on 2026-11-10 after this table was first
+built: the 24 dev stars marked `noise_quiet_coherent` are now class `periodic_low_amplitude` with
+`exclude_from_training` True. A plain rebuild would flip their `noise_exclude` to True and make
+dev_small_clean / dev_medium_clean (frozen, and the `_v8` baselines) fail the scorecard guard, so the
+P57 rebuild used `--keep-existing` (old rows unchanged, dev_medium_b rows added from the current flags).
+
 Usage
 -----
     python tools/build_noise_table.py                      # drive root: $SMARTS_DATA_ROOT or /Volumes/Data_Vault/smarts_data
@@ -77,6 +83,9 @@ def main(argv=None):
     ap.add_argument("--root", default=os.environ.get("SMARTS_DATA_ROOT", DEFAULT_ROOT))
     ap.add_argument("--coherent", type=Path, default=ROOT / "benchmarks" / "noise_quiet_coherent.csv")
     ap.add_argument("--out", type=Path, default=ROOT / "benchmarks" / "noise_sources_dev.csv")
+    ap.add_argument("--keep-existing", action="store_true",
+                    help="keep the flag values of sim_ids already in --out (only add new stars and refresh the "
+                         "in_* columns); see the P57 note in the module docstring")
     a = ap.parse_args(argv)
     flags_path = Path(a.root) / FLAGS_REL
     if not flags_path.exists():
@@ -84,6 +93,13 @@ def main(argv=None):
     flags = pd.read_csv(flags_path)
     table = build(flags, pd.read_csv(a.coherent)["tic"],
                   {k: pd.read_csv(v) for k, v in MANIFESTS.items()})
+    if a.keep_existing and a.out.exists():
+        old = pd.read_csv(a.out)
+        member = [c for c in MANIFESTS if c in table.columns]
+        keep = old.drop(columns=[c for c in old.columns if c.startswith("in_")]).merge(
+            table[["sim_id"] + member], on="sim_id", how="left")
+        table = pd.concat([keep, table[~table.sim_id.isin(old.sim_id)]], ignore_index=True)[table.columns]
+        table = table.sort_values("sim_id").reset_index(drop=True)
     tmp = a.out.with_suffix(".tmp")
     table.to_csv(tmp, index=False)
     tmp.replace(a.out)

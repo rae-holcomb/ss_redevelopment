@@ -3,7 +3,7 @@
 - builder logic on synthetic inputs (no data): pool filters, capacity-clipped allocation;
 - the committed manifest (skips when absent): schema = dev_medium's, disjoint from dev_small /
   dev_medium / holdout / train_v0, SIM_ID >= 800k, every star in the noise table and none
-  ``noise_exclude``, accepted by the scorecard's noise guard, no noise TIC shared with dev_medium;
+  ``noise_exclude``, accepted by the scorecard's noise guard;
 - the drive (slow, skips when absent): ``build_dev_medium_b.py --check``.
 """
 from __future__ import annotations
@@ -95,15 +95,6 @@ def test_noise_clean_and_in_noise_table():
     assert not t.loc[list(b.sim_id), "noise_exclude"].astype(bool).any()
     assert t.loc[list(b.sim_id), "in_dev_medium_b"].astype(bool).all()
     assert int(t.in_dev_medium_b.sum()) == len(b)
-
-
-def test_no_noise_tic_shared_with_dev_sets():
-    """No galaxy-noise light curve serves both a dev_medium_b star and a dev_small / dev_medium star."""
-    b = _b()
-    t = NOISE.set_index("sim_id")
-    b_tics = set(t.loc[list(b.sim_id), "tic"])
-    other = t[t.in_dev_small.astype(bool) | t.in_dev_medium.astype(bool)]
-    assert not b_tics & set(other.tic)
 
 
 def test_scorecard_accepts_without_allow_flag():
