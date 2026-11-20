@@ -1,0 +1,8 @@
+,A: dev_medium_clean,B: dev_medium_b_clean
+n,874.0,1000.0
+median P,9.394449999999999,9.55335
+median amp_proxy,0.4871310498426852,0.45637102777840866
+frac noise systematic_common_mode,0.2620137299771167,0.281
+frac noise periodic_low_amplitude (coherent-quiet),0.02517162471395881,0.0
+n noise TICs,447.0,472.0
+median n_native_sectors,12.0,12.0
