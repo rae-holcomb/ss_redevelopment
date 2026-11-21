@@ -1,0 +1,48 @@
+{
+ "fullyear": {
+  "target_wrong": 0.032,
+  "v9_success": 0.272,
+  "mp": 2,
+  "fp": 0.6,
+  "snr": 1.06,
+  "success": 0.284,
+  "wrong": 0.032,
+  "old_best": {
+   "mp": 2,
+   "fp": 0.6,
+   "snr": 1.06,
+   "success": 0.284,
+   "wrong": 0.032
+  },
+  "n_combos": {
+   "local_tol_trim_l0x": 228,
+   "local_tol_trim_l0x2": 228
+  }
+ },
+ "assigned": {
+  "target_wrong": 0.019,
+  "v9_success": 0.16799999999999998,
+  "mp": 3,
+  "fp": 0.6,
+  "snr": 1.05,
+  "success": 0.179,
+  "wrong": 0.018,
+  "old_best": {
+   "mp": 3,
+   "fp": 0.8,
+   "snr": 1.06,
+   "success": 0.176,
+   "wrong": 0.019
+  },
+  "n_combos": {
+   "local_tol_trim_l0x": 228,
+   "local_tol_trim_l0x2": 228
+  }
+ },
+ "chosen": {
+  "mp": 2,
+  "fp": 0.6,
+  "snr": 1.06
+ },
+ "modes_agree": false
+}

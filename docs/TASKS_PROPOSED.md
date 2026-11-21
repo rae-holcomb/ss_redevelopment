@@ -607,3 +607,14 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Rae (2026-11-20): approved.** Leave the lag-0 tooth out of `n_peaks`, `frac_positive_heights` (and
   `frac_vertex_in_window` where a variant uses it). Re-set the affected thresholds on dev_medium_b_clean (full-year rule,
   as in P44), judge on dev_medium_clean vs `_v9`.
+- **Status (2026-11-20): done, report draft** (`reports/2026-11-20_p59-lag0-gates/`, branch `claude/p59-lag0-gates`):
+  spec key `lag0_gates`, variants `local_tol_trim_l0x2` (B full-year rule: min_peaks 2, frac_pos 0.6, SNR 1.06) and
+  `l0x2b` (3, 0.6, 1.06). The definition alone is neutral; the rule's pick gains success but raises dev_medium wrong
+  0.019 -> 0.027 fy / 0.030 -> 0.049 as (and min_peaks 2 disables the few-peaks guard). Recommendation: keep `_v9`.
+
+### P60. Drop or lower `frac_positive_heights` (from P59, 2026-11-20)
+- **Proposed by:** P59 report. On dev_medium_b_clean the gate moves wrong by <= 1 star (full-year; <= 3 assigned) at any
+  threshold 0-1.0 but costs up to 13 correct answers. Try `min_frac_positive_heights` <= 0.6 (or off) at the current
+  min_peaks 4 / SNR 1.02, one threshold only: check on B both modes, judge on dev_medium_clean vs `_v9`.
+- Also: if min_peaks is ever lowered below 4, give the few-peaks height guard its own trigger (`few` is
+  `n_required < min_peaks_required`, so min_peaks 2 disables it).

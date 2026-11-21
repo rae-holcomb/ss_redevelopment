@@ -87,6 +87,16 @@ from guesses import InitialGuess
 # (matching its _v8 wrong rate, maximizing success); see reports/2026-11-20_p44-lag0-out/.
 P44_SNR_CUTOFF = 1.02  # B full-year: 0.272 success / 0.032 wrong (_v8 0.274 / 0.034); assigned alone would pick 1.00
 DEFAULT_MIN_MEAN_HEIGHT_SNR = 1.0  # the gate's cutoff for variants that don't set their own
+# P59: thresholds of the fully lag-0-free variants (*_l0x2), set on dev_medium_b_clean full-year
+# (highest success with wrong <= its _v9 wrong); see reports/2026-11-20_p59-lag0-gates/.
+# Full-year rule pick (B: 0.284 / 0.032 fy; but 0.188 / 0.029 assigned vs _v9 0.168 / 0.019):
+P59_MIN_PEAKS = 2  # = no peak-count gate beyond the 2-tooth floor
+P59_MIN_FRAC_POS = 0.6  # every value <= 0.6 gives identical results on B
+P59_SNR_CUTOFF = 1.06
+# Alternative declared from B before judging: within B's wrong budget in both modes (0.274 / 0.032 fy, 0.176 / 0.017 as)
+P59B_MIN_PEAKS, P59B_MIN_FRAC_POS, P59B_SNR_CUTOFF = 3, 0.6, 1.06
+DEFAULT_MIN_PEAKS_REQUIRED = 4
+DEFAULT_MIN_FRAC_POSITIVE_HEIGHTS = 0.8
 _LOCAL_TOL = dict(solver="local", vertex_gate="tol", tol_growth="sqrt", tol_base=0.05, min_frac_tol=0.6)
 COMB_VARIANTS = {
     "lsq": dict(solver="lsq"),
@@ -174,6 +184,22 @@ COMB_VARIANTS = {
     #                  calibrated with the lag-0 tooth inside the mean; P44 re-sets it on dev_medium_b_clean.
     "local_tol_trim_l0x": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
     "lsq_l0x": dict(solver="lsq", lag0_tooth="exclude", min_mean_height_snr=P44_SNR_CUTOFF),
+    # P59 (2026-11-20, reports/2026-11-20_p59-lag0-gates/; Rae's OK 2026-11-20): the lag-0 tooth out of the
+    # remaining comb gates too.
+    #   lag0_gates     True: n_peaks (and the teeth-available count behind min_peaks_required, the
+    #                  rejection floor and the trim floor), frac_positive_heights and frac_vertex_in_window
+    #                  count only teeth that are not the lag-0 tooth (_is_lag0_tooth; before the fit, the
+    #                  n = 0 window of a comb seeded at t0 < P0/2). Use with lag0_tooth="exclude".
+    #   min_peaks_required, min_frac_positive_heights  per-variant thresholds, used when the
+    #                  fit_rotation_period arguments are left at None (an explicit argument wins).
+    "local_tol_trim_l0x2": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", lag0_gates=True,
+                                min_mean_height_snr=P59_SNR_CUTOFF, min_peaks_required=P59_MIN_PEAKS,
+                                min_frac_positive_heights=P59_MIN_FRAC_POS),
+    "local_tol_trim_l0x2b": dict(_LOCAL_TOL, trim_novertex=True, lag0_tooth="exclude", lag0_gates=True,
+                                 min_mean_height_snr=P59B_SNR_CUTOFF, min_peaks_required=P59B_MIN_PEAKS,
+                                 min_frac_positive_heights=P59B_MIN_FRAC_POS),
+    "lsq_l0x2": dict(solver="lsq", lag0_tooth="exclude", lag0_gates=True, min_mean_height_snr=P59_SNR_CUTOFF,
+                     min_peaks_required=P59_MIN_PEAKS, min_frac_positive_heights=P59_MIN_FRAC_POS),
 }
 DEFAULT_COMB_VARIANT = "local_tol_trim_l0x"  # Rae, 2026-11-20 (P44); was "local_tol_trim" (P43 clean rerun, 2026-11-19), "local_tol" (T32, 2026-11-15), "local_screen2" (T31), "lsq" before
 COMB_VARIANT_ENV = "SS_COMB_VARIANT"
@@ -208,6 +234,20 @@ def _is_lag0_tooth(center: float, P: float) -> bool:
     nothing about P and whose vertex is pinned against the domain edge.
     """
     return bool(np.isfinite(center) and np.isfinite(P) and center < 0.5 * P)
+
+
+def lag0_gate_stats(fit: "CombFitResult") -> dict:
+    """P59 gate statistics over the surviving teeth that are NOT the lag-0 tooth (_is_lag0_tooth).
+
+    Returns n_peaks_gate (count), frac_positive_gate (fraction with fitted
+    height > 0; 0.0 if none) and frac_vertex_in_window_gate (fraction whose
+    vertex lies in its frozen window; 0.0 if none).
+    """
+    pk = [p for p in fit.per_peak.values() if not _is_lag0_tooth(p["center"], fit.P)]
+    n = len(pk)
+    return dict(n_peaks_gate=n,
+                frac_positive_gate=float(np.mean([p["height"] > 0 for p in pk])) if n else 0.0,
+                frac_vertex_in_window_gate=float(np.mean([p.get("vertex_in_window", True) for p in pk])) if n else 0.0)
 
 
 def gate_mean_height_snr(fit: "CombFitResult", diag: dict, spec: Optional[dict] = None) -> float:
@@ -2019,16 +2059,20 @@ def _gate_results(
     """
     mean_snr = float(diag["mean_height_snr"]) if "mean_height_snr" in diag else float(np.nanmean(diag["height_snr"]))
     few_enabled = bool(few and few_peaks_min_acf_height is not None)
+    # P59: lag-0-free statistics when fit_rotation_period recorded them (lag0_gates)
+    n_used = int(diag.get("n_peaks_gate", fit.n_peaks_used))
+    frac_pos = float(diag.get("frac_positive_gate", diag["frac_positive_heights"]))
+    fviw = float(diag.get("frac_vertex_in_window_gate", diag["frac_vertex_in_window"]))
     return {
-        "n_peaks": dict(passed=bool(fit.n_peaks_used >= n_required), value=int(fit.n_peaks_used),
+        "n_peaks": dict(passed=bool(n_used >= n_required), value=int(n_used),
                         threshold=int(n_required), op=">=", enabled=True),
-        "frac_positive_heights": dict(passed=bool(diag["frac_positive_heights"] >= min_frac_positive_heights),
-                                      value=float(diag["frac_positive_heights"]),
+        "frac_positive_heights": dict(passed=bool(frac_pos >= min_frac_positive_heights),
+                                      value=float(frac_pos),
                                       threshold=float(min_frac_positive_heights), op=">=", enabled=True),
         "mean_height_snr": dict(passed=bool(mean_snr >= min_mean_height_snr), value=mean_snr,
                                 threshold=float(min_mean_height_snr), op=">=", enabled=True),
-        "frac_vertex_in_window": dict(passed=bool(diag["frac_vertex_in_window"] >= min_frac_vertex_in_window),
-                                      value=float(diag["frac_vertex_in_window"]),
+        "frac_vertex_in_window": dict(passed=bool(fviw >= min_frac_vertex_in_window),
+                                      value=float(fviw),
                                       threshold=float(min_frac_vertex_in_window), op=">=", enabled=True),
         "half_lag_consistency": dict(passed=bool(diag["passes_half_lag_gate"]),
                                      value=float(diag["half_lag_min_term"]), threshold=0.0, op=">",
@@ -2336,8 +2380,8 @@ def fit_rotation_period(
     loss: str = "soft_l1",
     max_reject_iters: int = 3,
     reject_threshold_sigma: float = 4.0,
-    min_peaks_required: int = 4,
-    min_frac_positive_heights: float = 0.8,
+    min_peaks_required: Optional[int] = None,
+    min_frac_positive_heights: Optional[float] = None,
     min_mean_height_snr: Optional[float] = None,
     min_frac_vertex_in_window: float = 0.8,
     dedup_rel_tol: float = 0.03,
@@ -2518,7 +2562,11 @@ def fit_rotation_period(
         min_mean_height_snr=None (default) takes the comb variant's own
         "min_mean_height_snr" entry, else DEFAULT_MIN_MEAN_HEIGHT_SNR (1.0).
         With a variant's lag0_tooth="exclude" (P44) the mean leaves out the
-        lag-0 tooth (gate_mean_height_snr).
+        lag-0 tooth (gate_mean_height_snr). min_peaks_required and
+        min_frac_positive_heights likewise default to None: the variant's own
+        entry, else DEFAULT_MIN_PEAKS_REQUIRED (4) / DEFAULT_MIN_FRAC_POSITIVE_HEIGHTS
+        (0.8). With lag0_gates=True (P59) n_peaks, frac_positive_heights and
+        frac_vertex_in_window count only non-lag-0 teeth (lag0_gate_stats).
     dedup_rel_tol : relative-difference tolerance for treating two
         candidate periods as duplicates.
     acf_counts : optional per-lag valid-pair counts aligned with acf_lags
@@ -2679,6 +2727,12 @@ def fit_rotation_period(
     _, comb_spec = resolve_comb_variant(comb_variant)
     if min_mean_height_snr is None:  # P44: a variant may carry its own cutoff
         min_mean_height_snr = float(comb_spec.get("min_mean_height_snr", DEFAULT_MIN_MEAN_HEIGHT_SNR))
+    if min_peaks_required is None:  # P59: likewise for the peak count and positive-height fraction
+        min_peaks_required = int(comb_spec.get("min_peaks_required", DEFAULT_MIN_PEAKS_REQUIRED))
+    if min_frac_positive_heights is None:
+        min_frac_positive_heights = float(comb_spec.get("min_frac_positive_heights",
+                                                        DEFAULT_MIN_FRAC_POSITIVE_HEIGHTS))
+    lag0_gates = bool(comb_spec.get("lag0_gates"))
     results = []
     for guess, group in zip(deduped, merged_groups):
         n_dup = len(group) - 1
@@ -2699,6 +2753,11 @@ def fit_rotation_period(
         # would reject it by construction. Require every available tooth,
         # but never fewer than 2.
         n_teeth = _teeth_in_range(guess.P0, t0, lag_max, n_peaks, window_frac)
+        # P59 lag0_gates: count real teeth only. The n = 0 window of a comb seeded below P0/2 is the
+        # lag-0 tooth; it leaves the available count, and the rejection / trim floors (which count
+        # windows) carry it on top of the required real teeth.
+        n_lag0 = int(lag0_gates and n_teeth > 0 and t0 < 0.5 * guess.P0)
+        n_teeth -= n_lag0
         n_required = int(np.clip(n_teeth, 2, min_peaks_required))
         few = n_required < min_peaks_required
         def _fit_and_gate(spec):
@@ -2715,8 +2774,8 @@ def fit_rotation_period(
                     # from 3 windows is meaningless (two near-identical RMS
                     # values give MAD ~ 0 and the third, genuine peak gets
                     # rejected; seen on clean P ~ B/6 stars).
-                    min_peaks_required=n_required if few else min(min_peaks_required, 2),
-                    weights=weights, min_keep_after_trim=n_required,
+                    min_peaks_required=(n_required if few else min(min_peaks_required, 2)) + n_lag0,
+                    weights=weights, min_keep_after_trim=n_required + n_lag0,
                     trim_decayed_tail=trim_decayed_tail,
                     max_points_per_window=spec.get("max_points", max_points_per_window),
                     comb_spec=spec,
@@ -2724,10 +2783,14 @@ def fit_rotation_period(
                 diag = assess_rotation_candidate(fit, acf, min_peaks=n_required)
                 # P44: the gate's statistic (lag-0 tooth out of the mean with lag0_tooth="exclude")
                 diag["mean_height_snr"] = gate_mean_height_snr(fit, diag, spec)
+                if lag0_gates:  # P59: the other comb gates over real teeth only
+                    diag.update(lag0_gate_stats(fit))
+                n_used_gate = diag.get("n_peaks_gate", fit.n_peaks_used)
+                frac_pos_gate = diag.get("frac_positive_gate", diag["frac_positive_heights"])
                 # T32: which vertex test applies (default: frozen-window test)
                 vgate = spec.get("vertex_gate", "window")
                 if vgate == "window":
-                    vertex_ok = diag["frac_vertex_in_window"] >= min_frac_vertex_in_window
+                    vertex_ok = diag.get("frac_vertex_in_window_gate", diag["frac_vertex_in_window"]) >= min_frac_vertex_in_window
                 else:
                     diag.update(_vertex_stats(fit, spec))
                     if vgate == "tol":
@@ -2739,8 +2802,8 @@ def fit_rotation_period(
                 if vgate == "window" and fit.local_info:
                     diag.update(_vertex_stats(fit, spec))  # recorded (drift_a etc.), not gated
                 base_passed = bool(
-                    fit.n_peaks_used >= n_required
-                    and diag["frac_positive_heights"] >= min_frac_positive_heights
+                    n_used_gate >= n_required
+                    and frac_pos_gate >= min_frac_positive_heights
                     and diag["mean_height_snr"] >= min_mean_height_snr
                     and vertex_ok
                 )
