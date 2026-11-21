@@ -1,6 +1,6 @@
 # P59: lag-0 tooth out of the remaining comb gates
 
-**Date:** 2026-11-20 · **Author:** method-improver session · **Branch:** `claude/p59-lag0-gates` · **Status:** draft
+**Date:** 2026-11-20 · **Author:** method-improver session · **Branch:** `claude/p59-lag0-gates` · **Status:** merged as opt-in variants, default unchanged (Rae, 2026-11-21)
 
 ## TL;DR
 - **Not a win; I recommend keeping the `_v9` default (`local_tol_trim_l0x`) and not making `_v10`.**
@@ -115,6 +115,8 @@ The selected candidate under `_v9` (left) and l0x2 (right): two gains and two ne
 - **The definition change itself** gains nothing measurable on either set at matched wrong rate.
 
 ## Open questions for Rae
+
+**Rae (2026-11-21):** (1) neither variant adopted, `_v9` stands; (2) P60 queued; (3) noted in `comb_fit.py`; (4) yes, the tuning rule now requires both modes.
 1. **Adopt either variant as default?** I recommend **no**: keep `local_tol_trim_l0x` and its `_v9` baselines (no `_v10`).
    - l0x2 adds 0.013 / 0.021 success on dev_medium at 0.008 / 0.019 more wrong, and precision falls (0.908 → 0.895 full-year, 0.818 → 0.750 assigned).
    - l0x2b is near-neutral (+0.003 / +0.006 success, +0.004 / +0.008 wrong), so it isn't worth a baseline change.

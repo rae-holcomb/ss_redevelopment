@@ -2759,6 +2759,9 @@ def fit_rotation_period(
         n_lag0 = int(lag0_gates and n_teeth > 0 and t0 < 0.5 * guess.P0)
         n_teeth -= n_lag0
         n_required = int(np.clip(n_teeth, 2, min_peaks_required))
+        # NOTE (P59, 2026-11-20): the few-peaks height guard fires only when fewer than min_peaks_required teeth are
+        # available. With min_peaks_required <= 2 (n_required is clipped to >= 2) it can never fire, so lowering
+        # min_peaks silently disables the guard; give it its own trigger (e.g. n_teeth < 4) before doing that.
         few = n_required < min_peaks_required
         def _fit_and_gate(spec):
             """Fit this candidate with comb solver `spec` and evaluate every gate -> CandidateResult."""

@@ -70,9 +70,9 @@ keep turns cheap on Rae's Pro plan.
   Drive dropped a third time under 3-worker reads: run drive-reading jobs with 1 worker until the connection is fixed.
   (4) done: P57 `dev_medium_b_clean` merged (1,000 stars; `_v8` 0.274 / 0.034 full-year, 0.167 / 0.020 assigned; no
   overtuning sign). (5) done: P44 merged, default now `local_tol_trim_l0x` (cutoff 1.02); `_v9` baselines.
-- **Next:** P59 (lag-0 out of `n_peaks`/`frac_positive_heights`, approved) -> fold P58 noise-table refresh into its baseline
-  change if Rae agrees -> rebuild ranker tables ONCE under the post-P59 default (last night's are `local_tol_trim`, now
-  stale; drive reads 1 worker) -> ranker v1 -> `romrot_v0`. Rescore TESS validation 70% on the new default (~8 min, local).
+- **Next (2026-11-21):** P59 merged, default stays `local_tol_trim_l0x` (`_v9`). Rebuild the ranker tables ONCE under it
+  (last night's are `local_tol_trim`, stale; drive reads 1 worker, overnight) -> ranker v1 -> P60 -> `romrot_v0`. P58 and P61
+  (lag-0 out of every gate, Rae 2026-11-21) both ride along with the next baseline change. Rescore TESS validation 70% on the new default (~8 min, local).
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 

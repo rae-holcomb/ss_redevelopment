@@ -119,6 +119,9 @@ task from `docs/TASKS.md`:
   `datasets/` manifests, or existing test assertions as part of a method
   task. Propose changes in the report. Never evaluate on
   `datasets/holdout.csv` unless Rae says so.
+- **Threshold tuning rule (Rae, 2026-11-21):** tune on one of `dev_medium_clean` / `dev_medium_b_clean`, judge on the
+  other; the pick must keep the wrong rate at or below the tuning set's baseline in **both** coverage modes (full-year
+  and assigned), and a change is adopted only if it does not regress on either set.
 - Any claim of improvement needs a before/after `check_goals.py --baseline`
   on the same dataset string.
 - Synthetic scorecards (≤ ~200 stars) and `dev_small_clean` are "quick checks".

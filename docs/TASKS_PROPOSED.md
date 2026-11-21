@@ -611,10 +611,26 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   spec key `lag0_gates`, variants `local_tol_trim_l0x2` (B full-year rule: min_peaks 2, frac_pos 0.6, SNR 1.06) and
   `l0x2b` (3, 0.6, 1.06). The definition alone is neutral; the rule's pick gains success but raises dev_medium wrong
   0.019 -> 0.027 fy / 0.030 -> 0.049 as (and min_peaks 2 disables the few-peaks guard). Recommendation: keep `_v9`.
+- **Merged 2026-11-21 (Rae)** as opt-in variants; default stays `local_tol_trim_l0x`, `_v9` stands (no `_v10`). P60
+  queued; few-peaks trigger noted in `comb_fit.py`; tuning rule now requires both modes (CLAUDE.md). Done.
 
 ### P60. Drop or lower `frac_positive_heights` (from P59, 2026-11-20)
 - **Proposed by:** P59 report. On dev_medium_b_clean the gate moves wrong by <= 1 star (full-year; <= 3 assigned) at any
   threshold 0-1.0 but costs up to 13 correct answers. Try `min_frac_positive_heights` <= 0.6 (or off) at the current
   min_peaks 4 / SNR 1.02, one threshold only: check on B both modes, judge on dev_medium_clean vs `_v9`.
+- **Rae (2026-11-21): queued** (after the ranker v1 table rebuild; use the both-modes tuning rule).
 - Also: if min_peaks is ever lowered below 4, give the few-peaks height guard its own trigger (`few` is
   `n_required < min_peaks_required`, so min_peaks 2 disables it).
+
+### P61. Lag-0 tooth out of every comb gate, at the next baseline change (Rae, 2026-11-21)
+- **Why:** consistency. Rae wants the lag-0 tooth left out of all analysis, not just the rejection and the SNR mean (P44).
+  P59 showed that also leaving it out of `n_peaks`, `frac_positive_heights` and `frac_vertex_in_window` (spec key
+  `lag0_gates=True`, already merged as opt-in variants) is near-neutral, so it is not worth a baseline change on its own.
+- **When:** fold it into the next change that makes new baselines anyway (e.g. P58's noise-table refresh, P60, or the next
+  method adoption), so it costs no extra `_v##`.
+- **How:** make the default `local_tol_trim_l0x` + `lag0_gates=True`. The thresholds can't stay as they are: at
+  (min_peaks 4, frac_pos 0.8, SNR 1.02) the new definition is a slight tightening (B full-year 0.260 / 0.029 vs 0.272 /
+  0.032). Re-set them with P59's harness on one dev set under the both-modes tuning rule, judge on the other, and expect a
+  neutral result. P59's pick (2, 0.6, 1.06) overfit and disables the few-peaks guard. Its declared alternative (3, 0.6,
+  1.06) raised dev_medium assigned wrong to 0.038, so it is a starting point, not an answer. Coordinate with P60, which
+  touches `frac_positive_heights`.
