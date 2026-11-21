@@ -478,6 +478,9 @@ for confirmation (ask Rae first).
   success 0.248 → 0.267, assigned 0.148 → 0.188; no-decline top-1 0.441 / 0.328), loses at 10–30 d / > 30 d full-year
   because the global decline threshold over-declines right answers there (P24). 3k point pending Rae's table run
   (`tools/train_ranker.py --train .../train_3k --sizes 3000 --outdir runs/t11_ranker --resume`).
+  **v1 done 2026-11-21 (draft, branch `claude/ranker-v1-5e0e39`, `reports/2026-11-21_ranker-v1/`):** decline model +
+  per-bin thresholds beat hand on dev_medium_clean and dev_medium_b_clean in both modes, at lower wrong rates (per-bin OOF
+  precision 0.86). `half_snr_min` side table not yet run (needs Rae's OK). > 30 d full-year is 1-3 stars behind hand.
 - **Goal:** XGBoost ranker, star-grouped splits, beats hand-tuned arbitration
   per period bin, with a calibrated "decline" threshold.
 - **Decline operating point (Rae, 2026-11-10): deferred.** Working default: calibrate the decline threshold to

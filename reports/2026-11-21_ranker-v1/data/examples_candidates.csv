@@ -1,0 +1,104 @@
+star_id,cand_index,P_eval,relevance,selected,beyond_reach,fit_error,score,method,set,kind,true_period
+smarts-tess-v1.0-029013,0,4.866438062579228,2,True,False,False,0.7156868,lombscargle,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,1,1.173251028806518,0,False,False,False,-1.1478593,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,2,61.96401041666579,0,False,False,False,-0.67225885,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,3,74.30760205364341,0,False,False,False,-0.88171834,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,4,81.4886979166655,0,False,False,False,-0.9299021,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,5,51.78082724064309,0,False,False,False,-1.1269702,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,6,74.92626278134189,0,False,False,False,-0.8055582,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,7,31.430358079446783,0,False,False,False,-1.1770095,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,8,76.03994791666558,0,False,False,False,-0.8638525,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,9,44.239639858350834,0,False,False,False,-1.2019308,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,10,0.2231266958881235,0,False,False,False,-1.1405429,lombscargle,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,11,4.725619035559612,1,False,False,False,0.1829339,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,12,19.28537172988172,0,False,False,False,-1.3153903,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,13,11.085403114414492,0,False,False,False,-1.2949358,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,14,8.763509045669913,0,False,False,False,-1.2119188,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,15,14.938013042297758,0,False,False,False,-0.81832695,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,16,22.140244961626745,0,False,False,False,-1.3799317,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,17,28.36338541666626,0,False,False,False,-1.6286293,pairwise_histogram,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,18,1.6310722739881955,0,False,False,False,-1.0530479,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,19,1.3865110246433203,0,False,False,False,-1.1370884,lombscargle,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,20,11.379620224770065,0,False,False,False,-0.959988,lombscargle,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,21,0.8634409716861138,0,False,False,False,-1.5528212,lombscargle,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,22,1.2637411347517014,0,False,False,False,-0.8217918,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,23,0.5590196078431056,0,False,False,False,-0.95393735,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-029013,24,0.4037099971679182,0,False,False,False,-0.55904925,acf_fft,dev_medium,"declined, top-1 right",5.2881
+smarts-tess-v1.0-081077,0,14.266518715326786,2,True,False,False,1.0475127,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,1,14.35533947029843,2,False,False,False,1.0279274,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,2,0.2142566688353936,0,False,False,False,-1.4216255,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,3,40.32032518405406,0,False,False,False,-1.5561903,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,4,25.95620307097357,0,False,False,False,-1.4908004,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,5,41.78166654015582,0,False,False,False,-0.9910425,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,6,42.9924351841124,0,False,False,False,-0.762827,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,7,63.52908119081903,0,False,False,False,-1.0690029,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,8,58.20526041666336,0,False,False,False,-1.3374428,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,9,69.58192708332939,0,False,False,False,-1.2381356,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,10,71.84186878109043,0,False,False,False,-1.0277963,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,11,2.60459964671065,0,False,False,False,-0.84406936,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,12,3.283850698817734,0,False,False,False,-1.1896067,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,13,10.73388979924165,0,False,False,False,-1.0596852,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,14,3.920386904761905,0,False,False,False,-1.0438335,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,15,19.187397542606156,0,False,False,False,-0.93948305,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,16,1.7610294117647058,0,False,False,False,-1.1432941,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,17,12.698593749999288,0,False,False,False,-1.4419802,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,18,1.473713646532355,0,False,False,False,-1.2754428,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,19,0.6538683496536911,0,False,False,False,-1.5247624,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,20,0.4770608197619423,0,False,False,False,-1.4140477,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,21,0.2917298225390876,0,False,False,False,-1.5837277,acf_fft,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,22,0.0862752161383285,0,False,False,True,-2.7679484,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,23,0.1070238869028274,0,False,False,True,-2.8297672,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,24,98.82702114427296,0,False,True,False,-0.30580848,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,25,101.91103855720812,0,False,True,False,-0.45459694,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,26,109.77083333333331,0,False,True,False,-0.4349599,lombscargle,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-081077,27,113.47610385571492,0,False,True,False,-0.5031405,pairwise_histogram,dev_medium,"declined, top-1 right",14.6506
+smarts-tess-v1.0-556553,0,105.9642507896582,2,True,False,False,1.0855038,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,1,53.96394061156222,0,False,False,False,1.961826,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,2,54.97513920724008,0,False,False,False,1.7737224,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,3,7.997816949407347,0,False,False,False,-1.6102575,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,4,0.6656162464985615,0,False,False,False,-2.5017393,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,5,1.4085968379446645,0,False,False,False,-2.5702329,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,6,1.5841666666665766,0,False,False,False,-2.4291415,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,7,1.72997572815534,0,False,False,False,-2.2701926,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,8,1.9798611111111115,0,False,False,False,-2.2924972,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,9,22.2734375,0,False,False,False,-1.2150146,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,10,17.81875,0,False,False,False,-1.4902025,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,11,13.578571428570656,0,False,False,False,-2.6851172,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,12,3.801999999999784,0,False,False,False,-2.5748584,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,13,16.973214285713322,0,False,False,False,-1.6351343,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,14,15.571874999999778,0,False,False,False,-2.23976,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,15,12.185897435896743,0,False,False,False,-2.3076935,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,16,26.738184521356704,0,False,False,False,-1.2153169,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,17,31.68333333333153,0,False,False,False,-0.9908926,acf_fft,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,18,36.01271215518697,0,False,False,False,-0.103631735,lombscargle,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,19,69.05312499999903,0,False,False,False,-0.6127963,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,20,110.03165141801212,2,False,False,False,0.6268442,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,21,108.54476181519222,2,False,False,False,0.6908494,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-556553,22,161.33958333333106,1,False,True,False,0.427428,pairwise_histogram,dev_medium,answered alias,100.241
+smarts-tess-v1.0-061552,0,10.838607552666463,2,True,False,False,-0.19066142,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,1,0.2242496123455784,0,False,False,False,-2.0218415,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,2,8.191972254721463,0,False,False,False,-1.2287834,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,3,1.7045538167805423,0,False,False,False,-1.4949605,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,4,7.299453830139262,0,False,False,False,-1.3211867,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,5,32.52821599345395,0,False,False,False,-0.65674686,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,6,24.858309269927265,0,False,False,False,0.14928997,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,7,67.31157244586974,0,False,False,False,-1.2800202,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,8,3.4936683006535945,0,False,False,False,-1.0878878,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,9,50.31363936967075,0,False,False,False,-1.3680454,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,10,24.178700407466582,0,False,False,False,0.32085913,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,11,9.2934164791361,0,False,False,False,-0.7721783,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,12,39.47770122488155,0,False,False,False,-1.0937176,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,13,1.5767883480825955,0,False,False,False,-1.2190273,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,14,1.0701951951951345,0,False,False,False,-1.2095244,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,15,1.1849542809641889,0,False,False,False,-1.2360554,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,16,21.796190751396853,0,False,False,False,-0.060528196,acf_fft,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,17,60.42571618261066,0,False,False,False,-1.428465,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,18,35.26456053067943,0,False,False,False,-1.0760562,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,19,77.78024253731232,0,False,False,False,-1.2493522,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,20,63.25843673180823,0,False,False,False,-1.5088816,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,21,17.548157876061797,0,False,False,False,-0.7808888,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,22,8.25459784411266,0,False,False,False,-1.392978,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,23,0.5568033854166666,0,False,False,False,-1.2551591,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,24,19.81495490465259,0,False,False,False,-0.37218258,lombscargle,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,25,80.28116500829073,0,False,False,True,-1.1944654,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344
+smarts-tess-v1.0-061552,26,97.35541666666528,0,False,True,False,-0.97427255,pairwise_histogram,dev_medium_b,"declined, top-1 wrong",11.1344

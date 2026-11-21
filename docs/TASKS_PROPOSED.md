@@ -637,3 +637,19 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   neutral result. P59's pick (2, 0.6, 1.06) overfit and disables the few-peaks guard. Its declared alternative (3, 0.6,
   1.06) raised dev_medium assigned wrong to 0.038, so it is a starting point, not an answer. Coordinate with P60, which
   touches `frac_positive_heights`.
+
+### P62. Full-year training rows for the ranker v1 decline model (from ranker v1, 2026-11-21)
+- **Proposed by:** ranker v1 report.
+- **Why:** 52 of 58 stars where v1 loses to hand have a *correct* top-1 that the decline model declined. 28 of those 52 are > 30 d, almost all full-year.
+  - Training is assigned-coverage only, so the decline model has never seen a full-year rotator. For the same reason it was never trained on full-year negatives.
+  - It also answers on 6/434 full-year dev non-rotators, against hand's 1.
+- **Idea:** this is Rae's P24 fallback. Build a full-year table for the `nested_1k` subset (drive, 1 worker). Retrain with the full-year rotators *and* the full-year train negatives, which already exist in `neg_train`. Judge > 30 d full-year and the full-year FP rate under the two-set rule.
+
+### P63. Make `half_snr_min` a built-in feature-table column (from ranker v1, 2026-11-21)
+- **Proposed by:** ranker v1 report.
+- **Why:** it is a side table today (`tools/build_half_coherence_table.py`) because the P31 tables predate it.
+- **Idea:** at the next table rebuild, compute `half_coherence_features` inside `tools/build_feature_tables.py`. It costs ~0.13 s per star on full-year light curves with astropy `fast`. Then drop the side-table step.
+
+### P64. Ranker v1 on the TESS validation 70% (from ranker v1, 2026-11-21)
+- **Proposed by:** ranker v1 report. This was optional in the brief and was not cheap: it needs feature tables for the validation stars, not just scorecard runs.
+- **Idea:** build T10-style tables for the unlocked 70% (`TESS_VALIDATION_ROOT`, local, ~8 min of pipeline plus features). Score v1 at the 0.86 per-bin pick, and compare with `runs/tessval_v1_l0x_*`. This is the first real-data check of the decline model's transfer.

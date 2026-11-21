@@ -1,0 +1,193 @@
+{
+ "final": {
+  "overall": {
+   "n": 874,
+   "correct": 0.14530892448512586,
+   "diffrot": 0.05606407322654462,
+   "half": 0.0011441647597254005,
+   "double": 0.0011441647597254005,
+   "wrong": 0.02517162471395881,
+   "none": 0.7711670480549199,
+   "success": 0.2013729977116705,
+   "alias": 0.002288329519450801
+  },
+  "by_bin": {
+   "<1d": {
+    "n": 148,
+    "correct": 0.1891891891891892,
+    "diffrot": 0.0945945945945946,
+    "half": 0.0,
+    "double": 0.006756756756756757,
+    "wrong": 0.006756756756756757,
+    "none": 0.7027027027027027,
+    "success": 0.28378378378378377,
+    "alias": 0.006756756756756757
+   },
+   "1-3d": {
+    "n": 149,
+    "correct": 0.24161073825503357,
+    "diffrot": 0.04697986577181208,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.03355704697986577,
+    "none": 0.6778523489932886,
+    "success": 0.28859060402684567,
+    "alias": 0.0
+   },
+   "3-10d": {
+    "n": 151,
+    "correct": 0.2185430463576159,
+    "diffrot": 0.07947019867549669,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.7019867549668874,
+    "success": 0.2980132450331126,
+    "alias": 0.0
+   },
+   "10-30d": {
+    "n": 151,
+    "correct": 0.13245033112582782,
+    "diffrot": 0.0728476821192053,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.039735099337748346,
+    "none": 0.7549668874172185,
+    "success": 0.2052980132450331,
+    "alias": 0.0
+   },
+   ">30d": {
+    "n": 275,
+    "correct": 0.03636363636363636,
+    "diffrot": 0.01818181818181818,
+    "half": 0.0036363636363636364,
+    "double": 0.0,
+    "wrong": 0.03636363636363636,
+    "none": 0.9054545454545454,
+    "success": 0.05454545454545454,
+    "alias": 0.0036363636363636364
+   }
+  },
+  "by_coverage_class": {
+   "consecutive-2": {
+    "n": 109,
+    "correct": 0.08256880733944955,
+    "diffrot": 0.01834862385321101,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.009174311926605505,
+    "none": 0.8899082568807339,
+    "success": 0.10091743119266056,
+    "alias": 0.0
+   },
+   "consecutive-3-5": {
+    "n": 109,
+    "correct": 0.13761467889908258,
+    "diffrot": 0.05504587155963303,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.027522935779816515,
+    "none": 0.7798165137614679,
+    "success": 0.1926605504587156,
+    "alias": 0.0
+   },
+   "consecutive-6-12": {
+    "n": 111,
+    "correct": 0.23423423423423423,
+    "diffrot": 0.08108108108108109,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.018018018018018018,
+    "none": 0.6666666666666666,
+    "success": 0.3153153153153153,
+    "alias": 0.0
+   },
+   "full": {
+    "n": 109,
+    "correct": 0.21100917431192662,
+    "diffrot": 0.11926605504587157,
+    "half": 0.009174311926605505,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.6605504587155964,
+    "success": 0.3302752293577982,
+    "alias": 0.009174311926605505
+   },
+   "gapped-2": {
+    "n": 108,
+    "correct": 0.1111111111111111,
+    "diffrot": 0.0,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.046296296296296294,
+    "none": 0.8425925925925926,
+    "success": 0.1111111111111111,
+    "alias": 0.0
+   },
+   "gapped-3-5": {
+    "n": 110,
+    "correct": 0.18181818181818182,
+    "diffrot": 0.06363636363636363,
+    "half": 0.0,
+    "double": 0.00909090909090909,
+    "wrong": 0.045454545454545456,
+    "none": 0.7,
+    "success": 0.24545454545454545,
+    "alias": 0.00909090909090909
+   },
+   "gapped-6-12": {
+    "n": 110,
+    "correct": 0.15454545454545454,
+    "diffrot": 0.045454545454545456,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.03636363636363636,
+    "none": 0.7636363636363637,
+    "success": 0.2,
+    "alias": 0.0
+   },
+   "single": {
+    "n": 108,
+    "correct": 0.046296296296296294,
+    "diffrot": 0.06481481481481481,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.018518518518518517,
+    "none": 0.8703703703703703,
+    "success": 0.1111111111111111,
+    "alias": 0.0
+   }
+  }
+ },
+ "config": {
+  "scorecard_version": 6,
+  "git_commit": "d758510",
+  "rel_tol": 0.1,
+  "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=manifest",
+  "coverage": {
+   "spec": "full",
+   "seed": 0,
+   "weighting": "frequency",
+   "library": "datasets/coverage/all_cycles_patterns.csv"
+  },
+  "data_root": "data/smarts_dev",
+  "ignore_manifest_sectors": false,
+  "detectable_threshold": 5.0,
+  "detectability_table": "benchmarks/detectability_dev.csv",
+  "pipeline_methods": [
+   "pairwise_histogram",
+   "lombscargle",
+   "acf_fft"
+  ],
+  "n_guesses_default": 10,
+  "n_guesses_overrides": {
+   "acf_fft_highpass": 5
+  },
+  "comb_variant": "local_tol_trim_l0x",
+  "cwt_variant": "lean",
+  "wall_seconds": 153.94193315505981,
+  "created": "2026-11-20 15:00:51",
+  "system": "ranker v1 (head_perbin_p0.86)",
+  "run": "/Users/raeholcomb/Documents/GitHub/ss_redevelopment/runs/ranker_v1/nohalf"
+ }
+}

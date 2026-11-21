@@ -401,3 +401,227 @@ def gain_importance(models, columns: list) -> pd.Series:
         for k, v in m.get_score(importance_type="total_gain").items():
             tot[k] = tot.get(k, 0.0) + v
     return tot.sort_values(ascending=False)
+
+
+# =========================================================================== ranker v1
+# T11 v1 (2026-11-21): non-rotator negatives (T27), a star-level decline model ("head",
+# P24), per-reported-period-bin decline thresholds, the persistent-weak-period drop of
+# negative sources, and the half-coherence side table. Driver: tools/train_ranker_v1.py.
+
+NONE_BIN = "none"
+HEAD_PARAMS = dict(objective="binary:logistic", eval_metric="logloss", tree_method="hist", max_depth=3,
+                   eta=0.05, min_child_weight=5.0, subsample=0.8, colsample_bytree=0.8, seed=0, nthread=4)
+HEAD_ROUNDS = 300
+
+# Quiet-population 95th percentile of the time-split min-half LS S/N at the source's own
+# top period P_ref, per P_ref bin (reports/2026-11-10_quiet-noise-periods/, table "quiet P_ref
+# bin"). A negative source above it has a weak period that recurs in both halves of the
+# year: a probable real signal, i.e. label noise in the negatives (Rae, 2026-11-11, T27 Q4).
+PERSIST_SNR_EDGES = (0.0, 5.0, 10.0, 20.0, np.inf)
+PERSIST_SNR_P95 = (6.07, 5.78, 3.63, 2.77)
+
+
+def persistent_weak_period(P_ref, tsplit_min_snr) -> np.ndarray:
+    """True where a noise source's top period recurs in both year halves above the quiet 95th pct.
+
+    Parameters: arrays of the flags-table `P_ref` (days) and `tsplit_min_snr`. NaN -> False.
+    """
+    P = np.asarray(P_ref, float)
+    s = np.asarray(tsplit_min_snr, float)
+    idx = np.clip(np.searchsorted(PERSIST_SNR_EDGES, np.nan_to_num(P, nan=1.0), side="right") - 1,
+                  0, len(PERSIST_SNR_P95) - 1)
+    thr = np.asarray(PERSIST_SNR_P95)[idx]
+    return np.isfinite(s) & np.isfinite(P) & (s >= thr)
+
+
+def is_nonrotator(stars: pd.DataFrame) -> np.ndarray:
+    """True for non-rotator (negative) rows of a star table."""
+    return ~stars["is_rotator"].astype(str).str.lower().eq("true").to_numpy()
+
+
+def join_side_table(cands: pd.DataFrame, side: Optional[pd.DataFrame], columns=None) -> pd.DataFrame:
+    """Left-join a (star_id, cand_index) side table (e.g. half coherence); missing -> NaN columns."""
+    if side is None:
+        if columns:
+            cands = cands.copy()
+            for c in columns:
+                cands[c] = np.nan
+        return cands
+    out = cands.merge(side, on=["star_id", "cand_index"], how="left", validate="one_to_one")
+    assert len(out) == len(cands)
+    return out
+
+
+def top1_any(cands: pd.DataFrame, scores: np.ndarray, stars: pd.DataFrame) -> pd.DataFrame:
+    """`top1` for tables that may hold non-rotators.
+
+    Non-rotators get outcome `wrong` for any reported period (`none` with no rows) and
+    true_period NaN. Adds `is_rotator` and `top_bin` (evaluation period bin of the top-1
+    period, or 'none'), the bin the decline thresholds are applied in.
+    """
+    neg = is_nonrotator(stars)
+    s = pd.Series(np.asarray(scores, float), index=cands.index)
+    parts = []
+    for flag in (False, True):
+        sub = stars[neg == flag]
+        if not len(sub):
+            continue
+        m = cands["star_id"].isin(set(sub["star_id"])).to_numpy()
+        st = sub.assign(true_period=1.0, period_lo=np.nan, period_hi=np.nan) if flag else sub
+        t = top1(cands[m], s[m].to_numpy(), st)
+        if flag:
+            t["true_period"] = np.nan
+            t["top_outcome"] = np.where(t["top_period"].notna(), evaluation.WRONG, evaluation.NONE)
+        t["is_rotator"] = not flag
+        parts.append(t)
+    out = pd.concat(parts, ignore_index=True)
+    out["top_bin"] = [evaluation.period_bin(p) if np.isfinite(p) else NONE_BIN
+                      for p in out["top_period"].astype(float)]
+    return out
+
+
+def neg_weights(top: pd.DataFrame, r: float) -> np.ndarray:
+    """Per-star weights: 1 per rotator, r * n_rot / n_neg per non-rotator (r negatives per rotator)."""
+    rot = top["is_rotator"].to_numpy(bool)
+    n_rot, n_neg = rot.sum(), (~rot).sum()
+    return np.where(rot, 1.0, (r * n_rot / n_neg) if n_neg else 0.0)
+
+
+def weighted_curve(top: pd.DataFrame, r: float, score_col: str = "score_v1", w=None) -> pd.DataFrame:
+    """Precision vs rotator answer rate as the threshold drops, negatives weighted r per rotator.
+
+    Rows: one per distinct score, highest first. `precision` = rotator successes /
+    weighted answered; `answer_rate` = rotators answered / all rotators; `success_rate`
+    = rotator successes / all rotators; `fp_rate` = negatives answered / all negatives.
+    """
+    w = neg_weights(top, r) if w is None else np.asarray(w, float)
+    rot = top["is_rotator"].to_numpy(bool)
+    sc_ = top[score_col].to_numpy(float)
+    ok = np.isfinite(sc_)
+    order = np.argsort(-sc_[ok], kind="mergesort")
+    sc_o, rot_o, w_o = sc_[ok][order], rot[ok][order], w[ok][order]
+    succ_o = _success(top["top_outcome"].to_numpy()[ok][order]) & rot_o
+    n_rot, n_neg = max(rot.sum(), 1), max((~rot).sum(), 1)
+    cw = np.cumsum(w_o)
+    c = pd.DataFrame(dict(threshold=sc_o, precision=np.cumsum(succ_o) / cw,
+                          answer_rate=np.cumsum(rot_o) / n_rot, success_rate=np.cumsum(succ_o) / n_rot,
+                          fp_rate=np.cumsum(~rot_o) / n_neg))
+    return c.groupby("threshold", sort=False).tail(1).reset_index(drop=True)
+
+
+def threshold_for_precision_w(top: pd.DataFrame, target: float, r: float, score_col: str = "score_v1",
+                              w=None) -> float:
+    """Lowest threshold whose answered set has weighted precision >= target (+inf if none)."""
+    c = weighted_curve(top, r, score_col, w)
+    ok = c[c["precision"] >= target]
+    return float(ok["threshold"].min()) if len(ok) else float("inf")
+
+
+def perbin_thresholds(top: pd.DataFrame, target, r: float, score_col: str = "score_v1",
+                      bins=evaluation.PERIOD_BIN_LABELS) -> dict:
+    """Per reported-period-bin thresholds: in each bin, the lowest score with precision >= target.
+
+    `target` is a float or a {bin: target} dict. Negatives keep their global weight
+    (r * n_rot / n_neg) and fall in the bin of their own top-1 period, so each bin's
+    precision counts the false positives it would actually admit. Stars with no
+    candidate (bin 'none') are never answered.
+    """
+    w = neg_weights(top, r)
+    out = {}
+    for b in bins:
+        m = (top["top_bin"] == b).to_numpy()
+        tgt = target[b] if isinstance(target, dict) else target
+        out[b] = threshold_for_precision_w(top[m], tgt, r, score_col, w[m]) if m.any() else float("inf")
+    out[NONE_BIN] = float("inf")
+    return out
+
+
+def apply_thresholds(top: pd.DataFrame, thr, score_col: str = "score_v1") -> np.ndarray:
+    """Boolean 'answered' per star for a global float threshold or a per-bin dict."""
+    s = top[score_col].to_numpy(float)
+    if isinstance(thr, dict):
+        t = top["top_bin"].map(thr).fillna(np.inf).to_numpy(float)
+    else:
+        t = np.full(len(top), float(thr))
+    return np.isfinite(s) & (s >= t)
+
+
+def decided_outcomes(top: pd.DataFrame, answered: np.ndarray) -> np.ndarray:
+    """Outcome after declining: top_outcome where answered, else `none`."""
+    return np.where(answered, top["top_outcome"].to_numpy(), evaluation.NONE)
+
+
+def hand_precision(stars: pd.DataFrame, r: float, bins=None) -> object:
+    """Hand arbitration's precision, negatives weighted r per rotator; per final-period bin if `bins`.
+
+    Uses each star's `final_period` / `final_outcome` (the pipeline's answer).
+    """
+    neg = is_nonrotator(stars)
+    t = pd.DataFrame(dict(is_rotator=~neg, top_outcome=stars["final_outcome"].to_numpy(),
+                          score_v1=np.where(stars["final_outcome"].ne(evaluation.NONE), 1.0, -np.inf)))
+    fp = stars["final_period"].astype(float).to_numpy()
+    t["top_bin"] = [evaluation.period_bin(p) if np.isfinite(p) else NONE_BIN for p in fp]
+    w = neg_weights(t, r)
+    ans = t["score_v1"].to_numpy() > 0
+
+    def prec(m):
+        den = (w * ans * m).sum()
+        return float((_success(t["top_outcome"]) & ~neg & ans & m).sum() / den) if den else np.nan
+    if bins is None:
+        return prec(np.ones(len(t), bool))
+    return {b: prec((t["top_bin"] == b).to_numpy()) for b in bins}
+
+
+def head_features(cands: pd.DataFrame, scores: np.ndarray, X: pd.DataFrame) -> pd.DataFrame:
+    """Star-level decline-model inputs: the top-1 row's features + ranker score summary.
+
+    Added columns: h_top_score, h_margin (top minus runner-up score; 0 with one row),
+    h_score_std (spread of the star's scores), h_n_rows. Indexed by star_id order of
+    first appearance in `cands`.
+    """
+    df = pd.DataFrame(dict(star_id=cands["star_id"].to_numpy(), cand_index=cands["cand_index"].to_numpy(),
+                           score=np.asarray(scores, float), row=np.arange(len(cands))))
+    df = df.sort_values(["star_id", "score", "cand_index"], ascending=[True, False, True], kind="mergesort")
+    g = df.groupby("star_id", sort=False)
+    first = g.head(1).set_index("star_id")
+    second = g.nth(1).set_index("star_id")["score"]
+    H = X.iloc[first["row"].to_numpy()].reset_index(drop=True)
+    H.insert(0, "star_id", first.index.to_numpy())
+    H["h_top_score"] = first["score"].to_numpy()
+    H["h_margin"] = (first["score"] - second.reindex(first.index)).fillna(0.0).to_numpy()
+    H["h_score_std"] = g["score"].std().reindex(first.index).fillna(0.0).to_numpy()
+    H["h_n_rows"] = g.size().reindex(first.index).to_numpy()
+    return H
+
+
+def _head_X(H: pd.DataFrame) -> pd.DataFrame:
+    return H.drop(columns="star_id").replace([np.inf, -np.inf], [1e30, -1e30]).astype(np.float32)
+
+
+def train_head(H: pd.DataFrame, y: np.ndarray, rounds: int = HEAD_ROUNDS, params: Optional[dict] = None):
+    """One binary:logistic decline model on head features; label 1 = top-1 is a success."""
+    import xgboost as xgb
+    p = dict(HEAD_PARAMS)
+    p.update(params or {})
+    return xgb.train(p, xgb.DMatrix(_head_X(H), label=np.asarray(y, float), missing=np.nan),
+                     num_boost_round=int(rounds))
+
+
+def predict_head(models, H: pd.DataFrame) -> np.ndarray:
+    """Mean decline-model probability over fold models."""
+    import xgboost as xgb
+    d = xgb.DMatrix(_head_X(H), missing=np.nan)
+    models = models if isinstance(models, (list, tuple)) else [models]
+    return np.mean([m.predict(d) for m in models], axis=0)
+
+
+def grouped_folds_by_tic(noise_tics, n_splits: int = 5, seed: int = 0) -> dict:
+    """Map noise_tic -> fold, so rotators and negatives sharing a noise source share a fold."""
+    from sklearn.model_selection import GroupKFold
+    u = pd.unique(pd.Series(noise_tics))
+    gkf = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    out = {}
+    for k, (_, te) in enumerate(gkf.split(u, groups=u)):
+        for t in u[te]:
+            out[t] = k
+    return out

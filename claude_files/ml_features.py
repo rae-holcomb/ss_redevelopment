@@ -942,6 +942,87 @@ def _reach_features(P: float, reach: float) -> dict:
 
 
 # ==========================================================================
+# Coherence across halves (prototype, 2026-11-11; not yet in the T10 tables)
+# ==========================================================================
+# A red-noise peak of one light curve is typically strong in only part of the
+# baseline, while a rotation signal (even with evolving spots) recurs in both
+# halves. reports/2026-11-10_quiet-noise-periods/ found that SMARTS
+# "noise-period lures" (wrong answers on the noise light curve's own top LS
+# peak) fail this test. Light-curve-only: usable on real data.
+
+HALF_BAND_INNER = 0.03   # exclude +-3% fractional frequency around 1/P
+HALF_BAND_OUTER = 0.25   # local-noise band out to +-25%
+HALF_MIN_POINTS = 200
+HALF_MIN_CYCLES = 2.0    # each half must span at least this many periods
+
+
+def half_coherence_features(time: np.ndarray, flux: np.ndarray, P: float,
+                            n_band: int = 400) -> dict:
+    """Candidate-level coherence of the signal at period P between the two halves of a light curve.
+
+    The finite cadences are split at their median time (equal point counts, so
+    patchy coverage still gives two comparable halves). In each half, a
+    Lomb-Scargle periodogram (standard normalization, mean-subtracted flux,
+    astropy "fast" method) is evaluated on a regular grid of ~``n_band``
+    frequencies within +-25% of 1/P, with 1/P at its centre; the half's local S/N is power(1/P) / median(band power). The
+    semi-amplitude at P comes from the LS model.
+
+    Parameters
+    ----------
+    time, flux : light curve (days, normalized flux; NaNs allowed).
+    P : candidate period (days).
+    n_band : number of local-band frequencies per half.
+
+    Returns
+    -------
+    dict with
+      half_snr_min   : smaller of the two halves' local S/N (low = the peak is
+                       not present in one half);
+      half_snr_ratio : min / max of the two S/N (1 = equally strong);
+      half_amp_ratio : min / max of the two semi-amplitudes at P.
+    All NaN if P is not finite/positive, a half has < 200 finite points, or a
+    half spans fewer than 2 P. Phase agreement is deliberately not used: spot
+    evolution decorrelates phase over months even for true rotators.
+    """
+    nan = dict(half_snr_min=np.nan, half_snr_ratio=np.nan, half_amp_ratio=np.nan)
+    if not (np.isfinite(P) and P > 0):
+        return nan
+    from astropy.timeseries import LombScargle
+    t = np.asarray(time, float)
+    y = np.asarray(flux, float)
+    m = np.isfinite(t) & np.isfinite(y)
+    t, y = t[m], y[m]
+    if len(t) < 2 * HALF_MIN_POINTS:
+        return nan
+    tm = np.median(t)
+    f0 = 1.0 / P
+    # Regular grid centred on f0 (odd length, f0 at the middle) so astropy's O(N log N)
+    # "fast" method applies: ~15x faster than "cython" on full-year light curves, with
+    # half_snr_min Spearman 0.99 / median ratio 1.00 against the exact version
+    # (ranker v1, 2026-11-21). Band = |offset| > 3%.
+    off = np.linspace(-HALF_BAND_OUTER, HALF_BAND_OUTER, 2 * (n_band // 2) + 1)
+    i0 = len(off) // 2
+    band = np.abs(off) > HALF_BAND_INNER
+    freqs = f0 * (1 + off)
+    snr, amp = [], []
+    for h in (t < tm, t >= tm):
+        th, yh = t[h], y[h]
+        if len(th) < HALF_MIN_POINTS or (th.max() - th.min()) < HALF_MIN_CYCLES * P:
+            return nan
+        yh = yh - np.mean(yh)
+        ls = LombScargle(th, yh)
+        pw = ls.power(freqs, method="fast", assume_regular_frequency=True)
+        med = np.median(pw[band])
+        snr.append(pw[i0] / med if med > 0 else np.nan)
+        par = ls.model_parameters(f0)
+        amp.append(float(np.hypot(par[1], par[2])))
+    snr, amp = np.array(snr), np.array(amp)
+    return dict(half_snr_min=float(np.min(snr)),
+                half_snr_ratio=float(np.min(snr) / np.max(snr)) if np.max(snr) > 0 else np.nan,
+                half_amp_ratio=float(np.min(amp) / np.max(amp)) if np.max(amp) > 0 else np.nan)
+
+
+# ==========================================================================
 # Top-level extraction function
 # ==========================================================================
 

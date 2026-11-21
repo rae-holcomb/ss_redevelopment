@@ -1,0 +1,138 @@
+{
+ "final": {
+  "overall": {
+   "n": 1000,
+   "correct": 0.236,
+   "diffrot": 0.092,
+   "half": 0.005,
+   "double": 0.001,
+   "wrong": 0.015,
+   "none": 0.651,
+   "success": 0.32799999999999996,
+   "alias": 0.006
+  },
+  "by_bin": {
+   "<1d": {
+    "n": 172,
+    "correct": 0.2441860465116279,
+    "diffrot": 0.1511627906976744,
+    "half": 0.0,
+    "double": 0.005813953488372093,
+    "wrong": 0.0,
+    "none": 0.5988372093023255,
+    "success": 0.3953488372093023,
+    "alias": 0.005813953488372093
+   },
+   "1-3d": {
+    "n": 172,
+    "correct": 0.3081395348837209,
+    "diffrot": 0.0872093023255814,
+    "half": 0.005813953488372093,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.5988372093023255,
+    "success": 0.3953488372093023,
+    "alias": 0.005813953488372093
+   },
+   "3-10d": {
+    "n": 171,
+    "correct": 0.24561403508771928,
+    "diffrot": 0.11695906432748537,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.029239766081871343,
+    "none": 0.6081871345029239,
+    "success": 0.36257309941520466,
+    "alias": 0.0
+   },
+   "10-30d": {
+    "n": 171,
+    "correct": 0.3157894736842105,
+    "diffrot": 0.1286549707602339,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.023391812865497075,
+    "none": 0.5321637426900585,
+    "success": 0.4444444444444444,
+    "alias": 0.0
+   },
+   ">30d": {
+    "n": 314,
+    "correct": 0.14331210191082802,
+    "diffrot": 0.028662420382165606,
+    "half": 0.012738853503184714,
+    "double": 0.0,
+    "wrong": 0.01910828025477707,
+    "none": 0.7961783439490446,
+    "success": 0.17197452229299362,
+    "alias": 0.012738853503184714
+   }
+  },
+  "by_coverage_class": {
+   "consecutive-6-12": {
+    "n": 25,
+    "correct": 0.16,
+    "diffrot": 0.08,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.76,
+    "success": 0.24,
+    "alias": 0.0
+   },
+   "full": {
+    "n": 340,
+    "correct": 0.2323529411764706,
+    "diffrot": 0.10882352941176471,
+    "half": 0.011764705882352941,
+    "double": 0.0029411764705882353,
+    "wrong": 0.014705882352941176,
+    "none": 0.6294117647058823,
+    "success": 0.3411764705882353,
+    "alias": 0.014705882352941176
+   },
+   "gapped-6-12": {
+    "n": 635,
+    "correct": 0.2409448818897638,
+    "diffrot": 0.08346456692913386,
+    "half": 0.0015748031496062992,
+    "double": 0.0,
+    "wrong": 0.015748031496062992,
+    "none": 0.658267716535433,
+    "success": 0.32440944881889766,
+    "alias": 0.0015748031496062992
+   }
+  }
+ },
+ "config": {
+  "scorecard_version": 6,
+  "git_commit": "d758510",
+  "rel_tol": 0.1,
+  "dataset": "datasets/dev_medium_b_clean.csv,data_root=data/smarts_dev,sectors=ignored",
+  "coverage": {
+   "spec": "full",
+   "seed": 0,
+   "weighting": "frequency",
+   "library": "datasets/coverage/all_cycles_patterns.csv"
+  },
+  "data_root": "data/smarts_dev",
+  "ignore_manifest_sectors": true,
+  "detectable_threshold": 5.0,
+  "detectability_table": "benchmarks/detectability_dev.csv",
+  "pipeline_methods": [
+   "pairwise_histogram",
+   "lombscargle",
+   "acf_fft"
+  ],
+  "n_guesses_default": 10,
+  "n_guesses_overrides": {
+   "acf_fft_highpass": 5
+  },
+  "comb_variant": "local_tol_trim_l0x",
+  "cwt_variant": "lean",
+  "wall_seconds": 339.80008912086487,
+  "created": "2026-11-20 15:07:38",
+  "system": "ranker v1 (head_perbin_p0.86)",
+  "run": "/Users/raeholcomb/Documents/GitHub/ss_redevelopment/runs/ranker_v1/nohalf"
+ }
+}

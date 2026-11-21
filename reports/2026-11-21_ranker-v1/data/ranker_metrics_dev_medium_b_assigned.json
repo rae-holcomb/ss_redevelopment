@@ -1,0 +1,193 @@
+{
+ "final": {
+  "overall": {
+   "n": 1000,
+   "correct": 0.15,
+   "diffrot": 0.068,
+   "half": 0.002,
+   "double": 0.0,
+   "wrong": 0.013,
+   "none": 0.767,
+   "success": 0.218,
+   "alias": 0.002
+  },
+  "by_bin": {
+   "<1d": {
+    "n": 172,
+    "correct": 0.18604651162790697,
+    "diffrot": 0.16279069767441862,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.6511627906976745,
+    "success": 0.3488372093023256,
+    "alias": 0.0
+   },
+   "1-3d": {
+    "n": 172,
+    "correct": 0.25,
+    "diffrot": 0.05232558139534884,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.005813953488372093,
+    "none": 0.6918604651162791,
+    "success": 0.3023255813953488,
+    "alias": 0.0
+   },
+   "3-10d": {
+    "n": 171,
+    "correct": 0.1871345029239766,
+    "diffrot": 0.0935672514619883,
+    "half": 0.005847953216374269,
+    "double": 0.0,
+    "wrong": 0.017543859649122806,
+    "none": 0.695906432748538,
+    "success": 0.2807017543859649,
+    "alias": 0.005847953216374269
+   },
+   "10-30d": {
+    "n": 171,
+    "correct": 0.1871345029239766,
+    "diffrot": 0.07017543859649122,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.011695906432748537,
+    "none": 0.7309941520467836,
+    "success": 0.2573099415204678,
+    "alias": 0.0
+   },
+   ">30d": {
+    "n": 314,
+    "correct": 0.03503184713375796,
+    "diffrot": 0.009554140127388535,
+    "half": 0.0031847133757961785,
+    "double": 0.0,
+    "wrong": 0.022292993630573247,
+    "none": 0.9299363057324841,
+    "success": 0.044585987261146494,
+    "alias": 0.0031847133757961785
+   }
+  },
+  "by_coverage_class": {
+   "consecutive-2": {
+    "n": 125,
+    "correct": 0.104,
+    "diffrot": 0.064,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.832,
+    "success": 0.16799999999999998,
+    "alias": 0.0
+   },
+   "consecutive-3-5": {
+    "n": 124,
+    "correct": 0.14516129032258066,
+    "diffrot": 0.08064516129032258,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.024193548387096774,
+    "none": 0.75,
+    "success": 0.22580645161290325,
+    "alias": 0.0
+   },
+   "consecutive-6-12": {
+    "n": 125,
+    "correct": 0.232,
+    "diffrot": 0.096,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.032,
+    "none": 0.64,
+    "success": 0.328,
+    "alias": 0.0
+   },
+   "full": {
+    "n": 124,
+    "correct": 0.23387096774193547,
+    "diffrot": 0.07258064516129033,
+    "half": 0.008064516129032258,
+    "double": 0.0,
+    "wrong": 0.016129032258064516,
+    "none": 0.6693548387096774,
+    "success": 0.3064516129032258,
+    "alias": 0.008064516129032258
+   },
+   "gapped-2": {
+    "n": 125,
+    "correct": 0.112,
+    "diffrot": 0.024,
+    "half": 0.008,
+    "double": 0.0,
+    "wrong": 0.016,
+    "none": 0.84,
+    "success": 0.136,
+    "alias": 0.008
+   },
+   "gapped-3-5": {
+    "n": 125,
+    "correct": 0.136,
+    "diffrot": 0.08,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.008,
+    "none": 0.776,
+    "success": 0.21600000000000003,
+    "alias": 0.0
+   },
+   "gapped-6-12": {
+    "n": 127,
+    "correct": 0.16535433070866143,
+    "diffrot": 0.07086614173228346,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.7637795275590551,
+    "success": 0.2362204724409449,
+    "alias": 0.0
+   },
+   "single": {
+    "n": 125,
+    "correct": 0.072,
+    "diffrot": 0.056,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.008,
+    "none": 0.864,
+    "success": 0.128,
+    "alias": 0.0
+   }
+  }
+ },
+ "config": {
+  "scorecard_version": 6,
+  "git_commit": "d758510",
+  "rel_tol": 0.1,
+  "dataset": "datasets/dev_medium_b_clean.csv,data_root=data/smarts_dev,sectors=manifest",
+  "coverage": {
+   "spec": "full",
+   "seed": 0,
+   "weighting": "frequency",
+   "library": "datasets/coverage/all_cycles_patterns.csv"
+  },
+  "data_root": "data/smarts_dev",
+  "ignore_manifest_sectors": false,
+  "detectable_threshold": 5.0,
+  "detectability_table": "benchmarks/detectability_dev.csv",
+  "pipeline_methods": [
+   "pairwise_histogram",
+   "lombscargle",
+   "acf_fft"
+  ],
+  "n_guesses_default": 10,
+  "n_guesses_overrides": {
+   "acf_fft_highpass": 5
+  },
+  "comb_variant": "local_tol_trim_l0x",
+  "cwt_variant": "lean",
+  "wall_seconds": 206.56597113609314,
+  "created": "2026-11-20 15:12:12",
+  "system": "ranker v1 (head_perbin_p0.86)",
+  "run": "/Users/raeholcomb/Documents/GitHub/ss_redevelopment/runs/ranker_v1/nohalf"
+ }
+}

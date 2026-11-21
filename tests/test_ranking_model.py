@@ -124,3 +124,107 @@ def test_feature_family_and_method():
     assert rm.feature_family("gate_half_lag_consistency_value") == "gates"
     assert rm.feature_family("P_over_reach") == "coverage_reach"
     assert rm.feature_family("redchi") == "comb_fit"
+
+
+# ----------------------------------------------------------------------------- ranker v1
+def _with_negatives(n_neg=10, seed=1):
+    """Synthetic rotators plus non-rotator stars (every row relevance 0, is_rotator False)."""
+    c, s = _synthetic()
+    s["is_rotator"] = True
+    c["is_rotator"] = True
+    nc, ns = _synthetic(n_stars=n_neg, seed=seed)
+    ns["star_id"] = "n" + ns["star_id"]
+    nc["star_id"] = "n" + nc["star_id"]
+    ns["noise_tic"] += 1000
+    nc["relevance"] = 0
+    nc["signal"] -= 2.0  # non-rotators: weaker best candidate
+    ns["is_rotator"] = False
+    nc["is_rotator"] = False
+    ns["final_outcome"] = ["wrong"] + ["none"] * (n_neg - 1)
+    ns["final_period"] = [2.0] + [np.nan] * (n_neg - 1)
+    c = pd.concat([c, nc], ignore_index=True).sort_values(["star_id", "cand_index"]).reset_index(drop=True)
+    return c, pd.concat([s, ns], ignore_index=True)
+
+
+def test_persistent_weak_period_uses_per_bin_cut():
+    """A source is persistent only above its P_ref bin's quiet 95th percentile; NaN never is."""
+    P = np.array([2.0, 2.0, 15.0, 15.0, np.nan, 30.0])
+    snr = np.array([6.0, 6.2, 3.5, 3.7, 50.0, np.nan])
+    assert rm.persistent_weak_period(P, snr).tolist() == [False, True, False, True, False, False]
+
+
+def test_top1_any_marks_negatives_wrong_and_bins():
+    """Non-rotator top-1 is 'wrong' (any period); rotators keep classify_period outcomes; top_bin set."""
+    c, s = _with_negatives()
+    score = np.where(c["relevance"].to_numpy() == 2, 1.0, 0.0)
+    t = rm.top1_any(c, score, s)
+    assert len(t) == len(s)
+    neg = ~t["is_rotator"].astype(bool)
+    assert (t.loc[neg, "top_outcome"] == evaluation.WRONG).all()
+    assert t.loc[~neg, "top_outcome"].eq("correct").all()
+    assert set(t["top_bin"]) <= set(evaluation.PERIOD_BIN_LABELS) | {rm.NONE_BIN}
+
+
+def test_weighted_curve_counts_negatives_r_per_rotator():
+    """With r=1 the negatives weigh as much in total as the rotators do."""
+    t = pd.DataFrame(dict(is_rotator=[True, True, False, False, False, False],
+                          top_outcome=["correct", "wrong", "wrong", "wrong", "wrong", "wrong"],
+                          score_v1=[0.9, 0.5, 0.8, 0.1, 0.1, 0.1]))
+    c = rm.weighted_curve(t, 1.0)
+    # at threshold 0.8: answered = rotator(0.9, success) + one negative of weight 2/4 = 0.5
+    row = c[c.threshold == 0.8].iloc[0]
+    assert row.precision == pytest.approx(1 / 1.5) and row.fp_rate == pytest.approx(0.25)
+    assert rm.threshold_for_precision_w(t, 0.99, 1.0) == 0.9
+    assert rm.threshold_for_precision_w(t, 1.01, 1.0) == np.inf
+    assert rm.weighted_curve(t, 0.0).precision.iloc[1] == 1.0  # r=0: negatives ignored
+
+
+def test_perbin_thresholds_and_apply():
+    """Per-bin thresholds are set inside each reported-period bin; 'none' bin is never answered."""
+    t = pd.DataFrame(dict(is_rotator=[True] * 6, top_bin=["<1d"] * 3 + [">30d"] * 2 + [rm.NONE_BIN],
+                          top_outcome=["correct", "wrong", "correct", "correct", "wrong", "none"],
+                          score_v1=[0.9, 0.8, 0.2, 0.3, 0.6, 0.99]))
+    thr = rm.perbin_thresholds(t, 0.99, 0.0)
+    assert thr["<1d"] == 0.9 and thr[">30d"] == np.inf and thr[rm.NONE_BIN] == np.inf
+    ans = rm.apply_thresholds(t, thr)
+    assert ans.tolist() == [True, False, False, False, False, False]
+    assert rm.apply_thresholds(t, 0.5).tolist() == [True, True, False, False, True, True]
+    out = rm.decided_outcomes(t, ans)
+    assert out.tolist() == ["correct"] + ["none"] * 5
+
+
+def test_hand_precision_with_negatives():
+    """Hand precision: rotator successes over answered, negatives' answers weighted r per rotator."""
+    c, s = _with_negatives(n_neg=10)
+    s["final_outcome"] = ["correct"] * 20 + ["wrong"] * 10 + ["none"] * 10 + list(s["final_outcome"].iloc[40:])
+    s["final_period"] = 2.0
+    assert rm.hand_precision(s, 0.0) == pytest.approx(20 / 30)
+    # 1 of 10 negatives answered (FP 0.1) -> weighted 0.1 * 40 rotators = 4 extra answers
+    assert rm.hand_precision(s, 1.0) == pytest.approx(20 / 34)
+
+
+def test_head_features_and_training():
+    """Head rows: one per star with its top-1 row's features; the head learns top-1 correctness."""
+    c, s = _with_negatives()
+    X, cols = rm.feature_matrix(c)
+    score = c["signal"].to_numpy()
+    H = rm.head_features(c, score, X)
+    assert len(H) == s["star_id"].nunique() and H["star_id"].is_unique
+    assert (H["h_margin"] >= 0).all() and (H["h_n_rows"] == 6).all()
+    top = rm.top1_any(c, score, s)
+    y = (rm._success(top.set_index("star_id").loc[H["star_id"], "top_outcome"])
+         & top.set_index("star_id").loc[H["star_id"], "is_rotator"].to_numpy(bool)).astype(float)
+    m = rm.train_head(H, y, rounds=30, params=dict(nthread=1, subsample=1.0, colsample_bytree=1.0, min_child_weight=0.1))
+    p = rm.predict_head([m], H)
+    assert p[y == 1].mean() > p[y == 0].mean()
+
+
+def test_grouped_folds_by_tic_and_side_table():
+    """Fold map covers every tic once; side-table join is one-to-one with NaN for missing rows."""
+    f = rm.grouped_folds_by_tic([1, 1, 2, 3, 4, 5, 5], n_splits=2)
+    assert set(f) == {1, 2, 3, 4, 5} and set(f.values()) <= {0, 1}
+    c, _ = _synthetic(n_stars=3)
+    side = c[["star_id", "cand_index"]].iloc[:4].assign(half_snr_min=1.0)
+    j = rm.join_side_table(c, side)
+    assert len(j) == len(c) and j["half_snr_min"].notna().sum() == 4
+    assert rm.join_side_table(c, None, ["half_snr_min"])["half_snr_min"].isna().all()

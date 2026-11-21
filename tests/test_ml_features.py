@@ -172,3 +172,33 @@ def test_coverage_features_degenerate_inputs():
     assert star["n_contiguous_segments"] == 1 and star["longest_contiguous_days"] == 0.0
     c = _candidate_coverage_features(3.0, star, seg)
     assert np.isnan(c["P_over_longest_segment"]) and c["n_cycles_observed_total"] == 0
+
+
+def test_half_coherence_features_separates_persistent_from_one_half_signal():
+    """A sinusoid present throughout scores high half_snr_min; one present in only one half scores low."""
+    import numpy as np
+    from ml_features import half_coherence_features
+    rng = np.random.default_rng(0)
+    t = np.arange(0, 120, 1 / 48)
+    noise = 1e-3 * rng.standard_normal(len(t))
+    P = 3.7
+    both = 1 + noise + 5e-3 * np.sin(2 * np.pi * t / P)
+    one = 1 + noise + np.where(t < 60, 5e-3 * np.sin(2 * np.pi * t / P), 0)
+    a = half_coherence_features(t, both, P)
+    b = half_coherence_features(t, one, P)
+    assert a["half_snr_min"] > 20 and a["half_amp_ratio"] > 0.8
+    assert b["half_snr_min"] < 5 and b["half_amp_ratio"] < 0.2
+    assert 0 < a["half_snr_ratio"] <= 1
+
+
+def test_half_coherence_features_nan_cases():
+    """NaN outputs for bad P, too few points, or halves shorter than 2 P."""
+    import numpy as np
+    from ml_features import half_coherence_features
+    t = np.arange(0, 20, 1 / 48)
+    f = 1 + 1e-3 * np.sin(t)
+    assert np.isnan(half_coherence_features(t, f, np.nan)["half_snr_min"])
+    assert np.isnan(half_coherence_features(t, f, 8.0)["half_snr_min"])   # half = 10 d < 2P
+    assert np.isnan(half_coherence_features(t[:100], f[:100], 0.5)["half_snr_min"])
+    f2 = f.copy(); f2[::3] = np.nan
+    assert np.isfinite(half_coherence_features(t, f2, 2.0)["half_snr_min"])
