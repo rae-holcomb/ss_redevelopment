@@ -539,6 +539,9 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
     + 6 double. 15 of SAP's 17 wrongs are on the 60 QLP-only stars. Nothing above 20 d is recovered in either flux.
   - EBs (n=33): lock 33% (correct 12%, half 21%), all at P_orb < 10 d.
   - Non-rotators: dwarfs answer 29% (10/35), red-clump giants 6% (2/34), white dwarfs 0/15. Expected-undetectable: 18% (5/28).
+- **2026-11-21, rescored on the `local_tol_trim_l0x` default** (`runs/tessval_v1_l0x_*`): neutral. SAP rotators: one
+  star moves correct -> wrong (24.7% / 9.5%); expected-undetectable answers 4/28 instead of 5/28; PDCSAP, EBs and
+  non-rotators identical.
   - Open: score with the ranker once v1 exists; look at the QLP wrongs and the dwarf non-rotator answers.
 
 ### P53. Robust heights for the tracked `local` solver (from the T32 clean rerun, 2026-11-19; was P44 on its branch)

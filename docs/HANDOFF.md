@@ -73,6 +73,11 @@ keep turns cheap on Rae's Pro plan.
 - **Next (2026-11-21):** P59 merged, default stays `local_tol_trim_l0x` (`_v9`). Rebuild the ranker tables ONCE under it
   (last night's are `local_tol_trim`, stale; drive reads 1 worker, overnight) -> ranker v1 -> P60 -> `romrot_v0`. P58 and P61
   (lag-0 out of every gate, Rae 2026-11-21) both ride along with the next baseline change. Rescore TESS validation 70% on the new default (~8 min, local).
+- **2026-11-21 overnight, done (no errors, no drive drops at 1 worker):** ranker tables under `local_tol_trim_l0x` in
+  `runs/p31_l0x_dev_medium{,_b}_{assigned,fullyear}` (874 / 1,000 stars) and on the drive
+  `extracted/p31_tables_l0x/{train_3k (3,000), neg_dev_medium (1,736), neg_train (2,972)}`. Use these for ranker v1;
+  `runs/p31_dev_medium_*` and `extracted/p31_tables/` are stale. TESS 70% rescored (`runs/tessval_v1_l0x_*`): neutral
+  (see P52). **Next:** ranker v1 -> P60 -> `romrot_v0`.
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
