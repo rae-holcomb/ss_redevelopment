@@ -240,7 +240,50 @@ def examples():
     return _save(fig, "fig_examples.png")
 
 
-ALL = [purity_completeness, per_bin, lt1d, tuning, importance, failure_modes, examples]
+def ablation_half():
+    """half_snr_min ablation: OOF purity-completeness and per-bin success at the two-set pick, with vs without."""
+    cv = pd.read_csv(os.path.join(DATA, "ablation_curves.csv"))
+    sm = pd.read_csv(os.path.join(DATA, "ablation_summary.csv"))
+    tn = pd.read_csv(os.path.join(DATA, "ablation_tuning.csv"))
+    tn = tn[(tn.family == "head_perbin") & (tn.tuned_on == "dev_medium")]
+    pick = {r: f"head_perbin_p{tn[tn.run == r].pick.iloc[0]:.2f}" for r in ("base", "alt")}
+    lab = {"base": "without half-coherence (v1 as shipped)", "alt": "with half_snr_min + 2 siblings"}
+    col = {"base": C["pick"], "alt": C["matched"]}
+    fig, axes = plt.subplots(1, 3, figsize=(17, 4.4), gridspec_kw=dict(width_ratios=[1, 1.3, 1.3]))
+    ax = axes[0]
+    for r in ("base", "alt"):
+        c = cv[cv.run == r]  # oof_score_v1.csv is the train_3k OOF curve only
+        ax.plot(c.answer_rate, c.precision, lw=2, color=col[r], label=lab[r])
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0.3, 1)
+    ax.set_xlabel("answer rate")
+    ax.set_ylabel("precision (OOF, negatives 1:1)")
+    ax.set_title("train_3k out-of-fold: decline-model sweep", fontsize=10)
+    ax.legend(fontsize=8, loc="lower left")
+    _style(ax)
+    for ax, m in zip(axes[1:], ("fullyear", "assigned")):
+        x = np.arange(len(BINS) + 1)
+        for k, r in enumerate(("base", "alt")):
+            v = sm[(sm.run == r) & (sm.rule == pick[r]) & (sm.set == "dev_medium_b") & (sm["mode"] == m)]
+            v = v.set_index("bin").reindex(BINS + ["all"])
+            ax.bar(x + (k - 0.5) * 0.38, v.success, 0.36, color=col[r],
+                   label=f"{lab[r]}, pick p = {pick[r][-4:]}")
+            ax.plot(x + (k - 0.5) * 0.38, v.wrong, "_", ms=14, mew=2.5, color=INK)
+        h = sm[(sm.run == "base") & (sm.rule == "hand") & (sm.set == "dev_medium_b") & (sm["mode"] == m)]
+        h = h.set_index("bin").reindex(BINS + ["all"])
+        ax.plot(x, h.success, "*", ms=11, color=C["hand"], mec="white", label="hand arbitration (success)")
+        ax.set_xticks(x, BINS + ["all"])
+        ax.set_title(f"judged on dev_medium_b {m} (tuned on dev_medium)", fontsize=10)
+        ax.set_ylabel("success (bars); wrong (black ticks)")
+        _style(ax)
+    fig.suptitle("half_snr_min ablation: no gain at the two-set operating point", y=1.03)
+    fig.tight_layout()
+    fig.legend(*axes[1].get_legend_handles_labels(), fontsize=8, loc="upper center",
+               bbox_to_anchor=(0.6, 0.0), ncol=3)
+    return _save(fig, "fig_ablation_half.png")
+
+
+ALL = [purity_completeness, per_bin, lt1d, tuning, importance, failure_modes, examples, ablation_half]
 
 if __name__ == "__main__":
     for fn in ALL:

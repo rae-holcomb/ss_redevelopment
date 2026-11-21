@@ -709,5 +709,5 @@ are in `docs/CHANGELOG_ARCHIVE.md` (moved 2026-11-11, P30). Newest entries are a
   - **Results vs `_v9`:** dev_medium_clean full-year 0.270/0.019 -> 0.312/0.016, assigned 0.154/0.030 -> 0.201/0.025; dev_medium_b_clean full-year 0.272/0.032 -> 0.328/0.015, assigned 0.168/0.019 -> 0.218/0.013. `check_goals` PASS on all four.
   - **Brief's default fails:** matching hand's training precision (0.761) fails the both-modes wrong rule (wrong 0.035-0.054).
   - **Regressions:** > 30 d full-year success, by 1 and 3 stars; full-year dev non-rotator FPs, 6/434 vs 1/434. Losses are mostly correct top-1s declined at > 30 d (no full-year training data).
-  - **`half_snr_min`:** ported from `quiet-noise-followups`, now on astropy `fast`. Its side-table builder is `tools/build_half_coherence_table.py`, but the run waits for Rae's OK.
+  - **`half_snr_min` ablation: no gain.** Ported from `quiet-noise-followups`, now on astropy `fast`. Side tables come from `tools/build_half_coherence_table.py`; the drive tables' copies sit on the drive next to them (`p31_tables_l0x/<t>/half_coherence/`). At the two-set pick, success moved by -0.007 to +0.001 and wrong did not move. v1 ships without it.
   - Report: `reports/2026-11-21_ranker-v1/`.

@@ -265,13 +265,40 @@ def examples(run: str, n_per_kind: int = 2) -> None:
                         **{f"{k}__f": v[1] for k, v in lcs.items()})
 
 
+def ablation(base: str, alt: str) -> None:
+    """Ablation tables: whole-set and per-bin summaries, two-set tuning and OOF curves for two runs."""
+    rows, tun, cvs = [], [], []
+    for name, run in (("base", base), ("alt", alt)):
+        cfg = json.load(open(os.path.join(run, "config.json")))
+        summ = pd.read_csv(os.path.join(run, "summary.csv"))
+        summ.insert(0, "run", name)
+        summ["half"] = cfg["half"]
+        rows.append(summ)
+        t = tuning(summ[summ.columns[1:-1]])
+        t.insert(0, "run", name)
+        t["half"] = cfg["half"]
+        tun.append(t)
+        cv = pd.read_csv(os.path.join(run, "curves", "oof_score_v1.csv"))
+        cv.insert(0, "run", name)
+        cv["half"] = cfg["half"]
+        cvs.append(cv)
+    pd.concat(rows).to_csv(os.path.join(DATA, "ablation_summary.csv"), index=False)
+    pd.concat(tun).to_csv(os.path.join(DATA, "ablation_tuning.csv"), index=False)
+    pd.concat(cvs).to_csv(os.path.join(DATA, "ablation_curves.csv"), index=False)
+
+
 def main(argv=None):
     """CLI entry point."""
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--run", required=True)
     ap.add_argument("--skip-importance", action="store_true")
+    ap.add_argument("--ablation", default=None,
+                    help="second run dir (e.g. runs/ranker_v1/half): write data/ablation_* comparing it to --run")
     args = ap.parse_args(argv)
     os.makedirs(DATA, exist_ok=True)
+    if args.ablation:
+        ablation(args.run, args.ablation)
+        return
     thr = json.load(open(os.path.join(args.run, "thresholds.json")))
     cfg = json.load(open(os.path.join(args.run, "config.json")))
     summ = pd.read_csv(os.path.join(args.run, "summary.csv"))

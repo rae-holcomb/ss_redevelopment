@@ -15,7 +15,7 @@
 - **Matching hand's training precision (0.76), the brief's default, fails the wrong-rate rule:** wrong goes to 0.035–0.054.
 - **<1 d success:** 0.22 → 0.30 (dev_medium full-year).
 - **Regressions:** >30 d full-year success, by 1 and 3 stars; full-year non-rotator FPs, 6/434 vs 1/434.
-- **Deviation:** no `half_snr_min` yet. Its side table needs Rae's OK.
+- **`half_snr_min` ablation: no gain.** Within ±0.016 success everywhere, so v1 ships without it.
 
 ## Question / goal
 T11 in `docs/TASKS.md` ("Train and evaluate the ranker"), v1 as planned in `docs/HANDOFF.md` "Next up" and P24 / P23 in
@@ -63,6 +63,14 @@ targeted. G9–G11 are graded below for information.
      - precision-target grids 0.80–0.98 for per-bin and global.
 5. **Two-set protocol:** pick the target on one dev set, keeping wrong ≤ `_v9` in both modes, then judge on the other set. It was run in both directions.
 6. **Figures and tables** come from `analysis.py` (it reads the run) and `figures.py` (reads `data/`).
+7. **`half_snr_min` ablation** (Rae approved the side-table runs, 2026-11-21).
+   - `ml_features.half_coherence_features` was ported from the unmerged `quiet-noise-followups` branch (`892e266`) and switched to astropy LS `fast` on a regular grid: 15× faster, Spearman 0.99 against the exact version on 88 candidates.
+   - `tools/build_half_coherence_table.py` evaluates it at every candidate's `P_eval` (resumable, one shard per star).
+     - The four local dev tables ran at 3 workers.
+     - `train_3k`, `neg_train` and `neg_dev_medium` ran at 1 worker, with output on the drive next to the tables (`.../p31_tables_l0x/<t>/half_coherence/`, symlinked from the laptop copies).
+     - All 7 tables are fully covered, with 0 errors. The drive disconnected twice during `train_3k` and the run resumed from its shards.
+     - 7–11% of rows are NaN: 0% below 5 d, rising to 59% above 50 d, where a half baseline can't hold two cycles. NaN rows are spread evenly between shards written before and after the drive drops.
+   - `train_ranker_v1.py --half` adds `half_snr_min`, `half_snr_ratio` and `half_amp_ratio` to both models; everything else is unchanged.
 
 ```bash
 PY=/opt/anaconda3/envs/ss_openblas/bin/python
@@ -163,6 +171,27 @@ Grouped permutation on training OOF: each family's columns are permuted together
 - `P_over_reach` and `beyond_reach` add almost nothing (< 0.001).
 - The gates family adds 0.009 top-1 success, coverage features 0.008 decline AUC.
 
+### `half_snr_min` ablation
+![ablation](figures/fig_ablation_half.png)
+- **Left:** the training OOF purity–completeness curves with and without the half-coherence features lie on top of each other.
+- **Middle and right:** run under the two-set rule (tune on dev_medium, judge on dev_medium_b), the half run picks 0.85 and the base run 0.86. Per-bin success moves by a few stars either way, and the wrong ticks don't move.
+
+| success / wrong (two-set pick) | without (p = 0.86) | with half (p = 0.85) |
+|---|---|---|
+| dev_medium full-year | 0.312 / 0.016 | 0.305 / 0.018 |
+| dev_medium assigned | 0.201 / 0.025 | 0.197 / 0.026 |
+| dev_medium_b full-year | 0.328 / 0.015 | 0.325 / 0.014 |
+| dev_medium_b assigned | 0.218 / 0.013 | 0.219 / 0.012 |
+
+- At the same target, p = 0.86, the half run is 0.003–0.016 lower in success everywhere.
+- Tuned the other way (on dev_medium_b), the half run picks 0.82 and **fails both** dev_medium modes; the base run fails only full-year.
+- Non-rotator FP rates at the pick:
+  - dev_medium full-year: 0.016 with half against 0.014 without;
+  - full-year training negatives: 0.024 against 0.016.
+- **Importance:** the three columns carry under 1% of total gain each. In fold 0 they rank 31st, 46th and 53rd of 111 in the ranker and 14th, 22nd and 30th of 115 in the decline model.
+- **Why it likely adds nothing:** what it measures, whether P is still coherent in each half of the light curve, is already covered by the time-split and fold-half features (`fold_half_corr_at_2P` is a top decline-model input).
+- **Decision:** v1 ships without it. The side tables stay on disk in case a later model wants them.
+
 ### Failure modes: where v1 loses to hand
 ![failures](figures/fig_failure_modes.png)
 - Losses (hand right, pick not): 18 / 6 / 22 / 12 stars (dev_medium full-year / assigned, dev_medium_b full-year / assigned), against 55 / 47 / 78 / 62 wins.
@@ -183,6 +212,7 @@ Representative full-year losses. Right panels: ranker score per candidate; green
 - **T20's `persist` flag as the "persistent weak period" rule.** It is True for 93% of sources, for the reason in What I did step 2.
 - **Calibrating to hand's training precision (0.761, r = 1).** Success is +0.08 to +0.10, but wrong rises to 0.035–0.054, failing the both-modes wrong rule everywhere. Hand's training precision with negatives at 1:1 is only 0.761, a looser target than hand achieves on the dev sets (0.87–0.90 full-year). On dev_medium full-year the same cut answers 3.2% of non-rotators against hand's 0.2%.
 - **v0-style ranker-score threshold** (`rank_global`): +0.03 to +0.05 success, but wrong 0.025–0.046. It is dominated by the decline-model sweep on every curve.
+- **`half_snr_min`** (with `half_snr_ratio` and `half_amp_ratio`): no gain at any operating point, and slightly more non-rotator FPs. See the ablation section above.
 - **Tuning on dev_medium_b** picks 0.84, which fails dev_medium full-year. Its full-year baseline wrong rate (0.032) is looser.
 
 ## Open questions for Rae
@@ -190,11 +220,9 @@ Representative full-year losses. Right panels: ranker score per candidate; green
    - Strictly by the rule (tune on dev_medium, judge on dev_medium_b) the pick is 0.86 and passes.
    - The reverse direction fails. I took the stricter of the two, which uses both sets.
    - Is "pass in both directions" the bar? If so, 0.86 is the loosest target that passes everywhere.
-2. **`half_snr_min` run.**
-   - Port: ported from the unmerged `quiet-noise-followups` branch (`892e266`), switched to astropy `fast` on a regular grid (15× faster; Spearman 0.99 against the exact version on 88 candidates).
-   - Side-table script: `tools/build_half_coherence_table.py`.
-   - Runs needed: ~3,700 local dev light curves (~12 min, 3 workers) and ~7,700 drive light curves (~40 min, 1 worker).
-   - Then `train_ranker_v1.py --half`. OK to run, or will you run it?
+2. **`half_snr_min`.** The ablation shows no gain, so I left it out of v1.
+   - Keep `half_coherence_features` in `ml_features.py` for later models, or drop it?
+   - P63 (make it a built-in table column) is now low priority unless you want it.
 3. **Full-year non-rotator FPs** (6/434 vs 1/434, five at < 1 d). Accept as is, or add full-year negatives to the decline model alongside the full-year training table (next item)?
 4. **> 30 d full-year** is the one bin still behind (by 1 and 3 stars). Build the full-year training table for the 1k subset now (your P24 decision)?
 5. **Persistent-source rule** (95th percentile of the quiet time-split S/N, 43/743 sources dropped). Keep this rule, or prefer a different cut?
@@ -208,6 +236,10 @@ PY=/opt/anaconda3/envs/ss_openblas/bin/python
 #   -> <main>/runs/p31_l0x_train_tables/, plus neg_source_flags.csv (negative TICs' rows of noise_source_flags)
 nice -n 15 $PY tools/train_ranker_v1.py --outdir <main>/runs/ranker_v1/nohalf
 nice -n 15 $PY reports/2026-11-21_ranker-v1/analysis.py --run <main>/runs/ranker_v1/nohalf
+# half_snr_min ablation: side tables (dev: --n-workers 3; drive tables: --data-root /Volumes/Data_Vault/smarts_data --n-workers 1)
+nice -n 15 $PY tools/build_half_coherence_table.py --table <table dir> --outdir <table dir>/half_coherence --resume
+nice -n 15 $PY tools/train_ranker_v1.py --half --outdir <main>/runs/ranker_v1/half
+$PY reports/2026-11-21_ranker-v1/analysis.py --run <main>/runs/ranker_v1/nohalf --ablation <main>/runs/ranker_v1/half
 $PY reports/2026-11-21_ranker-v1/figures.py
 $PY benchmarks/check_goals.py reports/2026-11-21_ranker-v1/data/ranker_metrics_dev_medium_fullyear.json \
     --baseline benchmarks/baselines/dev_medium_clean_fullyear_v9.json   # same for the other three
