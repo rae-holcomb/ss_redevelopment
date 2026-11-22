@@ -78,6 +78,11 @@ keep turns cheap on Rae's Pro plan.
   `extracted/p31_tables_l0x/{train_3k (3,000), neg_dev_medium (1,736), neg_train (2,972)}`. Use these for ranker v1;
   `runs/p31_dev_medium_*` and `extracted/p31_tables/` are stale. TESS 70% rescored (`runs/tessval_v1_l0x_*`): neutral
   (see P52). **Next:** ranker v1 -> P60 -> `romrot_v0`.
+- **2026-11-22, ranker v1 merged** (`reports/2026-11-21_ranker-v1/`; `tools/train_ranker_v1.py`, ~1 min; reproduced
+  byte-for-byte by the coordinator). Per-bin decline thresholds at p = 0.86: dev_medium full-year 0.312 / 0.016, assigned
+  0.201 / 0.025; dev_medium_b 0.328 / 0.015, 0.218 / 0.013 (all beat `_v9`). Weak spots: > 30 d full-year (declined-right)
+  and full-year non-rotator FPs (6/434 vs 1). `half_snr_min` dropped and its code deleted (Rae). **Next:** P62 (full-year
+  training table for the decline model; Rae approved), then P60 -> `romrot_v0`; P64 (ranker on TESS 70%), P65-P68 queued.
 
 ## Your first activity (Rae, 2026-11-16): a clean, blind rerun of the decayed-tail fix task
 
