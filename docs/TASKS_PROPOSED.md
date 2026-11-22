@@ -655,3 +655,28 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 ### P64. Ranker v1 on the TESS validation 70% (from ranker v1, 2026-11-21)
 - **Proposed by:** ranker v1 report. This was optional in the brief and was not cheap: it needs feature tables for the validation stars, not just scorecard runs.
 - **Idea:** build T10-style tables for the unlocked 70% (`TESS_VALIDATION_ROOT`, local, ~8 min of pipeline plus features). Score v1 at the 0.86 per-bin pick, and compare with `runs/tessval_v1_l0x_*`. This is the first real-data check of the decline model's transfer.
+
+### P65. Noise-source periods behind wrong answers: second signals and the P58 refresh (from ranker v1 loss audit, 2026-11-21)
+- **Proposed by:** ranker v1 loss audit (`reports/2026-11-21_ranker-v1/loss_categories.py` → `data/loss_categories.csv`). Rae asked for it, 2026-11-21.
+- **Why:** at the v1 pick, 31% of the 64 answered-wrong star-tables report the noise source's own period (`P_ref`, or ½× or 2× it), against 3% by chance. 14 of the 64 come from the 22 `periodic_low_amplitude` stars that `dev_medium_clean` still keeps under its old flags; the P58 refresh would remove them.
+  - Several "quiet" sources give the same wrong period on several stars while their `P_ref` (the stack's top LS peak) is something else: TIC 10001742265 gives ~0.97 d on 3 stars (`P_ref` 25.9 d); TIC 10001638867 gives 1.40 d on 3 stars (`P_ref` 9.39 d); TIC 10001514155 gives ~0.96 d.
+- **Do:** (a) look for secondary periodic signals in the noise stacks: the top N LS peaks, or the time-split S/N at each peak. Report how many "quiet" sources carry one and whether they explain the repeat offenders. Plot the offenders' stacks and periodograms. (b) Report hand's and v1's wrong rates on dev_medium_clean with and without the 22 stars. That gives Rae what she needs to decide on P58, which changes the judging set and so needs her OK.
+- **Agent:** `data-auditor`.
+
+### P66. Ranking misses: the correct candidate exists but is not the top-1 (from ranker v1 loss audit, 2026-11-21)
+- **Proposed by:** ranker v1 loss audit. Rae asked for it, 2026-11-21.
+- **Why:** the largest recoverable pool. Across the four dev tables, 818 star-tables have a relevance-2 (correct) candidate that v1 does not rank first, against 995 successes. The winning top-1 is usually *not* an alias: 709 of the 818 are `wrong`. The pool is spread over all bins, with 163 at > 30 d full-year (P62 may fix part of those). 17% of the winning periods match the noise source's period, against ~5% by chance (see P65).
+- **Do:** for a stratified sample per bin and mode, plot the light curve, the method spectra, and the correct and winning candidates' feature values side by side. Use SHAP or pairwise feature differences to find which features favour the wrong one. Look for a missing feature or a label problem rather than tuning the model. Do the assigned-coverage misses first: they are in-distribution for training.
+- **Agent:** `ranking-model-builder` or `feature-researcher`. Ideally after P62, so the full-year > 30 d misses are measured on the retrained model.
+
+### P67. Correct top-1 declined, outside > 30 d full-year (from ranker v1 loss audit, 2026-11-21)
+- **Proposed by:** ranker v1 loss audit. Rae asked for it, 2026-11-21.
+- **Why:** 580 star-tables have the right top-1 but are declined at the pick (cf. 995 answered right). P62 targets the 135 at > 30 d full-year. The other ~445 are spread across all bins, 251 of them on assigned coverage, where the decline model's training data is representative.
+- **Do, after P62's retrain:** recompute the category with `loss_categories.py`. Characterize the declined-right stars against the answered-right ones: amplitude, number of sectors and coverage class, runner-up margin, an alias candidate nearby, decline-model score against the bin threshold. Plot those distributions. Propose features or decline-model changes; any threshold change follows the two-set rule.
+- **Agent:** `ranking-model-builder`.
+
+### P68. Recoverable periods that no method proposes (from ranker v1 loss audit, 2026-11-21)
+- **Proposed by:** ranker v1 loss audit. Rae asked for it, 2026-11-21.
+- **Why:** 430 star-tables are `searchable` but have no correct or alias candidate at all. No ranker can fix them. They concentrate at < 1 d (149) and > 30 d full-year (58), with ~40 per bin between.
+- **Do:** first check how many < 1 d cases remain after P31 and P32 (the rescued sub-day candidates are already in these tables). Then sample per bin and plot the light curves and method spectra with the true period marked. Classify why each method missed it (amplitude, harmonic structure, filtering, search range) and hand the top cause to a method task.
+- **Agent:** `method-improver`.
