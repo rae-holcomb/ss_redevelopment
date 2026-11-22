@@ -640,6 +640,7 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 
 ### P62. Full-year training rows for the ranker v1 decline model (from ranker v1, 2026-11-21)
 - **Proposed by:** ranker v1 report.
+- **Status: approved by Rae (2026-11-21)** (report open questions 3 and 4). The table build reads the drive at 1 worker; Rae runs anything over a few hundred files locally.
 - **Why:** 52 of 58 stars where v1 loses to hand have a *correct* top-1 that the decline model declined. 28 of those 52 are > 30 d, almost all full-year.
   - Training is assigned-coverage only, so the decline model has never seen a full-year rotator. For the same reason it was never trained on full-year negatives.
   - It also answers on 6/434 full-year dev non-rotators, against hand's 1.
