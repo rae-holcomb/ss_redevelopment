@@ -662,6 +662,7 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
   - Several "quiet" sources give the same wrong period on several stars while their `P_ref` (the stack's top LS peak) is something else: TIC 10001742265 gives ~0.97 d on 3 stars (`P_ref` 25.9 d); TIC 10001638867 gives 1.40 d on 3 stars (`P_ref` 9.39 d); TIC 10001514155 gives ~0.96 d.
 - **Do:** (a) look for secondary periodic signals in the noise stacks: the top N LS peaks, or the time-split S/N at each peak. Report how many "quiet" sources carry one and whether they explain the repeat offenders. Plot the offenders' stacks and periodograms. (b) Report hand's and v1's wrong rates on dev_medium_clean with and without the 22 stars. That gives Rae what she needs to decide on P58, which changes the judging set and so needs her OK.
 - **Agent:** `data-auditor`.
+- **Status (2026-11-22): done, report draft** (`reports/2026-11-22_p65-noise-periods/`, branch `claude/p65-noise-periods-c39360`). 34 of 64 v1 wrong answers sit on a coherent noise-stack signal (S/N >= 5; null 1.8): 13 at `P_ref`, 21 at a *secondary* signal (all three repeat offenders). 69 kept-class sources carry one at S/N >= 20. Without the 22 stars, dev_medium_clean wrong: v1 0.016 -> 0.011 fy / 0.025 -> 0.015 as; hand 0.019 -> 0.018 / 0.030 -> 0.022. Recommends P58 at the next baseline change; proposes P69-P71.
 
 ### P66. Ranking misses: the correct candidate exists but is not the top-1 (from ranker v1 loss audit, 2026-11-21)
 - **Proposed by:** ranker v1 loss audit. Rae asked for it, 2026-11-21.
@@ -680,3 +681,16 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Why:** 430 star-tables are `searchable` but have no correct or alias candidate at all. No ranker can fix them. They concentrate at < 1 d (149) and > 30 d full-year (58), with ~40 per bin between.
 - **Do:** first check how many < 1 d cases remain after P31 and P32 (the rescued sub-day candidates are already in these tables). Then sample per bin and plot the light curves and method spectra with the true period marked. Classify why each method missed it (amplitude, harmonic structure, filtering, search range) and hand the top cause to a method task.
 - **Agent:** `method-improver`.
+
+### P69. Flag noise sources with a coherent secondary signal (from P65, 2026-11-22)
+- **Proposed by:** P65 report. The 2026-11-10 `periodic_low_amplitude` rule tests only the stack's top peak (`P_ref`). Applied to any peak at P < 5 d (min-half S/N > 20, `tools/audit/noise_secondary_peaks.py`), it catches 69 more `quiet` / `systematic_common_mode` sources (42k files; 172 `train_v0` rotators, 232 `negatives_v0`). On the dev sets, v1 answers wrong on 18% of answered stars on those sources vs 3% elsewhere.
+- **Do (needs Rae's choice):** add a `secondary_periodic` flag column (with `P_secondary`, `snr_secondary`) to `noise_source_flags` via `galaxy_phase2_analysis.py`; whether it also excludes from training is Rae's call (P65 open question 2). Excluding changes the clean dev sets, so bundle it with P58 if chosen.
+- **Agent:** `data-auditor`.
+
+### P70. Coherent-blend feature for the ranker (from P65, 2026-11-22)
+- **Proposed by:** P65 report. Half of v1's wrong answers are coherent signals of the noise light curve, i.e. a blended neighbour, which real TESS stars also have. The injected spot signal evolves and drifts in period; a contaminating pulsator/EB line does not. Candidate features: line width of the candidate's periodogram peak relative to the resolution, phase stability of a fixed-period sinusoid across sectors/halves, amplitude constancy. Test whether they separate the 34 noise-lure answers from successes.
+- **Agent:** `feature-researcher`. After P62.
+
+### P71. FFI check of the P65 offender sources (from P65, 2026-11-22)
+- **Proposed by:** P65 report. TIC 10001742265 (0.975 d line), 10001638867 (1.37-1.41 d hump, evolving), 10002408980 (1.409 d), 10001514155 (0.95 d hump): run T20's `ffi_lc_compare.py` to see whether a neighbour star produces each signal. Cheap (4 sources, small drive read; not during another drive job).
+- **Agent:** `data-auditor`.

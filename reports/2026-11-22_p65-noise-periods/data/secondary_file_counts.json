@@ -1,0 +1,38 @@
+{
+ "10": {
+  "sources": 143,
+  "files": 87363,
+  "files_by_pool": {
+   "lt800k": 72608,
+   "ge800k": 14755
+  }
+ },
+ "20": {
+  "sources": 69,
+  "files": 42141,
+  "files_by_pool": {
+   "lt800k": 35211,
+   "ge800k": 6930
+  }
+ },
+ "all_files_by_pool": {
+  "lt800k": 800000,
+  "ge800k": 200000
+ },
+ "excluded_files_by_pool": {
+  "lt800k": 106555,
+  "ge800k": 27828
+ },
+ "training_sets": {
+  "train_v0": {
+   "n": 3000,
+   "ge10": 349,
+   "ge20": 172
+  },
+  "negatives_v0": {
+   "n": 4708,
+   "ge10": 460,
+   "ge20": 232
+  }
+ }
+}
