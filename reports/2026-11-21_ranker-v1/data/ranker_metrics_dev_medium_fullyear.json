@@ -1,0 +1,138 @@
+{
+ "final": {
+  "overall": {
+   "n": 874,
+   "correct": 0.2402745995423341,
+   "diffrot": 0.07208237986270023,
+   "half": 0.005720823798627002,
+   "double": 0.0011441647597254005,
+   "wrong": 0.016018306636155607,
+   "none": 0.6647597254004577,
+   "success": 0.3123569794050343,
+   "alias": 0.006864988558352402
+  },
+  "by_bin": {
+   "<1d": {
+    "n": 148,
+    "correct": 0.20270270270270271,
+    "diffrot": 0.0945945945945946,
+    "half": 0.0,
+    "double": 0.006756756756756757,
+    "wrong": 0.006756756756756757,
+    "none": 0.6891891891891891,
+    "success": 0.2972972972972973,
+    "alias": 0.006756756756756757
+   },
+   "1-3d": {
+    "n": 149,
+    "correct": 0.2953020134228188,
+    "diffrot": 0.06711409395973154,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.020134228187919462,
+    "none": 0.6174496644295302,
+    "success": 0.36241610738255037,
+    "alias": 0.0
+   },
+   "3-10d": {
+    "n": 151,
+    "correct": 0.31788079470198677,
+    "diffrot": 0.08609271523178808,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.006622516556291391,
+    "none": 0.5894039735099338,
+    "success": 0.40397350993377484,
+    "alias": 0.0
+   },
+   "10-30d": {
+    "n": 151,
+    "correct": 0.2913907284768212,
+    "diffrot": 0.08609271523178808,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.026490066225165563,
+    "none": 0.5960264900662252,
+    "success": 0.37748344370860926,
+    "alias": 0.0
+   },
+   ">30d": {
+    "n": 275,
+    "correct": 0.16,
+    "diffrot": 0.04727272727272727,
+    "half": 0.01818181818181818,
+    "double": 0.0,
+    "wrong": 0.01818181818181818,
+    "none": 0.7563636363636363,
+    "success": 0.20727272727272728,
+    "alias": 0.01818181818181818
+   }
+  },
+  "by_coverage_class": {
+   "consecutive-6-12": {
+    "n": 19,
+    "correct": 0.15789473684210525,
+    "diffrot": 0.0,
+    "half": 0.0,
+    "double": 0.0,
+    "wrong": 0.0,
+    "none": 0.8421052631578947,
+    "success": 0.15789473684210525,
+    "alias": 0.0
+   },
+   "full": {
+    "n": 298,
+    "correct": 0.2684563758389262,
+    "diffrot": 0.09395973154362416,
+    "half": 0.006711409395973154,
+    "double": 0.0,
+    "wrong": 0.003355704697986577,
+    "none": 0.62751677852349,
+    "success": 0.36241610738255037,
+    "alias": 0.006711409395973154
+   },
+   "gapped-6-12": {
+    "n": 557,
+    "correct": 0.22800718132854578,
+    "diffrot": 0.06283662477558348,
+    "half": 0.005385996409335727,
+    "double": 0.0017953321364452424,
+    "wrong": 0.02333931777378815,
+    "none": 0.6786355475763016,
+    "success": 0.29084380610412924,
+    "alias": 0.00718132854578097
+   }
+  }
+ },
+ "config": {
+  "scorecard_version": 6,
+  "git_commit": "d758510",
+  "rel_tol": 0.1,
+  "dataset": "datasets/dev_medium_clean.csv,data_root=data/smarts_dev,sectors=ignored",
+  "coverage": {
+   "spec": "full",
+   "seed": 0,
+   "weighting": "frequency",
+   "library": "datasets/coverage/all_cycles_patterns.csv"
+  },
+  "data_root": "data/smarts_dev",
+  "ignore_manifest_sectors": true,
+  "detectable_threshold": 5.0,
+  "detectability_table": "benchmarks/detectability_dev.csv",
+  "pipeline_methods": [
+   "pairwise_histogram",
+   "lombscargle",
+   "acf_fft"
+  ],
+  "n_guesses_default": 10,
+  "n_guesses_overrides": {
+   "acf_fft_highpass": 5
+  },
+  "comb_variant": "local_tol_trim_l0x",
+  "cwt_variant": "lean",
+  "wall_seconds": 278.08827209472656,
+  "created": "2026-11-20 14:57:10",
+  "system": "ranker v1 (head_perbin_p0.86)",
+  "run": "/Users/raeholcomb/Documents/GitHub/ss_redevelopment/runs/ranker_v1/nohalf"
+ }
+}

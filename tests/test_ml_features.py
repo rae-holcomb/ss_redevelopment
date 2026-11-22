@@ -172,3 +172,4 @@ def test_coverage_features_degenerate_inputs():
     assert star["n_contiguous_segments"] == 1 and star["longest_contiguous_days"] == 0.0
     c = _candidate_coverage_features(3.0, star, seg)
     assert np.isnan(c["P_over_longest_segment"]) and c["n_cycles_observed_total"] == 0
+
