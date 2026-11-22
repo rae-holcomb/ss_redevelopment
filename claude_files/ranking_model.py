@@ -439,19 +439,6 @@ def is_nonrotator(stars: pd.DataFrame) -> np.ndarray:
     return ~stars["is_rotator"].astype(str).str.lower().eq("true").to_numpy()
 
 
-def join_side_table(cands: pd.DataFrame, side: Optional[pd.DataFrame], columns=None) -> pd.DataFrame:
-    """Left-join a (star_id, cand_index) side table (e.g. half coherence); missing -> NaN columns."""
-    if side is None:
-        if columns:
-            cands = cands.copy()
-            for c in columns:
-                cands[c] = np.nan
-        return cands
-    out = cands.merge(side, on=["star_id", "cand_index"], how="left", validate="one_to_one")
-    assert len(out) == len(cands)
-    return out
-
-
 def top1_any(cands: pd.DataFrame, scores: np.ndarray, stars: pd.DataFrame) -> pd.DataFrame:
     """`top1` for tables that may hold non-rotators.
 

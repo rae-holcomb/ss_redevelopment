@@ -1199,27 +1199,6 @@ Description  : Roadmap decision (2026-11-09): gates become features, so the
 Stage        : 4 (gates) recorded at 5.
 
 --------------------------------------------------------------------------
-half_snr_min, half_snr_ratio, half_amp_ratio   (added 2026-11-11; ranker v1
-2026-11-21: side table tools/build_half_coherence_table.py, not built by
-tools/build_feature_tables.py; LS via astropy "fast" on a regular grid)
---------------------------------------------------------------------------
-Definition   : ml_features.half_coherence_features(time, flux, P). Split the
-               finite cadences at their median time. Per half: Lomb-Scargle
-               power at 1/P divided by the median power at 3-25% fractional
-               frequency offset (local S/N; regular grid of 401 frequencies
-               over +-25%), and the LS semi-amplitude at P.
-               half_snr_min = smaller S/N; half_snr_ratio = min/max S/N;
-               half_amp_ratio = min/max amplitude. NaN when a half has < 200
-               points or spans < 2 P.
-Description  : Coherence across halves. SMARTS wrong answers that land on the
-               noise light curve's own red-noise LS peak ("noise-period
-               lures") are typically strong in one half only; rotation
-               signals recur in both. Light-curve-only, so usable on real
-               data. Phase agreement is not used (spot evolution). Offline
-               evaluation: reports/2026-11-10_quiet-noise-periods/ (addendum).
-Stage        : 5 (feature extraction), candidate-level.
-
---------------------------------------------------------------------------
 Method-spectrum features over all Stage 1 methods
 --------------------------------------------------------------------------
 In the T10 tables, Section D features are evaluated against the spectra of

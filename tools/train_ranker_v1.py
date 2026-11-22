@@ -8,8 +8,6 @@ only scored):
    noise stacks, all three assigned draws per source, minus sources with a persistent weak
    period (``ranking_model.persistent_weak_period``). Their full-year draws are never
    trained on (no full-year rotators in training) but are scored out-of-fold for the FP rate.
-   Optional half-coherence side tables (``<table>/half_coherence/half_coherence.csv.gz``,
-   from ``tools/build_half_coherence_table.py``) are joined when ``--half`` is given.
 2. **Folds.** 5-fold ``GroupKFold`` on ``noise_tic`` over rotators *and* negatives (728 train
    negatives share a noise source with a train rotator), so no noise light curve sits on both
    sides of any split.
@@ -31,7 +29,7 @@ Outputs (``--outdir``): ``models/``, ``oof_top1.csv`` (training stars incl. nega
 
 Usage::
 
-    nice -n 15 python tools/train_ranker_v1.py --outdir <main>/runs/ranker_v1 [--half]
+    nice -n 15 python tools/train_ranker_v1.py --outdir <main>/runs/ranker_v1/nohalf
 """
 from __future__ import annotations
 
@@ -61,20 +59,13 @@ DEV = {("dev_medium", "fullyear"): f"{MAIN}/runs/p31_l0x_dev_medium_fullyear",
        ("dev_medium_b", "assigned"): f"{MAIN}/runs/p31_l0x_dev_medium_b_assigned"}
 RANK_PARAMS = dict(objective="rank:ndcg", max_depth=3, eta=0.1, min_child_weight=1.0)
 RANK_ROUNDS = 150
-HALF_COLS = ["half_snr_min", "half_snr_ratio", "half_amp_ratio"]
 PREC_GRID = [round(x, 2) for x in np.arange(0.80, 0.985, 0.01)]
 BINS = list(ev.PERIOD_BIN_LABELS)
 
 
-def load(table_dir: str, half: bool) -> tuple:
-    """(candidates, stars) with the half-coherence side table joined (or NaN columns) if `half`."""
-    c, s = rm.load_table(table_dir)
-    if half:
-        p = os.path.join(table_dir, "half_coherence", "half_coherence.csv.gz")
-        if not os.path.exists(p):
-            raise SystemExit(f"--half: missing {p} (run tools/build_half_coherence_table.py)")
-        c = rm.join_side_table(c, pd.read_csv(p))
-    return c, s
+def load(table_dir: str) -> tuple:
+    """(candidates, stars) of a feature table."""
+    return rm.load_table(table_dir)
 
 
 def subset(t: tuple, mask) -> tuple:
@@ -112,7 +103,6 @@ def main(argv=None):
     ap.add_argument("--neg-dev", default=f"{TT}/neg_dev_medium")
     ap.add_argument("--neg-flags", default=f"{TT}/neg_source_flags.csv",
                     help="flags rows (tic, P_ref, tsplit_min_snr) for the negative sources")
-    ap.add_argument("--half", action="store_true", help="join half-coherence side tables")
     ap.add_argument("--keep-persistent", action="store_true", help="ablation: keep persistent-period sources")
     ap.add_argument("--r", type=float, default=1.0, help="negatives per rotator in the precision")
     ap.add_argument("--n-threads", type=int, default=3)
@@ -123,8 +113,8 @@ def main(argv=None):
     os.makedirs(os.path.join(args.outdir, "curves"), exist_ok=True)
 
     # ---------------------------------------------------------------- data
-    rot = load(args.train, args.half)
-    neg = load(args.neg_train, args.half)
+    rot = load(args.train)
+    neg = load(args.neg_train)
     flags = pd.read_csv(args.neg_flags).set_index("tic")
     pers_tics = set(flags.index[rm.persistent_weak_period(flags["P_ref"], flags["tsplit_min_snr"])])
     ns = neg[1]
@@ -139,9 +129,8 @@ def main(argv=None):
     ndraw_src = neg_tr[1]["noise_tic"].nunique()
     info = dict(n_rot=len(rot[1]), n_neg_train=len(neg_tr[1]), n_neg_sources=int(ndraw_src),
                 n_persistent_sources=int(neg[1].loc[pers, "noise_tic"].nunique()),
-                n_neg_full=len(neg_full[1]), n_features=len(cols), half=args.half,
-                neg_per_rot_train=len(neg_tr[1]) / len(rot[1]), r=args.r,
-                half_in_features=[c for c in HALF_COLS if c in cols])
+                n_neg_full=len(neg_full[1]), n_features=len(cols),
+                neg_per_rot_train=len(neg_tr[1]) / len(rot[1]), r=args.r)
     print(info, flush=True)
 
     # ---------------------------------------------------------------- folds (by noise_tic over everything)
@@ -256,11 +245,11 @@ def main(argv=None):
                npers["star_id"].map(neg_pers[1].set_index("star_id")["final_outcome"]).to_numpy())
 
     # ---------------------------------------------------------------- dev scoring (fold ensembles)
-    negdev = load(args.neg_dev, args.half)
+    negdev = load(args.neg_dev)
     nd_full = negdev[1]["draw_id"].astype(str).eq("full").to_numpy()
     nd_pers = negdev[1]["noise_tic"].isin(pers_tics).to_numpy()
     for (setname, mode), path in DEV.items():
-        d = load(path, args.half)
+        d = load(path)
         if setname == "dev_medium":
             d = concat(d, subset(negdev, nd_full if mode == "fullyear" else ~nd_full))
         X = rm.feature_matrix(d[0], cols)[0]

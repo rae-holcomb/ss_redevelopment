@@ -219,12 +219,7 @@ def test_head_features_and_training():
     assert p[y == 1].mean() > p[y == 0].mean()
 
 
-def test_grouped_folds_by_tic_and_side_table():
-    """Fold map covers every tic once; side-table join is one-to-one with NaN for missing rows."""
+def test_grouped_folds_by_tic():
+    """Fold map covers every tic once."""
     f = rm.grouped_folds_by_tic([1, 1, 2, 3, 4, 5, 5], n_splits=2)
     assert set(f) == {1, 2, 3, 4, 5} and set(f.values()) <= {0, 1}
-    c, _ = _synthetic(n_stars=3)
-    side = c[["star_id", "cand_index"]].iloc[:4].assign(half_snr_min=1.0)
-    j = rm.join_side_table(c, side)
-    assert len(j) == len(c) and j["half_snr_min"].notna().sum() == 4
-    assert rm.join_side_table(c, None, ["half_snr_min"])["half_snr_min"].isna().all()

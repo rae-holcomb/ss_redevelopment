@@ -64,6 +64,7 @@ targeted. G9–G11 are graded below for information.
 5. **Two-set protocol:** pick the target on one dev set, keeping wrong ≤ `_v9` in both modes, then judge on the other set. It was run in both directions.
 6. **Figures and tables** come from `analysis.py` (it reads the run) and `figures.py` (reads `data/`).
 7. **`half_snr_min` ablation** (Rae approved the side-table runs, 2026-11-21).
+   - (The half-coherence code was deleted after this ablation, Rae 2026-11-21; it is in commit `5a049ee`.)
    - `ml_features.half_coherence_features` was ported from the unmerged `quiet-noise-followups` branch (`892e266`) and switched to astropy LS `fast` on a regular grid: 15× faster, Spearman 0.99 against the exact version on 88 candidates.
    - `tools/build_half_coherence_table.py` evaluates it at every candidate's `P_eval` (resumable, one shard per star).
      - The four local dev tables ran at 3 workers.
@@ -221,15 +222,25 @@ Representative full-year losses. Right panels: ranker score per candidate; green
 - **Tuning on dev_medium_b** picks 0.84, which fails dev_medium full-year. Its full-year baseline wrong rate (0.032) is looser.
 
 ## Open questions for Rae
-1. **Operating point.**
-   - Strictly by the rule (tune on dev_medium, judge on dev_medium_b) the pick is 0.86 and passes.
-   - The reverse direction fails. I took the stricter of the two, which uses both sets.
-   - Is "pass in both directions" the bar? If so, 0.86 is the loosest target that passes everywhere.
-2. ~~`half_snr_min`~~ **Decided (Rae, 2026-11-21): leave it out**, because a time split conflates baseline with spot lifetime. Open: delete `half_coherence_features` and its side-table script, or keep them for reference?
-3. **Full-year non-rotator FPs** (6/434 vs 1/434, five at < 1 d). Accept as is, or add full-year negatives to the decline model alongside the full-year training table (next item)?
-4. **> 30 d full-year** is the one bin still behind (by 1 and 3 stars). Build the full-year training table for the 1k subset now (your P24 decision)?
-5. **Persistent-source rule** (95th percentile of the quiet time-split S/N, 43/743 sources dropped). Keep this rule, or prefer a different cut?
-6. **Negatives per rotator** in training is now 0.7, not 2.2. Fine, or add more draws?
+All six were answered on 2026-11-21 (Rae took every recommendation).
+1. **Operating point: 0.86 per-bin; a pick must pass in both tuning directions.**
+   - Tuned on dev_medium and judged on dev_medium_b, 0.86 passes in both coverage modes.
+   - Tuning on dev_medium_b picks 0.84, which fails dev_medium full-year (wrong 0.030 > 0.019).
+   - 0.86 is the loosest target that passes everywhere. Each dev set is ~1,000 stars, so the two picks differ by a handful of stars per table.
+2. **`half_snr_min`: dropped and its code deleted.** A time split conflates baseline with spot lifetime (see the ablation section).
+   - Deleted: `half_coherence_features` with its tests and docs, `tools/build_half_coherence_table.py`, and the trainer's `--half` option.
+   - The side tables on the drive and the laptop are deleted too. The code is in git history: commit `5a049ee` and earlier.
+3. **and 4. Full-year non-rotator FPs and > 30 d full-year: build the full-year training table (P62).** One retrain with full-year rotators and the full-year negatives addresses both.
+5. **Persistent-source rule: keep** the 95th-percentile time-split S/N cut (43 of 743 sources dropped).
+   - It only drops sources whose signal persists, and the noise stacks are all full-year and split at the same date, so it compares like with like.
+   - P62's retrain should also be run without the cut, once, to see whether the cut matters.
+6. **Negatives per rotator: keep 0.7.** The precision re-weights non-rotators to 1:1, and more draws would repeat the same 700 noise sources. P62 adds 743 full-year non-rotators anyway.
+
+**Follow-ups from the loss audit** (`loss_categories.py`, `data/loss_categories.csv`) are P65–P68 in `docs/TASKS_PROPOSED.md`:
+- P65: noise-source periods behind wrong answers (31% of answered-wrong, against 3% by chance), and the P58 refresh;
+- P66: ranking misses (818);
+- P67: correct top-1 declined (580, ~445 outside > 30 d full-year);
+- P68: periods no method proposes (430).
 
 ## Reproduce
 ```bash
@@ -239,10 +250,10 @@ PY=/opt/anaconda3/envs/ss_openblas/bin/python
 #   -> <main>/runs/p31_l0x_train_tables/, plus neg_source_flags.csv (negative TICs' rows of noise_source_flags)
 nice -n 15 $PY tools/train_ranker_v1.py --outdir <main>/runs/ranker_v1/nohalf
 nice -n 15 $PY reports/2026-11-21_ranker-v1/analysis.py --run <main>/runs/ranker_v1/nohalf
-# half_snr_min ablation: side tables (dev: --n-workers 3; drive tables: --data-root /Volumes/Data_Vault/smarts_data --n-workers 1)
-nice -n 15 $PY tools/build_half_coherence_table.py --table <table dir> --outdir <table dir>/half_coherence --resume
-nice -n 15 $PY tools/train_ranker_v1.py --half --outdir <main>/runs/ranker_v1/half
+# half_snr_min ablation: the code is deleted; check out 5a049ee for build_half_coherence_table.py and --half.
+# data/ablation_*.csv and fig_ablation_half regenerate from the two saved runs:
 $PY reports/2026-11-21_ranker-v1/analysis.py --run <main>/runs/ranker_v1/nohalf --ablation <main>/runs/ranker_v1/half
+$PY reports/2026-11-21_ranker-v1/loss_categories.py --run <main>/runs/ranker_v1/nohalf
 $PY reports/2026-11-21_ranker-v1/figures.py
 $PY benchmarks/check_goals.py reports/2026-11-21_ranker-v1/data/ranker_metrics_dev_medium_fullyear.json \
     --baseline benchmarks/baselines/dev_medium_clean_fullyear_v9.json   # same for the other three

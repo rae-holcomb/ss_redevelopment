@@ -160,13 +160,13 @@ def ranker_metrics(run: str, thr: dict, rule: str) -> None:
             json.dump(doc, fh, indent=1, default=float)
 
 
-def importance(run: str, half: bool, n_rep: int = 3) -> None:
+def importance(run: str, n_rep: int = 3) -> None:
     """Gain + grouped (feature-family) permutation importance on OOF, ranker and head, same folds."""
     import xgboost as xgb
     cfg = json.load(open(os.path.join(run, "config.json")))
     cols = cfg["columns"]
-    rot = tr.load(f"{tr.TT}/train_3k", half)
-    neg = tr.load(f"{tr.TT}/neg_train", half)
+    rot = tr.load(f"{tr.TT}/train_3k")
+    neg = tr.load(f"{tr.TT}/neg_train")
     flags = pd.read_csv(f"{tr.TT}/neg_source_flags.csv").set_index("tic")
     pers = set(flags.index[rm.persistent_weak_period(flags.P_ref, flags.tsplit_min_snr)])
     ns = neg[1]
@@ -186,7 +186,7 @@ def importance(run: str, half: bool, n_rep: int = 3) -> None:
         g = [f for f in cols if rm.feature_method(f) == meth]
         if g:
             groups[f"method:{meth}"] = g
-    for f in ("P_over_reach", "beyond_reach") + tuple(tr.HALF_COLS):
+    for f in ("P_over_reach", "beyond_reach"):
         if f in cols:
             groups[f"feature:{f}"] = [f]
 
@@ -231,11 +231,23 @@ def importance(run: str, half: bool, n_rep: int = 3) -> None:
     g.rename_axis("feature").reset_index().to_csv(os.path.join(DATA, "importance_gain.csv"), index=False)
 
 
+def _table_tasks(table) -> list:
+    """Scorecard load tasks for a feature table's stars, rebuilt from its config.json."""
+    import build_feature_tables as bft
+    cfg = json.load(open(table / "config.json"))
+    ns = argparse.Namespace(manifest=os.path.join(ROOT, cfg["manifest"]), data_root=cfg["data_root"],
+                            ignore_manifest_sectors=cfg["ignore_manifest_sectors"], only=cfg.get("only"),
+                            limit=None, nonrotator=cfg.get("nonrotator", False),
+                            only_set=cfg.get("only_set"), flags=None, coherent_list=None)
+    if ns.data_root and not os.path.isabs(ns.data_root):
+        ns.data_root = os.path.join(ROOT, ns.data_root)
+    return bft.build_tasks(ns)
+
+
 def examples(run: str, n_per_kind: int = 2) -> None:
     """Per-candidate scores + light curves for representative full-year losses (dev_medium)."""
     import xgboost as xgb
     sys.path.insert(0, os.path.join(ROOT, "benchmarks"))
-    import build_half_coherence_table as bh
     import scorecard as sc
     cfg = json.load(open(os.path.join(run, "config.json")))
     f = pd.read_csv(os.path.join(DATA, "failures.csv"))
@@ -250,14 +262,13 @@ def examples(run: str, n_per_kind: int = 2) -> None:
     from pathlib import Path
     for s, sid, kind in pick:
         tab = tr.DEV[(s, "fullyear")]
-        c, st = tr.load(tab, cfg["half"])
+        c, st = tr.load(tab)
         c = c[c.star_id == sid].reset_index(drop=True)
         c["score"] = rm.predict(rankers, rm.feature_matrix(c, cfg["columns"])[0])
         rows.append(c[["star_id", "cand_index", "P_eval", "relevance", "selected", "beyond_reach", "fit_error",
                        "score", "method"]].assign(set=s, kind=kind,
                                                   true_period=float(st.set_index("star_id").loc[sid, "true_period"])))
-        tasks, _ = bh.tasks_for_table(Path(tab), None)
-        task = [t for t in tasks if t["star_id"] == sid][0]
+        task = [t for t in _table_tasks(Path(tab)) if t["star_id"] == sid][0]
         _, t_, f_, *_ = sc._load(task)
         lcs[sid] = (np.asarray(t_), np.asarray(f_))
     pd.concat(rows).to_csv(os.path.join(DATA, "examples_candidates.csv"), index=False)
@@ -272,15 +283,15 @@ def ablation(base: str, alt: str) -> None:
         cfg = json.load(open(os.path.join(run, "config.json")))
         summ = pd.read_csv(os.path.join(run, "summary.csv"))
         summ.insert(0, "run", name)
-        summ["half"] = cfg["half"]
+        summ["half"] = cfg.get("half", False)
         rows.append(summ)
         t = tuning(summ[summ.columns[1:-1]])
         t.insert(0, "run", name)
-        t["half"] = cfg["half"]
+        t["half"] = cfg.get("half", False)
         tun.append(t)
         cv = pd.read_csv(os.path.join(run, "curves", "oof_score_v1.csv"))
         cv.insert(0, "run", name)
-        cv["half"] = cfg["half"]
+        cv["half"] = cfg.get("half", False)
         cvs.append(cv)
     pd.concat(rows).to_csv(os.path.join(DATA, "ablation_summary.csv"), index=False)
     pd.concat(tun).to_csv(os.path.join(DATA, "ablation_tuning.csv"), index=False)
@@ -314,7 +325,7 @@ def main(argv=None):
     ranker_metrics(args.run, thr, PICK)
     examples(args.run)
     if not args.skip_importance:
-        importance(args.run, cfg["half"])
+        importance(args.run)
 
 
 if __name__ == "__main__":
