@@ -649,7 +649,7 @@ Split out of `docs/TASKS.md` on 2026-11-13 to keep the board short (agents read 
 - **Proposed by:** ranker v1 report.
 - **Why:** it is a side table today (`tools/build_half_coherence_table.py`) because the P31 tables predate it.
 - **Idea:** at the next table rebuild, compute `half_coherence_features` inside `tools/build_feature_tables.py`. It costs ~0.13 s per star on full-year light curves with astropy `fast`. Then drop the side-table step.
-- **Update 2026-11-21:** the ranker v1 ablation found no gain from it (report § "`half_snr_min` ablation"). Low priority.
+- **Status: dropped (Rae, 2026-11-21).** The ablation found no gain. A split in time conflates baseline with spot lifetime, so the feature means different things in full-year and assigned coverage. Don't add time-split candidate features without normalizing for the baseline.
 
 ### P64. Ranker v1 on the TESS validation 70% (from ranker v1, 2026-11-21)
 - **Proposed by:** ranker v1 report. This was optional in the brief and was not cheap: it needs feature tables for the validation stars, not just scorecard runs.

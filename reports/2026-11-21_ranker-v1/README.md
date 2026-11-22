@@ -189,8 +189,13 @@ Grouped permutation on training OOF: each family's columns are permuted together
   - dev_medium full-year: 0.016 with half against 0.014 without;
   - full-year training negatives: 0.024 against 0.016.
 - **Importance:** the three columns carry under 1% of total gain each. In fold 0 they rank 31st, 46th and 53rd of 111 in the ranker and 14th, 22nd and 30th of 115 in the decline model.
-- **Why it likely adds nothing:** what it measures, whether P is still coherent in each half of the light curve, is already covered by the time-split and fold-half features (`fold_half_corr_at_2P` is a top decline-model input).
-- **Decision:** v1 ships without it. The side tables stay on disk in case a later model wants them.
+- **Why it likely adds nothing, and why not to retry it (Rae, 2026-11-21):** a time split ties the feature to the light curve's baseline.
+  - Each half covers half the baseline, so the comparison depends on how half the baseline compares with the spot lifetime. In SMARTS, `TSPOT` gives spot lifetimes of 1–10 rotations.
+  - When a half lasts only a few spot lifetimes (assigned coverage, long P), one spot group can dominate one half, and a real rotator gets a low `half_snr_min`.
+  - When a half lasts many spot lifetimes (full-year), both halves average many spot generations and look alike.
+  - So the same star gives different values depending on coverage, and the model was trained on assigned coverage only.
+  - The `fold_half_corr*` alias features are *phase* splits (the first half of a folded cycle against the second) and don't have this problem.
+- **Decision (Rae, 2026-11-21):** leave it out of v1 and future models. The side tables stay on disk, but nothing uses them.
 
 ### Failure modes: where v1 loses to hand
 ![failures](figures/fig_failure_modes.png)
@@ -220,9 +225,7 @@ Representative full-year losses. Right panels: ranker score per candidate; green
    - Strictly by the rule (tune on dev_medium, judge on dev_medium_b) the pick is 0.86 and passes.
    - The reverse direction fails. I took the stricter of the two, which uses both sets.
    - Is "pass in both directions" the bar? If so, 0.86 is the loosest target that passes everywhere.
-2. **`half_snr_min`.** The ablation shows no gain, so I left it out of v1.
-   - Keep `half_coherence_features` in `ml_features.py` for later models, or drop it?
-   - P63 (make it a built-in table column) is now low priority unless you want it.
+2. ~~`half_snr_min`~~ **Decided (Rae, 2026-11-21): leave it out**, because a time split conflates baseline with spot lifetime. Open: delete `half_coherence_features` and its side-table script, or keep them for reference?
 3. **Full-year non-rotator FPs** (6/434 vs 1/434, five at < 1 d). Accept as is, or add full-year negatives to the decline model alongside the full-year training table (next item)?
 4. **> 30 d full-year** is the one bin still behind (by 1 and 3 stars). Build the full-year training table for the 1k subset now (your P24 decision)?
 5. **Persistent-source rule** (95th percentile of the quiet time-split S/N, 43/743 sources dropped). Keep this rule, or prefer a different cut?
